@@ -36,3 +36,8 @@ description: Work through your lane's queue autonomously - briefing, handoffs, t
 
 - The queue is empty: no open handoffs, no unblocked `task`/`polish` issue in your lane. Run `handover` and tell your user "Nothing unblocked in <lane>", listing what the blocked issues wait on. Never invent work outside the spec.
 - The feature freeze time in the spec has passed and the next issue is a `task`: tell your user to run `polish-pass` or `demo-prep`.
+- Your user tells you to stop, pause, stop after this task, or that they're going to sleep or switching account: finish or `wip:`-commit the current step, then run `handover` without being asked.
+
+## Every stop ends with `handover`
+
+Whatever ends the loop, a stop condition above, an empty queue or your user's word, run `handover` before your last message, unless it already ran in this session after the last commit. A session that stops without a summary on #1 isn't finished: the other lanes' agents can't see what it did. Your user never has to say "handover".

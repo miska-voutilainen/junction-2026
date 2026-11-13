@@ -1,6 +1,6 @@
 ---
 name: handover
-description: End a session so the other lanes' agents and your next session can pick up - commit and push, record decisions where they bind, and post the session summary to the agent sync log (issue #1). Use at the end of every session that did work, and before sleeping or switching account.
+description: End a session so the other lanes' agents and your next session can pick up - commit and push, record decisions where they bind, and post the session summary to the agent sync log (issue #1). Use at the end of every session that did work: run it yourself, without being asked, whenever your user says they're stopping, pausing, going to sleep or switching account, and whenever `go` stops.
 ---
 
 # Handover
