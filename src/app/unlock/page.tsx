@@ -17,11 +17,11 @@ export default async function UnlockPage({ searchParams }: PageProps<"/unlock">)
   if (code === null) redirect(next);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[380px] flex-col items-center px-5 pt-16 pb-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-gate flex-col items-center px-5 pt-16 pb-8">
       <Wordmark size="lg" />
       <div className="flex w-full flex-1 flex-col justify-center gap-7">
         <div className="flex flex-col gap-2">
-          <h1 className="text-[22px] font-semibold tracking-[-0.015em] text-balance">
+          <h1 className="text-xl font-semibold tracking-[-0.015em] text-balance">
             This project is private
           </h1>
           <p className="text-text-muted">Enter the code our team gave you.</p>
