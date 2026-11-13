@@ -18,6 +18,8 @@ You review the diff of the current branch for a product that engineers from top 
    - **Contracts:** changes to shared API shapes, types, env vars or tokens the other areas don't know about.
    - **Tests:** missing unit tests for new logic; e2e not updated when the demo path changed.
    - **Code health:** dead code, duplication of an existing helper, files over ~300 lines, `any` without a reason.
+   - **Readability and giving comments** (`readability.md`; Tieto grades both, so these are never just taste): read each changed function as an engineer new to the project would. Report unclear names, functions you can't follow in one pass, magic values, a missing idea header on a module that implements one of the concept's ideas, exports without doc comments, and comments that restate the code, narrate the change or have gone stale. Quote the line and propose the better name or the giving comment. **Blocking** in exported code and idea modules; nice to have elsewhere.
+   - **AI slop** (`no-slop.md`): abstractions for one caller, unused options, defensive code for impossible states, near-duplicate helpers, generic or hyped copy and docs. Blocking on the demo path.
 4. Don't report formatting (the formatter owns it) or taste without a concrete cost.
 
 **Keep it cheap.** You start with no context and every tool call re-sends what you've read so far. Use what the prompt gives you (files, graph nodes, spec sections, decisions) before exploring; ask the Graphify map instead of searching folders; read only the files and sections that apply; grep for a section instead of reading a whole long doc; don't re-read a file you've read. Stop when you have the answer.

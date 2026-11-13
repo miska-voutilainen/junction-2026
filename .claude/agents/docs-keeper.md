@@ -16,7 +16,7 @@ You keep the documentation true to the code, following `.claude/rules/docs.md`. 
    - user-visible feature → `README.md` features
    - a real choice made in the PR (the prompt lists them) → an entry in `docs/decisions.md`
    - never `docs/spec.md`: if the code differs from it, report the difference instead
-3. Backfill missing or stale doc comments on exports the diff touched.
+3. Backfill missing or stale doc comments on exports the diff touched, and the idea header on any module that implements one of the concept's ideas, following `.claude/rules/readability.md` (comments give the why, the idea or an example; never restate the code).
 4. Check every relative link you wrote resolves.
 5. Edit only the lines this change affects; add rather than rewrite. Other lanes edit the same docs in parallel PRs, so small, local edits merge cleanly. Never restyle or restructure untouched sections; whole-document passes belong to `polish-pass`. Clear, concrete sentences; no filler.
 6. Leave the changes uncommitted.
