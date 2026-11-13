@@ -23,6 +23,7 @@ export interface InboxSource {
 /** The report card as the server found it. */
 export type ReportCardInput = { state: "ok"; data: ReportCard } | { state: "missing" } | { state: "unreadable" };
 
+/** The notice shown above the list when the report card file fails validation. */
 export const REPORT_CARD_NOTICE =
   "The report card couldn't be read, so every area counts as Shadow and changes route as if the reviewer had no track record.";
 
@@ -68,10 +69,13 @@ export interface UnreviewedRow extends RowBase {
   state: "missing" | "unreadable";
 }
 
+/** One line of the inbox: a routed change, or one whose review is missing or unreadable. */
 export type InboxRow = ReviewedRow | UnreviewedRow;
 
+/** The status filter above the list; "needs-review" and "stale" match the receipt status. */
 export type StatusFilter = "all" | "needs-review" | "stale" | "signed";
 
+/** Totals for the summary bar; hunks and minutes count reviewed changes only. */
 export interface InboxSummary {
   changes: number;
   tierCounts: Record<Tier, number>;
@@ -82,6 +86,7 @@ export interface InboxSummary {
   fullMinutes: number;
 }
 
+/** Everything the inbox draws: sorted rows, the summary, and the change "Review next" opens. */
 export interface InboxModel {
   /** Sorted: Full, Focused, Light, then unreviewed; ties by id. */
   rows: InboxRow[];

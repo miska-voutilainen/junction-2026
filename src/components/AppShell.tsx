@@ -6,8 +6,6 @@ import type { ShellChange } from "@/components/ShellChange";
 import { TopBar } from "@/components/TopBar";
 import type { BreadcrumbItem } from "@/components/TopBar";
 
-export type { ShellChange };
-
 /**
  * The frame every page except the access gate sits in: top bar, side nav and
  * the content column, plus the command menu and its shortcuts. Pages opt in by
@@ -46,14 +44,14 @@ export function AppShell({
     <div className="flex min-h-screen flex-col bg-surface-bg text-text-primary">
       <a
         href="#content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-control focus:bg-brand focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-control focus:bg-brand focus:px-3 focus:py-2 focus:text-sm focus:text-primary-foreground"
       >
         Skip to content
       </a>
       <div className="hidden compact:block">
         <TopBar repo={repo} breadcrumb={breadcrumb} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
       </div>
-      <MobileHeader title={title} backHref={backHref} />
+      <MobileHeader title={title} backHref={backHref} escapeSlot={escapeSlot} />
       <div className="flex flex-1">
         <aside className="hidden w-nav shrink-0 border-r border-border-subtle bg-surface-raised nav:block">
           <AppNav needsReviewCount={needsReviewCount} />

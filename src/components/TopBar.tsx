@@ -12,6 +12,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSearchShortcutLabel } from "@/lib/useShortcuts";
 
+/** One step of the top bar trail; the last item is the current page and has no `href`. */
 export type BreadcrumbItem = { label: string; href?: string };
 
 /**

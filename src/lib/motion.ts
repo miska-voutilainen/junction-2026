@@ -9,6 +9,7 @@
  * version when the visitor prefers reduced motion: the end state with a
  * zero-length transition, so nothing moves, fades, blurs or clips.
  */
+import { useSyncExternalStore } from "react";
 import { useReducedMotion } from "motion/react";
 import type { TargetAndTransition, Transition } from "motion/react";
 
@@ -94,15 +95,29 @@ export function useMotionPreset(preset: Preset): Preset {
   };
 }
 
+const subscribeNever = () => () => {};
+
+/** False on the server and during hydration, true for anything that mounts afterwards. */
+function useHasHydrated(): boolean {
+  return useSyncExternalStore(subscribeNever, () => true, () => false);
+}
+
 /**
- * A preset whose entrance waits for the item's turn in a list (`staggerDelay`),
- * or the reduced-motion version with no delay: a delayed instant entrance would
- * only hide the row for a moment.
+ * A preset for one row of a list: its entrance waits for its turn
+ * (`staggerDelay`), or has no delay under reduced motion, where a delayed
+ * instant entrance would only hide the row for a moment.
+ *
+ * Rows present at page load skip the entrance (`initial: false`): the static
+ * HTML must show them, and an opacity-0 start would leave them invisible until
+ * scripts run. Only rows that mount later (a filter change, a menu opening) fade up.
  */
-export function useStaggeredPreset(preset: Preset, index: number): Preset {
+export function useStaggeredPreset(preset: Preset, index: number): Omit<Preset, "initial"> & { initial: Preset["initial"] | false } {
   const resolved = useMotionPreset(preset);
-  if (useReducedMotion()) return resolved;
-  return { ...resolved, animate: { ...resolved.animate, transition: { ...resolved.animate.transition, ...staggerDelay(index) } } };
+  const hasHydrated = useHasHydrated();
+  const initial = hasHydrated ? resolved.initial : false;
+  if (useReducedMotion()) return { ...resolved, initial };
+  const transition = { ...resolved.animate.transition, ...staggerDelay(index) };
+  return { ...resolved, initial, animate: { ...resolved.animate, transition } };
 }
 
 /** The press gesture, or nothing under reduced motion (no scaling). */

@@ -8,14 +8,12 @@ const GO_SEQUENCE_MS = 1000;
 
 const GO_TARGETS: Record<string, string> = { i: "/" };
 
-/** The page-level shortcuts that exist, in the order the nav lists them. */
+/** The page-level shortcuts that exist, in the order the nav lists them, after the search shortcut (its key depends on the platform, see `useSearchShortcutLabel`). */
 export const SHORTCUT_LIST = [
-  { keys: ["⌘K"], label: "Search and actions" },
   { keys: ["N"], label: "Review next" },
   { keys: ["j", "k"], label: "Move" },
   { keys: ["↵"], label: "Open" },
   { keys: ["g", "i"], label: "Inbox" },
-  { keys: ["1–4"], label: "Review steps" },
 ] as const;
 
 /** True when the key press belongs to a text field, so a shortcut must not steal it. */

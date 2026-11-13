@@ -21,11 +21,11 @@ export function InboxHeader({ reviewNext }: { reviewNext: ReviewedRow | null }) 
       {reviewNext && (
         <Link
           href={`/changes/${reviewNext.id}`}
-          className="hidden items-center gap-2 rounded-button bg-brand py-2.5 pr-3.5 pl-4 text-sm font-semibold text-white transition-colors duration-(--duration-fast) hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand compact:inline-flex"
+          className="hidden items-center gap-2 rounded-button bg-brand py-2.5 pr-3.5 pl-4 text-sm font-semibold text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand compact:inline-flex"
         >
           Review next
           <span className="font-mono text-xs font-medium opacity-85">{reviewNext.id}</span>
-          <Kbd className="bg-white/15 text-white">N</Kbd>
+          <Kbd className="bg-primary-foreground/15 text-primary-foreground">N</Kbd>
           <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
       )}

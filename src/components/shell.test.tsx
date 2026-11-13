@@ -70,6 +70,19 @@ describe("CommandMenu", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("closes on a second Ctrl+K and still returns focus to the search button", async () => {
+    const user = userEvent.setup();
+    renderShell();
+    const trigger = screen.getByRole("button", { name: "Search and quick actions" });
+    trigger.focus();
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    await user.keyboard("{Control>}k{/Control}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("says what to try when nothing matches", async () => {
     const user = userEvent.setup();
     renderShell();

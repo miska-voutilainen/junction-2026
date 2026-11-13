@@ -84,8 +84,15 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
   const { copiedNote, copy } = useCopyNote();
   const menuEntrance = useMotionPreset(popover);
 
+  // While open, the shortcut closes the menu: re-opening would make the search box the "trigger"
+  // and Esc would then return focus to it instead of the button that was used first.
+  const toggleSearch = useCallback(() => {
+    if (isOpen) close();
+    else open(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  }, [isOpen, open, close]);
+
   useShortcuts({
-    openSearch: () => open(document.activeElement instanceof HTMLElement ? document.activeElement : null),
+    openSearch: toggleSearch,
     reviewNextHref: nextChange ? `/changes/${nextChange.id}` : null,
   });
 
@@ -236,7 +243,7 @@ function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: 
         <span
           className={
             row.isPrimary
-              ? "grid size-6.5 shrink-0 place-items-center rounded-item bg-brand text-white"
+              ? "grid size-6.5 shrink-0 place-items-center rounded-item bg-brand text-primary-foreground"
               : "grid size-6.5 shrink-0 place-items-center rounded-item bg-surface-control text-text-secondary"
           }
         >

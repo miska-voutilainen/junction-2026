@@ -21,12 +21,13 @@ export function InboxMobile({ sections }: { sections: MobileSections }) {
         <Section title="Sign here" count={sections.signHere.length}>
           {sections.signHere.map((row) => (
             <li key={row.id} className="flex flex-col gap-2 border-t border-border-subtle pt-3">
-              <RowTitle row={row} />
+              {/* Plain text: the button below is this row's one link. */}
+              <RowTitle row={row} isLink={false} />
               <RowMeta row={row} />
               <Link
                 href={`/changes/${row.id}`}
                 data-inbox-row-link
-                className="flex min-h-11 items-center justify-center rounded-control bg-brand text-base font-semibold text-white hover:bg-brand-hover"
+                className="flex min-h-11 items-center justify-center rounded-control bg-brand text-base font-semibold text-primary-foreground hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand"
               >
                 {row.receipt === "stale" ? "Review and re-sign" : "Review and sign"}
               </Link>
@@ -38,7 +39,7 @@ export function InboxMobile({ sections }: { sections: MobileSections }) {
         <Section title="Needs a desktop" count={sections.needsDesktop.length}>
           {sections.needsDesktop.map((row) => (
             <li key={row.id} className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
-              <RowTitle row={row} />
+              <RowTitle row={row} dataRowLink />
               <RowMeta row={row} />
               {isReviewed(row) && (
                 <Link href={`/changes/${row.id}`} className="flex min-h-11 items-center text-sm text-link">
@@ -82,33 +83,52 @@ function Section({ title, count, children }: { title: string; count: number; chi
   );
 }
 
-function RowTitle({ row }: { row: InboxRow }) {
+function RowTitle({ row, isLink = true, dataRowLink = false }: { row: InboxRow; isLink?: boolean; dataRowLink?: boolean }) {
+  if (!isLink) return <span className="font-medium text-text-primary">{row.title}</span>;
   return (
-    <Link href={`/changes/${row.id}`} className="font-medium text-text-primary">
+    <Link href={`/changes/${row.id}`} data-inbox-row-link={dataRowLink || undefined} className="font-medium text-text-primary">
       {row.title}
     </Link>
   );
 }
 
-/** "MP-2283 · Focused · read 2 of 8 · 1 contradiction"; unreviewed rows say why they have no tier. */
+/** The row's meta line plus the "synthetic PR description" tag. */
 function RowMeta({ row }: { row: InboxRow }) {
-  if (!isReviewed(row)) {
-    return (
-      <p className="text-sm text-text-muted">
-        <span className="font-mono">{row.requirementId}</span> ·{" "}
-        {row.state === "missing" ? "Not reviewed yet" : "This review couldn't be read"}
-      </p>
-    );
-  }
   return (
-    <p className="text-sm text-text-muted">
-      <span className="font-mono">{row.requirementId}</span> · {tierLabel[row.tier]} · {readCount(row)} ·{" "}
-      <span className={metaFlagClass(row)}>{row.receipt === "stale" ? "Stale" : flagsText(row)}</span>
-    </p>
+    <div className="flex flex-col gap-1 text-sm text-text-muted">
+      <p>{metaLine(row)}</p>
+      {row.hasSyntheticDescription && (
+        <span className="self-start rounded-chip border border-border-default px-1.5 text-xs">synthetic PR description</span>
+      )}
+    </div>
   );
 }
 
+/** "MP-2283 · Focused · read 2 of 8 · 1 contradiction"; unreviewed rows say why they have no tier. */
+function metaLine(row: InboxRow): ReactNode {
+  const id = <span className="font-mono">{row.requirementId}</span>;
+  if (!isReviewed(row)) {
+    if (row.state === "missing") return <>{id} · Not reviewed yet</>;
+    return (
+      <>
+        {id} · This review couldn&apos;t be read. Re-record it with{" "}
+        <code className="font-mono text-xs text-text-secondary">pnpm pipeline run {row.id}</code>.
+      </>
+    );
+  }
+  return (
+    <>
+      {id} · {tierLabel[row.tier]} · {readCount(row)} · <span className={metaFlagClass(row)}>{receiptOrFlags(row)}</span>
+    </>
+  );
+}
+
+function receiptOrFlags(row: ReviewedRow): string {
+  if (row.isReceiptUnreadable) return "Receipt couldn't be read";
+  return row.receipt === "stale" ? "Stale" : flagsText(row);
+}
+
 function metaFlagClass(row: ReviewedRow): string {
-  if (row.receipt === "stale") return "text-amber-light";
+  if (row.isReceiptUnreadable || row.receipt === "stale") return "text-amber-light";
   return row.contradictions > 0 ? "text-rose-light" : "";
 }

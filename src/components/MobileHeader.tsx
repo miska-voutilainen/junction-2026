@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search } from "lucide-react";
 import { useCommandMenu } from "@/components/CommandMenu";
@@ -12,10 +13,11 @@ const TOUCH_TARGET = "grid size-11 place-items-center rounded-control text-text-
  * The header below 760 px, replacing the top bar: a back link (or the logo on
  * the home pages), the page title and search. 44 px touch targets.
  *
+ * @param escapeSlot The simulated-escape counter, so a recorded escape is visible at phone width too.
  * @param title What this page is, shown in place of the breadcrumb.
  * @param backHref Where "back" goes on a detail page; omit on the Inbox.
  */
-export function MobileHeader({ title, backHref }: { title: string; backHref?: string }) {
+export function MobileHeader({ title, backHref, escapeSlot }: { title: string; backHref?: string; escapeSlot?: ReactNode }) {
   const { open } = useCommandMenu();
   const searchRef = useRef<HTMLButtonElement>(null);
 
@@ -31,6 +33,7 @@ export function MobileHeader({ title, backHref }: { title: string; backHref?: st
         </Link>
       )}
       <p className="min-w-0 flex-1 truncate text-base font-semibold text-text-primary">{title}</p>
+      {escapeSlot}
       <button
         ref={searchRef}
         type="button"
