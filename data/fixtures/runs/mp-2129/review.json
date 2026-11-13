@@ -1,0 +1,708 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2129",
+  "requirementId": "MP-2129",
+  "title": "Add GeneratedMessagePackFormatter for types in other assemblies",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "tieto",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v1",
+      "a4": "a4.v1",
+      "a5": "a5.v1"
+    }
+  },
+  "run": {
+    "id": "run-20261114-mp-2129",
+    "startedAt": "2026-11-14T08:49:12Z",
+    "finishedAt": "2026-11-14T08:50:13.480Z",
+    "durationMs": 61480,
+    "usage": {
+      "inputTokens": 68990,
+      "outputTokens": 5530,
+      "costUsd": 1.05,
+      "calls": 6
+    }
+  },
+  "diff": {
+    "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "headSha": "2a8b1f5419782bd3dbb8db578a57df19c48a3273",
+    "baseTree": "57f8474f7f3a589046f643b541fe73ba4db2af08",
+    "headTree": "c8e9bb970b8f6e6aa4302db09e34998bbf9778e7",
+    "diffSha256": "5cc50d3326ebd5b3f18879010da751644b44fde5e09bc1c70c57d1e49e9979ea",
+    "filesChanged": 3,
+    "linesAdded": 39,
+    "linesRemoved": 0
+  },
+  "files": [
+    {
+      "path": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
+      "kind": "source",
+      "area": "generator",
+      "added": 12,
+      "removed": 0,
+      "hunkIds": [
+        "h1"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "kind": "source",
+      "area": "generator",
+      "added": 18,
+      "removed": 0,
+      "hunkIds": [
+        "h2",
+        "h3"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 9,
+      "removed": 0,
+      "hunkIds": [
+        "h4"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
+      "header": "@@ -0,0 +1,12 @@",
+      "oldStart": 0,
+      "oldLines": 0,
+      "newStart": 1,
+      "newLines": 12,
+      "lines": [
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1,
+          "text": "// Copyright (c) All contributors. All rights reserved."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 2,
+          "text": "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 3,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 4,
+          "text": "namespace MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 5,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 6,
+          "text": "/// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 7,
+          "text": "/// Requests that the source generator emits the body of a partial class implementing <see cref=\"Formatters.IMessagePackFormatter{T}\"/>."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 8,
+          "text": "/// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 9,
+          "text": "[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 10,
+          "text": "public sealed class GeneratedMessagePackFormatterAttribute : Attribute"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 11,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 12,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -340,5 +340,10 @@",
+      "oldStart": 340,
+      "oldLines": 5,
+      "newStart": 340,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 340,
+          "newLine": 340,
+          "text": "private bool CollectCore(INamedTypeSymbol typeSymbol, ISymbol? callerSymbol)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 341,
+          "newLine": 341,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 342,
+          "text": "    if (typeSymbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, this.typeReferences.GeneratedMessagePackFormatterAttribute)))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 343,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 344,
+          "text": "        return this.CollectGeneratedFormatter(typeSymbol, callerSymbol);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 345,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 346,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 342,
+          "newLine": 347,
+          "text": "    if (this.typeReferences.FormatterAttribute is not null && typeSymbol.GetAttributes().Any(IsFormatterAttribute))"
+        },
+        {
+          "kind": "context",
+          "oldLine": 343,
+          "newLine": 348,
+          "text": "    {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 344,
+          "newLine": 349,
+          "text": "        return true;"
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -420,5 +425,18 @@",
+      "oldStart": 420,
+      "oldLines": 5,
+      "newStart": 425,
+      "newLines": 18,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 420,
+          "newLine": 425,
+          "text": "    return true;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 421,
+          "newLine": 426,
+          "text": "}"
+        },
+        {
+          "kind": "context",
+          "oldLine": 422,
+          "newLine": 427,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 428,
+          "text": "private bool CollectGeneratedFormatter(INamedTypeSymbol formatterType, ISymbol? callerSymbol)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 429,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 430,
+          "text": "    INamedTypeSymbol? formattedType = formatterType.AllInterfaces"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 431,
+          "text": "        .FirstOrDefault(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, this.typeReferences.IMessagePackFormatterOfT))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 432,
+          "text": "        ?.TypeArguments[0] as INamedTypeSymbol;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 433,
+          "text": "    if (formattedType is null)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 434,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 435,
+          "text": "        return false;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 436,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 437,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 438,
+          "text": "    this.collectedGeneratedFormatters.Add(new GeneratedFormatterInfo(formatterType, formattedType, this.GetObjectInfo(formattedType, callerSymbol)));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 439,
+          "text": "    return true;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 440,
+          "text": "}"
+        },
+        {
+          "kind": "context",
+          "oldLine": 423,
+          "newLine": 441,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 424,
+          "newLine": 442,
+          "text": "private bool CollectEnum(INamedTypeSymbol type, ISymbol? callerSymbol)"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "header": "@@ -205,4 +205,13 @@",
+      "oldStart": 205,
+      "oldLines": 4,
+      "newStart": 205,
+      "newLines": 13,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 205,
+          "newLine": 205,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 206,
+          "newLine": 206,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 207,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 208,
+          "text": "    public async Task GeneratedFormatterForTypeInReferencedAssembly()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 209,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 210,
+          "text": "        Compilation library = await CompileLibraryAsync(\"public class MyObject { public int Id { get; set; } }\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 211,
+          "text": "        await VerifyGenerationAsync(library, \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 212,
+          "text": "            [GeneratedMessagePackFormatter]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 213,
+          "text": "            partial class MyObjectFormatter : IMessagePackFormatter<MyObject>;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 214,
+          "text": "            \"\"\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 215,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 207,
+          "newLine": 216,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 208,
+          "newLine": 217,
+          "text": "    [Fact]"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2129",
+    "title": "Feature Request: Allow generation of Formatter for a type in a referenced assembly",
+    "intent": "A project that references MessagePack can have the source generator emit a formatter for a type declared in a referenced assembly that does not.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>."
+      },
+      {
+        "id": "F2",
+        "text": "The source generator emits the formatter implementation for T inside the project that declares the partial class."
+      },
+      {
+        "id": "F3",
+        "text": "T may be declared in a referenced assembly that has no reference to MessagePack."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "Existing formatter attributes and generated output for types in the same project keep working (inferred)"
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2129",
+      "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>."
+        ],
+        "likelyAreas": [
+          "generator"
+        ],
+        "expectedTests": [
+          "A test that exercises: A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>"
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "The source generator emits the formatter implementation for T inside the project that declares the partial class."
+        ],
+        "likelyAreas": [
+          "generator"
+        ],
+        "expectedTests": [
+          "A test that exercises: The source generator emits the formatter implementation for T inside the project that declares the partial class"
+        ]
+      },
+      {
+        "requirementItemId": "F3",
+        "expectedBehaviours": [
+          "T may be declared in a referenced assembly that has no reference to MessagePack."
+        ],
+        "likelyAreas": [
+          "generator"
+        ],
+        "expectedTests": [
+          "A test that exercises: T may be declared in a referenced assembly that has no reference to MessagePack"
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "Adds the GeneratedMessagePackFormatter attribute, teaches TypeCollector to collect the formatted type of an attributed partial class, and adds one generation test.",
+    "why": "MP-2129 F1-F3: a library without a MessagePack reference cannot host a generated formatter, so its types need one generated in a consuming project.",
+    "touches": [
+      {
+        "symbol": "GeneratedMessagePackFormatterAttribute",
+        "file": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
+        "note": "New public attribute."
+      },
+      {
+        "symbol": "TypeCollector.CollectCore",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "New branch for attributed formatter classes."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "F1",
+      "text": "A public sealed attribute applicable to classes is added to MessagePack.Annotations.",
+      "kind": "structure",
+      "level": "supported",
+      "hunkIds": [
+        "h1"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
+          "side": "new",
+          "startLine": 9,
+          "endLine": 11,
+          "quote": "[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]\npublic sealed class GeneratedMessagePackFormatterAttribute : Attribute\n{"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "The attribute declaration is in the cited lines.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "F3",
+      "text": "Adds a generation test for a formatter of a type from a referenced library.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+          "side": "new",
+          "startLine": 207,
+          "endLine": 212,
+          "quote": "    [Fact]\n    public async Task GeneratedFormatterForTypeInReferencedAssembly()\n    {\n        Compilation library = await CompileLibraryAsync(\"public class MyObject { public int Id { get; set; } }\");\n        await VerifyGenerationAsync(library, \"\"\"\n            [GeneratedMessagePackFormatter]"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "pr-test",
+          "summary": "Snapshot test passes on the change.",
+          "testName": "GenerationTests.GeneratedFormatterForTypeInReferencedAssembly",
+          "base": null,
+          "head": {
+            "result": "pass",
+            "output": "Passed GeneratedFormatterForTypeInReferencedAssembly [612 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "F2",
+      "text": "The generator emits the formatter body for the type argument of the implemented interface.",
+      "kind": "behaviour",
+      "level": "unverified",
+      "hunkIds": [],
+      "citations": [],
+      "evidence": []
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "No diagnostic when the class is not partial or not a formatter",
+      "detail": "CollectGeneratedFormatter returns false without telling the user why when the attributed class does not implement IMessagePackFormatter<T>.",
+      "statement": null,
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 428,
+          "endLine": 435,
+          "quote": "private bool CollectGeneratedFormatter(INamedTypeSymbol formatterType, ISymbol? callerSymbol)\n{\n    INamedTypeSymbol? formattedType = formatterType.AllInterfaces\n        .FirstOrDefault(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, this.typeReferences.IMessagePackFormatterOfT))\n        ?.TypeArguments[0] as INamedTypeSymbol;\n    if (formattedType is null)\n    {\n        return false;"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "reason": "A new public attribute is public API. The issue lists three alternatives for per-member keys and settings; which one the library supports is the maintainers' decision.",
+      "hunkIds": [
+        "h1"
+      ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R1",
+      "reason": "Whether a generated formatter should live in the consuming project, and how keys of a foreign type are chosen, is a question about the requested behaviour.",
+      "hunkIds": [
+        "h2"
+      ]
+    }
+  ],
+  "quoteCheck": {
+    "checked": 3,
+    "passed": 3,
+    "downgraded": 0,
+    "dropped": 0,
+    "failures": []
+  },
+  "retractions": [],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "The attribute declaration matches the cited lines.",
+        "by": "ai-supported"
+      },
+      {
+        "item": "A generation test exists for a type from a referenced library.",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "What the generator emits for the attributed class",
+        "reason": "No differential test could run: the base commit has no attribute to place."
+      },
+      {
+        "item": "How keys and unions are chosen for a type in another assembly",
+        "reason": "Refused under R1: the issue leaves it open."
+      }
+    ],
+    "residualRisk": {
+      "text": "The public attribute and its semantics are not decided.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "full",
+    "reasons": [
+      {
+        "ruleId": "R-read-share",
+        "text": "Read 3 of 4 hunks: most of the change needs a human",
+        "tier": "full"
+      },
+      {
+        "ruleId": "R-refusal",
+        "text": "2 items refused: a human decides",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-sensitive-path",
+        "text": "Touches public attributes (MessagePack.Annotations)",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Generator: Calibrated, may route Focused at best",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "read",
+      "h2": "read",
+      "h3": "read",
+      "h4": "supported"
+    },
+    "readHunks": 3,
+    "totalHunks": 4,
+    "readLines": 30,
+    "totalLines": 39,
+    "readMinutes": 2,
+    "fullMinutes": 2
+  }
+}

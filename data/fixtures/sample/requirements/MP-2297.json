@@ -1,0 +1,26 @@
+{
+  "id": "MP-2297",
+  "title": "Add ExcludeFromCodeCoverage attribute to generated code.",
+  "intent": "Coverage tools no longer count code the MessagePack source generator emits.",
+  "functional": [
+    {
+      "id": "F1",
+      "text": "Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage."
+    },
+    {
+      "id": "F2",
+      "text": "The generated resolver class is decorated with ExcludeFromCodeCoverage."
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "N1",
+      "text": "No setting is required to turn the behaviour on."
+    }
+  ],
+  "derivedFrom": {
+    "kind": "github-issue",
+    "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2297",
+    "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+  }
+}
