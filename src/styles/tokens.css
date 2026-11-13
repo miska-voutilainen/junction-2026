@@ -1,0 +1,49 @@
+/* Design tokens: the one source for colour, radius and motion. Components use these, never raw values. */
+:root {
+  /* Surfaces */
+  --surface-bg: #0d0f12;
+  --surface-raised: #0f1216;
+  --surface-panel: #111418;
+  --surface-code: #0b0d10;
+  --surface-hover: #13171e;
+
+  /* Borders */
+  --border-subtle: #1f242b;
+  --border-default: #262c34;
+  --border-strong: #2a3038;
+
+  /* Text. --text-faint is the dimmest allowed: never dimmer, never below 12 px. */
+  --text-primary: #e6e8eb;
+  --text-secondary: #c4cad3;
+  --text-muted: #9aa3af;
+  --text-faint: #939ca8;
+
+  /* Accent */
+  --accent: #3558e8;
+  --accent-hover: #4566f2;
+  --focus-ring: #4566f2;
+  --focus-ring-on-accent: #93aaff;
+  --link: #93aaff;
+
+  /* Logo colours: the logo only. */
+  --logo-blue: #3d63f2;
+  --logo-strong: #f3f4f6;
+  --logo-muted: #6b7280;
+
+  /* Semantic colours: only for things that need a person. Green only for "Signature verified" and "Unlocked". */
+  --amber: #e2b04a;
+  --amber-light: #edc56e;
+  --rose: #ef7a85;
+  --rose-light: #f49ca4;
+  --green: #57c98b;
+  --green-light: #7ddba6;
+
+  /* Radius */
+  --radius-page: 12px;
+  --radius-control: 10px;
+  --radius-button: 9px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 150ms;
+}

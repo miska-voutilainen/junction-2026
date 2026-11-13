@@ -56,7 +56,7 @@ pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_R
 
 Production: https://countersign-junction.com (public; `www` and `http` redirect to it; DNS on Cloudflare as DNS-only records pointing at Vercel). The `*.vercel.app` URLs stay behind Vercel Authentication (protection covers everything except custom domains). Previews: one per PR from Vercel (team "junction", project "junction-2026").
 
-Env (names in `.env.example`): `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`).
+Env (names in `.env.example`): `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`), `ACCESS_CODE` (temporary gate; empty = off).
 
 ## Stack
 
@@ -80,7 +80,9 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
 ├── docs/         challenge, spec, concept-card, lessons, architecture, decisions, api, development, setup, demo, pitch, design/, ideas/ (one page per idea)
 ├── src/
-│   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), layout, loading, error, not-found
+│   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), /unlock (temporary gate), layout, loading, error, not-found
+│   ├── proxy.ts                temporary access gate entry
+│   ├── features/access-gate/   temporary access gate: check, cookie, unlock form; see its README
 │   ├── features/inbox/         S1 components
 │   ├── features/review/        S2 components: navigator, diff viewer, sidebar tabs
 │   ├── features/report-card/   S3 components

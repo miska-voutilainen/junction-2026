@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Temporary access gate until the submission
+
+- **Context:** The site is public on a custom domain before the final submission on Sun 15.11, and should open only for people we give a code.
+- **Decision:** One code on every page, checked by the Next proxy against an httpOnly cookie that holds the sha256 of the code. An empty `ACCESS_CODE` turns the gate off. It lives in one folder (`src/features/access-gate/`) plus two entry files (`src/proxy.ts`, `src/app/unlock/`), so removing it takes minutes.
+- **Why:** A code like 8888 is enough to keep casual visitors out; what matters is that it is clearly temporary and easy to delete.
+- **Rejected:** Vercel Password Protection (a paid-plan feature that treats custom domains differently). Basic Auth (the browser prompt would be the first thing a judge sees).
+- **PR:** –
+
 ## 2026-11-14 · App lane moves to Miska for the UI build
 
 - **Context:** The final design is a finished canvas with every screen, state and the shared components drawn. Building it is one connected job (tokens, shell, five screens) that needs judgment on layout and motion.
