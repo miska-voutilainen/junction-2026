@@ -1,0 +1,85 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { WrapText } from "lucide-react";
+import { CopyButton } from "@/components/CopyButton";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useWrapPreference } from "@/lib/useWrapPreference";
+import type { ConsoleKind } from "@/lib/useWrapPreference";
+import { cn } from "@/lib/utils";
+
+/** What the toolbar's Wrap button is named, given the current state. */
+const wrapActionName = (isWrapped: boolean) => (isWrapped ? "Unwrap lines" : "Wrap lines");
+
+interface ConsoleProps {
+  /** Names the box for screen readers and the toolbar, e.g. "Diff of Generator.cs". */
+  label: string;
+  /** The raw text Copy puts on the clipboard, never the rendered HTML. */
+  text: string;
+  /** Which Wrap choice this console shares with others of its kind. */
+  kind: ConsoleKind;
+  defaultWrap?: boolean;
+  /** Rendered content such as highlighted code; `text` in a <pre> when absent. */
+  children?: ReactNode;
+  className?: string;
+}
+
+/**
+ * A box for code or command output with a Wrap and Copy toolbar. Long lines
+ * scroll sideways inside the box only, or wrap when the visitor chooses; the
+ * choice is remembered per `kind`. The scroll region takes focus so arrow
+ * keys work without a mouse. UI plan section 6.
+ */
+export function Console({ label, text, kind, defaultWrap = false, children, className }: ConsoleProps) {
+  const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
+
+  return (
+    <div className={cn("rounded-control border border-border-subtle bg-surface-code", className)}>
+      <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
+        <span className="truncate text-xs text-text-muted">{label}</span>
+        <div className="flex items-center gap-0.5">
+          <WrapButton isWrapped={isWrapped} onToggle={() => setIsWrapped(!isWrapped)} />
+          <CopyButton text={text} label={`Copy ${label}`} />
+        </div>
+      </div>
+      <div
+        role="region"
+        aria-label={label}
+        tabIndex={0}
+        className={cn(
+          "rounded-b-control p-3 font-mono text-sm text-text-secondary",
+          isWrapped
+            ? "[overflow-wrap:anywhere] whitespace-pre-wrap [&_pre]:whitespace-pre-wrap"
+            : "overflow-x-auto whitespace-pre",
+        )}
+      >
+        {children ?? <pre className="font-[inherit]">{text}</pre>}
+      </div>
+    </div>
+  );
+}
+
+function WrapButton({ isWrapped, onToggle }: { isWrapped: boolean; onToggle: () => void }) {
+  const name = wrapActionName(isWrapped);
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={name}
+            aria-pressed={isWrapped}
+            onClick={onToggle}
+            className="text-text-muted hover:bg-surface-hover hover:text-text-primary aria-pressed:text-text-primary"
+          >
+            <WrapText aria-hidden="true" className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{name}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
