@@ -45,5 +45,5 @@ The failure modes we saw go in `docs/lessons.md`.
 ## In the code
 
 - The quote check in `src/pipeline/`, run between the story step (A2) and the area review (A3) (T12, in progress)
-- `src/contracts/common.ts`: the citation and evidence-level types (in progress)
+- [`src/contracts/common.ts`](../../src/contracts/common.ts): the citation and evidence-level types
 - Shown on screen S2, the Story tab: each claim with its quoted code; and on S3 under hallucinations

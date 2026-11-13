@@ -55,6 +55,6 @@ The failure modes we saw (wrong tier calls) go in `docs/lessons.md`.
 
 ## In the code
 
-- `src/rules/route.ts`: `route()`, the rules above in order (T11, in progress)
-- `src/policy/routing.ts`: `sizeLimit: 400`, `readShareFull: 0.75`, `linesPerMinute: 25`, the sensitive paths (T11, in progress)
+- [`src/rules/route.ts`](../../src/rules/route.ts): `route()`, the rules above in order
+- [`src/policy/routing.ts`](../../src/policy/routing.ts): `sizeLimit: 400`, `readShareFull: 0.75`, `linesPerMinute: 25`, the sensitive paths
 - Shown on screen S2: the tier banner and the hunk navigator ("Read this", "Supported", "Verified")

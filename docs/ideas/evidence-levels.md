@@ -56,6 +56,6 @@ The failure modes we saw (retractions, build errors) go in `docs/lessons.md`.
 
 ## In the code
 
-- `src/contracts/common.ts`: `EvidenceLevel`, `"verified" | "supported" | "unverified" | "refused"` (in progress)
+- [`src/contracts/common.ts`](../../src/contracts/common.ts): `EvidenceLevel`, `"verified" | "supported" | "unverified" | "refused"`
 - `src/prompts/a5.ts` and the worktree test runner in `src/pipeline/` (T14, in progress)
 - Shown on screen S2, the Story tab: each claim with its level badge and the evidence behind it

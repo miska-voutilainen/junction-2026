@@ -46,6 +46,6 @@ Not measured yet. The review of MP-2283 is expected to refuse under `R7` or `R1`
 
 ## In the code
 
-- `src/policy/refusals.ts`: the seven rules, `refusalPolicyVersion = "v1"` (in progress)
+- [`src/policy/refusals.ts`](../../src/policy/refusals.ts): the seven rules, `refusalPolicyVersion = "v1"`
 - `src/prompts/a3.ts`: the area review that outputs refusals (T13, in progress)
 - Shown on screen S2, the Refused tab: each refusal with its rule, reason, decider and hunks

@@ -51,7 +51,7 @@ The failure modes we saw in our own runs go in `docs/lessons.md` once the eval h
 
 ## In the code
 
-- `src/rules/ladder.ts`: `ladderLevel()` and `applyEscapes()`, pure functions (T11, in progress)
-- `src/policy/ladder.ts`: the thresholds `minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5` (T11, in progress)
+- [`src/rules/ladder.ts`](../../src/rules/ladder.ts): `ladderLevel()` and `applyEscapes()`, pure functions
+- [`src/policy/ladder.ts`](../../src/policy/ladder.ts): the thresholds `minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`
 - Eval scoring in `src/pipeline/` (T16, in progress)
 - Shown on screen S3, "Can the reviewer be trusted?", the ladder per area
