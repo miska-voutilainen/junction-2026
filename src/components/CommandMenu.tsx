@@ -143,7 +143,8 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
       >
         <DialogTitle className="sr-only">Quick actions</DialogTitle>
         <DialogDescription className="sr-only">Search changes, pages and actions.</DialogDescription>
-        <motion.div {...menuEntrance} style={{ transformOrigin: originFor(trigger) }}>
+        {/* min-w-0: the dialog is a grid; without it the list grows to its longest row and spills past a phone screen. */}
+        <motion.div {...menuEntrance} className="min-w-0" style={{ transformOrigin: originFor(trigger) }}>
           <Command className="rounded-menu! bg-transparent p-0">
             <CommandInput
               value={query}

@@ -129,13 +129,13 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 
 - **Purpose:** every agent-written change waiting for review, routed by risk. It doubles as the routing spread.
 - **Content:** the four Tieto changes (`data/sample/changes/*.json` with `kind: "tieto"`), each with its recorded review. Planted-bug variants never appear here.
-- **Layout (1440 px):** page title (h1) "Changes waiting for review". Below it a summary bar, one line: "4 changes · 0 Light · 3 Focused · 1 Full · 1 signed" and, on the same line right-aligned, "Humans read 14 of 290 hunks · ~12 of 180 min". Then a list, one row per change, sorted by tier (Full, Focused, Light), then by change id.
+- **Layout (1440 px):** page title (h1) "Inbox" with the subline "Agent changes waiting for a named person to sign." and a primary "Review next" link (the first unsigned change in list order). Below it a summary bar, one line: "4 changes · 0 Light · 3 Focused · 1 Full · 1 signed" and, on the same line right-aligned, "Humans read 14 of 290 hunks · ~12 of 180 min". Then a list, one row per change, sorted by tier (Full, Focused, Light), then by change id.
 - **Each row** (the whole row is one link to `/changes/<id>`, keyboard-focusable):
   - the change title (from the change input), e.g. "Fix crash on closed generic structs from referenced assemblies";
   - the requirement ID chip, e.g. "MP-2283";
   - the authoring agent, e.g. "Coding agent (Tieto sample)";
   - the tier badge: "Light", "Focused" or "Full";
-  - the reading estimate: "Read 2 of 8 hunks · ~2 min";
+  - the reading estimate: "read 2 of 8 · ~2 min" (the minutes are left out when nothing needs reading);
   - the counts, only when non-zero: "1 contradiction", "2 contradictions", "2 refused";
   - the receipt status: "Needs review", "Signed by <owner login>" or "Stale";
   - a "synthetic PR description" tag when the change's `authorDescription.synthetic` is true.

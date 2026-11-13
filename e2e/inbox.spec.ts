@@ -45,6 +45,9 @@ test("lists the four changes with their tiers and links each to its review", asy
     await page.getByRole("button", { name: "Search and quick actions" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.screenshot({ path: ".review/inbox-375-menu.png" });
+    // The dialog is position: fixed, so the page-level scroll check misses it; check the menu fits inside its dialog.
+    const menuOverflow = await page.getByRole("dialog").evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth);
+    expect(menuOverflow).toBeLessThanOrEqual(0);
   }
   expect(problems).toEqual([]);
 });
