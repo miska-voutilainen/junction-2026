@@ -1,0 +1,1271 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2283",
+  "requirementId": "MP-2283",
+  "title": "Fix crash on closed generic structs from referenced assemblies",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "tieto",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v1",
+      "a4": "a4.v1",
+      "a5": "a5.v1"
+    }
+  },
+  "run": {
+    "id": "run-20261114-mp-2283",
+    "startedAt": "2026-11-14T08:12:03Z",
+    "finishedAt": "2026-11-14T08:13:17.210Z",
+    "durationMs": 74210,
+    "usage": {
+      "inputTokens": 91234,
+      "outputTokens": 7412,
+      "costUsd": 1.37,
+      "calls": 6
+    }
+  },
+  "diff": {
+    "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "headSha": "8b2d63b81b6c017ba76db376d280279561e9cde0",
+    "baseTree": "183e31c6b83226f5057a291ec0499c490f556cd5",
+    "headTree": "9207894f137315f23417b0e618caa11c436e8a3b",
+    "diffSha256": "4324d7fc9bf1398271864e2d529054c4f28b9dc911d42b3bb4184463d2f3a322",
+    "filesChanged": 5,
+    "linesAdded": 56,
+    "linesRemoved": 5
+  },
+  "files": [
+    {
+      "path": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "kind": "source",
+      "area": "generator",
+      "added": 5,
+      "removed": 2,
+      "hunkIds": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+      "kind": "source",
+      "area": "analyzer",
+      "added": 8,
+      "removed": 1,
+      "hunkIds": [
+        "h3"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+      "kind": "source",
+      "area": "security",
+      "added": 2,
+      "removed": 2,
+      "hunkIds": [
+        "h4"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 34,
+      "removed": 0,
+      "hunkIds": [
+        "h5",
+        "h6",
+        "h7"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 7,
+      "removed": 0,
+      "hunkIds": [
+        "h8"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -735,6 +735,9 @@",
+      "oldStart": 735,
+      "oldLines": 6,
+      "newStart": 735,
+      "newLines": 9,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 735,
+          "newLine": 735,
+          "text": "private ObjectSerializationInfo? GetObjectInfo(INamedTypeSymbol type, ISymbol? callerSymbol)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 736,
+          "newLine": 736,
+          "text": "{"
+        },
+        {
+          "kind": "del",
+          "oldLine": 737,
+          "newLine": null,
+          "text": "    Location location = type.DeclaringSyntaxReferences[0].GetSyntax().GetLocation();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 737,
+          "text": "    // A type from a referenced assembly is a metadata symbol: it has no syntax to point at."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 738,
+          "text": "    Location location = type.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 739,
+          "text": "        ?? callerSymbol?.Locations.FirstOrDefault()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 740,
+          "text": "        ?? Location.None;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 738,
+          "newLine": 741,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 739,
+          "newLine": 742,
+          "text": "    bool isClass = type.TypeKind == TypeKind.Class;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 740,
+          "newLine": 743,
+          "text": "    bool isStruct = type.TypeKind == TypeKind.Struct;"
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1009,5 +1012,5 @@",
+      "oldStart": 1009,
+      "oldLines": 5,
+      "newStart": 1012,
+      "newLines": 5,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1009,
+          "newLine": 1012,
+          "text": "private void ReportMemberNeedsKey(INamedTypeSymbol type, ISymbol member)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1010,
+          "newLine": 1013,
+          "text": "{"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1011,
+          "newLine": null,
+          "text": "    Location location = type.DeclaringSyntaxReferences[0].GetSyntax().GetLocation();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1014,
+          "text": "    Location location = GetLocation(type, member);"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1012,
+          "newLine": 1015,
+          "text": "    this.diagnostics.Add(Diagnostic.Create(MessagePackGenerator.MemberNeedsKey, location, type.Name, member.Name));"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1013,
+          "newLine": 1016,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+      "header": "@@ -424,9 +424,16 @@",
+      "oldStart": 424,
+      "oldLines": 9,
+      "newStart": 424,
+      "newLines": 16,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 424,
+          "newLine": 424,
+          "text": "private static void AnalyzeSymbol(SymbolAnalysisContext context, ReferenceSymbols typeReferences, AnalyzerOptions options)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 425,
+          "newLine": 425,
+          "text": "{"
+        },
+        {
+          "kind": "context",
+          "oldLine": 426,
+          "newLine": 426,
+          "text": "    if (context.Symbol is not INamedTypeSymbol typeSymbol)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 427,
+          "newLine": 427,
+          "text": "    {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 428,
+          "newLine": 428,
+          "text": "        return;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 429,
+          "newLine": 429,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 430,
+          "newLine": 430,
+          "text": ""
+        },
+        {
+          "kind": "del",
+          "oldLine": 431,
+          "newLine": null,
+          "text": "    new TypeCollector(context.Compilation, typeReferences, options).Analyze(typeSymbol, context.ReportDiagnostic);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 431,
+          "text": "    try"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 432,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 433,
+          "text": "        new TypeCollector(context.Compilation, typeReferences, options).Analyze(typeSymbol, context.ReportDiagnostic);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 434,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 435,
+          "text": "    catch (IndexOutOfRangeException)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 436,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 437,
+          "text": "        context.ReportDiagnostic(Diagnostic.Create(UnsupportedGenericMember, typeSymbol.Locations[0], typeSymbol.Name));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 438,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 432,
+          "newLine": 439,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+      "header": "@@ -212,5 +212,5 @@",
+      "oldStart": 212,
+      "oldLines": 5,
+      "newStart": 212,
+      "newLines": 5,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 212,
+          "newLine": 212,
+          "text": "        this.Write(\"        public void Serialize(ref MessagePackWriter writer, \");"
+        },
+        {
+          "kind": "context",
+          "oldLine": 213,
+          "newLine": 213,
+          "text": "        this.Write(this.ToStringHelper.ToStringWithCulture(info.FullName));"
+        },
+        {
+          "kind": "del",
+          "oldLine": 214,
+          "newLine": null,
+          "text": "        this.Write(\" value, MessagePackSerializerOptions options)\\r\\n\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 214,
+          "text": "        this.Write(\" value, MessagePackSerializerOptions serializerOptions)\\r\\n\");"
+        },
+        {
+          "kind": "context",
+          "oldLine": 215,
+          "newLine": 215,
+          "text": "        this.Write(\"        {\\r\\n\");"
+        },
+        {
+          "kind": "del",
+          "oldLine": 216,
+          "newLine": null,
+          "text": "        this.Write(\"            IFormatterResolver formatterResolver = options.Resolver;\\r\\n\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 216,
+          "text": "        this.Write(\"            IFormatterResolver formatterResolver = serializerOptions.Resolver;\\r\\n\");"
+        }
+      ]
+    },
+    {
+      "id": "h5",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "header": "@@ -118,4 +118,20 @@",
+      "oldStart": 118,
+      "oldLines": 4,
+      "newStart": 118,
+      "newLines": 20,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 118,
+          "newLine": 118,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 119,
+          "newLine": 119,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 120,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 121,
+          "text": "    public async Task ClosedGenericStructFromReferencedAssembly()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 122,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 123,
+          "text": "        Compilation library = await CompileLibraryAsync(\"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 124,
+          "text": "            [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 125,
+          "text": "            public partial record struct Item<T>([property: Key(0)] string Key);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 126,
+          "text": "            \"\"\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 127,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 128,
+          "text": "        await VerifyGenerationAsync(library, \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 129,
+          "text": "            [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 130,
+          "text": "            public sealed partial record Cmd([property: Key(0)] string Scope)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 131,
+          "text": "            {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 132,
+          "text": "                [Key(1)] public Item<int> Member { get; init; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 133,
+          "text": "            }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 134,
+          "text": "            \"\"\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 135,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 120,
+          "newLine": 136,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 121,
+          "newLine": 137,
+          "text": "    [Fact]"
+        }
+      ]
+    },
+    {
+      "id": "h6",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "header": "@@ -142,2 +160,15 @@",
+      "oldStart": 142,
+      "oldLines": 2,
+      "newStart": 160,
+      "newLines": 15,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 142,
+          "newLine": 160,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 161,
+          "text": "    public async Task ResolverIsGeneratedWhenMemberTypeIsFromReferencedAssembly()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 162,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 163,
+          "text": "        Compilation library = await CompileLibraryAsync(\"public struct Pair<T> { public T First; }\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 164,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 165,
+          "text": "        GeneratorRunResult result = await RunGeneratorAsync(library, \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 166,
+          "text": "            [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 167,
+          "text": "            public class Holder { [Key(0)] public Pair<int> Value { get; set; } }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 168,
+          "text": "            \"\"\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 169,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 170,
+          "text": "        Assert.Contains(result.GeneratedSources, s => s.HintName.EndsWith(\"Resolver.g.cs\", StringComparison.Ordinal));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 171,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 172,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 173,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "context",
+          "oldLine": 143,
+          "newLine": 174,
+          "text": "    public async Task NullableEnumMember()"
+        }
+      ]
+    },
+    {
+      "id": "h7",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "header": "@@ -301,3 +331,8 @@",
+      "oldStart": 301,
+      "oldLines": 3,
+      "newStart": 331,
+      "newLines": 8,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 301,
+          "newLine": 331,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 302,
+          "newLine": 332,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 333,
+          "text": "    private static async Task<Compilation> CompileLibraryAsync(string source)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 334,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 335,
+          "text": "        return await CompilationFactory.CreateAsync(\"Lib\", source, OutputKind.DynamicallyLinkedLibrary);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 336,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 337,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 303,
+          "newLine": 338,
+          "text": "    private static Task VerifyGenerationAsync(Compilation referencedLibrary, string source)"
+        }
+      ]
+    },
+    {
+      "id": "h8",
+      "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+      "header": "@@ -58,4 +58,11 @@",
+      "oldStart": 58,
+      "oldLines": 4,
+      "newStart": 58,
+      "newLines": 11,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 58,
+          "newLine": 58,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 59,
+          "newLine": 59,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 60,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 61,
+          "text": "    public async Task ClosedGenericStructFromReferencedAssembly_DoesNotThrow()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 62,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 63,
+          "text": "        Compilation library = await CompileLibraryAsync(\"[MessagePackObject] public partial record struct Item<T>([property: Key(0)] string Key);\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 64,
+          "text": "        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(library, \"[MessagePackObject] public partial class Cmd { [Key(0)] public Item<int> Member { get; set; } }\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 65,
+          "text": "        Assert.DoesNotContain(diagnostics, d => d.Id == \"AD0001\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 66,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 60,
+          "newLine": 67,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 61,
+          "newLine": 68,
+          "text": "    [Fact]"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2283",
+    "title": "Generator and analyzer crash with IndexOutOfRangeException on a closed generic struct from a referenced assembly",
+    "intent": "A [MessagePackObject] type with a member of a closed generic value type from a referenced assembly builds cleanly and gets a generated resolver.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "The source generator does not throw IndexOutOfRangeException (CS8785) for a member whose type is a closed generic value type defined in a referenced assembly."
+      },
+      {
+        "id": "F2",
+        "text": "The compiling assembly gets a generated resolver that includes the affected [MessagePackObject] type."
+      },
+      {
+        "id": "F3",
+        "text": "The MsgPack00xMessagePackAnalyzer does not throw (AD0001) for the same member type."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "Generated output for types that were already supported does not change (inferred)"
+      },
+      {
+        "id": "N2",
+        "text": "A failure inside the generator or analyzer is reported as a diagnostic the user can see, not only as a build warning."
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283",
+      "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "The source generator does not throw IndexOutOfRangeException (CS8785) for a member whose type is a closed generic value type defined in a referenced assembly."
+        ],
+        "likelyAreas": [
+          "generator",
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A test that exercises: The source generator does not throw IndexOutOfRangeException (CS8785) for a member whose type is a closed generic value type defined in a referenced assembly"
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "The compiling assembly gets a generated resolver that includes the affected [MessagePackObject] type."
+        ],
+        "likelyAreas": [
+          "generator",
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A test that exercises: The compiling assembly gets a generated resolver that includes the affected [MessagePackObject] type"
+        ]
+      },
+      {
+        "requirementItemId": "F3",
+        "expectedBehaviours": [
+          "The MsgPack00xMessagePackAnalyzer does not throw (AD0001) for the same member type."
+        ],
+        "likelyAreas": [
+          "generator",
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A test that exercises: The MsgPack00xMessagePackAnalyzer does not throw (AD0001) for the same member type"
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "Replaces three DeclaringSyntaxReferences[0] lookups in the type collector with null-safe lookups, wraps the analyzer's collector call so a failed lookup reports a diagnostic instead of crashing, and adds regression tests for the closed-generic case.",
+    "why": "MP-2283 F1-F3: the generator silently produced no resolver for assemblies that use closed generic structs from a referenced assembly, which breaks trimmed and NativeAOT apps at runtime.",
+    "touches": [
+      {
+        "symbol": "TypeCollector.GetObjectInfo",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "Location lookup no longer assumes the type has syntax."
+      },
+      {
+        "symbol": "MsgPack00xMessagePackAnalyzer.AnalyzeSymbol",
+        "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+        "note": "Catches IndexOutOfRangeException and reports a diagnostic."
+      },
+      {
+        "symbol": "FormatterTemplate (emitted Serialize signature)",
+        "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+        "note": "Renames the options parameter in emitted code; not asked for."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "F1",
+      "text": "The generator no longer throws IndexOutOfRangeException when a member's type is a closed generic struct from a referenced assembly.",
+      "kind": "behaviour",
+      "level": "verified",
+      "hunkIds": [
+        "h1"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 737,
+          "endLine": 740,
+          "quote": "    // A type from a referenced assembly is a metadata symbol: it has no syntax to point at.\n    Location location = type.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()\n        ?? callerSymbol?.Locations.FirstOrDefault()\n        ?? Location.None;"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "Regression test fails on the base commit with CS8785 and passes on the change.",
+          "testName": "GenerationTests.ClosedGenericStructFromReferencedAssembly",
+          "base": {
+            "result": "fail",
+            "output": "CSC : warning CS8785: Generator 'MessagePackGenerator' failed to generate source. It will not contribute to the output and compilation errors may occur as a result. Exception was of type 'IndexOutOfRangeException' with message 'Index was outside the bounds of the array.'.\nFailed ClosedGenericStructFromReferencedAssembly [412 ms]\n  Assert.Empty() Failure: Collection was not empty\n  [Diagnostic CS8785]"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed ClosedGenericStructFromReferencedAssembly [388 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "F2",
+      "text": "A resolver that includes the affected type is generated for the compiling assembly.",
+      "kind": "behaviour",
+      "level": "verified",
+      "hunkIds": [
+        "h2",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1014,
+          "endLine": 1014,
+          "quote": "    Location location = GetLocation(type, member);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "No resolver source on the base commit; Resolver.g.cs is generated on the change.",
+          "testName": "GenerationTests.ResolverIsGeneratedWhenMemberTypeIsFromReferencedAssembly",
+          "base": {
+            "result": "fail",
+            "output": "Failed ResolverIsGeneratedWhenMemberTypeIsFromReferencedAssembly [377 ms]\n  Assert.Contains() Failure: Filter not matched in collection\n  Collection: []"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed ResolverIsGeneratedWhenMemberTypeIsFromReferencedAssembly [351 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "F3",
+      "text": "The analyzer catches the failed lookup and reports a diagnostic instead of throwing.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
+          "startLine": 431,
+          "endLine": 437,
+          "quote": "    try\n    {\n        new TypeCollector(context.Compilation, typeReferences, options).Analyze(typeSymbol, context.ReportDiagnostic);\n    }\n    catch (IndexOutOfRangeException)\n    {\n        context.ReportDiagnostic(Diagnostic.Create(UnsupportedGenericMember, typeSymbol.Locations[0], typeSymbol.Name));"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Cited lines show the try/catch around the collector call.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "requirementItemId": "N1",
+      "text": "Types without a referenced-assembly generic member go through the same code path as before.",
+      "kind": "structure",
+      "level": "supported",
+      "hunkIds": [
+        "h1"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 737,
+          "endLine": 740,
+          "quote": "    // A type from a referenced assembly is a metadata symbol: it has no syntax to point at.\n    Location location = type.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()\n        ?? callerSymbol?.Locations.FirstOrDefault()\n        ?? Location.None;"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "FirstOrDefault keeps the original syntax location when one exists.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "requirementItemId": "F1",
+      "text": "Adds GenerationTests.ClosedGenericStructFromReferencedAssembly, which compiles a library and references it from the app project.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h5",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+          "side": "new",
+          "startLine": 120,
+          "endLine": 122,
+          "quote": "    [Fact]\n    public async Task ClosedGenericStructFromReferencedAssembly()\n    {"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "The test method is in the cited lines.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "requirementItemId": "F3",
+      "text": "Adds an analyzer test that asserts no AD0001 diagnostic for the closed generic member.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+          "side": "new",
+          "startLine": 60,
+          "endLine": 65,
+          "quote": "    [Fact]\n    public async Task ClosedGenericStructFromReferencedAssembly_DoesNotThrow()\n    {\n        Compilation library = await CompileLibraryAsync(\"[MessagePackObject] public partial record struct Item<T>([property: Key(0)] string Key);\");\n        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(library, \"[MessagePackObject] public partial class Cmd { [Key(0)] public Item<int> Member { get; set; } }\");\n        Assert.DoesNotContain(diagnostics, d => d.Id == \"AD0001\");"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "pr-test",
+          "summary": "Test passes on the change; not run on the base commit.",
+          "testName": "AnalyzerTests.ClosedGenericStructFromReferencedAssembly_DoesNotThrow",
+          "base": null,
+          "head": {
+            "result": "pass",
+            "output": "Passed ClosedGenericStructFromReferencedAssembly_DoesNotThrow [241 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c7",
+      "requirementItemId": "N2",
+      "text": "A failure inside the generator is surfaced to the user as a diagnostic.",
+      "kind": "behaviour",
+      "level": "unverified",
+      "hunkIds": [],
+      "citations": [],
+      "evidence": []
+    },
+    {
+      "id": "c8",
+      "requirementItemId": "F1",
+      "text": "The same fix covers closed generic classes from referenced assemblies.",
+      "kind": "behaviour",
+      "level": "unverified",
+      "hunkIds": [],
+      "citations": [],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "The test also passes on the base commit, so it does not show a behaviour change.",
+          "testName": "GenerationTests.ClosedGenericClassFromReferencedAssembly",
+          "base": {
+            "result": "pass",
+            "output": "Passed ClosedGenericClassFromReferencedAssembly [402 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed ClosedGenericClassFromReferencedAssembly [397 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "contradiction",
+      "area": "analyzer",
+      "severity": "high",
+      "title": "The PR says the analyzer's diagnostics are unchanged; the change adds one",
+      "detail": "The description says the analyzer \"reports exactly the same set of diagnostics as before and adds none\". The catch block reports UnsupportedGenericMember, a diagnostic users have not seen before.",
+      "statement": "The analyzer's diagnostics are unchanged: it reports exactly the same set of diagnostics as before and adds none.",
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
+          "startLine": 437,
+          "endLine": 437,
+          "quote": "        context.ReportDiagnostic(Diagnostic.Create(UnsupportedGenericMember, typeSymbol.Locations[0], typeSymbol.Name));"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "kind": "defect",
+      "area": "analyzer",
+      "severity": "medium",
+      "title": "Catch block hides other IndexOutOfRangeExceptions",
+      "detail": "The analyzer now reports the type as an unsupported generic member for any IndexOutOfRangeException from the collector, so an unrelated bug in the collector looks like a user error.",
+      "statement": null,
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
+          "startLine": 435,
+          "endLine": 438,
+          "quote": "    catch (IndexOutOfRangeException)\n    {\n        context.ReportDiagnostic(Diagnostic.Create(UnsupportedGenericMember, typeSymbol.Locations[0], typeSymbol.Name));\n    }"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "kind": "missing",
+      "area": null,
+      "severity": "medium",
+      "title": "No check that the built assembly resolves the type at runtime",
+      "detail": "F2 asks for a working resolver. The tests assert that Resolver.g.cs exists, not that a serialize and deserialize round trip of Cmd works in an app that references the library.",
+      "statement": null,
+      "hunkIds": [],
+      "citations": []
+    },
+    {
+      "id": "f4",
+      "kind": "scope-creep",
+      "area": "security",
+      "severity": "low",
+      "title": "Renames the options parameter in emitted Serialize code",
+      "detail": "FormatterTemplate now emits serializerOptions instead of options. No requirement item asks for it, and it changes every generated formatter.",
+      "statement": null,
+      "hunkIds": [
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+          "side": "new",
+          "startLine": 214,
+          "endLine": 214,
+          "quote": "        this.Write(\" value, MessagePackSerializerOptions serializerOptions)\\r\\n\");"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R6",
+      "reason": "The rename in the shared formatter template can't be traced to any item of MP-2283. A person decides whether it belongs in this change.",
+      "hunkIds": [
+        "h4"
+      ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R7",
+      "reason": "The analyzer now reports a diagnostic that did not exist before. Whether and how to expose it is a public contract decision.",
+      "hunkIds": [
+        "h3"
+      ]
+    }
+  ],
+  "quoteCheck": {
+    "checked": 10,
+    "passed": 9,
+    "downgraded": 1,
+    "dropped": 0,
+    "failures": [
+      {
+        "itemId": "c7",
+        "citation": {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
+          "startLine": 437,
+          "endLine": 437,
+          "quote": "context.ReportDiagnostic(Diagnostic.Create(UnsupportedGenericMember, typeSymbol.Locations[0]));"
+        },
+        "reason": "Quoted text is not in the cited lines (the call also passes typeSymbol.Name)."
+      }
+    ]
+  },
+  "retractions": [
+    {
+      "claimId": "c8",
+      "reason": "Differential test passed on the base commit as well; the claim is not a result of this change.",
+      "output": "Passed ClosedGenericClassFromReferencedAssembly [402 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+    }
+  ],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "Closed generic struct from a referenced assembly no longer crashes the generator (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "A resolver is generated for the compiling assembly (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "The analyzer catches the failed lookup (cited lines match).",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "Round trip of Cmd with a real serializer at runtime",
+        "reason": "No test covers it (finding f3)."
+      },
+      {
+        "item": "Unrelated rename in FormatterTemplate",
+        "reason": "Refused under R6: no requirement item."
+      }
+    ],
+    "residualRisk": {
+      "text": "The new UnsupportedGenericMember diagnostic is new public surface and its wording has not been agreed. The catch block can hide other collector bugs.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "focused",
+    "reasons": [
+      {
+        "ruleId": "R-refusal",
+        "text": "2 items refused: a human decides",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-contradiction",
+        "text": "The PR description contradicts the code in 1 place",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-defect",
+        "text": "1 defect found",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Generator: Calibrated, may route Focused at best",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Analyzer: Calibrated, may route Focused at best",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Security: Shadow, the AI's output routes nothing here",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "verified",
+      "h2": "verified",
+      "h3": "read",
+      "h4": "read",
+      "h5": "supported",
+      "h6": "verified",
+      "h7": "supported",
+      "h8": "supported"
+    },
+    "readHunks": 2,
+    "totalHunks": 8,
+    "readLines": 13,
+    "totalLines": 61,
+    "readMinutes": 1,
+    "fullMinutes": 3
+  }
+}

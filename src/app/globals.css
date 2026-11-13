@@ -34,9 +34,44 @@
   --color-rose-light: var(--rose-light);
   --color-green: var(--green);
   --color-green-light: var(--green-light);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-scrim: var(--surface-scrim);
+  --color-coverage-verified: var(--coverage-verified);
+  --color-coverage-supported: var(--coverage-supported);
+  --color-coverage-read: var(--coverage-read);
+  --color-tier-light: var(--tier-light);
+  --color-tier-focused: var(--tier-focused);
+  --color-tier-full: var(--tier-full);
   --radius-page: var(--radius-page);
+  --radius-menu: var(--radius-menu);
   --radius-control: var(--radius-control);
   --radius-button: var(--radius-button);
+  --radius-item: var(--radius-item);
+  --radius-chip: var(--radius-chip);
+  --text-xs: var(--text-xs);
+  --text-xs--line-height: var(--text-xs-leading);
+  --text-sm: var(--text-sm);
+  --text-sm--line-height: var(--text-sm-leading);
+  --text-base: var(--text-base);
+  --text-base--line-height: var(--text-base-leading);
+  --text-md: var(--text-md);
+  --text-md--line-height: var(--text-md-leading);
+  --text-lg: var(--text-lg);
+  --text-lg--line-height: var(--text-lg-leading);
+  --text-xl: var(--text-xl);
+  --text-xl--line-height: var(--text-xl-leading);
+  --text-2xl: var(--text-2xl);
+  --text-2xl--line-height: var(--text-2xl-leading);
+  --text-display: var(--text-display);
+  --text-display--line-height: var(--text-display-leading);
+  --spacing-topbar: var(--layout-topbar);
+  --container-nav: var(--layout-nav);
+  --container-navigator: var(--layout-navigator);
+  --container-steps-panel: var(--layout-steps-panel);
+  --container-content: var(--layout-content-max);
+  --container-prose: var(--layout-prose-max);
+  --container-gate: var(--layout-gate-max);
+  --ease-in-out: var(--ease-in-out);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -71,87 +106,56 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: var(--radius-item);
+  --radius-md: var(--radius-button);
+  --radius-lg: var(--radius-control);
+  --radius-xl: var(--radius-menu);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* shadcn's variables, pointed at our dark tokens so its primitives render in our palette. */
+  --background: var(--surface-bg);
+  --foreground: var(--text-primary);
+  --card: var(--surface-panel);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand);
+  --primary-foreground: var(--text-on-brand);
+  --secondary: var(--surface-control);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-panel);
+  --muted-foreground: var(--text-muted);
+  /* shadcn's "accent" is a hover surface, not our brand colour. */
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--rose);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--focus-ring);
+  --chart-1: var(--brand);
+  --chart-2: var(--link);
+  --chart-3: var(--amber);
+  --chart-4: var(--text-muted);
+  --chart-5: var(--text-faint);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: var(--surface-raised);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--text-on-brand);
+  --sidebar-accent: var(--surface-selected);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-subtle);
+  --sidebar-ring: var(--focus-ring);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
   body {
     background: var(--surface-bg);
@@ -161,6 +165,21 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
 

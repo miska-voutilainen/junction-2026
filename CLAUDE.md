@@ -17,7 +17,7 @@ Tools: Lightfoot shadow, Graphify, Obsidian, Playwright MCP (set up by `join`).
 - **New machine:** open Claude Code in the repo and say **"join"**. The `join` skill sets up the git identity, tools, vault, `.claude/settings.local.json` and the code map from the Team and Lanes tables; you only approve install prompts.
 
 - **"go"** (or "continue", "proceed") with nothing else means: run the `go` skill. It works through your lane's task issues to the spec, ships and merges each through `ship-pr`, and asks only on its stop conditions.
-- Session start: the briefing (lane, handoffs, overlapping PRs, new summaries on the agent sync log, issue #1). Session end, sleep or account switch: `handover`.
+- Session start: the briefing (lane, handoffs, overlapping PRs, new summaries on the agent sync log, issue #1). Session end, sleep or account switch: telling your agent you're stopping is enough; it runs `handover` itself (summary on issue #1), then you `/exit`.
 - One person runs `polish-pass` at the midpoint and after the freeze, and `demo-prep` at the freeze; their findings become issues the lanes' "go" picks up.
 - Find code through the Graphify map first (`.claude/rules/tools.md`); sessions run through Lightfoot.
 - Rules: `.claude/rules/` (all loaded automatically). Subagents and models: `.claude/rules/delegation.md`. Plans: Miska Max 5x (normal mode); Elias and Veijo Pro (budget mode, capped in their `.claude/settings.local.json`; reviewers follow the session model). Details: `.claude/rules/delegation.md`, Plans and effort. Lanes: Miska engine and app (the UI build; Elias takes over UI changes once the design is built), Veijo evidence (the lightest).
@@ -29,8 +29,8 @@ Decided at kickoff (`.claude/rules/lanes.md`). Every code path belongs to exactl
 | Lane | Owner (GitHub login) | Owns (paths) | Responsible for |
 | --- | --- | --- | --- |
 | engine | `miska-voutilainen` | `src/ai/**`, `src/prompts/**`, `src/pipeline/**`, `src/rules/**`, `src/policy/**`, `src/lib/git/**`, `data/runs/**`, `data/eval/**`, `data/recordings/**` | The review pipeline (A1–A5, quote check, .NET differential tests), routing rules and trust ladder, the planted-bug eval and report card, the AI client and prompts, CI and the harness; the critical path of the demo (heaviest) |
-| app | `miska-voutilainen` | `src/app/**`, `src/features/inbox/**`, `src/features/review/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/utils.ts`, `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, S1 inbox, S2 review page, data loaders, fixtures, the simulated-escape store, e2e and screenshots |
-| evidence | `Kasanen` | `src/receipt/**`, `src/features/report-card/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants written blind, the receipt CLI (SSH-signed git notes), S3 report card, quality hooks, the concept card (lightest) |
+| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots |
+| evidence | `Kasanen` | `src/receipt/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants written blind, the receipt CLI (SSH-signed git notes), the report card's data with the engine lane, quality hooks, the concept card (lightest) |
 | _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
 
 The evidence lane writes the planted bugs blind: Veijo and his agent never open `src/prompts/`, `src/pipeline/` or recorded review output before the plants are merged.
@@ -80,12 +80,14 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
 ├── docs/         challenge, spec, concept-card, lessons, architecture, decisions, api, development, setup, demo, pitch, design/, ideas/ (one page per idea)
 ├── src/
-│   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), /unlock (temporary gate), layout, loading, error, not-found
+│   ├── app/                    routes: / (S1), /changes/[id] (S2), /changes/[id]/receipt (S4), /reviewer (S3), /dashboard (S5), /unlock (temporary gate), layout, loading, error, not-found
 │   ├── proxy.ts                temporary access gate entry
 │   ├── features/access-gate/   temporary access gate: check, cookie, unlock form; see its README
 │   ├── features/inbox/         S1 components
 │   ├── features/review/        S2 components: navigator, diff viewer, sidebar tabs
 │   ├── features/report-card/   S3 components
+│   ├── features/receipt/       S4 full receipt components
+│   ├── features/dashboard/     S5 components
 │   ├── components/ui/          shadcn/ui primitives (generated)
 │   ├── components/             shared app components: shell, states, badges
 │   ├── styles/tokens.css       design tokens (T01)
@@ -93,7 +95,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   ├── lib/data/               server-side loaders for data/
 │   ├── lib/simulation/         simulated-escape store (browser)
 │   ├── lib/git/                git helpers: diff, hunks, diff identity
-│   ├── lib/utils.ts            shadcn class-name helper
+│   ├── lib/*.ts                top-level helpers: shadcn class names, motion presets, shortcuts, idea links
 │   ├── policy/                 refusal rules, areas and checklists, ladder and routing thresholds
 │   ├── rules/                  route() and the trust ladder, pure TS (pipeline and browser)
 │   ├── ai/                     the one model client: record/replay, usage log

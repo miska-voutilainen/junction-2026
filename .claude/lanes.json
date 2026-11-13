@@ -18,12 +18,17 @@
       "owner": "miska-voutilainen",
       "paths": [
         "src/app/**",
+        "src/proxy.ts",
+        "src/features/access-gate/**",
+        "src/features/report-card/**",
+        "src/features/receipt/**",
+        "src/features/dashboard/**",
         "src/features/inbox/**",
         "src/features/review/**",
         "src/components/**",
         "src/lib/data/**",
         "src/lib/simulation/**",
-        "src/lib/utils.ts",
+        "src/lib/*.ts",
         "data/fixtures/**",
         "e2e/**",
         "public/**"
@@ -33,7 +38,6 @@
       "owner": "Kasanen",
       "paths": [
         "src/receipt/**",
-        "src/features/report-card/**",
         "data/sample/**",
         "data/receipts/**",
         "scripts/**"

@@ -76,21 +76,21 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
           className={
             isBoxed
               ? "absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent outline-none"
-              : `h-12 w-full rounded-control border-2 bg-surface-control px-4 text-lg text-text-primary outline-none transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none focus:outline-2 focus:outline-offset-2 focus:outline-focus-ring ${hasError ? "border-rose" : "border-transparent"}`
+              : `h-12 w-full rounded-control border-2 bg-surface-control px-4 text-lg text-text-primary outline-none transition-colors duration-(--duration-fast) ease-out motion-reduce:transition-none focus:outline-2 focus:outline-offset-2 focus:outline-focus-ring ${hasError ? "border-rose" : "border-transparent"}`
           }
         />
       </div>
       <p
         id="access-code-status"
         aria-live="polite"
-        className={`min-h-[22px] text-sm ${hasError ? "text-rose-light" : "text-text-muted"}`}
+        className={`min-h-5.5 text-sm ${hasError ? "text-rose-light" : "text-text-muted"}`}
       >
         {statusMessage(hasError, isPending)}
       </p>
       <button
         type="submit"
         disabled={!isComplete || isPending}
-        className="min-h-11 w-full rounded-button bg-brand text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="min-h-11 w-full rounded-button bg-brand text-sm font-semibold text-white transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Unlock
       </button>
@@ -112,7 +112,7 @@ function statusMessage(hasError: boolean, isPending: boolean): string {
 function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean; length: number }) {
   const cursorIndex = Math.min(code.length, length - 1);
   return (
-    <div aria-hidden="true" className="flex gap-[10px]">
+    <div aria-hidden="true" className="flex gap-2.5">
       {Array.from({ length }, (_, index) => {
         // The cursor box always shows focus, also in the error state, so the
         // refocused field after a wrong code is visibly focused (WCAG 2.4.7).
@@ -122,7 +122,7 @@ function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean
         return (
           <div
             key={index}
-            className={`flex aspect-[76/100] min-w-0 flex-[0_1_76px] items-center justify-center rounded-control border-2 bg-surface-control text-[40px] font-semibold transition-colors duration-150 ease-[var(--ease-out)] group-hover:bg-surface-control-hover motion-reduce:transition-none ${border}`}
+            className={`flex aspect-[76/100] min-w-0 flex-[0_1_76px] items-center justify-center rounded-control border-2 bg-surface-control text-display font-semibold transition-colors duration-(--duration-fast) ease-out group-hover:bg-surface-control-hover motion-reduce:transition-none ${border}`}
           >
             {code[index] ?? ""}
           </div>
@@ -156,7 +156,7 @@ function UnlockedNotice({ next }: { next: string }) {
       </p>
       <a
         href={next}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-brand text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-brand text-sm font-semibold text-white transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Continue
       </a>
