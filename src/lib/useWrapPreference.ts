@@ -22,18 +22,22 @@ function subscribe(onChange: () => void): () => void {
 }
 
 function readChoice(kind: ConsoleKind): boolean | null {
+  // A choice the store refused is newer than anything it still holds.
+  const unsaved = unsavedChoices.get(kind);
+  if (unsaved !== undefined) return unsaved;
   try {
     const stored = window.localStorage.getItem(storageKey(kind));
     if (stored === "true" || stored === "false") return stored === "true";
     return null;
   } catch {
-    return unsavedChoices.get(kind) ?? null;
+    return null;
   }
 }
 
 function writeChoice(kind: ConsoleKind, isWrapped: boolean): void {
   try {
     window.localStorage.setItem(storageKey(kind), String(isWrapped));
+    unsavedChoices.delete(kind);
   } catch {
     unsavedChoices.set(kind, isWrapped);
   }
