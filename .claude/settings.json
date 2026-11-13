@@ -30,5 +30,14 @@
       "Bash(git push --force *)", "Bash(git push -f *)", "Bash(git push origin main *)",
       "Bash(gh repo delete *)", "Bash(gh repo edit *)", "Bash(gh pr review *)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-brief.mjs"], "timeout": 45 }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Bash|PowerShell",
+        "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs"], "timeout": 10 }] }
+    ]
   }
 }
