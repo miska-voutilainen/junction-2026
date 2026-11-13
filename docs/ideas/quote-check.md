@@ -18,11 +18,11 @@ A model can describe code that doesn't exist: a function that isn't called, a ch
 1. **Claims must cite.** Each claim the reviewer writes carries citations: `file`, `side` (`new` for the head version, `old` for the base), `startLine`, `endLine` and the exact `quote`.
 2. **Normalise both sides the same way.** Replace `\r\n` with `\n`, collapse every run of whitespace (newlines too) to one space, and trim. The match stays case-sensitive. Models often re-indent quoted code, and an exact match would count that as a hallucination when it isn't.
 3. **Substring match in the cited lines.** A citation passes when its normalised quote is a substring of the normalised text of lines `startLine`–`endLine` on the cited side. A file missing on that side fails with "file not present on new" (or "old").
-4. **Claims are downgraded, never hidden silently.**
+4. **Claims are never dropped, only downgraded.**
    - At least one passing citation: the claim is **Supported**, and its failing citations are removed.
    - No passing citation: the claim becomes **Unverified** with no citations, and stays visible as such.
-5. **Findings must pass too.** A finding (a defect, a missing piece, scope creep) with no passing citation is dropped. A finding that can't point at the code isn't shown to a person.
-6. **Every failure is counted.** Each failing citation is recorded with the claim's id. The report card shows quotes checked, quote failures, claims downgraded and findings dropped: the reviewer's hallucination rate, measured on its own output.
+5. **Findings must pass too.** A finding from the area review (a defect, a missing piece, scope creep) with no passing citation is dropped: a finding that can't point at the code isn't shown to a person. Contradiction findings are kept; only their failing citations are removed.
+6. **Every failure is counted.** Each failing citation is recorded with the claim's id in the review. The report card adds them up over all runs: quotes checked, quote failures and findings dropped, next to claims retracted by a failing test. That is the reviewer's hallucination rate, measured on its own output.
 
 ## What we measured
 
@@ -31,7 +31,7 @@ Not measured yet. The report card will show "quote failures: x of n quotes check
 ## How to adopt it
 
 - **What you need:** structured model output (a schema with `file`, `side`, `startLine`, `endLine`, `quote` per citation) and access to both versions of each file.
-- **What it costs:** no model calls. About fifty lines of string handling and its tests.
+- **What it costs:** no model calls; string handling and its tests.
 - **Smallest first step:** add the citation fields to your review prompt's output schema and log the failures before you hide anything. The failure count alone tells you how much of your current AI review is invented.
 
 ## Limits and failure modes

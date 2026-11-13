@@ -21,7 +21,7 @@ An agent-written pull request arrives with the agent's own story of what it did.
 4. **Tests are blind-first too.** Step A5 writes one test per functional requirement item from the requirement and A1's expectation, never from the diff. A test counts as evidence only if it fails before the change and passes after it ([Idea 6](evidence-levels.md)).
 5. **We measure the effect instead of asserting it.** The evidence lane plants false sentences in pull request descriptions (5 "contradiction plants"). The same reviewer runs 3 times in each mode on each plant:
    - **Anchored:** A2 reads the description first, A1 is skipped.
-   - **Blind-first:** the order above.
+   - **Blind-first:** A1, A2 and A4 in the order above (A3 and A5 are skipped in these runs).
 
    A plant counts as caught in a run when A4 marks the planted sentence `contradicted` or `unsupported`. The result is two counts, "anchored caught x of 15, blind-first caught y of 15".
 

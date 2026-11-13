@@ -13,7 +13,7 @@ Seven ideas for reviewing agent-written code so that a named person can accept a
 | 2 | [Blind-first review](blind-first.md) | The reviewer writes what the requirement should produce before it reads the code or the author's story. |
 | 3 | [The hunk coverage map](coverage-map.md) | Every hunk is Verified, Supported or Read this, from rules a person can read. |
 | 4 | [A mechanical quote check](quote-check.md) | Code checks that every quoted citation is really in the cited lines. |
-| 5 | [A written refusal policy](refusal-policy.md) | Seven things the AI never decides, each with the person who does. |
+| 5 | [A written refusal policy](refusal-policy.md) | Seven things the AI never decides, each with the role that does. |
 | 6 | [Evidence levels instead of confidence](evidence-levels.md) | A claim is labelled by what backs it, never by how sure the model felt. |
 | 7 | [The signed receipt in git](signed-receipt.md) | The owner signs what was checked and what wasn't, bound to the exact diff. |
 

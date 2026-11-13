@@ -41,7 +41,6 @@ export interface Theme {
   accent: string;
   amber: string;
   rose: string;
-  green: string;
 }
 
 /**
@@ -50,22 +49,38 @@ export interface Theme {
  */
 export const THEMES: Record<"dark" | "light", Theme> = {
   dark: {
-    bg: "#0d0f12", panel: "#111418", border: "#2a3038", hair: "#262c34", text: "#e6e8eb",
-    sec: "#c4cad3", muted: "#9aa3af", brand: "#3558e8", accent: "#93aaff",
-    amber: "#e2b04a", rose: "#ef7a85", green: "#57c98b",
+    bg: "#0d0f12",
+    panel: "#111418",
+    border: "#2a3038",
+    hair: "#262c34",
+    text: "#e6e8eb",
+    sec: "#c4cad3",
+    muted: "#9aa3af",
+    brand: "#3558e8",
+    accent: "#93aaff",
+    amber: "#e2b04a",
+    rose: "#ef7a85",
   },
   light: {
-    bg: "#ffffff", panel: "#f6f8fa", border: "#c9d1d9", hair: "#d8dee4", text: "#1f2328",
-    sec: "#3d444d", muted: "#59636e", brand: "#3558e8", accent: "#2f4fd6",
-    amber: "#8a5a00", rose: "#c4232e", green: "#1a7f37",
+    bg: "#ffffff",
+    panel: "#f6f8fa",
+    border: "#c9d1d9",
+    hair: "#d8dee4",
+    text: "#1f2328",
+    sec: "#3d444d",
+    muted: "#59636e",
+    brand: "#3558e8",
+    accent: "#2f4fd6",
+    amber: "#8a5a00",
+    rose: "#c4232e",
   },
 };
 
 // Already XML-escaped, because they are pasted into a style sheet inside the SVG.
 const SANS_FONTS =
-  '-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif';
+  "-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif";
 const MONO_FONTS =
-  'ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;, monospace';
+  "ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;, monospace";
 
 function styleSheet(c: Theme): string {
   return `
@@ -83,11 +98,10 @@ text{font-family:${SANS_FONTS};font-size:12px;fill:${c.muted}}
 .h{font-size:14px;font-weight:600;fill:${c.text}}
 .s{fill:${c.muted}}
 .c{font-family:${MONO_FONTS};fill:${c.sec}}
-.ta{fill:${c.accent}}.tam{fill:${c.amber}}.tr{fill:${c.rose}}.tg{fill:${c.green}}
+.ta{fill:${c.accent}}.tr{fill:${c.rose}}
 .ln{stroke:${c.muted};stroke-width:1.5;fill:none}
 .la{stroke:${c.accent};stroke-width:2;fill:none}
 .lr{stroke:${c.rose};stroke-width:1.5;fill:none;stroke-dasharray:5 4}
-.lh{stroke:${c.hair};stroke-width:1;fill:none}
 .fn{fill:${c.muted}}.fa{fill:${c.accent}}.fr{fill:${c.rose}}
 .dot{fill:${c.brand}}.dott{fill:#ffffff;font-size:12px;font-weight:600}
 .strike{stroke:${c.rose};stroke-width:1.5}
@@ -102,7 +116,7 @@ const MARKERS = ARROW_HEADS.map(
     `orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f${head}"/></marker>`,
 ).join("");
 
-/** Escapes text for XML the way Python's html.escape does, so output stays byte-stable. */
+/** Escapes the five XML special characters with fixed entities, so re-running the generator writes identical bytes. */
 function escapeXml(content: string): string {
   return content
     .replaceAll("&", "&amp;")
@@ -127,12 +141,25 @@ export function renderDocument(diagram: Diagram, theme: Theme): string {
 }
 
 /** A rectangle; `cssClass` picks the border and fill style, `rx` the corner radius. */
-export function rect(x: number, y: number, width: number, height: number, cssClass = "node", rx = 6): string {
+export function rect(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  cssClass = "node",
+  rx = 6,
+): string {
   return `<rect class="${cssClass}" x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}"/>`;
 }
 
 /** A text element; `anchor` is the SVG text-anchor (start is the default and left out). */
-export function text(x: number, y: number, content: string, cssClass = "", anchor = "start"): string {
+export function text(
+  x: number,
+  y: number,
+  content: string,
+  cssClass = "",
+  anchor = "start",
+): string {
   const anchorAttribute = anchor !== "start" ? ` text-anchor="${anchor}"` : "";
   const classAttribute = cssClass ? ` class="${cssClass}"` : "";
   return `<text x="${x}" y="${y}"${classAttribute}${anchorAttribute}>${escapeXml(content)}</text>`;
@@ -144,7 +171,7 @@ const NODE_LINE_HEIGHT = 17;
 
 /**
  * A rectangle with a bold title and secondary lines, vertically centred.
- * With `center` the text sits on the horizontal middle, else 14 px from the left edge.
+ * The text starts 14 px from the left edge.
  */
 export function node(
   x: number,
@@ -155,35 +182,47 @@ export function node(
   lines: readonly TextLine[] = [],
   cssClass = "node",
   tint?: string,
-  center = false,
 ): string {
   const parts = [rect(x, y, width, height, cssClass)];
   if (tint) parts.push(rect(x, y, width, height, tint));
-  const textX = center ? x + width / 2 : x + 14;
-  const anchor = center ? "middle" : "start";
+  const textX = x + 14;
   const blockHeight = NODE_TITLE_HEIGHT + NODE_LINE_HEIGHT * lines.length;
   const titleY = y + (height - blockHeight) / 2 + 13;
-  parts.push(text(textX, titleY, title, "t", anchor));
+  parts.push(text(textX, titleY, title, "t"));
   lines.forEach(([content, lineClass], index) => {
     const lineY = titleY + 18 + NODE_LINE_HEIGHT * index;
-    parts.push(text(textX, lineY, content, lineClass, anchor));
+    parts.push(text(textX, lineY, content, lineClass));
   });
   return parts.join("");
 }
 
 /** A path with an arrowhead of the given colour (`n`, `a`, `r`); pass `null` for none. */
-export function path(d: string, cssClass = "ln", head: "n" | "a" | "r" | null = "n"): string {
+export function path(
+  d: string,
+  cssClass = "ln",
+  head: "n" | "a" | "r" | null = "n",
+): string {
   const marker = head ? ` marker-end="url(#ah-${head})"` : "";
   return `<path class="${cssClass}" d="${d}"${marker}/>`;
 }
 
 /** A short text next to an arrow, centred on its x by default. */
-export function label(x: number, y: number, content: string, cssClass = "s", anchor = "middle"): string {
+export function label(
+  x: number,
+  y: number,
+  content: string,
+  cssClass = "s",
+  anchor = "middle",
+): string {
   return text(x, y, content, cssClass, anchor);
 }
 
 /** A numbered circle that points at one of the seven ideas. */
-export function badge(centerX: number, centerY: number, ideaNumber: number): string {
+export function badge(
+  centerX: number,
+  centerY: number,
+  ideaNumber: number,
+): string {
   return (
     `<circle class="dot" cx="${centerX}" cy="${centerY}" r="10"/>` +
     text(centerX, centerY + 4, String(ideaNumber), "dott", "middle")

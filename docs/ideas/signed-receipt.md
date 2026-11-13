@@ -42,7 +42,7 @@ Nothing to measure in rates. The receipt for MP-2283 will be signed with a real 
 ## How to adopt it
 
 - **What you need:** git, `ssh-keygen` (OpenSSH 8.2 or newer, already on most machines), and an `allowed_signers` file listing who may sign.
-- **What it costs:** no service and no model calls. The receipt CLI is a few hundred lines.
+- **What it costs:** no service and no model calls; a small CLI around `git notes` and `ssh-keygen`.
 - **Smallest first step:** add a CI step that fails when a pull request's head commit has no valid note under `refs/notes/countersign`. Start with a receipt that only names the owner and the diff hash; add the checked and not-checked lists once your review can fill them.
 
 ## Limits and failure modes

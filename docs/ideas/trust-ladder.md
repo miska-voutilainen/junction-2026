@@ -17,7 +17,7 @@ Teams either trust an AI reviewer everywhere or nowhere, and both choices are gu
 
 1. **Areas come from paths.** Each repository defines its review areas. For Tieto's MessagePack-CSharp we use four: `generator`, `analyzer`, `security`, `performance`. A file's area comes from its path, first match wins (for example `src/MessagePack.SourceGenerator/Analyzers/**` → `analyzer`).
 2. **Someone else plants the bugs.** A teammate who never opens the prompts or the reviewer's output writes small, realistic bugs into the real code, each with an answer key: file, line range, area, what's wrong. The reviewer runs on each one blind.
-3. **A catch is scored mechanically.** A planted bug counts as caught when a finding cites the answer key's file, its lines overlap the planted range within ±3 lines, and its area matches.
+3. **A catch is scored mechanically.** A planted bug counts as caught when a `defect` or `missing` finding cites the answer key's file on the head side, its lines overlap the planted range within ±3 lines, and its area matches.
 4. **The catch rate sets a level.** Each area sits on a three-step ladder:
 
    | Level | Rule | What the AI's output may do |
@@ -31,14 +31,14 @@ Teams either trust an AI reviewer everywhere or nowhere, and both choices are gu
 
 ## What we measured
 
-Not measured yet. The eval runs the reviewer on 10 planted bugs across the four areas, and the report card shows each area's catch rate with its sample size ("4 of 5 caught"), never a bare percentage.
+Not measured yet. The eval runs the reviewer on 10 planted bugs across the four areas, and the report card shows each area's catch rate with its sample size (in the form "<caught> of <planted> caught"), never a bare percentage.
 
 We have no spot-check workflow in this reference implementation, so `spotChecksClean` is 0 and no area can reach Trusted. The report card screen says so instead of hiding it.
 
 ## How to adopt it
 
 - **What you need:** a list of review areas with path rules, a person who writes planted bugs without seeing the reviewer's prompts, and an answer key per bug.
-- **What it costs:** one reviewer run per planted bug. Ten bugs is one evening of writing and a few dollars of model calls.
+- **What it costs:** one reviewer run per planted bug, plus the time to write the plants. Our cost per run is not measured yet.
 - **Smallest first step:** start every area in Shadow. Plant three bugs in the area you care about most, run your reviewer on them, and publish the catch rate with its sample size. That alone changes the conversation from "do we trust the AI?" to "do we trust it here, on this evidence?".
 
 ## Limits and failure modes

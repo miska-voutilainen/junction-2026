@@ -42,7 +42,7 @@ Not measured yet. The report card will show the routing over all four of Tieto's
 ## How to adopt it
 
 - **What you need:** hunks with stable ids, claims that list the hunks they cover, and a ladder level per area (start everything at Shadow).
-- **What it costs:** no model calls. It's a few hundred lines of rules and their tests.
+- **What it costs:** no model calls. Our `route()` is 172 lines, with 263 lines of tests.
 - **Smallest first step:** show the three states in your diff view and the "Read r of n hunks" line. Keep your current approval flow; just let the reviewer see what the evidence covers.
 
 ## Limits and failure modes

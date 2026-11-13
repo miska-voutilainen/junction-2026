@@ -19,16 +19,35 @@ import { signedReceipt } from "./diagrams/signedReceipt";
 import { trustLadder } from "./diagrams/trustLadder";
 import { renderDocument, THEMES } from "./svg";
 
-const OUTPUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "docs", "ideas", "img");
+const OUTPUT_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "docs",
+  "ideas",
+  "img",
+);
 
-const DIAGRAMS = [trustLadder, blindFirst, coverageMap, quoteCheck, evidenceLevels, signedReceipt, ideasOverview];
+const DIAGRAMS = [
+  trustLadder,
+  blindFirst,
+  coverageMap,
+  quoteCheck,
+  evidenceLevels,
+  signedReceipt,
+  ideasOverview,
+];
 
 function drawAll(): void {
   mkdirSync(OUTPUT_DIR, { recursive: true });
   for (const drawDiagram of DIAGRAMS) {
     const diagram = drawDiagram();
     for (const [themeName, theme] of Object.entries(THEMES)) {
-      writeFileSync(join(OUTPUT_DIR, `${diagram.name}-${themeName}.svg`), renderDocument(diagram, theme), "utf-8");
+      writeFileSync(
+        join(OUTPUT_DIR, `${diagram.name}-${themeName}.svg`),
+        renderDocument(diagram, theme),
+        "utf-8",
+      );
     }
   }
 }

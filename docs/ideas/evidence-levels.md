@@ -15,14 +15,14 @@ Each claim the AI makes is labelled by what backs it, Verified, Supported, Unver
   <img src="img/evidence-levels-light.svg" alt="Verified (a test fails on base and passes on head), Supported (a quoted citation matched), Unverified (no citation matched), and separately Refused (a written rule applies). The model's confidence is never shown." width="880">
 </picture>
 
-Four levels, from strongest to weakest, each earned by something a person can check:
+Three levels of evidence, strongest first, each earned by something a person can check, and a fourth label for what the AI may not decide:
 
 | Level | Earned by | What the reader can check |
 | --- | --- | --- |
 | **Verified** | A test that **fails on the code before the change and passes after it** | Both test outputs, attached |
 | **Supported** | A citation whose quote matched the code ([Idea 4](quote-check.md)) | The quoted lines, with file and line range |
 | **Unverified** | Nothing: the model said it, but no citation matched | Only the claim, labelled as unchecked |
-| **Refused** | A refusal rule: the AI won't decide this ([Idea 5](refusal-policy.md)) | The rule, its reason and who decides |
+| **Refused** (not a level of evidence) | A refusal rule: the AI won't decide this ([Idea 5](refusal-policy.md)) | The rule, its reason and who decides |
 
 How a claim becomes Verified (step A5):
 
@@ -34,7 +34,7 @@ How a claim becomes Verified (step A5):
    - Fails on head with a test failure: the claim is retracted and logged.
    - Build error: logged and counted; the claim stays as it was.
 
-The levels feed the coverage map: a hunk listed by a Verified claim is Verified, by a Supported one Supported, and otherwise Read this ([Idea 3](coverage-map.md)).
+The levels feed the coverage map: unless a finding, a refusal or a Shadow area already marks it Read this, a hunk listed by a Verified claim is Verified, by a Supported one Supported, and otherwise Read this ([Idea 3](coverage-map.md)).
 
 ## What we measured
 
