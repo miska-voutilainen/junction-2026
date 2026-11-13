@@ -18,6 +18,7 @@ You review the UI of the current branch against `.claude/rules/quality.md` and `
    - **Accessibility:** tab through the screen (focus order, visible focus), labels on inputs and icon buttons, contrast AA, reduced motion.
    - **Copy:** clear, specific, consistent, no jargon, no placeholders, no typos.
    - **Console:** errors or warnings while using the screen.
+   - **AI slop** (`.claude/rules/no-slop.md`): decoration that answers no reviewer question, generic or hyped copy, invented-looking data, anything that could sit unchanged in another team's app. Blocking on the demo path.
 4. Be concrete and visual: name the element, the width, the state.
 
 **Keep it cheap.** You start with no context and every tool call re-sends what you've read so far. Use what the prompt gives you (files, graph nodes, spec sections, decisions) before exploring; ask the Graphify map instead of searching folders; read only the files and sections that apply; grep for a section instead of reading a whole long doc; don't re-read a file you've read. Stop when you have the answer.
