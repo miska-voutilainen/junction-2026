@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2283",
+  "receipt": {
+    "kind": "countersign-receipt",
+    "version": 1,
+    "changeId": "mp-2283",
+    "requirementId": "MP-2283",
+    "repo": "miska-voutilainen/junction26-messagepack-csharp",
+    "commit": "8b2d63b81b6c017ba76db376d280279561e9cde0",
+    "baseCommit": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "baseTree": "183e31c6b83226f5057a291ec0499c490f556cd5",
+    "headTree": "9207894f137315f23417b0e618caa11c436e8a3b",
+    "diffSha256": "4324d7fc9bf1398271864e2d529054c4f28b9dc911d42b3bb4184463d2f3a322",
+    "reviewerVersion": "rv1",
+    "reviewRunId": "run-20261114-mp-2283",
+    "owner": "miska-voutilainen",
+    "signedAt": "2026-11-14T09:40:12Z",
+    "checked": [
+      {
+        "item": "Closed generic struct from a referenced assembly no longer crashes the generator (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "A resolver is generated for the compiling assembly (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "The analyzer catches the failed lookup (cited lines match).",
+        "by": "ai-supported"
+      },
+      {
+        "item": "Read hunks h3 and h4 in full.",
+        "by": "human"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "Round trip of Cmd with a real serializer at runtime",
+        "reason": "No test covers it (finding f3)."
+      },
+      {
+        "item": "Unrelated rename in FormatterTemplate",
+        "reason": "Refused under R6: no requirement item."
+      }
+    ],
+    "residualRisk": {
+      "text": "The new UnsupportedGenericMember diagnostic ships without an agreed wording. Accepted for the sample fork; the maintainers decide before it goes upstream.",
+      "acceptedRefusalIds": [
+        "r2"
+      ]
+    }
+  },
+  "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgFIXTUREBLeVLOGRBm3sKq7dH\nqPzJ0nN2xTq8dQmV3S8AAAAUY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEy\nAAAAUwAAAAtzc2gtZWQyNTUxOQAAAEBVq3c0M1bX9YwJ8cK5eT2gL7ZpNfoH4rA6yD1s\n-----END SSH SIGNATURE-----",
+  "notesRef": "refs/notes/countersign",
+  "verify": {
+    "command": "pnpm countersign verify mp-2283",
+    "output": "Good \"countersign-receipt\" signature for miska-voutilainen with ED25519 key SHA256:4fT0kq1mGv9eQ2sWl8cJxN3yRzA7uHbD5pLiKoE6aXs\nReceipt matches the diff: diffSha256 equal.",
+    "ok": true,
+    "verifiedAt": "2026-11-14T09:40:15Z"
+  }
+}

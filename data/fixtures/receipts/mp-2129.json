@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2129",
+  "receipt": {
+    "kind": "countersign-receipt",
+    "version": 1,
+    "changeId": "mp-2129",
+    "requirementId": "MP-2129",
+    "repo": "miska-voutilainen/junction26-messagepack-csharp",
+    "commit": "46d3a530ee98086efe097fe1fab4f5d17e6c0c1f",
+    "baseCommit": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "baseTree": "57f8474f7f3a589046f643b541fe73ba4db2af08",
+    "headTree": "21597b716735192d6d28e87a7b0c6a5d3b5cbe9a",
+    "diffSha256": "72fa1db4d57012ec5cf2ca255b4f8480dd09cc8e4b36ac456f84bb8075d4e433",
+    "reviewerVersion": "rv1",
+    "reviewRunId": "run-20261113-mp-2129",
+    "owner": "miska-voutilainen",
+    "signedAt": "2026-11-13T17:22:48Z",
+    "checked": [
+      {
+        "item": "The attribute declaration matches the cited lines.",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "What the generator emits for the attributed class",
+        "reason": "No differential test could run."
+      }
+    ],
+    "residualRisk": {
+      "text": "The public attribute and its semantics are not decided.",
+      "acceptedRefusalIds": [
+        "r1"
+      ]
+    }
+  },
+  "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgFIXTUREBLeVLOGRBm3sKq7dH\nqPzJ0nN2xTq8dQmV3S8AAAAUY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEy\nAAAAUwAAAAtzc2gtZWQyNTUxOQAAAEC2m9Zr1vD0kPq7sLxUe3YhT8cNwJ4aGfR5oB6d\n-----END SSH SIGNATURE-----",
+  "notesRef": "refs/notes/countersign",
+  "verify": {
+    "command": "pnpm countersign verify mp-2129",
+    "output": "Good \"countersign-receipt\" signature for miska-voutilainen with ED25519 key SHA256:4fT0kq1mGv9eQ2sWl8cJxN3yRzA7uHbD5pLiKoE6aXs\nReceipt does not match the diff: the change was amended after signing.",
+    "ok": false,
+    "verifiedAt": "2026-11-14T09:00:01Z"
+  }
+}

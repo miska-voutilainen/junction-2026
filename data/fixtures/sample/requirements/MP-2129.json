@@ -1,0 +1,30 @@
+{
+  "id": "MP-2129",
+  "title": "Feature Request: Allow generation of Formatter for a type in a referenced assembly",
+  "intent": "A project that references MessagePack can have the source generator emit a formatter for a type declared in a referenced assembly that does not.",
+  "functional": [
+    {
+      "id": "F1",
+      "text": "A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>."
+    },
+    {
+      "id": "F2",
+      "text": "The source generator emits the formatter implementation for T inside the project that declares the partial class."
+    },
+    {
+      "id": "F3",
+      "text": "T may be declared in a referenced assembly that has no reference to MessagePack."
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "N1",
+      "text": "Existing formatter attributes and generated output for types in the same project keep working (inferred)"
+    }
+  ],
+  "derivedFrom": {
+    "kind": "github-issue",
+    "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2129",
+    "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+  }
+}

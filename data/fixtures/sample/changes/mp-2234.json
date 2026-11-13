@@ -1,0 +1,17 @@
+{
+  "id": "mp-2234",
+  "kind": "tieto",
+  "title": "Run the analyzer when SuppressSourceGeneration is true",
+  "requirementId": "MP-2234",
+  "parentChangeId": null,
+  "repo": "miska-voutilainen/junction26-messagepack-csharp",
+  "branch": "agent/mp-2234",
+  "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+  "headSha": "dd3528ef236e1be22e53b9c7999c47b365b70040",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "authorDescription": {
+    "text": "The MsgPack00xMessagePackAnalyzer returned early from its compilation start action whenever SuppressSourceGeneration was true, so no diagnostics were reported for projects that turn the generator off. That early return is removed, so type diagnostics such as a missing Key attribute are reported again, as they were in 3.1.0. The check that a [MessagePackObject] type is partial only makes sense when the generator runs, so it is registered only when SuppressSourceGeneration is false. I added two analyzer tests: one asserts MsgPack003 is reported with the option set, the other asserts the partial requirement is not enforced with it set. Nothing in the generator or the public API changed.",
+    "synthetic": true,
+    "writtenBy": "Kasanen (evidence lane), written blind"
+  }
+}

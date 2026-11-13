@@ -1,0 +1,26 @@
+{
+  "id": "MP-2234",
+  "title": "The analyzer does not work if SuppressSourceGeneration = true",
+  "intent": "The analyzer reports its diagnostics when SuppressSourceGeneration is true, as it did in MessagePack 3.1.0.",
+  "functional": [
+    {
+      "id": "F1",
+      "text": "With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types."
+    },
+    {
+      "id": "F2",
+      "text": "Behaviour with SuppressSourceGeneration unset or false is the same as before."
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "N1",
+      "text": "The restored behaviour matches MessagePack 3.1.0, the last version where the analyzer worked with this option."
+    }
+  ],
+  "derivedFrom": {
+    "kind": "github-issue",
+    "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234",
+    "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+  }
+}
