@@ -21,7 +21,7 @@ export const SHORTCUT_LIST = [
 ] as const;
 
 /** True when the key press belongs to a text field, so a shortcut must not steal it. */
-function isTypingTarget(target: EventTarget | null): boolean {
+export function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }

@@ -94,6 +94,17 @@ export function useMotionPreset(preset: Preset): Preset {
   };
 }
 
+/**
+ * A preset whose entrance waits for the item's turn in a list (`staggerDelay`),
+ * or the reduced-motion version with no delay: a delayed instant entrance would
+ * only hide the row for a moment.
+ */
+export function useStaggeredPreset(preset: Preset, index: number): Preset {
+  const resolved = useMotionPreset(preset);
+  if (useReducedMotion()) return resolved;
+  return { ...resolved, animate: { ...resolved.animate, transition: { ...resolved.animate.transition, ...staggerDelay(index) } } };
+}
+
 /** The press gesture, or nothing under reduced motion (no scaling). */
 export function usePress(): typeof press | Record<string, never> {
   return useReducedMotion() ? {} : press;

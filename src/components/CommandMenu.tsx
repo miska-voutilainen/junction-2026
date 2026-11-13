@@ -3,13 +3,13 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowRight, BarChart3, Copy, FileDiff, Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import { fadeUpItem, popover, staggerDelay, useMotionPreset } from "@/lib/motion";
+import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./ShellChange";
 
@@ -228,12 +228,9 @@ function buildPages(needsReviewCount: number): Row[] {
 
 function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: (row: Row) => void }) {
   const Icon = row.icon;
-  const entrance = useMotionPreset(fadeUpItem);
-  const isReduced = useReducedMotion();
-  // Under reduced motion the row is already in place, so a delay would only hide it.
-  const animate = isReduced ? entrance.animate : { ...entrance.animate, transition: { ...entrance.animate.transition, ...staggerDelay(index) } };
+  const entrance = useStaggeredPreset(fadeUpItem, index);
   return (
-    <motion.div initial={entrance.initial} animate={animate}>
+    <motion.div initial={entrance.initial} animate={entrance.animate}>
       <CommandItem
         value={`${row.label} ${row.meta}`}
         onSelect={() => onChoose(row)}
