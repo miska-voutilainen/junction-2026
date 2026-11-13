@@ -6,7 +6,7 @@ Write it so an agent can build any task below without asking a question: concret
 Every task in section 9 becomes a GitHub issue; "go" works through them.
 -->
 
-Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-13 21:50 · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
+Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-13, ideas first (section 1, Emphasis) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
 
 Event milestones: Fri 23:59 pre-submission ✅ done Fri 13.11 by Miska (draft "Countersign", Tieto challenge; name, punchline, description; status Draft) · Sat 12:00 submissions open · Sun 10:00 final (set to FINAL, not DRAFT) · Sun 10:30–13:00 live peer review at our table (all present, else no main prize) · Sun 14:15 top-5 pitches (3 min + 3 min Q&A).
 
@@ -33,7 +33,18 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   Tieto's requirements set and standards document are still announced as "TBA". Until they arrive we derive one requirement record per issue (intent, functional, non-functional items, labelled "derived from upstream issue #n") and write our own per-area checklists, labelled as ours. The commits carry one-line messages only, so each change gets an author PR description written by the evidence lane and labelled "synthetic". Models: Anthropic Claude through the Junction partner credits (Q2 answered). Vendor selection is out of scope, so the model sits behind one client interface (`src/ai/`) and the concept holds with any capable model.
 - **Review areas for this repository:** `generator`, `analyzer`, `security`, `performance` (areas are per-repository configuration; a web repository would use frontend, backend, security, performance). Used the same everywhere: policy, prompts, planted bugs, report card.
 - **Event judging (peer review and finals):** Innovation (the canaries, the blind-first review and evidence, the receipt in git), Impact (every team merging agent PRs), Implementation (a working pipeline on Tieto's real repo, not slides).
-- **Tieto's judging criteria** (from the challenge page): **Clarity 30%** (a clear recommendation with stated principles, explicit trade-offs and limits) · **Practicality 25%** (could work in a real PR flow and scale, with a named human owning each decision) · **Measurement 25%** (how trust is measured: reverts and incidents don't rise as review time falls, AI findings are real and accepted, time to merge, share routed to humans) · **Evidence 20%** (evidence traceable to a requirement lets a named human accept a change without a full read, incl. what the AI found, what it refused to decide, and why). Tieto: "we put more weight for the concept than only the technical implementation."
+- **Tieto's judging criteria** (from the challenge page): **Clarity 30%** (a clear recommendation with stated principles, explicit trade-offs and limits) · **Practicality 25%** (could work in a real PR flow and scale, with a named human owning each decision) · **Measurement 25%** (how trust is measured: reverts and incidents don't rise as review time falls, AI findings are real and accepted, time to merge, share routed to humans) · **Evidence 20%** (evidence traceable to a requirement lets a named human accept a change without a full read, incl. what the AI found, what it refused to decide, and why). Tieto: "we put more weight for the concept than only the technical implementation." Tieto added two criteria for the code itself: **readable code** and **comments that give the reader something** (`.claude/rules/readability.md`).
+- **Emphasis (changed 2026-11-13):** Tieto wants ideas from the teams to build into their own product. So the **seven ideas are the headline and the app is their proof**: every screen exists to show an idea working on Tieto's real code, not to look like a finished product. Effort split, roughly: **60% proof** (pipeline, quote check, eval, receipt, and the screens that show them), **25% ideas** (the idea pages, the concept card, "Beyond the reference", the pitch), **15% readable code** (idea headers, giving comments, names; written as we build, not cleaned up at the end). The seven ideas, each with a page in `docs/ideas/` (T25):
+
+  | # | Idea | Page | Shown in |
+  | --- | --- | --- | --- |
+  | 1 | Planted-bug calibration and a trust ladder per area | `trust-ladder.md` | S3 ladder |
+  | 2 | Blind-first review, with the anchoring effect measured | `blind-first.md` | S2 Blind check |
+  | 3 | The hunk coverage map | `coverage-map.md` | S2 tier banner and navigator |
+  | 4 | A mechanical quote check | `quote-check.md` | S2 Story evidence, S3 hallucinations |
+  | 5 | A written refusal policy | `refusal-policy.md` | S2 Refused |
+  | 6 | Evidence levels instead of confidence scores | `evidence-levels.md` | S2 Story claims |
+  | 7 | The signed receipt in git, tied to the exact diff | `signed-receipt.md` | S2 Receipt, the CLI |
 - **Final submission requires:** project name, punchline, description; challenge; technologies; a **2-minute video, strictly not a second longer**, publicly viewable (YouTube or Vimeo); demo and source links (source accessible to the organisers, MIT-licensed); pitch deck as PDF; phone numbers and Discord usernames.
 - **Rules that bind us:** no code written before the event (open-source libraries are fine); past experience is fine, copying a project is not.
 - **Challenge expectations, mapped:**
@@ -48,7 +59,8 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   - "Who owns the decision?": moment 3, the signed receipt in git.
   - "How would this scale?": moment 3, the routing spread over all four Tieto changes, plus the trust ladder.
 - **Tieto deliverables (first-class, each has a task):**
-  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide.
+  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide. It is also the index of the seven ideas and holds "Beyond the reference".
+  - Idea pages: `docs/ideas/*.md` (T25), one per idea, written for a product team that wants to adopt it.
   - Lessons log with the failure modes we actually saw: `docs/lessons.md`, started by T15 from the first pipeline run (caught hallucinations, missed planted bugs, wrong tier calls, model errors), each entry with the date and what we changed.
   - Decision log: `docs/decisions.md`.
   - Live walkthrough: the three demo moments.
@@ -79,7 +91,7 @@ Seven parts, each with one job. Data flows top to bottom: P1 feeds P2, P2 and P3
 | **P4 · Reviewer measurement** | Measure how far the reviewer can be trusted | planted-bug runs + answer keys → `data/eval/report-card.json` | Plain code over P2's output | engine | S3 |
 | **P5 · Receipt** | Make a named human accountable | drafted receipt → signed git note (the owner's own SSH key), verify result, stale check, exported JSON | `pnpm countersign` CLI + git + ssh-keygen | evidence | S2 Receipt tab, S1 status |
 | **P6 · Review app** | Show all of it | recorded files → inbox, review page, report card | Static Next.js site on Vercel; the simulated escape re-runs P3 in the browser | app (S3: evidence) | S1, S2, S3 |
-| **P7 · Tieto deliverables** | What Tieto grades besides the app | everything above → concept card, lessons log, decision log, 2-min video, deck | Docs + recording | evidence, engine, pitch owner | Pitch and submission |
+| **P7 · Tieto deliverables** | What Tieto grades besides the app, and what they take home | everything above → idea pages, concept card, lessons log, decision log, 2-min video, deck | Docs + recording | evidence, engine, pitch owner | Pitch and submission |
 
 **Boundaries that keep the parts independent:** P2 never decides the tier on its own terms (it calls P3). P3 never calls a model. P6 never runs the pipeline or signs anything (it only reads recorded files and runs P3 client-side). P5 is the only part that writes git notes. No part has a server: the site is static, and everything that needs git, .NET or a model runs on a laptop.
 
@@ -95,7 +107,9 @@ Seven parts, each with one job. Data flows top to bottom: P1 feeds P2, P2 and P3
 
 Wow moment (first 30 s): moment 1's "read 2 of 8 hunks, and here's what covers the other 6", straight into moment 2's "the PR says X, the code does Y, and a reviewer reading the PR first missed it".
 
-Video and pitch structure (2 min): problem (15 s) → moment 1 (30 s) → moment 2 (30 s) → moment 3 (30 s) → principles and "AI reviews, humans stay accountable" (15 s).
+Each moment is told as ideas in action: moment 1 shows ideas 3, 4 and 6; moment 2 ideas 2 and 5; moment 3 ideas 7 and 1.
+
+Video and pitch structure (2 min): problem (15 s) → moment 1 (25 s) → moment 2 (25 s) → moment 3 (25 s) → the seven ideas and what Tieto can take from them, "Beyond the reference" (30 s).
 
 At the peer-review table the app runs locally (`pnpm dev`) against the laptop's clone of the fork, so sign → refresh works live in front of judges. The deployed site shows the receipt signed earlier.
 
@@ -104,6 +118,8 @@ At the peer-review table the app runs locally (`pnpm dev`) against the laptop's 
 The app is a **Graphite-style review interface**: an inbox of changes, a review page with the diff at the centre, and the reviewer's report card. It is a static site over recorded files, not connected to GitHub. **Visual direction:** Miska designs it in Claude Design; the wireframe link is posted on T01's issue by Fri ~23:30, and T01 turns it into tokens and the app shell. Until then screens use shadcn/ui defaults (dark). Every screen uses only tokens and `src/components/`.
 
 **App shell (all screens):** top bar with the wordmark "Countersign" (links to `/`), nav links "Inbox" (`/`) and "Reviewer" (`/reviewer`), active link marked with `aria-current="page"`. When simulated escapes exist, the right side shows "Simulated escapes: <n>" and a button "Reset". Below 768 px the nav stays in the top bar (two short links fit). A "Showing mock data" banner (role `status`) appears under the top bar whenever any data on the page came from `data/fixtures/` instead of recorded files.
+
+**Idea labels (T26, T27):** the part of a screen that shows an idea carries a small label "Idea <n> · <name>" (names from the table in section 1, Emphasis) linking to `https://github.com/miska-voutilainen/junction-2026/blob/main/docs/ideas/<page>`, opened in a new tab. Placement: S2 tier banner (3), Story tab "Claims" heading (6) and each "Quote checked against the code" line (4), Blind check heading (2), Refused heading (5), Receipt heading (7); S3 trust ladder heading (1) and "Hallucinations caught" heading (4). One shared component, `IdeaLabel`, muted text, keyboard-focusable, accessible name "Idea <n>: <name>, opens the idea page".
 
 **States everywhere:** pages are statically generated, so there is no data loading on the client. Each route still has a `loading.tsx` skeleton (shown during client navigation) and an `error.tsx` with "Something went wrong showing this page." and a "Try again" button (calls `reset()`). A data file that fails schema validation never crashes a page: the loader returns an `invalid` result and the screen shows the error copy given below.
 
@@ -378,7 +394,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - **A5 input:** the requirement item, A1's expectation for it, and the base-side text of one existing test file in the touched test project as a style example. No hunks.
 - **A5 output:** `{ testFile: string /* path inside the test project */, code: string, testNames: string[], requirementItemId: string }`.
 - **Run:** in two git worktrees of `SAMPLE_REPO_DIR` (base and head), the test file is added to each, then `dotnet test <project> --filter "FullyQualifiedName~<name>"` runs on both (timeout 15 min per side). For (1) the base worktree gets only the PR's test files. A claim citing hunks of that requirement item becomes `verified` only when a test **fails on base and passes on head**; both outputs are attached as evidence. Passes on both: the claim stays `supported`, noted "the test doesn't tell the versions apart". Fails on head with a test failure (not a build error): the claim is retracted (`retractions`, logged in `docs/lessons.md`). Build error: logged and counted, the claim stays as it was.
-- **Go/no-go Sat 01:00 (Miska):** `dotnet test tests/MessagePack.SourceGenerator.Tests` runs on the pipeline laptop (.NET SDK 8.0.4xx installed). If not, A5 is cut, no claim can be Verified, S2 shows Supported as the top level, and the concept card's limits say why.
+- **Go/no-go Sat 01:00 (Miska):** `dotnet test tests/MessagePack.SourceGenerator.Tests` runs on the pipeline laptop (.NET SDK 8.0.4xx installed). With the ideas-first emphasis, a borderline result (it runs only after workarounds, or a run takes over 15 min) counts as no-go. If not, A5 is cut, no claim can be Verified, S2 shows Supported as the top level, and the concept card's limits say why.
 
 ### Planted-bug eval
 
@@ -391,7 +407,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - git and GitHub: our fork of Tieto's repo (branches, worktrees, notes under `refs/notes/countersign`, pushed with `git push origin refs/notes/countersign`); SSH signing with `ssh-keygen -Y` (namespace `countersign-receipt`).
 - .NET SDK 8.0.4xx on the pipeline laptop for A5.
 - Vercel: project "junction-2026" (team "junction"), Git integration, a preview per PR, production from `main`; `vercel.json` sets the framework to Next.js and the pnpm commands.
-- Stretch goals, only after all three moments work on production, in this order: (1) a GitHub PR comment on the fork's PR with the story summary and a link to the receipt; (2) a live "Prove it" button that reruns A5 on one claim.
+- Stretch goals: dropped on 2026-11-13 (ideas first, section 1). Both are described in "Beyond the reference" instead: a GitHub PR comment with the story and a link to the receipt, and a live "Prove it" button that reruns A5 on one claim.
 - Not built, pitch only: in a real team the receipt becomes a required merge check (`pnpm countersign verify` exit code: "no valid receipt for this diff, no merge"), and the pipeline runs on every agent PR.
 
 ## 8. Out of scope
@@ -400,7 +416,8 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - Accounts, multi-user collaboration, review of arbitrary repos or PRs (our fork of Tieto's repo only).
 - Real CI integration of the reviewer; a server or database of any kind.
 - Specialist multi-agent reviewer swarms and reviewer debate.
-- Live model calls during the demo. The live "Prove it" button is a stretch goal only.
+- Live model calls during the demo, including the "Prove it" button (vision only).
+- UI polish beyond the definition of done (`.claude/rules/quality.md`): screens are clean and correct; spare time goes to the idea pages and readable code.
 - A spot-check workflow (the concept card describes it; the report card shows its effect through the simulated escape and the "Trusted needs 5 clean spot checks" line).
 - Keyboard shortcuts beyond normal tab focus (no `j`/`k`).
 - Any real customer data.
@@ -418,7 +435,7 @@ Each task is one PR in one lane, about 1–3 hours of agent work. Lanes: **engin
 | T04 | engine | CI workflows | T00, T02, T03 | – | `.github/workflows/ci.yml` and `e2e-preview.yml` per docs/setup.md section 6 (message check, lane check, tree check in `.github/scripts/`, hook tests, lint, typecheck, unit tests, build, gitleaks); under 4 minutes on this repo; then Miska turns on branch protection on `main` (PR required, `ci` required, no force push) and auto-merge. Shared: `.github/**` |
 | T05 | engine | Docs foundation | – | – | `docs/architecture.md` (Mermaid diagram of P1–P7 and the data files, the boundaries from section 1), `docs/development.md` (setup incl. `.env`, the fork clone, .NET, commands), `docs/api.md` (every contract in section 5, field by field, plus both CLIs); README "How to run" section. Docs only |
 | T06 | app | Fixtures, data loaders and the simulated-escape store | – | 1, 3 | `data/fixtures/` with a `mp-2283` review (built from the real diff: its real hunks, 8–12 claims across levels incl. one Verified with base/head outputs, one contradiction, two refusals, a receipt draft), the other three Tieto changes' reviews (smaller), a report card, a signed receipt record, change inputs; every fixture validates (unit test); `src/lib/data/` loaders (server-only) returning `{ status: "ok" \| "missing" \| "invalid", data, source: "recorded" \| "fixture" }`, preferring recorded files; `src/lib/simulation/escapes.ts` per section 5 with tests (record, reset, persistence, no storage) |
-| T07 | evidence | Sample repo fork, change inputs and requirements | – | 1 | `scripts/seed.ts` clones `miska-voutilainen/junction26-messagepack-csharp` into `SAMPLE_REPO_DIR` if missing, fetches all branches and `refs/notes/countersign`, and checks the four Tieto heads exist; `data/sample/changes/mp-*.json` (4, full SHAs, titles in plain words) and `data/sample/requirements/MP-*.json` (4) per section 4; the four synthetic author descriptions, with the one false statement in `mp-2283`'s recorded in `data/sample/answer-key/cp0.json`; all validate against `src/contracts/` (unit test). Never open `src/prompts/` or `src/pipeline/` |
+| T07 | evidence | Sample repo fork, change inputs and requirements | T28 | 1 | `data/sample/changes/mp-*.json` (4, full SHAs, titles in plain words) and `data/sample/requirements/MP-*.json` (4) per section 4; the four synthetic author descriptions, with the one false statement in `mp-2283`'s recorded in `data/sample/answer-key/cp0.json`; all validate against `src/contracts/` (unit test). Never open `src/prompts/` or `src/pipeline/` |
 | T08 | evidence | Planted bugs and contradiction plants, written blind | T07 | 2, 3 | 10 variant branches pushed to the fork per section 4 (6 of `mp-2283`, 4 of `mp-2234`; 4 generator, 3 analyzer, 3 security), each compiling with `dotnet build src/MessagePack.SourceGenerator`; `data/sample/changes/v01…v10.json` and `cp1…cp4.json`; answer keys for all 14; written without opening `src/prompts/`, `src/pipeline/` or any review output; validated by a unit test (every plant has an answer key whose file and lines exist in the variant) |
 | T09 | engine | Git diff loader, hunks, diff identity and policy | T07 | 1 | `src/lib/git/`: diff between two SHAs parsed (parse-diff) into `Review.files` and `Review.hunks` with ids `h1…` in diff order, file kind and area from `src/policy/areas.ts`; `computeDiffIdentity()` per section 5; head and base file text readers; `src/policy/*.ts` per section 5 incl. the four area checklists; tests on `mp-2283` (8 hunks expected; adjust the number in the spec if the real diff differs) and on fixture diffs |
 | T10 | engine | AI client with record/replay and usage log | – | – | `src/ai/client.ts` per section 6 (model, effort, structured outputs, retry with the validation error, refusal fallback, timeout, usage and cost); `AI_MODE` record/replay/live; unit tests with a fake transport (validation retry, replay miss, refusal); one live smoke call recorded |
@@ -433,9 +450,13 @@ Each task is one PR in one lane, about 1–3 hours of agent work. Lanes: **engin
 | T19 | app | S2 sidebar: Story, Blind check, Refused and Receipt tabs | T18, T09 | 1, 2, 3 | The four tabs per section 3, every empty state; selecting a claim highlights its cited lines; Receipt tab in unsigned, signed and stale states (fixtures); e2e for each tab |
 | T20 | evidence | Receipt CLI: draft, sign, verify, export | T07, T09 | 3 | `src/receipt/` per section 5; unit tests with a throwaway key in a temp repo: sign → verify ok, tampered payload → exit 3, changed diff → exit 1, second sign → refused; works on Windows (Git for Windows ssh-keygen) |
 | T21 | evidence | S3 Reviewer report card | T01, T03, T06, T11 | 3 | S3 per section 3 in `src/features/report-card/` and `src/app/reviewer/page.tsx` (route file pre-agreed with app), every state; "Record escape" uses `useEscapes()` and the S1 badges change without a reload (e2e); 375 and 1440 px. Shared: none; cross-lane file `src/app/reviewer/page.tsx` agreed here |
-| T22 | evidence | Concept card | – | – | `docs/concept-card.md`, one printed page: recommendation (3 sentences), the 9 principles in one line each, trade-offs (at least 4, each "we chose X over Y because Z, at the cost of W"), limits (at least 5, incl. no Trusted area without spot checks, derived requirements, synthetic descriptions, n per area, notes not tamper-evident without the signature), how trust is measured (Tieto's four measurement points mapped to what we measure now and what a real deployment tracks: reverts and incidents vs review time, findings real and accepted, time to merge, share routed to humans); reviewed by Miska |
+| T22 | evidence | Concept card | – | – | `docs/concept-card.md`, one printed page: recommendation (3 sentences), the 9 principles in one line each, trade-offs (at least 4, each "we chose X over Y because Z, at the cost of W"), limits (at least 5, incl. no Trusted area without spot checks, derived requirements, synthetic descriptions, n per area, notes not tamper-evident without the signature), how trust is measured (Tieto's four measurement points mapped to what we measure now and what a real deployment tracks: reverts and incidents vs review time, findings real and accepted, time to merge, share routed to humans); the seven ideas in one line each, linking to `docs/ideas/`; a "Beyond the reference" section (what each idea looks like across a real organisation: the receipt as a required merge check, trust ladders across teams, a spot-check workflow, a refusal policy per organisation, the PR comment and "Prove it" button); reviewed by Miska |
 | T23 | engine | Sign and publish the demo receipt | T15, T20 | 3 | Miska's `countersign_ed25519` public key in `data/sample/allowed_signers`; `mp-2283` signed by `miska-voutilainen`, note pushed to the fork, `data/receipts/mp-2283.json` exported and shown on production |
 | T24 | engine | Guard hardening follow-ups from the T00 review (issue #27) | T00 | – | gh subcommands after leading flags, chaining and wrapper forms, worktree paths and cwd, PowerShell harness writes; one test each. Shared: `.claude/hooks/**` |
+| T25 | engine | Idea pages | – (numbers filled in after T16) | all | Seven pages in `docs/ideas/` named as in section 1 (Emphasis), each per the template in 9.1; the code links resolve; each idea in the README's "The ideas" list links to its page; numbers only from `data/eval/report-card.json` or recorded runs, with sample sizes, or "not measured yet"; reviewed by Miska. Docs only |
+| T26 | app | `IdeaLabel` and idea labels on S2 | T19 | 1, 2, 3 | `src/components/IdeaLabel.tsx` per section 3 (Idea labels), the seven ideas defined once in it; labels on S2 at the placements listed; e2e: each S2 label present with its link, keyboard focus visible, at 375 and 1440 px |
+| T27 | evidence | Idea labels on S3 | T21, T26 | 3 | `IdeaLabel` on the S3 trust ladder (1) and "Hallucinations caught" (4) headings; e2e: both present with their links |
+| T28 | evidence | Seed script (split out of T07, about an hour) | – | – | `scripts/seed.ts` per 9.1 T07 (the `scripts/seed.ts` bullet: env, clone, origin check, fetch with notes, exit codes); until T07's change inputs exist it checks the four Tieto branches `ju26-issue-2283`, `ju26-issue-2234`, `ju26-issue-2129`, `ju26-issue-2297` exist on `origin` instead of their `headSha`s, and prints each branch's head SHA (T07 uses them); `pnpm seed` runs on Windows; a unit test for the origin check and the exit codes against a temp git repo; readable per `.claude/rules/readability.md`. No other files |
 
 Not tasks: the 2-minute video, the deck and the final README are made at the freeze by `demo-prep` and the pitch owner.
 
@@ -460,6 +481,15 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
   - Fetches all branches and `refs/notes/countersign:refs/notes/countersign`, printing "No receipts yet" when that ref doesn't exist.
   - Checks each `data/sample/changes/*.json` `headSha` exists in the clone, then prints one line per change. Exit 0 on success, 1 on any failure.
 - The unit test `scripts/sampleData.test.ts` validates every `data/sample/**/*.json` against `src/contracts/` and checks every change has its requirement. It needs no clone.
+
+**T25 · idea page template.** Each page, under 600 words, written for an engineer on a product team who wasn't at the event:
+- `# Idea <n> · <name>`, then one sentence: the idea.
+- **The problem** it answers, in two to four sentences.
+- **How it works**, as steps, with the concrete values we use (thresholds, rule ids, formats).
+- **What we measured**, numbers with sample sizes, or "not measured yet" and why.
+- **How to adopt it** in your own review product: what you need, what it costs, the smallest first step.
+- **Limits and failure modes**, including the ones we saw (link `docs/lessons.md` entries).
+- **In the code**, links to the modules with the idea header (`.claude/rules/readability.md`) and to the screen that shows it.
 
 **T09 · hunk count.** T09 reports the real hunk count of `mp-2283` and, if it isn't 8, updates the example numbers in sections 2–3 in its PR. Tests compute expectations from the data, never from the example numbers.
 
@@ -629,7 +659,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 ## 10. Open questions
 
 - **Q1** Tieto's requirements set and standards document are still "TBA". We derive requirements from the issues (T07) and write our own checklists (T09). If Tieto's arrive, swap them in and rerun T15/T16. Owner: Miska (Tieto contact, interim) · by: Sat 12:00 · blocks: nothing until they arrive.
-- **Q4** Visual direction: Miska's Claude Design wireframe, link posted on T01. Owner: Miska · by: Fri 23:30 · blocks: T01 (then T17–T19, T21). Pitch owner: interim Miska, final decision by Sat 18:00.
+- **Q4** Visual direction: Miska's Claude Design wireframe, link posted on T01. Elias reviews the design artifact first and posts issues and development ideas on T01's issue; Miska revises the artifact and hands the final design to T01. Owner: Miska · by: Fri 23:30 · blocks: T01 (then T17–T19, T21). Pitch owner: interim Miska, final decision by Sat 18:00.
 - **Q6** Does Tieto expect the concept card in a specific format (PDF, slide or page)? Owner: Miska · by: Sat 12:00 · blocks: nothing (T22 writes Markdown either way).
 - **Q7** .NET go/no-go for A5: `dotnet test tests/MessagePack.SourceGenerator.Tests` on the pipeline laptop. Owner: Miska · by: Sat 01:00 · blocks: T14.
 - **Q8** Anthropic API key from the partner credits in `.env` with a spending limit. Owner: Miska · by: Sat 00:00 · blocks: T10's live smoke call, T12–T16.

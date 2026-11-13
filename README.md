@@ -1,10 +1,26 @@
 # Countersign
 
-**AI reviews. A named human countersigns, on evidence they can check.**
+**Seven ideas for reviewing agent-written code, each shown working on Tieto's real repository.**
 
-Countersign is a concept and reference implementation for reviewing agent-written pull requests. The AI explains each change as a story traced to its requirement, backs every claim with evidence you can check, routes the human's attention by readable risk rules and states what it refuses to decide. A named engineer then signs a receipt in git for what was checked, what wasn't, and the risk they accept. We test the reviewer itself on planted bugs, so trust is earned per area rather than assumed.
+AI reviews. A named human countersigns, on evidence they can check.
 
-**Live:** https://countersign-junction.com
+Agent-written pull requests now outnumber human ones, and line-by-line review doesn't scale. Countersign is a set of ideas for how AI review can keep pace while a named person stays accountable. Each idea stands on its own, so a product team can adopt one without the others. The app is the reference implementation: it proves the ideas on agent-written changes to Tieto's sample repository.
+
+## The ideas
+
+1. **Planted-bug calibration and a trust ladder per area.** We test the AI reviewer on bugs planted by someone who never sees its prompts. Its catch rate in each area decides how much a human reads, and an escaped bug drops that area a level.
+2. **Blind-first review.** The reviewer writes down what the requirement should produce before it reads the code or the author's description. We measure how much reading the description first costs.
+3. **The hunk coverage map.** "Read 2 of 8 hunks, and here is what covers the other 6", from rules a person can read, with no AI in the routing.
+4. **A mechanical quote check.** Every AI claim cites the code. A citation that doesn't match the code is never shown, and each one caught counts as a hallucination.
+5. **A written refusal policy.** A versioned list of what the AI never decides, each item naming who decides instead.
+6. **Evidence levels instead of confidence scores.** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
+7. **The signed receipt in git.** The owner signs what was checked, what wasn't and the risk they accept, tied to the exact diff, so the receipt can gate the merge.
+
+Each idea gets its own page in `docs/ideas/`: the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
+
+## See them working
+
+**Live:** https://countersign-junction.com, the review of one agent-written change (MP-2283), with each idea labelled where it appears.
 
 Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([challenge text](docs/challenge.md)). What we build: [docs/spec.md](docs/spec.md). Why: [docs/decisions.md](docs/decisions.md).
 
