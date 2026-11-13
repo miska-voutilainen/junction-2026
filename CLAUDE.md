@@ -109,7 +109,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   └── fixtures/               mock data for UI work and tests
 ├── e2e/                        Playwright specs
 ├── public/                     static assets
-└── scripts/                    seed (clone the fork, fetch branches and notes)
+└── scripts/                    seed (clone the fork, fetch branches and notes), idea-diagrams (draws docs/ideas/img)
 ```
 
 Unit tests sit next to the code (`route.ts` → `route.test.ts`); the eval set is the planted bugs and contradiction plants in `data/sample/`.

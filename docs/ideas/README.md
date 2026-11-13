@@ -19,4 +19,4 @@ Seven ideas for reviewing agent-written code so that a named person can accept a
 
 These pages are drafts. Numbers come from the planted-bug eval and the recorded runs, and say "not measured yet" until those have run.
 
-The diagrams in `img/` come in a light and a dark version; each page shows the one that matches the reader's theme.
+The diagrams in `img/` come in a light and a dark version, and each page shows the one that matches the reader's theme. They are drawn by `pnpm tsx scripts/idea-diagrams/draw.ts`: change the diagram's file there and re-run it, never edit the SVGs by hand.
