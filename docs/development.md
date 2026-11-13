@@ -18,7 +18,7 @@
 
 | Name | What it's for | Where to get it |
 | --- | --- | --- |
-| --- | --- | --- |
+| `ACCESS_CODE` | Temporary access gate until the submission on Sun 15.11; empty turns it off | Ask the team; set in Vercel's env settings only |
 
 ## Commands
 

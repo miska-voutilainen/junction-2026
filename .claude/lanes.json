@@ -15,7 +15,7 @@
       ]
     },
     "app": {
-      "owner": "eliasnorta",
+      "owner": "miska-voutilainen",
       "paths": [
         "src/app/**",
         "src/features/inbox/**",

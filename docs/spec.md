@@ -424,7 +424,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 
 ## 9. Work plan
 
-Each task is one PR in one lane, about 1–3 hours of agent work. Lanes: **engine** (Miska, `miska-voutilainen`, Max), **app** (Elias, `eliasnorta`, Pro), **evidence** (Veijo, `Kasanen`, Pro). Foundation tasks list their **pre-agreed shared paths**; the sign-off of this spec is the owners' agreement for exactly those. Every task: docs it changes in the same PR; unit tests for its logic; UI tasks a Playwright spec at 375 and 1440 px.
+Each task is one PR in one lane, about 1–3 hours of agent work. Lanes: **engine** (Miska, `miska-voutilainen`, Max), **app** (Miska, `miska-voutilainen`, Max, from Sat 14.11; Elias takes over UI changes once the design is built), **evidence** (Veijo, `Kasanen`, Pro). Foundation tasks list their **pre-agreed shared paths**; the sign-off of this spec is the owners' agreement for exactly those. Every task: docs it changes in the same PR; unit tests for its logic; UI tasks a Playwright spec at 375 and 1440 px.
 
 | ID | Lane | Title | Depends on | Demo step | Acceptance criteria |
 | --- | --- | --- | --- | --- | --- |

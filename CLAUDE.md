@@ -20,7 +20,7 @@ Tools: Lightfoot shadow, Graphify, Obsidian, Playwright MCP (set up by `join`).
 - Session start: the briefing (lane, handoffs, overlapping PRs, new summaries on the agent sync log, issue #1). Session end, sleep or account switch: `handover`.
 - One person runs `polish-pass` at the midpoint and after the freeze, and `demo-prep` at the freeze; their findings become issues the lanes' "go" picks up.
 - Find code through the Graphify map first (`.claude/rules/tools.md`); sessions run through Lightfoot.
-- Rules: `.claude/rules/` (all loaded automatically). Subagents and models: `.claude/rules/delegation.md`. Plans: Miska Max 5x (normal mode); Elias and Veijo Pro (budget mode, capped in their `.claude/settings.local.json`; reviewers follow the session model). Details: `.claude/rules/delegation.md`, Plans and effort. Lanes: Miska the heaviest, Elias the second, Veijo the lightest.
+- Rules: `.claude/rules/` (all loaded automatically). Subagents and models: `.claude/rules/delegation.md`. Plans: Miska Max 5x (normal mode); Elias and Veijo Pro (budget mode, capped in their `.claude/settings.local.json`; reviewers follow the session model). Details: `.claude/rules/delegation.md`, Plans and effort. Lanes: Miska engine and app (the UI build; Elias takes over UI changes once the design is built), Veijo evidence (the lightest).
 
 ## Lanes
 
@@ -29,7 +29,7 @@ Decided at kickoff (`.claude/rules/lanes.md`). Every code path belongs to exactl
 | Lane | Owner (GitHub login) | Owns (paths) | Responsible for |
 | --- | --- | --- | --- |
 | engine | `miska-voutilainen` | `src/ai/**`, `src/prompts/**`, `src/pipeline/**`, `src/rules/**`, `src/policy/**`, `src/lib/git/**`, `data/runs/**`, `data/eval/**`, `data/recordings/**` | The review pipeline (A1–A5, quote check, .NET differential tests), routing rules and trust ladder, the planted-bug eval and report card, the AI client and prompts, CI and the harness; the critical path of the demo (heaviest) |
-| app | `eliasnorta` | `src/app/**`, `src/features/inbox/**`, `src/features/review/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/utils.ts`, `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, S1 inbox, S2 review page, data loaders, fixtures, the simulated-escape store, e2e and screenshots |
+| app | `miska-voutilainen` | `src/app/**`, `src/features/inbox/**`, `src/features/review/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/utils.ts`, `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, S1 inbox, S2 review page, data loaders, fixtures, the simulated-escape store, e2e and screenshots |
 | evidence | `Kasanen` | `src/receipt/**`, `src/features/report-card/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants written blind, the receipt CLI (SSH-signed git notes), S3 report card, quality hooks, the concept card (lightest) |
 | _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
 
@@ -56,7 +56,7 @@ pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_R
 
 Production: https://countersign-junction.com (public; `www` and `http` redirect to it; DNS on Cloudflare as DNS-only records pointing at Vercel). The `*.vercel.app` URLs stay behind Vercel Authentication (protection covers everything except custom domains). Previews: one per PR from Vercel (team "junction", project "junction-2026").
 
-Env (names in `.env.example`): `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`).
+Env (names in `.env.example`): `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`), `ACCESS_CODE` (temporary gate; empty = off).
 
 ## Stack
 
@@ -80,7 +80,9 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
 ├── docs/         challenge, spec, concept-card, lessons, architecture, decisions, api, development, setup, demo, pitch, design/, ideas/ (one page per idea)
 ├── src/
-│   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), layout, loading, error, not-found
+│   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), /unlock (temporary gate), layout, loading, error, not-found
+│   ├── proxy.ts                temporary access gate entry
+│   ├── features/access-gate/   temporary access gate: check, cookie, unlock form; see its README
 │   ├── features/inbox/         S1 components
 │   ├── features/review/        S2 components: navigator, diff viewer, sidebar tabs
 │   ├── features/report-card/   S3 components
