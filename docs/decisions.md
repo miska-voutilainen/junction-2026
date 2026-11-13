@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · The UI follows the design canvas; S4 receipt and S5 dashboard added; S3 moves to the app lane
+
+- **Context:** The final design canvas draws a product connected to GitHub and CI, with sample people, ids and 30 days of metrics, plus a full receipt page, a dashboard, a grouped nav and a command menu that the spec didn't have.
+- **Decision:** `docs/design/ui-plan.md` translates the canvas into this product: same layouts, states and motion over our recorded data only. Controls with no backend are cut (request changes, ask a person, approve/reject, send to desktop, time ranges, editable receipt fields). Two routes added: `/changes/[id]/receipt` (S4) and `/dashboard` (S5). `motion` and `cmdk` are added for shared-layout indicators and the command list. S3's components move from the evidence lane to the app lane, so one session builds every screen; the evidence lane keeps the data and the CLIs.
+- **Why:** The canvas gives the product a finished look; showing it with invented people or dead buttons would break the "nothing fake on the demo path" rule judges will test.
+- **Rejected:** Building S1–S3 only (loses the receipt page, the strongest visual for idea 7). Keeping the cut controls as browser-only simulations (more surface that says nothing true).
+- **PR:** –
+
 ## 2026-11-14 · Temporary access gate until the submission
 
 - **Context:** The site is public on a custom domain before the final submission on Sun 15.11, and should open only for people we give a code.
