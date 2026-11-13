@@ -1,3 +1,11 @@
+---
+paths:
+  - "src/ai/**"
+  - "src/prompts/**"
+  - "src/pipeline/**"
+  - "data/recordings/**"
+---
+
 # AI features
 
 Judges from AI labs and GPU companies will probe the AI part first. It must be robust, fast and honest, not a thin wrapper.

@@ -1,0 +1,34 @@
+{
+  "attribution": { "commit": "", "pr": "" },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(pnpm run *)", "Bash(pnpm dev *)", "Bash(pnpm build *)", "Bash(pnpm start *)", "Bash(pnpm lint *)",
+      "Bash(pnpm typecheck *)", "Bash(pnpm test *)", "Bash(pnpm e2e *)", "Bash(pnpm evals *)",
+      "Bash(pnpm screenshots *)", "Bash(pnpm seed *)", "Bash(pnpm format *)", "Bash(pnpm pipeline *)",
+      "Bash(pnpm countersign *)", "Bash(pnpm test:hooks *)",
+      "Bash(pnpm exec playwright *)", "Bash(pnpm exec vitest *)", "Bash(pnpm exec tsc *)",
+      "Bash(pnpm exec eslint *)", "Bash(pnpm exec prettier *)", "Bash(pnpm exec tsx *)",
+      "Bash(node --test *)", "Bash(node .claude/hooks/*)",
+      "Bash(git status *)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)", "Bash(git branch *)",
+      "Bash(git switch *)", "Bash(git add *)", "Bash(git commit *)", "Bash(git fetch *)", "Bash(git pull *)",
+      "Bash(git merge *)", "Bash(git push *)", "Bash(git notes *)",
+      "Bash(gh pr create *)", "Bash(gh pr view *)", "Bash(gh pr list *)", "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)", "Bash(gh pr comment *)", "Bash(gh pr merge *)", "Bash(gh pr edit *)", "Bash(gh pr ready *)",
+      "Bash(gh issue list *)", "Bash(gh issue view *)", "Bash(gh issue create *)",
+      "Bash(gh issue comment *)", "Bash(gh issue edit *)", "Bash(gh run list *)", "Bash(gh run view *)",
+      "Bash(graphify query *)", "Bash(graphify explain *)", "Bash(graphify path *)", "Bash(graphify update *)",
+      "Bash(python -m graphify *)", "Bash(py -m graphify *)"
+    ],
+    "ask": [
+      "Bash(gh api *)", "Bash(pnpm add *)", "Bash(pnpm install *)", "Bash(pnpm remove *)", "Bash(pnpm dlx *)",
+      "Bash(vercel *)", "Bash(npx vercel *)"
+    ],
+    "deny": [
+      "Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./.env.production)",
+      "Edit(./.env)", "Edit(./.env.local)", "Edit(./.env.*.local)", "Edit(./.env.production)",
+      "Bash(git push --force *)", "Bash(git push -f *)", "Bash(git push origin main *)",
+      "Bash(gh repo delete *)", "Bash(gh repo edit *)", "Bash(gh pr review *)"
+    ]
+  }
+}
