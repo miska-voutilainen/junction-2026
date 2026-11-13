@@ -6,6 +6,10 @@
   --surface-panel: #111418;
   --surface-code: #0b0d10;
   --surface-hover: #13171e;
+  /* Active nav item and active command row. */
+  --surface-selected: #1a1f27;
+  /* Overlay behind dialogs and sheets: --surface-bg at 70%. */
+  --surface-scrim: rgb(13 15 18 / 0.7);
   /* Fill of an input box: lighter than the panels so an empty field still reads as a field. */
   --surface-control: #22272e;
   --surface-control-hover: #2a3038;
@@ -42,12 +46,59 @@
   --green: #57c98b;
   --green-light: #7ddba6;
 
-  /* Radius */
+  /* Hunk coverage (idea 3): only "Read this" asks for attention, so only it is coloured. */
+  --coverage-verified: var(--text-faint);
+  --coverage-supported: var(--text-faint);
+  --coverage-read: var(--amber);
+
+  /* Review tiers: more bars and a warmer colour as more must be read. */
+  --tier-light: var(--text-muted);
+  --tier-focused: var(--link);
+  --tier-full: var(--amber);
+
+  /* Type scale. 12 px is the floor; each size carries the line height it is read at. */
+  --text-xs: 0.75rem;
+  --text-xs-leading: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm-leading: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base-leading: 1.375rem;
+  --text-md: 0.9375rem;
+  --text-md-leading: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg-leading: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-xl-leading: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl-leading: 2rem;
+  /* The access gate's digits. */
+  --text-display: 2.5rem;
+  --text-display-leading: 1;
+
+  /* Radius. A nested radius is the outer one minus the padding between them. */
   --radius-page: 12px;
+  --radius-menu: 14px;
   --radius-control: 10px;
   --radius-button: 9px;
+  --radius-item: 7px;
+  --radius-chip: 4px;
 
-  /* Motion */
+  /* Layout */
+  --layout-topbar: 56px;
+  --layout-nav: 248px;
+  --layout-navigator: 264px;
+  --layout-steps-panel: 392px;
+  --layout-content-max: 1280px;
+  /* The receipt reads as a document: about 70 characters a line. */
+  --layout-prose-max: 820px;
+  --layout-gate-max: 380px;
+
+  /* Motion. Exits run at 0.8x of the entrance. */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+  /* Delay between list rows entering; src/lib/motion.ts caps it at 10 rows. */
+  --stagger: 30ms;
 }
