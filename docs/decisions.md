@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Doc diagrams are SVG images, drawn by a script
+
+- **Context:** With the ideas as the headline, each idea page needs a diagram a product team can read at a glance, and the docs rule said Mermaid.
+- **Decision:** Diagrams are SVGs in light and dark versions, shown with `<picture>`, in the app's colour tokens and system fonts. `scripts/idea-diagrams/` draws them from one TypeScript source, so the two themes never drift apart. The architecture diagram stays Mermaid while spec T05 names it. Miska decided; Veijo's agreement for `scripts/` and `.claude/rules/docs.md` was not asked first because he was asleep.
+- **Why:** Mermaid's layout and styling can't match the product's look or keep dense labels readable. GitHub can't load web fonts in images and is retiring its `#gh-dark-mode-only` suffix, so `<picture>` with two files is the documented way to follow the reader's theme.
+- **Rejected:** Mermaid (limited styling); one SVG with an internal `prefers-color-scheme` query (it follows the OS, not GitHub's theme); hand-edited SVGs (two files to keep in sync per diagram).
+- **PR:** this PR
+
 ## 2026-11-14 · The UI follows the design canvas; S4 receipt and S5 dashboard added; S3 moves to the app lane
 
 - **Context:** The final design canvas draws a product connected to GitHub and CI, with sample people, ids and 30 days of metrics, plus a full receipt page, a dashboard, a grouped nav and a command menu that the spec didn't have.

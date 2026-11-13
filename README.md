@@ -8,15 +8,15 @@ Agent-written pull requests now outnumber human ones, and line-by-line review do
 
 ## The ideas
 
-1. **Planted-bug calibration and a trust ladder per area.** We test the AI reviewer on bugs planted by someone who never sees its prompts. Its catch rate in each area decides how much a human reads, and an escaped bug drops that area a level.
-2. **Blind-first review.** The reviewer writes down what the requirement should produce before it reads the code or the author's description. We measure how much reading the description first costs.
-3. **The hunk coverage map.** "Read 2 of 8 hunks, and here is what covers the other 6", from rules a person can read, with no AI in the routing.
-4. **A mechanical quote check.** Every AI claim cites the code. A citation that doesn't match the code is never shown, and each one caught counts as a hallucination.
-5. **A written refusal policy.** A versioned list of what the AI never decides, each item naming who decides instead.
-6. **Evidence levels instead of confidence scores.** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
-7. **The signed receipt in git.** The owner signs what was checked, what wasn't and the risk they accept, tied to the exact diff, so the receipt can gate the merge.
+1. **[Planted-bug calibration and a trust ladder per area](docs/ideas/trust-ladder.md).** We test the AI reviewer on bugs planted by someone who never sees its prompts. Its catch rate in each area decides how much a human reads, and an escaped bug drops that area a level.
+2. **[Blind-first review](docs/ideas/blind-first.md).** The reviewer writes down what the requirement should produce before it reads the code or the author's description. We measure how much reading the description first costs.
+3. **[The hunk coverage map](docs/ideas/coverage-map.md).** "Read 2 of 8 hunks, and here is what covers the other 6", from rules a person can read, with no AI in the routing.
+4. **[A mechanical quote check](docs/ideas/quote-check.md).** Every AI claim cites the code. A citation that doesn't match the code is never shown, and each one caught counts as a hallucination.
+5. **[A written refusal policy](docs/ideas/refusal-policy.md).** A versioned list of what the AI never decides, each item naming who decides instead.
+6. **[Evidence levels instead of confidence scores](docs/ideas/evidence-levels.md).** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
+7. **[The signed receipt in git](docs/ideas/signed-receipt.md).** The owner signs what was checked, what wasn't and the risk they accept, tied to the exact diff, so the receipt can gate the merge.
 
-Each idea gets its own page in `docs/ideas/`: the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
+Each idea has its own page in [`docs/ideas/`](docs/ideas/): the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
 
 ## See them working
 
