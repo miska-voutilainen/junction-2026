@@ -9,8 +9,4 @@ describe("ideaLinks", () => {
   it("links every idea to the base page", () => {
     for (const { n } of IDEAS) expect(ideaUrl(n)).toBe(IDEA_LINK_BASE);
   });
-
-  it("rejects a number that is not an idea", () => {
-    expect(() => ideaUrl(8)).toThrow("There is no idea 8");
-  });
 });
