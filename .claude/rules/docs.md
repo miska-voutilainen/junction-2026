@@ -23,5 +23,5 @@ Partner engineers read the repo. A judge should understand what it does, how it 
 - When code and spec disagree, the spec wins until a person changes it: fix the code, or raise a `needs-human` question.
 - Write for a smart reader new to the project: short sentences, concrete, examples over abstractions, no filler ("simply", "just", "robust", "seamless").
 - One fact in one place; link instead of repeating. Relative Markdown links that resolve; never Obsidian `[[wikilinks]]` (GitHub shows them as raw text). Diagrams in Mermaid, kept small.
-- Comments say why, not what. No commented-out code; an open TODO names an issue.
+- Comments say why, not what. No commented-out code; an open TODO names an issue. What a giving comment is, the idea headers and examples: `readability.md`.
 - No secrets, keys or real personal data in any doc or example; env var names only.
