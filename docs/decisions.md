@@ -6,9 +6,9 @@
 
 - **Context:** The site is public on a custom domain before the final submission on Sun 15.11, and should open only for people we give a code.
 - **Decision:** One code on every page, checked by the Next proxy against an httpOnly cookie that holds the sha256 of the code. An empty `ACCESS_CODE` turns the gate off. It lives in one folder (`src/features/access-gate/`) plus two entry files (`src/proxy.ts`, `src/app/unlock/`), so removing it takes minutes.
-- **Why:** A code like 8888 is enough to keep casual visitors out; what matters is that it is clearly temporary and easy to delete.
+- **Why:** A short code is enough to keep casual visitors out; what matters is that it is clearly temporary and easy to delete.
 - **Rejected:** Vercel Password Protection (a paid-plan feature that treats custom domains differently). Basic Auth (the browser prompt would be the first thing a judge sees).
-- **PR:** –
+- **PR:** #38
 
 ## 2026-11-14 · App lane moves to Miska for the UI build
 
@@ -16,7 +16,7 @@
 - **Decision:** Miska (`miska-voutilainen`, Max) owns the app lane and builds the UI from the canvas, in phases. Elias takes over UI changes once the design is built; polishing the UI happens in the last hours.
 - **Why:** One Max session holding the whole design builds a consistent UI faster than handing a large design across machines.
 - **Rejected:** Keeping the lane with Elias and handing over the canvas (more handoffs for one connected job).
-- **PR:** –
+- **PR:** #36
 
 ## 2026-11-13 22:10 · Lanes: engine (Miska), app (Elias), evidence (Veijo)
 
