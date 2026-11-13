@@ -78,7 +78,7 @@ test("lanes: own, other, shared, open, unset, local", () => {
   assert.equal(kind(edit("src/rules/route.ts")), null);
   const other = edit("src/app/page.tsx");
   assert.equal(other.decision, "ask");
-  assert.match(other.reason, /src\/app\/page\.tsx belongs to lane app \(owner eliasnorta\); talk to them or open a handoff/);
+  assert.match(other.reason, /src\/app\/page\.tsx belongs to lane app \(owner miska-voutilainen\); talk to them or open a handoff/);
   assert.match(edit("src/contracts/review.ts").reason, /shared path: agree the change with the affected lanes/);
   assert.equal(kind(edit("docs/api.md")), null);
   assert.equal(kind(edit("src/rules/route.ts", { lane: undefined })), "ask");
