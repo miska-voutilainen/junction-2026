@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T10:05:00Z",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5"
+  },
+  "areas": [
+    {
+      "area": "generator",
+      "planted": 4,
+      "caught": 3,
+      "spotChecksClean": 0,
+      "level": "calibrated",
+      "plants": [
+        {
+          "plantId": "v01",
+          "changeId": "v01",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "FirstOrDefault fallback returns Location.None, so the diagnostic for a missing Key points nowhere.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/3b698fe7cfa42f0f18b108078ca7ed5b1dba1e8b"
+        },
+        {
+          "plantId": "v02",
+          "changeId": "v02",
+          "caught": true,
+          "findingId": "f2",
+          "defect": "TryGetMemberType returns true for a member that is neither a property nor a field.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/94fc1c00e77a95b32ad6b1432b5ad39e153d711a"
+        },
+        {
+          "plantId": "v03",
+          "changeId": "v03",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The type-argument loop stops one element early, so the last argument of a closed generic is never mapped.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/d02b6832b84d4086e11afb3af42c28f8396d1b65"
+        },
+        {
+          "plantId": "v07",
+          "changeId": "v07",
+          "caught": false,
+          "findingId": null,
+          "defect": "The option is read once per assembly instead of per syntax tree, so a per-file override is ignored.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/1f58f5000408476f3afbfefc752142bba203058a"
+        }
+      ]
+    },
+    {
+      "area": "analyzer",
+      "planted": 3,
+      "caught": 2,
+      "spotChecksClean": 0,
+      "level": "calibrated",
+      "plants": [
+        {
+          "plantId": "v04",
+          "changeId": "v04",
+          "caught": true,
+          "findingId": "f2",
+          "defect": "The catch block reports the unsupported-member diagnostic at Locations[0] without checking the list is non-empty.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/706b37ef42a1a5dbe47bba4f7ff2ca18d9173703"
+        },
+        {
+          "plantId": "v08",
+          "changeId": "v08",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The partial-class check is registered when SuppressSourceGeneration is true instead of when it is false.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/eeaa8fb2cbf2078eb43ba4479cae0b9384655d41"
+        },
+        {
+          "plantId": "v09",
+          "changeId": "v09",
+          "caught": false,
+          "findingId": null,
+          "defect": "A MsgPack003 diagnostic is skipped for properties declared in a base class.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/7a3dddfb55a3a4fc3985fe96b652f3e266810c71"
+        }
+      ]
+    },
+    {
+      "area": "security",
+      "planted": 3,
+      "caught": 1,
+      "spotChecksClean": 0,
+      "level": "shadow",
+      "plants": [
+        {
+          "plantId": "v05",
+          "changeId": "v05",
+          "caught": false,
+          "findingId": null,
+          "defect": "The emitted deserializer no longer calls options.Security.DepthStep for the new closed generic member.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/a3f4cca97de3ae9d44bccfa2dc1cdb64554b6015"
+        },
+        {
+          "plantId": "v06",
+          "changeId": "v06",
+          "caught": true,
+          "findingId": "f4",
+          "defect": "The renamed options parameter is shadowed in the emitted Deserialize method, so a caller's security options are replaced by defaults.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/37f51aab4750b3a8059fa837b73bd2f63589eb01"
+        },
+        {
+          "plantId": "v10",
+          "changeId": "v10",
+          "caught": false,
+          "findingId": null,
+          "defect": "The analyzer's relaxed path skips the untrusted-type allow-list check.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/1d9d67f126da982476b3c60fc9d31871cf6e2907"
+        }
+      ]
+    },
+    {
+      "area": "performance",
+      "planted": 0,
+      "caught": 0,
+      "spotChecksClean": 0,
+      "level": "shadow",
+      "plants": []
+    }
+  ],
+  "anchoredVsBlind": {
+    "plants": 5,
+    "runsPerMode": 3,
+    "anchored": {
+      "caught": 4,
+      "total": 15
+    },
+    "blind": {
+      "caught": 12,
+      "total": 15
+    },
+    "perPlant": [
+      {
+        "plantId": "cp0",
+        "changeId": "mp-2283",
+        "statement": "The analyzer's diagnostics are unchanged: it reports exactly the same set of diagnostics as before and adds none.",
+        "anchoredCaught": 1,
+        "blindCaught": 3,
+        "runs": 3
+      },
+      {
+        "plantId": "cp1",
+        "changeId": "cp1",
+        "statement": "The change adds no new public types or members.",
+        "anchoredCaught": 1,
+        "blindCaught": 2,
+        "runs": 3
+      },
+      {
+        "plantId": "cp2",
+        "changeId": "cp2",
+        "statement": "Generated output for existing types is identical, verified by the updated snapshots.",
+        "anchoredCaught": 0,
+        "blindCaught": 3,
+        "runs": 3
+      },
+      {
+        "plantId": "cp3",
+        "changeId": "cp3",
+        "statement": "The generator is not affected: no file under the generator project changed.",
+        "anchoredCaught": 1,
+        "blindCaught": 2,
+        "runs": 3
+      },
+      {
+        "plantId": "cp4",
+        "changeId": "cp4",
+        "statement": "The attribute has been added to the analyzer release notes as a shipped diagnostic.",
+        "anchoredCaught": 1,
+        "blindCaught": 2,
+        "runs": 3
+      }
+    ]
+  },
+  "hallucinations": {
+    "quotesChecked": 212,
+    "quoteFailures": 9,
+    "claimsRetracted": 3,
+    "findingsDropped": 2
+  },
+  "findingsOnPlants": {
+    "total": 11,
+    "matchedPlant": 6
+  },
+  "routingSpread": {
+    "changes": 4,
+    "light": 0,
+    "focused": 3,
+    "full": 1,
+    "readHunks": 7,
+    "totalHunks": 21,
+    "readMinutes": 4,
+    "fullMinutes": 8
+  }
+}

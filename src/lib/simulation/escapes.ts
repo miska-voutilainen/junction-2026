@@ -1,0 +1,105 @@
+"use client";
+
+/**
+ * Simulated escapes: a reviewer can record "a bug got through in this area" and
+ * every tier on screen is recomputed with that area one trust level lower
+ * (`applyEscapes`, spec section 5). Nothing is sent anywhere: the count per area
+ * lives in this small store, persisted to localStorage, so it survives a reload
+ * and is shared by every component without a provider.
+ */
+import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { z } from "zod";
+import { type Area, AreaSchema } from "@/contracts";
+
+/** Escapes recorded per area; an area with none is absent. */
+export type Escapes = Partial<Record<Area, number>>;
+
+/** localStorage key; the version suffix lets a later shape change start clean. */
+export const escapesStorageKey = "countersign.escapes.v1";
+
+const StoredEscapesSchema = z.partialRecord(AreaSchema, z.number().int().positive());
+
+// One frozen object for the server and for "nothing recorded": React compares snapshots by identity.
+const noEscapes: Escapes = Object.freeze({});
+
+let current: Escapes | null = null;
+const listeners = new Set<() => void>();
+
+/** The stored value, or nothing when storage is unavailable, empty or corrupt. */
+function readStorage(): Escapes {
+  try {
+    const text = window.localStorage.getItem(escapesStorageKey);
+    if (text === null) return noEscapes;
+    const parsed = StoredEscapesSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data : noEscapes;
+  } catch {
+    return noEscapes;
+  }
+}
+
+function writeStorage(escapes: Escapes): void {
+  try {
+    window.localStorage.setItem(escapesStorageKey, JSON.stringify(escapes));
+  } catch {
+    // Private mode or a full quota: the escapes still work until the page closes.
+  }
+}
+
+function getSnapshot(): Escapes {
+  current ??= readStorage();
+  return current;
+}
+
+function getServerSnapshot(): Escapes {
+  return noEscapes;
+}
+
+function set(next: Escapes): void {
+  current = next;
+  writeStorage(next);
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  // Another tab recorded or reset: reread so both tabs show the same tiers.
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== escapesStorageKey) return;
+    current = readStorage();
+    listener();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+/** The simulated escapes with the two actions the UI needs. */
+export interface EscapesApi {
+  /** Escapes recorded per area. */
+  escapes: Escapes;
+  /** Sum over all areas; the top bar shows it when above zero. */
+  total: number;
+  /** Records one more escape in `area`. */
+  record: (area: Area) => void;
+  /** Clears every recorded escape. */
+  reset: () => void;
+}
+
+/**
+ * Reads and changes the simulated escapes.
+ * Empty on the server and during hydration, then the stored value.
+ */
+export function useEscapes(): EscapesApi {
+  const escapes = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const record = useCallback((area: Area) => {
+    const now = getSnapshot();
+    set({ ...now, [area]: (now[area] ?? 0) + 1 });
+  }, []);
+  const reset = useCallback(() => set(noEscapes), []);
+  return useMemo(
+    () => ({ escapes, total: Object.values(escapes).reduce((sum, count) => sum + count, 0), record, reset }),
+    [escapes, record, reset],
+  );
+}

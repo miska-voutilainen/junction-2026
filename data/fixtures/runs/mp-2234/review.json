@@ -1,0 +1,621 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2234",
+  "requirementId": "MP-2234",
+  "title": "Run the analyzer when SuppressSourceGeneration is true",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "tieto",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v1",
+      "a4": "a4.v1",
+      "a5": "a5.v1"
+    }
+  },
+  "run": {
+    "id": "run-20261114-mp-2234",
+    "startedAt": "2026-11-14T08:31:40Z",
+    "finishedAt": "2026-11-14T08:32:32.630Z",
+    "durationMs": 52630,
+    "usage": {
+      "inputTokens": 52810,
+      "outputTokens": 4120,
+      "costUsd": 0.81,
+      "calls": 6
+    }
+  },
+  "diff": {
+    "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "headSha": "dd3528ef236e1be22e53b9c7999c47b365b70040",
+    "baseTree": "a27716e5b28274401ede2b2b1fe8a8a3f756bad6",
+    "headTree": "6c13b22acf561b44a5b0ae4a10f333771e84f659",
+    "diffSha256": "1d8a46c5acfbdc17a724072beb65fb7192cf25b5a99fc86e0b447c4aa12273cf",
+    "filesChanged": 2,
+    "linesAdded": 23,
+    "linesRemoved": 4
+  },
+  "files": [
+    {
+      "path": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+      "kind": "source",
+      "area": "analyzer",
+      "added": 6,
+      "removed": 4,
+      "hunkIds": [
+        "h1",
+        "h2"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 17,
+      "removed": 0,
+      "hunkIds": [
+        "h3",
+        "h4"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+      "header": "@@ -96,13 +96,10 @@",
+      "oldStart": 96,
+      "oldLines": 13,
+      "newStart": 96,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 96,
+          "newLine": 96,
+          "text": "public override void Initialize(AnalysisContext context)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 97,
+          "newLine": 97,
+          "text": "{"
+        },
+        {
+          "kind": "context",
+          "oldLine": 98,
+          "newLine": 98,
+          "text": "    context.EnableConcurrentExecution();"
+        },
+        {
+          "kind": "context",
+          "oldLine": 99,
+          "newLine": 99,
+          "text": "    context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);"
+        },
+        {
+          "kind": "context",
+          "oldLine": 100,
+          "newLine": 100,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 101,
+          "newLine": 101,
+          "text": "    context.RegisterCompilationStartAction(startContext =>"
+        },
+        {
+          "kind": "context",
+          "oldLine": 102,
+          "newLine": 102,
+          "text": "    {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 103,
+          "newLine": 103,
+          "text": "        AnalyzerOptions options = AnalyzerOptions.Read(startContext.Options);"
+        },
+        {
+          "kind": "del",
+          "oldLine": 104,
+          "newLine": null,
+          "text": "        if (options.SuppressSourceGeneration)"
+        },
+        {
+          "kind": "del",
+          "oldLine": 105,
+          "newLine": null,
+          "text": "        {"
+        },
+        {
+          "kind": "del",
+          "oldLine": 106,
+          "newLine": null,
+          "text": "            return;"
+        },
+        {
+          "kind": "del",
+          "oldLine": 107,
+          "newLine": null,
+          "text": "        }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 104,
+          "text": "        // SuppressSourceGeneration turns off the generator only; type diagnostics still apply."
+        },
+        {
+          "kind": "context",
+          "oldLine": 108,
+          "newLine": 105,
+          "text": "        ReferenceSymbols? references = ReferenceSymbols.TryCreate(startContext.Compilation);"
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+      "header": "@@ -118,5 +114,10 @@",
+      "oldStart": 118,
+      "oldLines": 5,
+      "newStart": 114,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 118,
+          "newLine": 114,
+          "text": "        startContext.RegisterSymbolAction("
+        },
+        {
+          "kind": "context",
+          "oldLine": 119,
+          "newLine": 115,
+          "text": "            context => AnalyzeSymbol(context, references, options),"
+        },
+        {
+          "kind": "context",
+          "oldLine": 120,
+          "newLine": 116,
+          "text": "            SymbolKind.NamedType);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 117,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 118,
+          "text": "        if (!options.SuppressSourceGeneration)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 119,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 120,
+          "text": "            startContext.RegisterSymbolAction(context => ReportMissingPartial(context, references), SymbolKind.NamedType);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 121,
+          "text": "        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 121,
+          "newLine": 122,
+          "text": "    });"
+        },
+        {
+          "kind": "context",
+          "oldLine": 122,
+          "newLine": 123,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+      "header": "@@ -31,4 +31,12 @@",
+      "oldStart": 31,
+      "oldLines": 4,
+      "newStart": 31,
+      "newLines": 12,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 31,
+          "newLine": 31,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 32,
+          "newLine": 32,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 33,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 34,
+          "text": "    public async Task DiagnosticsAreReportedWhenSuppressSourceGenerationIsTrue()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 35,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 36,
+          "text": "        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync("
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 37,
+          "text": "            \"[MessagePackObject] public class C { public int NoKey { get; set; } }\","
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 38,
+          "text": "            suppressSourceGeneration: true);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 39,
+          "text": "        Assert.Contains(diagnostics, d => d.Id == \"MsgPack003\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 40,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 33,
+          "newLine": 41,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 34,
+          "newLine": 42,
+          "text": "    [Fact]"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+      "header": "@@ -40,2 +49,11 @@",
+      "oldStart": 40,
+      "oldLines": 2,
+      "newStart": 49,
+      "newLines": 11,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 40,
+          "newLine": 49,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 50,
+          "text": "    public async Task PartialRequirementIsNotEnforcedWhenSuppressSourceGenerationIsTrue()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 51,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 52,
+          "text": "        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync("
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 53,
+          "text": "            \"[MessagePackObject] public class C { [Key(0)] public int Id { get; set; } }\","
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 54,
+          "text": "            suppressSourceGeneration: true);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 55,
+          "text": "        Assert.DoesNotContain(diagnostics, d => d.Id == \"MsgPack011\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 56,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 57,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 58,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "context",
+          "oldLine": 41,
+          "newLine": 59,
+          "text": "    public async Task NoDiagnosticsForValidType()"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2234",
+    "title": "The analyzer does not work if SuppressSourceGeneration = true",
+    "intent": "The analyzer reports its diagnostics when SuppressSourceGeneration is true, as it did in MessagePack 3.1.0.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types."
+      },
+      {
+        "id": "F2",
+        "text": "Behaviour with SuppressSourceGeneration unset or false is the same as before."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "The restored behaviour matches MessagePack 3.1.0, the last version where the analyzer worked with this option."
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234",
+      "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types."
+        ],
+        "likelyAreas": [
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A test that exercises: With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types"
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "Behaviour with SuppressSourceGeneration unset or false is the same as before."
+        ],
+        "likelyAreas": [
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A test that exercises: Behaviour with SuppressSourceGeneration unset or false is the same as before"
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "Removes the early return on SuppressSourceGeneration from the analyzer's compilation start action, registers the partial-class check only when the generator is on, and adds two analyzer tests.",
+    "why": "MP-2234 F1: projects that set SuppressSourceGeneration lost all analyzer diagnostics since 3.1.1.",
+    "touches": [
+      {
+        "symbol": "MsgPack00xMessagePackAnalyzer.Initialize",
+        "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+        "note": "Compilation start action no longer returns early."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "F1",
+      "text": "Diagnostics are reported when SuppressSourceGeneration is true.",
+      "kind": "behaviour",
+      "level": "verified",
+      "hunkIds": [
+        "h1"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "old",
+          "startLine": 104,
+          "endLine": 107,
+          "quote": "        if (options.SuppressSourceGeneration)\n        {\n            return;\n        }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "MsgPack003 is missing on the base commit and reported on the change.",
+          "testName": "AnalyzerTests.DiagnosticsAreReportedWhenSuppressSourceGenerationIsTrue",
+          "base": {
+            "result": "fail",
+            "output": "Failed DiagnosticsAreReportedWhenSuppressSourceGenerationIsTrue [96 ms]\n  Assert.Contains() Failure: Filter not matched in collection\n  Collection: []"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed DiagnosticsAreReportedWhenSuppressSourceGenerationIsTrue [88 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "F2",
+      "text": "The partial-class check still runs when the generator is on.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h2"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
+          "startLine": 118,
+          "endLine": 121,
+          "quote": "        if (!options.SuppressSourceGeneration)\n        {\n            startContext.RegisterSymbolAction(context => ReportMissingPartial(context, references), SymbolKind.NamedType);\n        }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "The registration is guarded by the negated option in the cited lines.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "F1",
+      "text": "Adds two analyzer tests for the option set to true.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h3",
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+          "side": "new",
+          "startLine": 33,
+          "endLine": 40,
+          "quote": "    [Fact]\n    public async Task DiagnosticsAreReportedWhenSuppressSourceGenerationIsTrue()\n    {\n        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(\n            \"[MessagePackObject] public class C { public int NoKey { get; set; } }\",\n            suppressSourceGeneration: true);\n        Assert.Contains(diagnostics, d => d.Id == \"MsgPack003\");\n    }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "pr-test",
+          "summary": "Both tests pass on the change.",
+          "testName": "AnalyzerTests.PartialRequirementIsNotEnforcedWhenSuppressSourceGenerationIsTrue",
+          "base": null,
+          "head": {
+            "result": "pass",
+            "output": "Passed PartialRequirementIsNotEnforcedWhenSuppressSourceGenerationIsTrue [74 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "missing",
+      "area": "analyzer",
+      "severity": "low",
+      "title": "No test for the option set in .editorconfig",
+      "detail": "The tests pass the option through the test harness. The issue reproduces with the property set in the project file, which reaches the analyzer through a different options path.",
+      "statement": null,
+      "hunkIds": [],
+      "citations": []
+    }
+  ],
+  "refusals": [],
+  "quoteCheck": {
+    "checked": 3,
+    "passed": 3,
+    "downgraded": 0,
+    "dropped": 0,
+    "failures": []
+  },
+  "retractions": [],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "Diagnostics are reported when SuppressSourceGeneration is true (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "The partial-class check is guarded by the option.",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "Option read from the project file or .editorconfig",
+        "reason": "No test covers it (finding f1)."
+      }
+    ],
+    "residualRisk": {
+      "text": "The option path through the project file is not tested.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "focused",
+    "reasons": [
+      {
+        "ruleId": "R-area-level",
+        "text": "Analyzer: Calibrated, may route Focused at best",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "verified",
+      "h2": "supported",
+      "h3": "supported",
+      "h4": "supported"
+    },
+    "readHunks": 0,
+    "totalHunks": 4,
+    "readLines": 0,
+    "totalLines": 27,
+    "readMinutes": 0,
+    "fullMinutes": 2
+  }
+}
