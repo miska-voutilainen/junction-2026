@@ -92,3 +92,12 @@ test("compareWithClaudeMd", () => {
   assert.equal(problems.length, 1);
   assert.match(problems[0], /app/);
 });
+
+test("normalisePath collapses dot segments", () => {
+  assert.equal(normalisePath("src/../.claude/hooks/guard.mjs", "C:/repo"), ".claude/hooks/guard.mjs");
+  assert.equal(normalisePath("C:\\repo\\src\\..\\.claude\\x", "c:/repo"), ".claude/x");
+  assert.equal(isOutside(normalisePath("src/../..", "C:/repo")), true);
+  assert.equal(isOutside(normalisePath("C:/repo/../other/a.ts", "C:/repo")), true);
+  assert.equal(normalisePath("./a//b/./c.ts", "C:/repo"), "a/b/c.ts");
+  assert.equal(normalisePath("C:/repo", "C:/repo"), "");
+});

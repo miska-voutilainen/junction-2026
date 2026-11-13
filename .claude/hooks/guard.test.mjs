@@ -315,3 +315,64 @@ test("end to end: the canary, and silence on an allowed call", () => {
   assert.equal(quiet.status, 0);
   assert.equal(quiet.stdout, "");
 });
+
+// Review fixes: escapes, .env variants, push edge cases, false positives.
+const denies = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), "deny", cmd);
+const allows = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), null, cmd);
+
+test("escape characters cannot hide a command", () => {
+  for (const c of ['echo \\"; cat .env', 'echo \\"; git push --force origin feat', "cat .e\\nv", "git push origin ma\\in", "git push -\\f origin x"])
+    denies(c);
+  denies("echo `\"; Get-Content .env", "PowerShell");
+  denies("git push origin ma`in", "PowerShell");
+  allows("echo 'a\\' ; echo ok");
+  allows('git commit -m "C:\\Users\\x"');
+});
+
+test(".env variants are denied, .env.example forms are not", () => {
+  assert.equal(kind(decide(file("Read", "C:\\Users\\x\\repo\\.ENV"), ctx({ root: "C:\\Users\\x\\repo" }))), "deny");
+  for (const c of ["cat .ENV", "cat .env*", "cat <.env", "echo $(cat .env)", "(Get-Content .env)", "Get-Content .env,README.md", "Get-Content -Path:.env"])
+    for (const t of ["Bash", "PowerShell"]) denies(c, t);
+  for (const c of ["cat .env.example", "cat <.env.example", "echo $(cat .env.example)", "Get-Content .env.example,README.md", "Get-Content -Path:.env.example", "cat .envrc"])
+    allows(c);
+  assert.equal(decide({ tool_name: "Grep", tool_input: { pattern: "K", path: ".env" } }, ctx()).decision, "deny");
+  assert.equal(decide({ tool_name: "Grep", tool_input: { pattern: "K", glob: "**/.env*" } }, ctx()).decision, "deny");
+  assert.equal(decide({ tool_name: "Grep", tool_input: { pattern: "K", path: "src", glob: "*.ts" } }, ctx()), null);
+  assert.equal(decide({ tool_name: "Grep", tool_input: { pattern: "K", path: ".env.example" } }, ctx()), null);
+});
+
+test("push: --mirror, --all and HEAD resolve against the current branch", () => {
+  denies("git push --mirror");
+  denies("git push --all origin");
+  state.branch = "main";
+  denies("git push -u origin HEAD");
+  denies("git push origin @");
+  state.branch = "feat/x";
+  allows("git push -u origin HEAD");
+  allows("git push origin HEAD:refs/heads/feat/x");
+});
+
+test("recursive delete: flag rules and piped targets", () => {
+  allows("Remove-Item -ErrorAction SilentlyContinue $env:TEMP\\x.txt", "PowerShell");
+  allows("Remove-Item -Force x", "PowerShell");
+  denies("Remove-Item -rec C:\\x", "PowerShell");
+  denies("ri -r ..\\x", "PowerShell");
+  assert.match(shell("Get-ChildItem | Remove-Item -Recurse", "PowerShell").reason, /recursive delete with a piped target: check it by hand/);
+  assert.equal(kind(shell("find . | rm -rf")), "ask");
+  denies("rm -rf C:\\x");
+});
+
+test("false positives: shortcode lookalikes, trailer forms, issue 01", () => {
+  for (const m of ["fix: null check at src/app/page.tsx:42:7", "chore: add test:e2e:ui script", "at 10:30:00"]) allows(`git commit -m "${m}"`);
+  denies('git commit -m ":sparkles: fix"');
+  denies('git commit --trailer "Co-authored-by=Claude <noreply@anthropic.com>" -m x');
+  denies("gh issue close 01");
+  denies("gh issue close 001");
+  allows("gh issue close 10");
+});
+
+test("normalisePath collapses dot segments before classification", () => {
+  assert.equal(edit("src/../.claude/hooks/guard.mjs").decision, "ask");
+  assert.match(edit("src/../.claude/hooks/guard.mjs").reason, /harness file/);
+  assert.equal(kind(edit("src/../..", {})), null);
+});

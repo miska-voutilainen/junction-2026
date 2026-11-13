@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { classifyPath, isOutside, loadLanes, normalisePath, readSetting } from "./lib/lanes.mjs";
-import { shellRows } from "./lib/guardShell.mjs";
+import { envHit, shellRows } from "./lib/guardShell.mjs";
 
 const FILE_TOOLS = new Set(["Read", "Edit", "Write", "MultiEdit", "NotebookEdit"]);
 const BANNED_SEGMENTS = new Set(["copy", "backup", "old", "final", "v2", "temp", "tmp", "untitled"]);
@@ -49,7 +49,7 @@ function fileRows(input, ctx, add) {
   const lrel = rel.toLowerCase();
   const base = rel.split("/").pop();
 
-  if (/(^|\/)\.env(\.|$)/.test(rel) && !/(^|\/)\.env\.example$/.test(rel))
+  if (envHit(rel))
     add("deny", ".env holds secrets; use .env.example", true);
   if (tool === "Read") return;
 
@@ -93,6 +93,11 @@ export function decide(input, ctx) {
   };
   const tool = input?.tool_name;
   if (FILE_TOOLS.has(tool)) fileRows(input, ctx, add);
+  else if (tool === "Grep") {
+    const ti = input.tool_input ?? {};
+    if ([ti.path, ti.glob].some((v) => typeof v === "string" && envHit(normalisePath(v, ctx.root))))
+      add("deny", ".env holds secrets; use .env.example", true);
+  }
   else if (tool === "Bash" || tool === "PowerShell") {
     const command = input.tool_input?.command;
     if (typeof command === "string") shellRows(command, ctx, input, add);
@@ -114,9 +119,9 @@ export function safeDecide(input, ctx) {
   }
 }
 
-function run(cmd, args, cwd) {
+function run(cmd, args, cwd, timeout = 5000) {
   try {
-    const out = execFileSync(cmd, args, { cwd, timeout: 5000, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
+    const out = execFileSync(cmd, args, { cwd, timeout, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     return out.trim() || null;
   } catch {
     return null;
@@ -134,8 +139,8 @@ function realIo(root) {
     },
     fileExists: (p) => existsSync(p),
     currentBranch: () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"], root),
-    ghUser: () => run("gh", ["api", "user", "--jq", ".login"], root),
-    prAuthor: (n) => run("gh", ["pr", "view", ...(n ? [n] : []), "--json", "author", "--jq", ".author.login"], root),
+    ghUser: () => run("gh", ["api", "user", "--jq", ".login"], root, 3000),
+    prAuthor: (n) => run("gh", ["pr", "view", ...(n ? [n] : []), "--json", "author", "--jq", ".author.login"], root, 3000),
   };
 }
 

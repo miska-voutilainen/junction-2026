@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseDependsOn, queueStatus, summariseSyncComment, nextStep } from "./session-brief.mjs";
+import { parseDependsOn, queueStatus, summariseSyncComment, nextStep, callTimeout, shouldMoveCursor } from "./session-brief.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -61,4 +61,22 @@ test("end to end run exits 0 and prints the lane line", () => {
   });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /Lane/);
+});
+
+test("callTimeout", () => {
+  assert.equal(callTimeout(8000, 0, 30000), 8000);
+  assert.equal(callTimeout(8000, 25000, 30000), 5000);
+  assert.equal(callTimeout(8000, 29000, 30000), 1000);
+  assert.equal(callTimeout(8000, 29001, 30000), null);
+  assert.equal(callTimeout(8000, 40000, 30000), null);
+});
+
+test("shouldMoveCursor", () => {
+  assert.equal(shouldMoveCursor("startup", true, true), true);
+  assert.equal(shouldMoveCursor("resume", true, true), true);
+  assert.equal(shouldMoveCursor("startup", false, true), false);
+  assert.equal(shouldMoveCursor("resume", true, false), false);
+  assert.equal(shouldMoveCursor("clear", true, true), false);
+  assert.equal(shouldMoveCursor("compact", true, true), false);
+  assert.equal(shouldMoveCursor("manual", true, true), false);
 });

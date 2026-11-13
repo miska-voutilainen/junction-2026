@@ -3,23 +3,42 @@
 import { resolve } from "node:path";
 import { isOutside, normalisePath } from "./lanes.mjs";
 
-const EMOJI = /\p{Extended_Pictographic}|️|:[a-z0-9_+-]+:/u;
-const TRAILER = /co-authored-by:[^\n]*(claude|anthropic)|Generated with \[Claude Code\]\(/i;
-const ENV_FILE = /(^|\/)\.env(\.|$)/;
-const ENV_EXAMPLE = /(^|\/)\.env\.example$/;
+const EMOJI = /\p{Extended_Pictographic}|\uFE0F|(?<![\w:]):[a-z0-9_+-]+:(?![\w:])/u;
+const TRAILER = /co-authored-by\s*[:=][^\n]*(claude|anthropic)|Generated with \[Claude Code\]\(/i;
+const ENV_FILE = /(^|\/)\.env(?![\w-])/i;
+const ENV_EXAMPLE = /(^|\/)\.env\.example$/i;
 const HARNESS = /\.claude\/(hooks\/|settings\.json)/i;
 const HARNESS_VERBS = new Set(["mv", "cp", "rm", "tee", "set-content", "out-file", "remove-item", "move-item"]);
 const DELETE_CMDS = new Set(["rm", "remove-item", "ri", "del", "erase", "rd", "rmdir"]);
 const NPM_SUBS = { install: "install", i: "install", ci: "install --frozen-lockfile", add: "add", uninstall: "remove", remove: "remove", update: "update" };
 
-/** Splits a command on `&&`, `||`, `;`, `|` and newlines outside quotes. */
-export function splitParts(cmd) {
+/**
+ * True when a path, glob or shell word names a `.env` file other than `.env.example`.
+ * Strips redirect and substitution punctuation and tests each `,` `:` `=` `{` `}` piece too.
+ */
+export function envHit(word) {
+  const stripped = String(word).replace(/^(?:\$\(|[<(`"'])+/, "").replace(/[)`"']+$/, "");
+  return stripped.split(/[,:={}]/).some((s) => {
+    const n = s.replaceAll("\\", "/");
+    return ENV_FILE.test(n) && !ENV_EXAMPLE.test(n);
+  });
+}
+
+/**
+ * Splits a command on `&&`, `||`, `;`, `|` and newlines outside quotes.
+ * `esc` is the tool's escape character (backslash for Bash, backtick for PowerShell);
+ * outside single quotes it makes the next character literal, so it can't open or close a quote.
+ */
+export function splitParts(cmd, esc = "\\") {
   const parts = [];
   let cur = "";
   let q = null;
   for (let i = 0; i < cmd.length; i++) {
     const c = cmd[i];
-    if (q) {
+    if (esc && c === esc && q !== "'") {
+      cur += c + (cmd[i + 1] ?? "");
+      i++;
+    } else if (q) {
       cur += c;
       if (c === q) q = null;
     } else if (c === '"' || c === "'") {
@@ -38,14 +57,23 @@ export function splitParts(cmd) {
   return parts.map((s) => s.trim()).filter(Boolean);
 }
 
-/** Splits one part into words, honouring quotes (quotes are removed). */
-export function words(part) {
+/** Splits one part into words, honouring quotes and the escape character `esc` (null: no escapes). */
+export function words(part, esc = "\\") {
   const out = [];
   let cur = "";
   let has = false;
   let q = null;
-  for (const c of part) {
-    if (q) {
+  for (let i = 0; i < part.length; i++) {
+    const c = part[i];
+    if (esc && c === esc && q !== "'") {
+      const n = part[i + 1];
+      if (n === undefined || (q === '"' && esc === "\\" && !'"\$`'.includes(n))) cur += c;
+      else {
+        cur += n;
+        has = true;
+        i++;
+      }
+    } else if (q) {
       if (c === q) q = null;
       else cur += c;
     } else if (c === '"' || c === "'") {
@@ -96,11 +124,13 @@ function gitRows(sub, rest, ctx, add) {
   if (sub === "push") {
     const positional = rest.filter((w) => !w.startsWith("-"));
     const refspecs = positional.slice(1);
-    const force = rest.some((w) => w === "--force" || w.startsWith("--force-with-lease") || (/^-[a-zA-Z]+$/.test(w) && w.includes("f")));
+    const force = rest.some((w) => w === "--force" || w.startsWith("--force-with-lease") || w === "--mirror" || (/^-[a-zA-Z]+$/.test(w) && w.includes("f")));
     if (force || refspecs.some((r) => r.startsWith("+")))
       add("deny", "force push is not allowed: push normally or ask the owner", true);
+    if (rest.includes("--all")) add("deny", "pushing all branches is not allowed: push the one branch", true);
     const toMain = refspecs.some((r) => ["main", "refs/heads/main"].includes(r.replace(/^\+/, "").split(":").pop()));
-    if (toMain || (positional.length <= 1 && ctx.io.currentBranch() === "main"))
+    const headRef = refspecs.some((r) => ["HEAD", "@"].includes(r.replace(/^\+/, "")));
+    if (toMain || ((positional.length <= 1 || headRef) && ctx.io.currentBranch() === "main"))
       add("deny", "open a PR (ship-pr)", true);
   } else if (sub === "rebase") {
     if (!rest.includes("--abort") && !rest.includes("--continue"))
@@ -116,13 +146,16 @@ function gitRows(sub, rest, ctx, add) {
   }
 }
 
-function deleteRows(args, ctx, add) {
-  const recursive = args.some((w) => /^-[a-zA-Z]*[rR]/.test(w) || w === "--recursive");
+function deleteRows(cmd, args, rawArgs, ctx, add) {
+  const recursive =
+    cmd === "rm"
+      ? args.some((w) => /^-[a-zA-Z]*[rR]/.test(w) || w === "--recursive")
+      : args.some((w) => w.length >= 2 && w.startsWith("-") && "-recurse".startsWith(w.toLowerCase()));
   if (!recursive) return;
-  const outside = args
-    .filter((w) => !w.startsWith("-"))
-    .some((w) => isOutside(normalisePath(w, ctx.root)) || /^[$%]/.test(w));
-  if (outside) add("deny", "recursive delete outside the repo is not allowed", true);
+  const targets = [...args, ...rawArgs].filter((w) => !w.startsWith("-"));
+  if (!targets.length) add("ask", "recursive delete with a piped target: check it by hand");
+  else if (targets.some((w) => isOutside(normalisePath(w, ctx.root)) || /^[$%]/.test(w)))
+    add("deny", "recursive delete outside the repo is not allowed", true);
 }
 
 function packageManagerRow(cmd, args, add) {
@@ -148,14 +181,15 @@ export function shellRows(command, ctx, input, add) {
     return null;
   };
 
-  for (const part of splitParts(command)) {
-    const ws = cleanWords(words(part));
+  const esc = input.tool_name === "PowerShell" ? "`" : "\\";
+  for (const part of splitParts(command, esc)) {
+    const ws = cleanWords(words(part, esc));
     if (!ws.length) continue;
+    const raw = cleanWords(words(part, null));
     const cmd = cmdName(ws[0]);
     const args = ws.slice(1);
 
-    if (ws.some((w) => [w, w.slice(w.indexOf("=") + 1)].some((s) => { const n = s.replace(/\\/g, "/"); return ENV_FILE.test(n) && !ENV_EXAMPLE.test(n); })))
-      add("deny", ".env holds secrets; use .env.example", true);
+    if ([...ws, ...raw].some(envHit)) add("deny", ".env holds secrets; use .env.example", true);
 
     const norm = part.replace(/\\/g, "/");
     if (HARNESS.test(norm)) {
@@ -169,7 +203,7 @@ export function shellRows(command, ctx, input, add) {
     const gi = ws.findIndex((w) => cmdName(w) === "graphify");
     if (gi >= 0 && ws[gi + 1]?.toLowerCase() === "claude" && ws[gi + 2]?.toLowerCase() === "install")
       add("deny", "it rewrites CLAUDE.md and the shared hooks; the kit's rule is .claude/rules/tools.md");
-    if (DELETE_CMDS.has(cmd)) deleteRows(args, ctx, add);
+    if (DELETE_CMDS.has(cmd)) deleteRows(cmd, args, raw.slice(1), ctx, add);
     if (["npm", "yarn", "bun"].includes(cmd)) packageManagerRow(cmd, args, add);
 
     if (cmd === "git") {
@@ -212,7 +246,7 @@ function ghRows(args, env, add) {
 
   if (group === "issue" && ["close", "edit", "reopen"].includes(action)) {
     const hit = rest.some((w, i) => {
-      if (!/^#?1$|\/issues\/1$/.test(w)) return false;
+      if (!/^#?0*1$|\/issues\/0*1$/.test(w)) return false;
       const prev = rest[i - 1];
       return prev === undefined || !prev.startsWith("-") || prev.includes("=");
     });

@@ -36,7 +36,7 @@
       { "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-brief.mjs"], "timeout": 45 }] }
     ],
     "PreToolUse": [
-      { "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+      { "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Bash|PowerShell",
         "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs"], "timeout": 10 }] }
     ]
   }

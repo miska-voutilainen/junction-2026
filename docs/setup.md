@@ -176,7 +176,7 @@ Four facts the code must respect:
 - **`LANE`:** hooks inherit Claude Code's environment, including `env` from the settings files. If `LANE` is still missing, read `env.LANE` from `.claude/settings.local.json` directly before treating it as unset.
 - **Stop loops:** besides `stop_hook_active`, Claude Code caps a Stop hook at 8 consecutive continuations.
 
-### 4.2 `guard.mjs` (PreToolUse, matcher `Read|Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell`, timeout 10)
+### 4.2 `guard.mjs` (PreToolUse, matcher `Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Bash|PowerShell`, timeout 10)
 
 A pure function `decide(input, root, lane)` so it can be unit-tested; the CLI wrapper reads `LANE` and prints the decision. **Shell** rows apply to both the `Bash` and the `PowerShell` tool (both pass `tool_input.command`). Paths in `open` (section 3) skip the lane rows. A foundation task's issue lists its **pre-agreed shared paths**; the guard still asks for them, and the user approves (that's the expected confirmation, not a stop).
 

@@ -73,6 +73,18 @@ export function nextStep({ missingSummary, handoffs, queue, lane, plan } = {}) {
   return `Nothing unblocked in ${lane}.`;
 }
 
+/** Timeout for an external call: min(normal, budget left), or null when under 1000 ms remain. */
+export function callTimeout(normalMs, elapsedMs, budgetMs = BUDGET_MS) {
+  const left = budgetMs - elapsedMs;
+  if (left < 1000) return null;
+  return Math.min(normalMs, left);
+}
+
+/** The cursor moves only for a real session start and only when parts 6 and 7 both succeeded. */
+export function shouldMoveCursor(source, part6ok, part7ok) {
+  return (source === "startup" || source === "resume") && part6ok === true && part7ok === true;
+}
+
 // ---------- environment ----------
 
 function run(cmd, args, timeout, cwd) {
@@ -109,8 +121,13 @@ function main() {
   const slot = readSetting("SLOT", root);
   const vault = readSetting("VAULT", root);
   const config = loadLanes(root);
-  const git = (args, t = 5000) => run("git", args, t, root);
-  const gh = (args, t = 8000) => run("gh", args, t, root);
+  const call = (cmd, args, normal) => {
+    const t = callTimeout(normal, Date.now() - started);
+    if (t === null) throw new Error("budget exhausted");
+    return run(cmd, args, t, root);
+  };
+  const git = (args, t = 5000) => call("git", args, t);
+  const gh = (args, t = 8000) => call("gh", args, t);
   const ghJson = (args, t) => JSON.parse(gh(args, t));
   const timeLeft = () => Date.now() - started < BUDGET_MS;
   const out = [`# Countersign session briefing (source: ${source})`, ""];
@@ -254,11 +271,14 @@ function main() {
       for (const p of fresh) l.push(`- #${p.number} ${p.title} (lanes: ${lanesTouched((p.files ?? []).map((f) => f.path), config).join(", ") || "none"})`);
       if (fresh.length === 0) l.push("- nothing merged");
       add("Merged since my last session", l);
+      part6ok = true;
     } catch {}
   }
 
   // Part 7
   let missingSummary = false;
+  let part6ok = false;
+  let part7ok = false;
   if (timeLeft()) {
     try {
       const raw = gh(["api", "repos/{owner}/{repo}/issues/1/comments", "--paginate", "--jq", ".[] | {user: .user.login, created_at, body}"]);
@@ -281,12 +301,13 @@ function main() {
         }
       } catch {}
       add("Sync log (issue #1)", l);
+      part7ok = true;
     } catch {}
   }
 
   // Cursor write: only for a real session start
   try {
-    if (cursorFile && (source === "startup" || source === "resume")) writeFileSync(cursorFile, JSON.stringify({ last: new Date().toISOString() }));
+    if (cursorFile && shouldMoveCursor(source, part6ok, part7ok)) writeFileSync(cursorFile, JSON.stringify({ last: new Date().toISOString() }));
   } catch {}
 
   // Part 8
@@ -300,7 +321,7 @@ function main() {
     let installed = false;
     for (const [c, a] of [["graphify", ["--help"]], ["py", ["-m", "graphify", "--help"]], ["python", ["-m", "graphify", "--help"]]]) {
       try {
-        run(c, a, 2000, root);
+        call(c, a, 2000);
         installed = true;
         break;
       } catch {}

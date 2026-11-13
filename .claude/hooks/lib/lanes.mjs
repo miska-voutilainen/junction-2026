@@ -2,7 +2,7 @@
 // and classifies a repo path as local, shared, open, a lane's, outside or unmatched.
 // Matching order (docs/setup.md section 3): settings.local.json → shared → open → lanes.
 import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 
 const LOCAL_SETTINGS = ".claude/settings.local.json";
 
@@ -59,7 +59,10 @@ export function normalisePath(path, root) {
     if (cp === cr) p = "";
     else if (cp.startsWith(`${cr}/`)) p = p.slice(cr.length + 1);
   }
-  return p.replace(/^(\.\/)+/, "");
+  p = p.replace(/^(\.\/)+/, "");
+  if (p === "") return p;
+  const n = posix.normalize(p);
+  return n === "." ? "" : n.replace(/\/$/, "");
 }
 
 /** True when a normalised path points outside the repo (absolute or climbing with `..`). */
