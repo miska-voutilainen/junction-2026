@@ -54,7 +54,7 @@ pnpm countersign sign <changeId>  # draft | sign | verify | export a receipt (T2
 pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_REPO_DIR and fetch notes (T07)
 ```
 
-Production: https://junction-2026-junction-d7c8c07f.vercel.app (Vercel's alias for `main`; `junction-2026.vercel.app` belongs to another project; Vercel Authentication is on until Miska sets Deployment Protection to previews only, and a shorter `*.vercel.app` domain may replace this). Previews: one per PR from Vercel (team "junction", project "junction-2026").
+Production: https://countersign-junction.com (public; `www` and `http` redirect to it; DNS on Cloudflare as DNS-only records pointing at Vercel). The `*.vercel.app` URLs stay behind Vercel Authentication (protection covers everything except custom domains). Previews: one per PR from Vercel (team "junction", project "junction-2026").
 
 Env (names in `.env.example`): `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`).
 
