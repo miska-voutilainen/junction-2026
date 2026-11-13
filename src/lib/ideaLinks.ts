@@ -34,8 +34,8 @@ export const IDEA_LINK_BASE =
  *
  * @example ideaUrl(3) // ".../docs/spec.md#3-screens"
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- see the comment below
 // Every idea shares one page until T25, so `_n` is unused but kept for callers.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ideaUrl(_n: IdeaNumber): string {
   return IDEA_LINK_BASE;
 }
