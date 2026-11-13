@@ -17,7 +17,7 @@ Tools: Lightfoot shadow, Graphify, Obsidian, Playwright MCP (set up by `join`).
 - **New machine:** open Claude Code in the repo and say **"join"**. The `join` skill sets up the git identity, tools, vault, `.claude/settings.local.json` and the code map from the Team and Lanes tables; you only approve install prompts.
 
 - **"go"** (or "continue", "proceed") with nothing else means: run the `go` skill. It works through your lane's task issues to the spec, ships and merges each through `ship-pr`, and asks only on its stop conditions.
-- Session start: the briefing (lane, handoffs, overlapping PRs, new summaries on the agent sync log, issue #1). Session end, sleep or account switch: `handover`.
+- Session start: the briefing (lane, handoffs, overlapping PRs, new summaries on the agent sync log, issue #1). Session end, sleep or account switch: telling your agent you're stopping is enough; it runs `handover` itself (summary on issue #1), then you `/exit`.
 - One person runs `polish-pass` at the midpoint and after the freeze, and `demo-prep` at the freeze; their findings become issues the lanes' "go" picks up.
 - Find code through the Graphify map first (`.claude/rules/tools.md`); sessions run through Lightfoot.
 - Rules: `.claude/rules/` (all loaded automatically). Subagents and models: `.claude/rules/delegation.md`. Plans: Miska Max 5x (normal mode); Elias and Veijo Pro (budget mode, capped in their `.claude/settings.local.json`; reviewers follow the session model). Details: `.claude/rules/delegation.md`, Plans and effort. Lanes: Miska engine and app (the UI build; Elias takes over UI changes once the design is built), Veijo evidence (the lightest).
