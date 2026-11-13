@@ -43,7 +43,7 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/reviewer?x=1")).toBe("/reviewer?x=1");
   });
 
-  it.each(["//evil.com", "/\\evil", "https://x", "/unlock", "/unlock?next=%2F", "", null, undefined])(
+  it.each(["//evil.com", "/\\evil", "/\t/evil.com", "/\n/evil.com", "/\r/evil.com", "https://x", "/unlock", "/unlock?next=%2F", "", null, undefined])(
     "falls back to / for %s",
     (value) => {
       expect(safeNextPath(value)).toBe("/");

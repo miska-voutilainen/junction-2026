@@ -50,7 +50,6 @@ test.describe("gate off", () => {
   test.skip(!!code, "ACCESS_CODE is set");
 
   test("the home page loads directly", async ({ page }) => {
-    await unlock(page);
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Countersign" })).toBeVisible();
   });

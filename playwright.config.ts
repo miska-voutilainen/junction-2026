@@ -13,10 +13,11 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 } },
+      use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true },
     },
   ],
   // Builds and serves the production app; the server inherits ACCESS_CODE from this process.
+  // A server already running on the port is reused as it is, so stop it before switching ACCESS_CODE.
   webServer: externalBaseUrl
     ? undefined
     : {

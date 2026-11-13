@@ -25,7 +25,8 @@ export async function unlock(_previous: UnlockState, formData: FormData): Promis
 
   (await cookies()).set(ACCESS_COOKIE, await accessCookieValue(expectedCode), {
     httpOnly: true,
-    secure: true,
+    // Safari refuses Secure cookies on http://localhost; Vercel always serves HTTPS.
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: SEVEN_DAYS_IN_SECONDS,

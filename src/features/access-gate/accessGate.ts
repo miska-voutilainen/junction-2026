@@ -32,11 +32,15 @@ export async function accessCookieValue(code: string): Promise<string> {
  */
 export function safeNextPath(next: string | null | undefined): string {
   if (!next || !next.startsWith("/")) return "/";
-  // Browsers read "//host" and "/\host" as another site.
-  if (next.startsWith("//") || next.startsWith("/\\")) return "/";
-  if (next === "/unlock" || next.startsWith("/unlock?") || next.startsWith("/unlock/")) return "/";
-  return next;
+  // Parse it the way the browser will, instead of checking prefixes: the URL
+  // parser drops tabs and newlines first, so "/\t/evil.com" means "//evil.com".
+  const url = new URL(next, SAME_SITE_BASE);
+  if (url.origin !== SAME_SITE_BASE) return "/";
+  if (url.pathname === "/unlock" || url.pathname.startsWith("/unlock/")) return "/";
+  return url.pathname + url.search + url.hash;
 }
+
+const SAME_SITE_BASE = "http://gate.invalid";
 
 /**
  * The proxy step: lets a request through when the gate is off or the visitor
@@ -57,8 +61,13 @@ export async function accessGate(request: NextRequest): Promise<NextResponse> {
 }
 
 function redirectToUnlock(request: NextRequest): NextResponse {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+  // A client-side navigation adds Next's internal "_rsc" parameter; the
+  // visitor should come back to the clean URL.
+  const visibleParams = new URLSearchParams(searchParams);
+  visibleParams.delete("_rsc");
+  const query = visibleParams.toString();
   const unlockUrl = new URL("/unlock", request.url);
-  unlockUrl.searchParams.set("next", pathname + search);
+  unlockUrl.searchParams.set("next", query ? `${pathname}?${query}` : pathname);
   return NextResponse.redirect(unlockUrl);
 }

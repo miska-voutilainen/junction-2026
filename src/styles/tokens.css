@@ -22,10 +22,11 @@
   --text-faint: #939ca8;
 
   /* Accent */
-  --accent: #3558e8;
-  --accent-hover: #4566f2;
+  /* "brand", not "accent": shadcn's --accent means a subtle hover surface. */
+  --brand: #3558e8;
+  --brand-hover: #4566f2;
   --focus-ring: #4566f2;
-  --focus-ring-on-accent: #93aaff;
+  --focus-ring-on-brand: #93aaff;
   --link: #93aaff;
 
   /* Logo colours: the logo only. */

@@ -6,6 +6,8 @@ import { Check } from "lucide-react";
 import { unlock, type UnlockState } from "./unlockAction";
 
 const BOXED_CODE_LENGTH = 4;
+// Long enough for the success pulse to run once; keep in step with the
+// 600ms in UnlockedNotice's animation class.
 const REDIRECT_DELAY_MS = 600;
 const IDLE: UnlockState = { status: "idle" };
 
@@ -39,7 +41,8 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
   if (state.status === "unlocked") return <UnlockedNotice next={state.next} />;
 
   const isBoxed = codeLength === BOXED_CODE_LENGTH;
-  const hasError = state.status === "error";
+  // The error stays until the visitor starts typing the next attempt.
+  const hasError = state.status === "error" && code.length === 0;
   const isComplete = code.length === codeLength;
   const label = isBoxed ? "4-digit code" : "Access code";
 
@@ -73,7 +76,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
           className={
             isBoxed
               ? "absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent outline-none"
-              : `h-12 w-full rounded-control border-2 bg-surface-control px-4 text-lg text-text-primary outline-none transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none ${hasError ? "border-rose" : "border-transparent focus:border-focus-ring"}`
+              : `h-12 w-full rounded-control border-2 bg-surface-control px-4 text-lg text-text-primary outline-none transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none focus:outline-2 focus:outline-offset-2 focus:outline-focus-ring ${hasError ? "border-rose" : "border-transparent"}`
           }
         />
       </div>
@@ -82,12 +85,12 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
         aria-live="polite"
         className={`min-h-[22px] text-sm ${hasError ? "text-rose-light" : "text-text-muted"}`}
       >
-        {statusMessage(state, isPending)}
+        {statusMessage(hasError, isPending)}
       </p>
       <button
         type="submit"
         disabled={!isComplete || isPending}
-        className="min-h-11 w-full rounded-button bg-accent text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="min-h-11 w-full rounded-button bg-brand text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Unlock
       </button>
@@ -95,9 +98,9 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
   );
 }
 
-function statusMessage(state: UnlockState, isPending: boolean): string {
+function statusMessage(hasError: boolean, isPending: boolean): string {
   if (isPending) return "Checking…";
-  if (state.status === "error") return "That code doesn't match. Try again.";
+  if (hasError) return "That code doesn't match. Try again.";
   return "Type or paste the code.";
 }
 
@@ -111,9 +114,11 @@ function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean
   return (
     <div aria-hidden="true" className="flex gap-[10px]">
       {Array.from({ length }, (_, index) => {
-        let border = "border-transparent";
-        if (hasError) border = "border-rose";
-        else if (index === cursorIndex) border = "border-transparent group-focus-within:border-focus-ring";
+        // The cursor box always shows focus, also in the error state, so the
+        // refocused field after a wrong code is visibly focused (WCAG 2.4.7).
+        const restingBorder = hasError ? "border-rose" : "border-transparent";
+        const border =
+          index === cursorIndex ? `${restingBorder} group-focus-within:border-focus-ring` : restingBorder;
         return (
           <div
             key={index}
@@ -151,7 +156,7 @@ function UnlockedNotice({ next }: { next: string }) {
       </p>
       <a
         href={next}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-accent text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-accent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-brand text-sm font-semibold text-white transition duration-150 ease-[var(--ease-out)] hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Continue
       </a>

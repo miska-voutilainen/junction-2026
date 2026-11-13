@@ -20,9 +20,10 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-text-faint: var(--text-faint);
-  --color-accent-hover: var(--accent-hover);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
   --color-focus-ring: var(--focus-ring);
-  --color-focus-ring-on-accent: var(--focus-ring-on-accent);
+  --color-focus-ring-on-brand: var(--focus-ring-on-brand);
   --color-link: var(--link);
   --color-logo-blue: var(--logo-blue);
   --color-logo-strong: var(--logo-strong);
@@ -92,6 +93,7 @@
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
