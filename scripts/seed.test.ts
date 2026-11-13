@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -59,8 +59,11 @@ describe("seed", () => {
 
     expect(run(clone)).toBe(0);
 
-    const expectedHead = git(forkDir, "rev-parse", TIETO_BRANCHES[0]);
-    expect(logged).toContain(`${TIETO_BRANCHES[0]} ${expectedHead}`);
+    for (const branch of TIETO_BRANCHES) {
+      expect(logged).toContain(
+        `${branch} ${git(forkDir, "rev-parse", branch)}`,
+      );
+    }
     expect(logged).toContain("No receipts yet");
     expect(errors).toEqual([]);
   });
@@ -76,6 +79,24 @@ describe("seed", () => {
       "receipt",
     );
     expect(logged).not.toContain("No receipts yet");
+  });
+
+  it("clones into an existing empty folder", () => {
+    makeFork(TIETO_BRANCHES);
+    const clone = join(workDir, "clone");
+    mkdirSync(clone);
+
+    expect(run(clone)).toBe(0);
+  });
+
+  it("exits 1 for a folder with content that is not a git repository", () => {
+    makeFork(TIETO_BRANCHES);
+    const notARepo = join(workDir, "notes");
+    mkdirSync(notARepo);
+    writeFileSync(join(notARepo, "todo.txt"), "not a clone");
+
+    expect(run(notARepo)).toBe(1);
+    expect(errors[0]).toContain("SAMPLE_REPO_DIR is not a clone of the fork");
   });
 
   it("exits 1 when the folder is a clone of another repository", () => {

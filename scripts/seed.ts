@@ -7,10 +7,11 @@
  * Run with `pnpm seed`. Exit 0 on success, 1 on any failure.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const FORK_URL =
+const FORK_URL =
   "https://github.com/miska-voutilainen/junction26-messagepack-csharp.git";
 
 /** Tieto branches the four sample changes come from. T07 swaps this for the `headSha`s in data/sample/changes/*.json. */
@@ -30,9 +31,6 @@ export interface SeedOptions {
   log: (line: string) => void;
   error: (line: string) => void;
 }
-
-/** A failure the person can fix; `seed` prints the message and exits 1. */
-class SeedError extends Error {}
 
 /**
  * Runs every seed step in order.
@@ -54,7 +52,7 @@ export function seed(options: SeedOptions): number {
 
 function requireSampleRepoDir(sampleRepoDir: string | undefined): string {
   if (!sampleRepoDir) {
-    throw new SeedError(
+    throw new Error(
       "SAMPLE_REPO_DIR is not set. Add it to .env as the absolute path where the fork should be cloned (see .env.example), then run pnpm seed again.",
     );
   }
@@ -66,9 +64,14 @@ function cloneIfMissing(
   forkUrl: string,
   log: (line: string) => void,
 ): void {
-  if (existsSync(dir)) return;
+  // `git clone` accepts an empty folder, so only a folder with content is left alone.
+  if (existsSync(dir) && readdirSync(dir).length > 0) return;
   log(`Cloning ${forkUrl} into ${dir}`);
-  git(["clone", forkUrl, dir], process.cwd());
+  git(
+    ["clone", forkUrl, dir],
+    process.cwd(),
+    `Could not clone the fork. Check your network and your access to ${forkUrl}, then run pnpm seed again`,
+  );
 }
 
 /**
@@ -76,14 +79,20 @@ function cloneIfMissing(
  * would be written against the wrong history.
  * Example: origin `https://github.com/MessagePack-CSharp/MessagePack-CSharp.git` is rejected.
  */
-export function checkOrigin(dir: string, forkUrl: string): void {
+function checkOrigin(dir: string, forkUrl: string): void {
+  // Without its own .git, git would read the origin of a parent repository (this project's, for example).
+  if (!existsSync(join(dir, ".git"))) {
+    throw new Error(
+      `SAMPLE_REPO_DIR is not a clone of the fork: ${dir} has content but no .git folder. Point SAMPLE_REPO_DIR at an empty or missing folder, or at a clone of the fork.`,
+    );
+  }
   const origin = git(
     ["config", "--get", "remote.origin.url"],
     dir,
     "SAMPLE_REPO_DIR is not a clone of the fork",
   );
   if (trimUrl(origin) !== trimUrl(forkUrl)) {
-    throw new SeedError(
+    throw new Error(
       `SAMPLE_REPO_DIR is not a clone of the fork: origin is ${origin}, expected ${forkUrl}. Point SAMPLE_REPO_DIR at an empty or missing folder, or at a clone of the fork.`,
     );
   }
@@ -91,6 +100,7 @@ export function checkOrigin(dir: string, forkUrl: string): void {
 
 function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
   git(["fetch", "origin"], dir);
+  // No `+` on the notes refspec: a local notes ref that has diverged holds receipts not yet pushed, and forcing would drop them.
   // Fetching a ref that doesn't exist fails the whole command, so ask the remote first.
   const remoteHasNotes = git(["ls-remote", "origin", NOTES_REF], dir) !== "";
   if (!remoteHasNotes) {
@@ -104,15 +114,16 @@ function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
 function printBranchHeads(dir: string, log: (line: string) => void): void {
   const missing: string[] = [];
   for (const branch of TIETO_BRANCHES) {
-    const headSha = tryGit(
-      ["rev-parse", "--verify", `refs/remotes/origin/${branch}`],
-      dir,
-    );
-    if (headSha === undefined) missing.push(branch);
-    else log(`${branch} ${headSha}`);
+    try {
+      log(
+        `${branch} ${git(["rev-parse", "--verify", `refs/remotes/origin/${branch}`], dir)}`,
+      );
+    } catch {
+      missing.push(branch);
+    }
   }
   if (missing.length > 0) {
-    throw new SeedError(
+    throw new Error(
       `Branches missing on origin: ${missing.join(", ")}. The fork must keep all of Tieto's branches; ask the engine lane to re-sync it.`,
     );
   }
@@ -123,18 +134,6 @@ function trimUrl(url: string): string {
     .trim()
     .replace(/\/+$/, "")
     .replace(/\.git$/, "");
-}
-
-function tryGit(args: string[], cwd: string): string | undefined {
-  try {
-    return execFileSync("git", args, {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-  } catch {
-    return undefined;
-  }
 }
 
 function git(args: string[], cwd: string, failureMessage?: string): string {
@@ -149,7 +148,7 @@ function git(args: string[], cwd: string, failureMessage?: string): string {
       failure instanceof Error && "stderr" in failure
         ? String(failure.stderr).trim()
         : "";
-    throw new SeedError(
+    throw new Error(
       `${failureMessage ?? `git ${args[0]} failed`}${stderr ? `: ${stderr}` : ""}`,
     );
   }
@@ -160,7 +159,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   process.exitCode = seed({
     sampleRepoDir: process.env.SAMPLE_REPO_DIR,
     forkUrl: FORK_URL,
-    log: console.log,
-    error: console.error,
+    log: (line) => process.stdout.write(`${line}\n`),
+    error: (line) => process.stderr.write(`${line}\n`),
   });
 }
