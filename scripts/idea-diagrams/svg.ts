@@ -112,15 +112,6 @@ function escapeXml(content: string): string {
     .replaceAll("'", "&#x27;");
 }
 
-/**
- * Formats a computed coordinate with a trailing `.0` when it is whole.
- * Centred node text is computed with a division, and the committed SVGs
- * spell those values `61.0`; keeping that makes regeneration a no-op diff.
- */
-function computedCoordinate(value: number): string {
-  return Number.isInteger(value) ? value.toFixed(1) : String(value);
-}
-
 /** Wraps a diagram's body in the frame, style sheet and accessible title for one theme. */
 export function renderDocument(diagram: Diagram, theme: Theme): string {
   const { name, height, title, desc, body } = diagram;
@@ -141,7 +132,7 @@ export function rect(x: number, y: number, width: number, height: number, cssCla
 }
 
 /** A text element; `anchor` is the SVG text-anchor (start is the default and left out). */
-export function text(x: number | string, y: number | string, content: string, cssClass = "", anchor = "start"): string {
+export function text(x: number, y: number, content: string, cssClass = "", anchor = "start"): string {
   const anchorAttribute = anchor !== "start" ? ` text-anchor="${anchor}"` : "";
   const classAttribute = cssClass ? ` class="${cssClass}"` : "";
   return `<text x="${x}" y="${y}"${classAttribute}${anchorAttribute}>${escapeXml(content)}</text>`;
@@ -168,14 +159,14 @@ export function node(
 ): string {
   const parts = [rect(x, y, width, height, cssClass)];
   if (tint) parts.push(rect(x, y, width, height, tint));
-  const textX = center ? computedCoordinate(x + width / 2) : x + 14;
+  const textX = center ? x + width / 2 : x + 14;
   const anchor = center ? "middle" : "start";
   const blockHeight = NODE_TITLE_HEIGHT + NODE_LINE_HEIGHT * lines.length;
   const titleY = y + (height - blockHeight) / 2 + 13;
-  parts.push(text(textX, computedCoordinate(titleY), title, "t", anchor));
+  parts.push(text(textX, titleY, title, "t", anchor));
   lines.forEach(([content, lineClass], index) => {
     const lineY = titleY + 18 + NODE_LINE_HEIGHT * index;
-    parts.push(text(textX, computedCoordinate(lineY), content, lineClass, anchor));
+    parts.push(text(textX, lineY, content, lineClass, anchor));
   });
   return parts.join("");
 }
