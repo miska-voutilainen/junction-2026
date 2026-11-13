@@ -78,7 +78,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   next.config.ts, eslint.config.mjs, vitest.config.ts, playwright.config.ts, .prettierrc.json, .env.example
 ├── .github/      workflows/, scripts/ (CI lane and tree checks), pull_request_template.md
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
-├── docs/         challenge, spec, concept-card, lessons, architecture, decisions, api, development, setup, demo, pitch, design/
+├── docs/         challenge, spec, concept-card, lessons, architecture, decisions, api, development, setup, demo, pitch, design/, ideas/ (one page per idea)
 ├── src/
 │   ├── app/                    routes: / (S1), /changes/[id] (S2), /reviewer (S3), layout, loading, error, not-found
 │   ├── features/inbox/         S1 components
