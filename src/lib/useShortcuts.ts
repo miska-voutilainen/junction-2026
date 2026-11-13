@@ -6,30 +6,25 @@ import { useRouter } from "next/navigation";
 // "g" then a letter must come as one gesture; a second later it is forgotten.
 const GO_SEQUENCE_MS = 1000;
 
-const GO_TARGETS: Record<string, string> = { i: "/", d: "/dashboard", r: "/reviewer" };
+const GO_TARGETS: Record<string, string> = { i: "/" };
 
-/** The page-level shortcuts that exist, in the order the nav lists them. */
+/** The page-level shortcuts that exist, in the order the nav lists them, after the search shortcut (its key depends on the platform, see `useSearchShortcutLabel`). */
 export const SHORTCUT_LIST = [
-  { keys: ["⌘K"], label: "Search and actions" },
   { keys: ["N"], label: "Review next" },
   { keys: ["j", "k"], label: "Move" },
   { keys: ["↵"], label: "Open" },
   { keys: ["g", "i"], label: "Inbox" },
-  { keys: ["g", "d"], label: "Dashboard" },
-  { keys: ["g", "r"], label: "Reviewer report card" },
-  { keys: ["1–4"], label: "Review steps" },
 ] as const;
 
 /** True when the key press belongs to a text field, so a shortcut must not steal it. */
-function isTypingTarget(target: EventTarget | null): boolean {
+export function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
 /**
  * Global keyboard shortcuts: Cmd/Ctrl+K opens search, N opens the next change
- * that needs review, `g` then `i`, `d` or `r` jumps to Inbox, Dashboard or the
- * report card. Letter shortcuts ignore modifier keys and any focused field, so
+ * that needs review, `g` then `i` jumps to Inbox. Letter shortcuts ignore modifier keys and any focused field, so
  * typing "n" in a search box never navigates. `j`/`k` and `1`-`4` belong to the
  * pages that have something to move through.
  *

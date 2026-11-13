@@ -1,0 +1,242 @@
+/**
+ * The inbox as data: one row per change, sorted and counted, ready to draw.
+ * Tiers and reading estimates come from `route()` run here with the current
+ * trust levels, so a simulated escape re-routes the inbox without a reload
+ * (spec section 3, S1 "Live re-routing"). Pure functions, no React.
+ */
+import type { ShellChange } from "@/components/ShellChange";
+import { tierLabel } from "@/contracts";
+import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier } from "@/contracts";
+import { receiptStatus } from "@/lib/data/receiptStatus";
+import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
+import { route } from "@/rules/route";
+
+/** What the server hands over for one change: its input, the state of its review, and its receipt if any. */
+export interface InboxSource {
+  change: ChangeInput;
+  review: { state: "ok"; data: Review } | { state: "missing" } | { state: "unreadable" };
+  /** "unreadable": a receipt file exists but fails validation. */
+  receipt: ReceiptRecord | "unreadable" | null;
+}
+
+/** The report card as the server found it. */
+export type ReportCardInput = { state: "ok"; data: ReportCard } | { state: "missing" } | { state: "unreadable" };
+
+/** The notice shown above the list when the report card file fails validation. */
+export const REPORT_CARD_NOTICE =
+  "The report card couldn't be read, so every area counts as Shadow and changes route as if the reviewer had no track record.";
+
+/** The line to show above the list when the report card is unreadable, else null. */
+export function reportCardNotice(reportCard: ReportCardInput): string | null {
+  return reportCard.state === "unreadable" ? REPORT_CARD_NOTICE : null;
+}
+
+/** Trust level per area: the report card (none counts as all Shadow) minus simulated escapes. */
+export function inboxLevels(reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): Record<Area, LadderLevel> {
+  return applyEscapes(levelsFromReportCard(reportCard.state === "ok" ? reportCard.data : null), escapes);
+}
+
+interface RowBase {
+  id: string;
+  title: string;
+  requirementId: string;
+  authorAgent: string;
+  hasSyntheticDescription: boolean;
+}
+
+/** A change with a readable review, routed. */
+export interface ReviewedRow extends RowBase {
+  state: "reviewed";
+  tier: Tier;
+  readHunks: number;
+  totalHunks: number;
+  readMinutes: number;
+  fullMinutes: number;
+  /** One entry per hunk in diff order, for the coverage strip. */
+  coverage: Coverage[];
+  contradictions: number;
+  refusals: number;
+  receipt: ReceiptStatusValue;
+  /** The receipt file exists but could not be read; `receipt` then says "needs-review". */
+  isReceiptUnreadable: boolean;
+  /** GitHub login of the signer; set only when `receipt` is "signed". */
+  signedBy?: string;
+}
+
+/** A change whose review is missing or fails validation; shown as a title and a one-line reason. */
+export interface UnreviewedRow extends RowBase {
+  state: "missing" | "unreadable";
+}
+
+/** One line of the inbox: a routed change, or one whose review is missing or unreadable. */
+export type InboxRow = ReviewedRow | UnreviewedRow;
+
+/** The status filter above the list; "needs-review" and "stale" match the receipt status. */
+export type StatusFilter = "all" | "needs-review" | "stale" | "signed";
+
+/** Totals for the summary bar; hunks and minutes count reviewed changes only. */
+export interface InboxSummary {
+  changes: number;
+  tierCounts: Record<Tier, number>;
+  signed: number;
+  readHunks: number;
+  totalHunks: number;
+  readMinutes: number;
+  fullMinutes: number;
+}
+
+/** Everything the inbox draws: sorted rows, the summary, and the change "Review next" opens. */
+export interface InboxModel {
+  /** Sorted: Full, Focused, Light, then unreviewed; ties by id. */
+  rows: InboxRow[];
+  summary: InboxSummary;
+  /** The first row in inbox order that has a review and no valid receipt, or null. */
+  reviewNext: ReviewedRow | null;
+}
+
+const TIER_ORDER: Record<Tier, number> = { full: 0, focused: 1, light: 2 };
+const UNREVIEWED_ORDER = 3;
+
+/**
+ * Routes every change with `levels` and builds the sorted rows and summary.
+ *
+ * @param levels trust level per area, already adjusted for simulated escapes
+ */
+export function buildInboxModel(sources: InboxSource[], levels: Record<Area, LadderLevel>): InboxModel {
+  const rows = sources.map((source) => buildRow(source, levels)).sort(compareRows);
+  return {
+    rows,
+    summary: summarise(rows),
+    reviewNext: rows.filter(isReviewed).find((row) => row.receipt !== "signed") ?? null,
+  };
+}
+
+/** Type guard: the row has a review and so a tier. */
+export function isReviewed(row: InboxRow): row is ReviewedRow {
+  return row.state === "reviewed";
+}
+
+/** Rows that match the status filter. Unreviewed rows appear only under "all": they have no receipt status. */
+export function filterRows(rows: InboxRow[], filter: StatusFilter): InboxRow[] {
+  if (filter === "all") return rows;
+  const wanted: ReceiptStatusValue = filter === "stale" ? "stale" : filter === "signed" ? "signed" : "needs-review";
+  return rows.filter((row) => isReviewed(row) && row.receipt === wanted);
+}
+
+/** How many rows each filter shows, for the counts on the filter buttons. */
+export function filterCounts(rows: InboxRow[]): Record<StatusFilter, number> {
+  return {
+    all: rows.length,
+    "needs-review": filterRows(rows, "needs-review").length,
+    stale: filterRows(rows, "stale").length,
+    signed: filterRows(rows, "signed").length,
+  };
+}
+
+/** The mobile inbox's three groups: what a phone can sign, what needs a desktop, and what is done. */
+export interface MobileSections {
+  signHere: ReviewedRow[];
+  needsDesktop: InboxRow[];
+  signed: ReviewedRow[];
+}
+
+/**
+ * Light changes and stale signatures can be handled on a phone; Focused and
+ * Full changes need the reading a desktop gives. Stale wins over the tier:
+ * a stale signature is the one thing that is always asking for action.
+ */
+export function mobileSections(rows: InboxRow[]): MobileSections {
+  const sections: MobileSections = { signHere: [], needsDesktop: [], signed: [] };
+  for (const row of rows) {
+    if (!isReviewed(row)) sections.needsDesktop.push(row);
+    else if (row.receipt === "signed") sections.signed.push(row);
+    else if (row.receipt === "stale" || row.tier === "light") sections.signHere.push(row);
+    else sections.needsDesktop.push(row);
+  }
+  return sections;
+}
+
+function buildRow({ change, review, receipt }: InboxSource, levels: Record<Area, LadderLevel>): InboxRow {
+  const base: RowBase = {
+    id: change.id,
+    title: change.title,
+    requirementId: change.requirementId,
+    authorAgent: change.authorAgent,
+    hasSyntheticDescription: change.authorDescription.synthetic,
+  };
+  if (review.state !== "ok") return { ...base, state: review.state };
+
+  const decision = route(review.data, levels);
+  const isReceiptUnreadable = receipt === "unreadable";
+  const record = isReceiptUnreadable ? null : receipt;
+  const status = receiptStatus(review.data, record);
+  return {
+    ...base,
+    state: "reviewed",
+    tier: decision.tier,
+    readHunks: decision.readHunks,
+    totalHunks: decision.totalHunks,
+    readMinutes: decision.readMinutes,
+    fullMinutes: decision.fullMinutes,
+    coverage: review.data.hunks.map((hunk) => decision.coverage[hunk.id]),
+    contradictions: review.data.findings.filter((finding) => finding.kind === "contradiction").length,
+    refusals: review.data.refusals.length,
+    receipt: status,
+    isReceiptUnreadable,
+    signedBy: status === "signed" ? record?.receipt.owner : undefined,
+  };
+}
+
+function compareRows(a: InboxRow, b: InboxRow): number {
+  const byTier = tierOrder(a) - tierOrder(b);
+  return byTier !== 0 ? byTier : a.id.localeCompare(b.id);
+}
+
+function tierOrder(row: InboxRow): number {
+  return isReviewed(row) ? TIER_ORDER[row.tier] : UNREVIEWED_ORDER;
+}
+
+function summarise(rows: InboxRow[]): InboxSummary {
+  const reviewed = rows.filter(isReviewed);
+  const sum = (pick: (row: ReviewedRow) => number) => reviewed.reduce((total, row) => total + pick(row), 0);
+  const countTier = (tier: Tier) => reviewed.filter((row) => row.tier === tier).length;
+  return {
+    changes: rows.length,
+    tierCounts: { light: countTier("light"), focused: countTier("focused"), full: countTier("full") },
+    signed: reviewed.filter((row) => row.receipt === "signed").length,
+    readHunks: sum((row) => row.readHunks),
+    totalHunks: sum((row) => row.totalHunks),
+    readMinutes: sum((row) => row.readMinutes),
+    fullMinutes: sum((row) => row.fullMinutes),
+  };
+}
+
+const STATUS_LABEL: Record<ReceiptStatusValue, string> = {
+  "needs-review": "needs review",
+  signed: "signed",
+  stale: "stale",
+};
+
+/** The rows as the shell wants them (nav badge, command menu), in inbox order. */
+export function toShellChanges(rows: InboxRow[]): ShellChange[] {
+  return rows.map((row) =>
+    isReviewed(row)
+      ? {
+          id: row.id,
+          title: row.title,
+          requirementId: row.requirementId,
+          tierLabel: tierLabel[row.tier],
+          statusLabel: STATUS_LABEL[row.receipt],
+          needsReview: row.receipt !== "signed",
+        }
+      : {
+          id: row.id,
+          title: row.title,
+          requirementId: row.requirementId,
+          tierLabel: null,
+          statusLabel: row.state === "missing" ? "not reviewed" : "unreadable",
+          needsReview: false,
+        },
+  );
+}

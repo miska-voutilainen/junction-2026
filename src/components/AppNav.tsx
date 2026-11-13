@@ -4,25 +4,18 @@ import { useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
-import { BarChart3, Inbox, Keyboard, ShieldCheck } from "lucide-react";
+import { Inbox, Keyboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
 import { Kbd } from "@/components/ui/kbd";
 import { useEnterTransition } from "@/lib/motion";
-import { SHORTCUT_LIST } from "@/lib/useShortcuts";
+import { SHORTCUT_LIST, useSearchShortcutLabel } from "@/lib/useShortcuts";
 import { cn } from "@/lib/utils";
 
 type NavItem = { label: string; href: string; icon: LucideIcon; hasBadge?: boolean };
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  { label: "Review", items: [{ label: "Inbox", href: "/", icon: Inbox, hasBadge: true }] },
-  {
-    label: "Insights",
-    items: [
-      { label: "Dashboard", href: "/dashboard", icon: BarChart3 },
-      { label: "Reviewer report card", href: "/reviewer", icon: ShieldCheck },
-    ],
-  },
+  { label: "Review", items: [{ label: "Inbox", href: "/", icon: Inbox, hasBadge: true }] }
 ];
 
 /** Inbox is the home of `/` and of every `/changes/<id>`; the other items match their own path. */
@@ -32,7 +25,7 @@ function isCurrent(href: string, pathname: string): boolean {
 }
 
 /**
- * The side navigation: Review and Insights groups, and the keyboard shortcuts
+ * The side navigation: the Review group, and the keyboard shortcuts
  * that exist. The selected background is one element that slides between items
  * (shared `layoutId`), so the eye follows where you went.
  *
@@ -44,6 +37,7 @@ export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: num
   // Two navs can be mounted (the page's and the sheet's); a group id keeps their highlights apart.
   const groupId = useId();
   const slide = useEnterTransition();
+  const searchShortcut = useSearchShortcutLabel();
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col gap-5 px-2.5 pt-4 pb-3 text-sm">
@@ -100,6 +94,7 @@ export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: num
           }
         >
           <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 py-1 pr-2.5 pl-9 text-xs text-text-muted">
+            <ShortcutRow keys={[searchShortcut]} label="Search and actions" />
             {SHORTCUT_LIST.map((shortcut) => (
               <ShortcutRow key={shortcut.label} keys={shortcut.keys} label={shortcut.label} />
             ))}

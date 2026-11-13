@@ -90,7 +90,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
       <button
         type="submit"
         disabled={!isComplete || isPending}
-        className="min-h-11 w-full rounded-button bg-brand text-sm font-semibold text-white transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="min-h-11 w-full rounded-button bg-brand text-sm font-semibold text-primary-foreground transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Unlock
       </button>
@@ -156,7 +156,7 @@ function UnlockedNotice({ next }: { next: string }) {
       </p>
       <a
         href={next}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-brand text-sm font-semibold text-white transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-button bg-brand text-sm font-semibold text-primary-foreground transition duration-(--duration-fast) ease-out hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-focus-ring-on-brand active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         Continue
       </a>

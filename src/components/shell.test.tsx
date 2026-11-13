@@ -43,10 +43,10 @@ function renderShell() {
 
 describe("AppNav", () => {
   it("marks only the current page", () => {
-    navigation.pathname = "/reviewer";
+    navigation.pathname = "/changes/mp-2283";
     render(<AppNav needsReviewCount={2} />);
-    expect(screen.getByRole("link", { name: "Reviewer report card" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: /Inbox/ }).hasAttribute("aria-current")).toBe(false);
+    expect(screen.getByRole("link", { name: /Inbox/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
   });
 
   it("shows the number of changes that need review on Inbox", () => {
@@ -66,6 +66,19 @@ describe("CommandMenu", () => {
     expect(await screen.findByRole("dialog")).toBeTruthy();
 
     await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("closes on a second Ctrl+K and still returns focus to the search button", async () => {
+    const user = userEvent.setup();
+    renderShell();
+    const trigger = screen.getByRole("button", { name: "Search and quick actions" });
+    trigger.focus();
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    await user.keyboard("{Control>}k{/Control}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(document.activeElement).toBe(trigger);
   });
@@ -100,13 +113,13 @@ describe("CommandMenu", () => {
 });
 
 describe("shortcuts", () => {
-  it("N opens the next change, and g then d goes to the dashboard", () => {
+  it("N opens the next change, and g then i goes to the inbox", () => {
     renderShell();
     fireEvent.keyDown(window, { key: "n" });
     expect(navigation.push).toHaveBeenCalledWith("/changes/mp-2283");
     fireEvent.keyDown(window, { key: "g" });
-    fireEvent.keyDown(window, { key: "d" });
-    expect(navigation.push).toHaveBeenCalledWith("/dashboard");
+    fireEvent.keyDown(window, { key: "i" });
+    expect(navigation.push).toHaveBeenCalledWith("/");
   });
 
   it("ignores letters typed into a field", () => {

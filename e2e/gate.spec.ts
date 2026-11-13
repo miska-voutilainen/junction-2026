@@ -28,7 +28,7 @@ test.describe("gate on", () => {
     await unlock(page);
     await page.goto("/");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("heading", { name: "Countersign" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeAttached();
   });
 
   test("gated pages ask search engines not to index", async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("gate off", () => {
 
   test("the home page loads directly", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Countersign" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeAttached();
   });
 
   test("/unlock redirects to /", async ({ page }) => {

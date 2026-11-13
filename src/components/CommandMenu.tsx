@@ -3,13 +3,13 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, BarChart3, Copy, FileDiff, Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
+import { motion } from "motion/react";
+import { ArrowRight, Copy, FileDiff, Inbox } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import { fadeUpItem, popover, staggerDelay, useMotionPreset } from "@/lib/motion";
+import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./ShellChange";
 
@@ -84,8 +84,15 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
   const { copiedNote, copy } = useCopyNote();
   const menuEntrance = useMotionPreset(popover);
 
+  // While open, the shortcut closes the menu: re-opening would make the search box the "trigger"
+  // and Esc would then return focus to it instead of the button that was used first.
+  const toggleSearch = useCallback(() => {
+    if (isOpen) close();
+    else open(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  }, [isOpen, open, close]);
+
   useShortcuts({
-    openSearch: () => open(document.activeElement instanceof HTMLElement ? document.activeElement : null),
+    openSearch: toggleSearch,
     reviewNextHref: nextChange ? `/changes/${nextChange.id}` : null,
   });
 
@@ -136,7 +143,8 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
       >
         <DialogTitle className="sr-only">Quick actions</DialogTitle>
         <DialogDescription className="sr-only">Search changes, pages and actions.</DialogDescription>
-        <motion.div {...menuEntrance} style={{ transformOrigin: originFor(trigger) }}>
+        {/* min-w-0: the dialog is a grid; without it the list grows to its longest row and spills past a phone screen. */}
+        <motion.div {...menuEntrance} className="min-w-0" style={{ transformOrigin: originFor(trigger) }}>
           <Command className="rounded-menu! bg-transparent p-0">
             <CommandInput
               value={query}
@@ -214,26 +222,20 @@ function buildQuickActions(
     const command = `pnpm countersign sign ${changeInView.id}`;
     rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
   }
-  rows.push({ id: "record-escape", label: "Record an escape", meta: "drops an area one level", icon: TriangleAlert, href: "/reviewer" });
   return rows;
 }
 
 function buildPages(needsReviewCount: number): Row[] {
   return [
     { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
-    { id: "go-dashboard", label: "Dashboard", meta: "trust by area", icon: BarChart3, shortcut: ["g", "d"], href: "/dashboard" },
-    { id: "go-reviewer", label: "Reviewer report card", meta: "planted-bug results", icon: ShieldCheck, shortcut: ["g", "r"], href: "/reviewer" },
   ];
 }
 
 function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: (row: Row) => void }) {
   const Icon = row.icon;
-  const entrance = useMotionPreset(fadeUpItem);
-  const isReduced = useReducedMotion();
-  // Under reduced motion the row is already in place, so a delay would only hide it.
-  const animate = isReduced ? entrance.animate : { ...entrance.animate, transition: { ...entrance.animate.transition, ...staggerDelay(index) } };
+  const entrance = useStaggeredPreset(fadeUpItem, index);
   return (
-    <motion.div initial={entrance.initial} animate={animate}>
+    <motion.div initial={entrance.initial} animate={entrance.animate}>
       <CommandItem
         value={`${row.label} ${row.meta}`}
         onSelect={() => onChoose(row)}
@@ -242,7 +244,7 @@ function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: 
         <span
           className={
             row.isPrimary
-              ? "grid size-6.5 shrink-0 place-items-center rounded-item bg-brand text-white"
+              ? "grid size-6.5 shrink-0 place-items-center rounded-item bg-brand text-primary-foreground"
               : "grid size-6.5 shrink-0 place-items-center rounded-item bg-surface-control text-text-secondary"
           }
         >
