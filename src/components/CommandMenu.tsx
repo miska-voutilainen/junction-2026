@@ -3,18 +3,17 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, BarChart3, Copy, FileDiff, Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import { EASE_OUT, fadeUpItem, popover, staggerChildren } from "@/lib/motion";
+import { fadeUpItem, popover, staggerDelay, useMotionPreset } from "@/lib/motion";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./ShellChange";
 
 const COPIED_MS = 1500;
-const ROW_ENTER_SECONDS = 0.2;
 // The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.
 const MENU_MAX_WIDTH_PX = 640;
 const MENU_TOP_FRACTION = 1 / 3;
@@ -83,6 +82,7 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
   const changeInView = changes.find((change) => pathname === `/changes/${change.id}`) ?? nextChange;
   const needsReviewCount = changes.filter((change) => change.needsReview).length;
   const { copiedNote, copy } = useCopyNote();
+  const menuEntrance = useMotionPreset(popover);
 
   useShortcuts({
     openSearch: () => open(document.activeElement instanceof HTMLElement ? document.activeElement : null),
@@ -136,7 +136,7 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
       >
         <DialogTitle className="sr-only">Quick actions</DialogTitle>
         <DialogDescription className="sr-only">Search changes, pages and actions.</DialogDescription>
-        <motion.div {...popover} style={{ transformOrigin: originFor(trigger) }}>
+        <motion.div {...menuEntrance} style={{ transformOrigin: originFor(trigger) }}>
           <Command className="rounded-menu! bg-transparent p-0">
             <CommandInput
               value={query}
@@ -228,11 +228,12 @@ function buildPages(needsReviewCount: number): Row[] {
 
 function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: (row: Row) => void }) {
   const Icon = row.icon;
+  const entrance = useMotionPreset(fadeUpItem);
+  const isReduced = useReducedMotion();
+  // Under reduced motion the row is already in place, so a delay would only hide it.
+  const animate = isReduced ? entrance.animate : { ...entrance.animate, transition: { ...entrance.animate.transition, ...staggerDelay(index) } };
   return (
-    <motion.div
-      initial={fadeUpItem.initial}
-      animate={{ ...fadeUpItem.animate, transition: { duration: ROW_ENTER_SECONDS, ease: EASE_OUT, ...staggerChildren(index) } }}
-    >
+    <motion.div initial={entrance.initial} animate={animate}>
       <CommandItem
         value={`${row.label} ${row.meta}`}
         onSelect={() => onChoose(row)}

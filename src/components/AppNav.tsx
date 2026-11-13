@@ -8,7 +8,7 @@ import { BarChart3, Inbox, Keyboard, ShieldCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
 import { Kbd } from "@/components/ui/kbd";
-import { EASE_OUT } from "@/lib/motion";
+import { useEnterTransition } from "@/lib/motion";
 import { SHORTCUT_LIST } from "@/lib/useShortcuts";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,7 @@ export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: num
   const pathname = usePathname();
   // Two navs can be mounted (the page's and the sheet's); a group id keeps their highlights apart.
   const groupId = useId();
+  const slide = useEnterTransition();
 
   return (
     <nav aria-label="Main" className="flex h-full flex-col gap-5 px-2.5 pt-4 pb-3 text-sm">
@@ -69,7 +70,7 @@ export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: num
                       layoutId="nav-selected"
                       aria-hidden="true"
                       className="absolute inset-0 rounded-item bg-surface-selected"
-                      transition={{ duration: 0.2, ease: EASE_OUT }}
+                      transition={slide}
                     />
                   )}
                   <Icon aria-hidden="true" className="relative size-4 shrink-0" />
