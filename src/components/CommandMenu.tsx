@@ -1,0 +1,274 @@
+"use client";
+
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { ArrowRight, BarChart3, Copy, FileDiff, Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Kbd } from "@/components/ui/kbd";
+import { EASE_OUT, fadeUpItem, popover, staggerChildren } from "@/lib/motion";
+import { useShortcuts } from "@/lib/useShortcuts";
+import type { ShellChange } from "./ShellChange";
+
+const COPIED_MS = 1500;
+const ROW_ENTER_SECONDS = 0.2;
+// The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.
+const MENU_MAX_WIDTH_PX = 640;
+const MENU_TOP_FRACTION = 1 / 3;
+const MENU_SIDE_MARGIN_PX = 32;
+
+type CommandMenuState = {
+  isOpen: boolean;
+  /** Opens the menu; `trigger` is the button to return focus to and to grow from. */
+  open: (trigger?: HTMLElement | null) => void;
+  close: () => void;
+  trigger: HTMLElement | null;
+};
+
+const CommandMenuContext = createContext<CommandMenuState | null>(null);
+
+/**
+ * Holds whether the command menu is open and which button opened it, so the
+ * top bar, the mobile header and the keyboard shortcut all drive one menu.
+ * Mount once in the root layout.
+ */
+export function CommandMenuProvider({ children }: { children: ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [trigger, setTrigger] = useState<HTMLElement | null>(null);
+  const open = useCallback((from?: HTMLElement | null) => {
+    setTrigger(from ?? null);
+    setIsOpen(true);
+  }, []);
+  const close = useCallback(() => setIsOpen(false), []);
+  const value = useMemo(() => ({ isOpen, open, close, trigger }), [isOpen, open, close, trigger]);
+  return <CommandMenuContext value={value}>{children}</CommandMenuContext>;
+}
+
+/** Opens and closes the command menu from anywhere under the provider. */
+export function useCommandMenu(): CommandMenuState {
+  const state = useContext(CommandMenuContext);
+  if (!state) throw new Error("useCommandMenu needs a CommandMenuProvider above it. Mount one in src/app/layout.tsx.");
+  return state;
+}
+
+type Row = {
+  id: string;
+  label: string;
+  meta: string;
+  icon: LucideIcon;
+  shortcut?: string[];
+  /** Navigates here; a row without it runs `run` instead. */
+  href?: string;
+  run?: () => void;
+  isPrimary?: boolean;
+};
+
+/**
+ * The Cmd/Ctrl+K menu: quick actions, pages and every change in one filterable
+ * list. Also registers the global shortcuts, since it knows the next change to
+ * review. Render it once per page, inside the shell.
+ *
+ * @param changes The inbox in order; the first that needs review is "next".
+ */
+export function CommandMenu({ changes }: { changes: ShellChange[] }) {
+  const { isOpen, open, close, trigger } = useCommandMenu();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [query, setQuery] = useState("");
+  const nextChange = changes.find((change) => change.needsReview) ?? null;
+  // "Copy sign command" targets the change on screen, else the next one to review.
+  const changeInView = changes.find((change) => pathname === `/changes/${change.id}`) ?? nextChange;
+  const needsReviewCount = changes.filter((change) => change.needsReview).length;
+  const { copiedNote, copy } = useCopyNote();
+
+  useShortcuts({
+    openSearch: () => open(document.activeElement instanceof HTMLElement ? document.activeElement : null),
+    reviewNextHref: nextChange ? `/changes/${nextChange.id}` : null,
+  });
+
+  const changeRows: Row[] = changes.map((change) => ({
+    id: `change-${change.id}`,
+    label: change.title,
+    meta: `${change.requirementId} · ${change.statusLabel}`,
+    icon: FileDiff,
+    href: `/changes/${change.id}`,
+  }));
+
+  function choose(row: Row) {
+    if (row.href) {
+      close();
+      router.push(row.href);
+    } else {
+      row.run?.();
+    }
+  }
+
+  function handleOpenChange(isNowOpen: boolean) {
+    if (isNowOpen) return;
+    close();
+    setQuery("");
+  }
+
+  const groups = [
+    { heading: "Quick actions", rows: buildQuickActions(nextChange, changeInView, copy) },
+    { heading: "Go to", rows: buildPages(needsReviewCount) },
+    { heading: "Changes", rows: changeRows },
+  ].filter((group) => group.rows.length > 0);
+  let rowIndex = 0;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        // The entrance is the motion element below; the exit is the dialog's own shorter fade.
+        className="top-1/3 max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
+        onCloseAutoFocus={(event) => {
+          // Return focus to the button that opened the menu, not whatever Radix remembered.
+          if (trigger?.isConnected) {
+            event.preventDefault();
+            trigger.focus();
+          }
+        }}
+      >
+        <DialogTitle className="sr-only">Quick actions</DialogTitle>
+        <DialogDescription className="sr-only">Search changes, pages and actions.</DialogDescription>
+        <motion.div {...popover} style={{ transformOrigin: originFor(trigger) }}>
+          <Command className="rounded-menu! bg-transparent p-0">
+            <CommandInput
+              value={query}
+              onValueChange={setQuery}
+              placeholder="Search changes or type a command…"
+              aria-label="Search or run a command"
+            />
+            <CommandList className="max-h-100 p-1">
+              <CommandEmpty className="px-3 py-7 text-text-muted">
+                No match for “{query}”. Try a change id, a requirement or a page.
+              </CommandEmpty>
+              {groups.map((group) => (
+                <CommandGroup key={group.heading} heading={group.heading} className="p-1.5">
+                  {group.rows.map((row) => (
+                    <MenuRow key={row.id} row={row} index={rowIndex++} onChoose={choose} />
+                  ))}
+                </CommandGroup>
+              ))}
+            </CommandList>
+            <div className="flex h-9.5 items-center gap-3.5 border-t border-border-subtle bg-surface-raised px-3.5 text-xs text-text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd> move
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Kbd>↵</Kbd> open
+              </span>
+              <span className="flex-1" />
+              <span role="status" aria-live="polite">
+                {copiedNote}
+              </span>
+            </div>
+          </Command>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Copies text and keeps a short "Copied" note for the live region; says so when the browser refuses. */
+function useCopyNote() {
+  const [copiedNote, setCopiedNote] = useState("");
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedNote("Copied");
+    } catch {
+      setCopiedNote("Copy failed. Select the command and copy it by hand.");
+    }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopiedNote(""), COPIED_MS);
+  }, []);
+  return { copiedNote, copy };
+}
+
+function buildQuickActions(
+  nextChange: ShellChange | null,
+  changeInView: ShellChange | null,
+  copySignCommand: (command: string) => void,
+): Row[] {
+  const rows: Row[] = [];
+  if (nextChange) {
+    rows.push({
+      id: "review-next",
+      label: "Review next change",
+      meta: [nextChange.requirementId, nextChange.tierLabel].filter(Boolean).join(" · "),
+      icon: ArrowRight,
+      shortcut: ["N"],
+      href: `/changes/${nextChange.id}`,
+      isPrimary: true,
+    });
+  }
+  if (changeInView) {
+    const command = `pnpm countersign sign ${changeInView.id}`;
+    rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
+  }
+  rows.push({ id: "record-escape", label: "Record an escape", meta: "drops an area one level", icon: TriangleAlert, href: "/reviewer" });
+  return rows;
+}
+
+function buildPages(needsReviewCount: number): Row[] {
+  return [
+    { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
+    { id: "go-dashboard", label: "Dashboard", meta: "trust by area", icon: BarChart3, shortcut: ["g", "d"], href: "/dashboard" },
+    { id: "go-reviewer", label: "Reviewer report card", meta: "planted-bug results", icon: ShieldCheck, shortcut: ["g", "r"], href: "/reviewer" },
+  ];
+}
+
+function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: (row: Row) => void }) {
+  const Icon = row.icon;
+  return (
+    <motion.div
+      initial={fadeUpItem.initial}
+      animate={{ ...fadeUpItem.animate, transition: { duration: ROW_ENTER_SECONDS, ease: EASE_OUT, ...staggerChildren(index) } }}
+    >
+      <CommandItem
+        value={`${row.label} ${row.meta}`}
+        onSelect={() => onChoose(row)}
+        className="gap-2.5 rounded-item px-2.5 py-2 data-selected:bg-surface-selected"
+      >
+        <span
+          className={
+            row.isPrimary
+              ? "grid size-6.5 shrink-0 place-items-center rounded-item bg-brand text-white"
+              : "grid size-6.5 shrink-0 place-items-center rounded-item bg-surface-control text-text-secondary"
+          }
+        >
+          <Icon aria-hidden="true" className="size-3.5" />
+        </span>
+        <span className="flex min-w-0 flex-1 items-baseline gap-2">
+          <span className="truncate">{row.label}</span>
+          <span className="truncate text-xs text-text-muted">{row.meta}</span>
+        </span>
+        {row.shortcut && (
+          <span className="flex gap-1">
+            {row.shortcut.map((key) => (
+              <Kbd key={key}>{key}</Kbd>
+            ))}
+          </span>
+        )}
+      </CommandItem>
+    </motion.div>
+  );
+}
+
+/** Aims the entrance at the button that opened the menu, as a CSS transform-origin. */
+function originFor(trigger: HTMLElement | null): string {
+  if (!trigger || typeof window === "undefined") return "50% 0";
+  const box = trigger.getBoundingClientRect();
+  const menuWidth = Math.min(MENU_MAX_WIDTH_PX, window.innerWidth - MENU_SIDE_MARGIN_PX);
+  const menuLeft = (window.innerWidth - menuWidth) / 2;
+  const menuTop = window.innerHeight * MENU_TOP_FRACTION;
+  return `${box.left + box.width / 2 - menuLeft}px ${box.top + box.height / 2 - menuTop}px`;
+}
