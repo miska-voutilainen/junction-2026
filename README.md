@@ -1,12 +1,18 @@
-# Junction 2026
+# Countersign
 
-<One-line pitch, written at kickoff. `demo-prep` turns this part into the judges' README: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools.>
+**AI reviews. A named human countersigns, on evidence they can check.**
 
-## Prepared before the event, no code
+Countersign is a concept and reference implementation for reviewing agent-written pull requests. The AI explains each change as a story traced to its requirement, backs every claim with evidence you can check, routes the human's attention by readable risk rules and states what it refuses to decide. A named engineer then signs a receipt in git for what was checked, what wasn't, and the risk they accept. We test the reviewer itself on planted bugs, so trust is earned per area rather than assumed.
 
-This environment was set up before Junction started, and it contains no code. There are no scripts, no product code, no config files and no installed tools here. It is written guidance: how the team works, how the agents behave, and specs for the tooling. The event rules let us bring only Markdown files like these, so that is all this folder holds.
+Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([challenge text](docs/challenge.md)). What we build: [docs/spec.md](docs/spec.md). Why: [docs/decisions.md](docs/decisions.md).
 
-Every line of code is written during the event, in a fresh repository, by the team and its agents. That includes the hooks, settings and CI described here. Nothing from other projects goes into that repository. If organisers want to check, we show them this folder as it is.
+<!-- demo-prep turns this part into the judges' README at the freeze: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools. -->
+
+## Prepared before the event: Markdown only
+
+The agent environment below was set up before Junction started, as Markdown only: written guidance on how the team works, how the agents behave, and specs for the tooling. The event rules let us bring only Markdown files, so the first commit (`chore: add agent environment`) holds nothing else.
+
+Every line of code was written during the event, by the team and its agents, starting with the kickoff branch on Fri 13.11. That includes the hooks, settings and CI described here. Nothing from other projects is in this repository.
 
 ## Agent environment
 

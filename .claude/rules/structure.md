@@ -5,7 +5,7 @@ Judges open the repo. The tree should read like a table of contents: every file 
 ## The tree
 
 - The canonical layout lives in `CLAUDE.md` ("File tree"). New top-level folders or root files are added there first, in the same PR.
-- **Root holds only:** `README.md`, `CLAUDE.md`, `AGENTS.md`, `LICENSE`, the package manifest and lockfile, tool configs the stack needs at the root, `.gitignore`, `.env.example`, and the top-level folders in `CLAUDE.md`. Anything else goes in a folder.
+- **Root holds only:** `README.md`, `CLAUDE.md`, `AGENTS.md`, `LICENSE`, the package manifest and lockfile (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`), tool configs the stack needs at the root (`tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`), `.gitignore`, `.gitattributes`, `.env.example`, and the top-level folders in `CLAUDE.md`. Anything else goes in a folder.
 - Group code by feature, not by type: a feature folder holds its components, logic, API calls and tests, and exposes a small `index`; other features import from it, never from its internals.
 - Shared UI, clients, scripts, e2e tests and evals each have one home, named in the File tree. Code moves to a shared folder only when a second feature needs it.
 - Keep the framework's conventions (routing folders, config locations) where they conflict with these rules.

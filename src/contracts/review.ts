@@ -1,0 +1,174 @@
+import { z } from "zod";
+import {
+  AreaSchema,
+  CitationSchema,
+  EvidenceLevelSchema,
+  FileKindSchema,
+  IsoTimestampSchema,
+  ReceiptBodySchema,
+  ShaSchema,
+} from "./common";
+import { RequirementSchema } from "./requirement";
+import { TierDecisionSchema } from "./tierDecision";
+
+const nonNegInt = z.number().int().nonnegative();
+const TestResultSchema = z.strictObject({
+  result: z.enum(["fail", "pass", "error"]),
+  output: z.string(), // trimmed to the last 2,000 characters
+});
+
+const HunkLineSchema = z.strictObject({
+  kind: z.enum(["context", "add", "del"]),
+  oldLine: z.number().int().positive().nullable(),
+  newLine: z.number().int().positive().nullable(),
+  text: z.string(), // excludes the +/-/space prefix
+});
+
+const HunkSchema = z.strictObject({
+  id: z.string(), // "h1", "h2", ... in diff order
+  file: z.string(),
+  header: z.string(), // "@@ -236,7 +236,7 @@"
+  oldStart: nonNegInt,
+  oldLines: nonNegInt,
+  newStart: nonNegInt,
+  newLines: nonNegInt,
+  lines: z.array(HunkLineSchema),
+});
+
+const ClaimSchema = z.strictObject({
+  id: z.string(), // "c1"
+  requirementItemId: z.string().nullable(),
+  text: z.string(),
+  kind: z.enum(["behaviour", "structure", "docs", "test"]),
+  level: EvidenceLevelSchema,
+  hunkIds: z.array(z.string()),
+  citations: z.array(CitationSchema),
+  evidence: z.array(
+    z.strictObject({
+      kind: z.enum(["differential-test", "pr-test", "quote-check"]),
+      summary: z.string(),
+      testName: z.string().nullable(),
+      base: TestResultSchema.nullable(),
+      head: TestResultSchema.nullable(),
+    }),
+  ),
+});
+
+const FindingSchema = z.strictObject({
+  id: z.string(), // "f1"
+  kind: z.enum(["defect", "contradiction", "missing", "scope-creep"]),
+  area: AreaSchema.nullable(),
+  severity: z.enum(["high", "medium", "low"]),
+  title: z.string(),
+  detail: z.string(),
+  statement: z.string().nullable(), // contradiction: the PR sentence
+  hunkIds: z.array(z.string()),
+  citations: z.array(CitationSchema),
+});
+
+/** data/runs/<changeId>/review.json and the anchored/blind runs (producer: engine lane). */
+export const ReviewSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  // copied from ChangeInput
+  changeId: z.string(),
+  requirementId: z.string(),
+  title: z.string(),
+  authorAgent: z.string(),
+  kind: z.enum(["tieto", "planted-bug", "contradiction-plant"]),
+  mode: z.enum(["blind-first", "anchored"]),
+  reviewer: z.strictObject({
+    version: z.string(), // "rv1"
+    model: z.string(),
+    promptVersions: z.strictObject({
+      a1: z.string(),
+      a2: z.string(),
+      a3: z.string(),
+      a4: z.string(),
+      a5: z.string(),
+    }),
+  }),
+  run: z.strictObject({
+    id: z.string(),
+    startedAt: IsoTimestampSchema,
+    finishedAt: IsoTimestampSchema,
+    durationMs: nonNegInt,
+    usage: z.strictObject({
+      inputTokens: nonNegInt,
+      outputTokens: nonNegInt,
+      costUsd: z.number().nonnegative(),
+      calls: nonNegInt,
+    }),
+  }),
+  diff: z.strictObject({
+    baseSha: ShaSchema,
+    headSha: ShaSchema,
+    baseTree: ShaSchema,
+    headTree: ShaSchema,
+    diffSha256: z.string().regex(/^[0-9a-f]{64}$/),
+    filesChanged: nonNegInt,
+    linesAdded: nonNegInt,
+    linesRemoved: nonNegInt,
+  }),
+  files: z.array(
+    z.strictObject({
+      path: z.string(),
+      kind: FileKindSchema,
+      area: AreaSchema.nullable(),
+      added: nonNegInt,
+      removed: nonNegInt,
+      hunkIds: z.array(z.string()),
+    }),
+  ),
+  hunks: z.array(HunkSchema),
+  requirement: RequirementSchema,
+  // null in anchored mode
+  expectation: z
+    .strictObject({
+      items: z.array(
+        z.strictObject({
+          requirementItemId: z.string(),
+          expectedBehaviours: z.array(z.string()),
+          likelyAreas: z.array(AreaSchema),
+          expectedTests: z.array(z.string()),
+        }),
+      ),
+    })
+    .nullable(),
+  story: z.strictObject({
+    what: z.string(),
+    why: z.string(),
+    touches: z.array(
+      z.strictObject({ symbol: z.string(), file: z.string(), note: z.string() }),
+    ),
+  }),
+  claims: z.array(ClaimSchema),
+  findings: z.array(FindingSchema),
+  refusals: z.array(
+    z.strictObject({
+      id: z.string(), // "r1"
+      ruleId: z.string(), // "R1".."R7"
+      reason: z.string(),
+      hunkIds: z.array(z.string()),
+    }),
+  ),
+  quoteCheck: z.strictObject({
+    checked: nonNegInt,
+    passed: nonNegInt,
+    downgraded: nonNegInt,
+    dropped: nonNegInt,
+    failures: z.array(
+      z.strictObject({
+        itemId: z.string(),
+        citation: CitationSchema,
+        reason: z.string(),
+      }),
+    ),
+  }),
+  retractions: z.array(
+    z.strictObject({ claimId: z.string(), reason: z.string(), output: z.string() }),
+  ),
+  receiptDraft: ReceiptBodySchema,
+  // route() at record time, with the levels from the report card then
+  routing: TierDecisionSchema,
+});
+export type Review = z.infer<typeof ReviewSchema>;

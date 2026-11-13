@@ -41,6 +41,7 @@ The heavy work is front-loaded: kickoff at `max` is a one-off of under an hour. 
 - **Watch it live:** `lightfoot status-line install` shows the share of the 5-hour window in Claude Code's status line.
 - **Checkpoints:** at every `handover` and at T+6, T+12, T+24 and the freeze, check `/usage`. If the 5-hour window is past 60% with more than half of it left, or the weekly limit is past 50% before the midpoint: main session to `/model sonnet` for mechanical work, reviews at tier M, and `product-critic` only for the pitch.
 - **Delegate the writing:** the main session plans, briefs and verifies; `builder` and `test-writer` on sonnet write the code. An Opus main session that writes code itself is the fastest way to empty the window.
+- **Second seat** (`join`, Max only): a second session in a worktree on Sonnet at medium effort roughly doubles the lane's output for about a third of an Opus session's usage. Close it at the first checkpoint that crosses a threshold.
 - **Short sessions:** `handover` and a fresh session every ~3 tasks; Lightfoot trims the rest.
 - **If it runs out anyway:** `handover`, then keep going on Sonnet in a new session, or log Claude Code in with a Console API key that has a spending limit (pay per token, no usage window; partner credits often cover it). Another person's account is never the fallback.
 

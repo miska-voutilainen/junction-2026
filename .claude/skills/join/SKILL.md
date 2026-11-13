@@ -23,4 +23,13 @@ Your user has cloned the repo and started Claude Code in it; everything else is 
 6. **Code map.** `graphify update .` and `graphify hook install` (no model calls).
 7. **Hand over to a fresh session.** The new settings apply only to a new session. Tell your user, in one message: what was set up (name, plan, lane, vault path), anything that failed and its fix, then: "Type `/exit`, start Claude Code again in this folder, accept the trust prompt, and say **go**." (Before the harness core has merged, `go` holds merges; after it, the first session runs setup.md 4.7.)
 
+## Second seat (Max only, on request: "add a second session")
+
+A second Claude Code session on the same lane, in its own git worktree, so two tasks build at once. Only with `PLAN=max`, only after T00 and the CI foundation task have merged, only when the lane has at least two ready tasks that touch different files, and only while `/usage` is under the checkpoints in `delegation.md`. Refuse politely otherwise.
+
+1. `git worktree add ../<repo>-b main` (sibling folder; the first seat keeps the main checkout).
+2. In it, write `.claude/settings.local.json`: a copy of this machine's, plus `"SLOT": "b"` and `"PORT": "3100"` in `env`, plus `"model": "sonnet"` and `"CLAUDE_CODE_EFFORT_LEVEL": "medium"` (the second seat builds well-specified tasks; Opus stays with the first). In the first seat's file, add `"SLOT": "a"`. Both writes raise a prompt.
+3. In the worktree: the frozen-lockfile install (the package manager's store makes it fast) and `graphify update .` (the git hooks are shared already).
+4. Tell your user: open a second VS Code window (or terminal) on `../<repo>-b`, start Claude Code, accept the trust prompt, say **go**; restart the first seat too so it picks up `SLOT=a`. Each seat claims its task with a draft PR, so they never take the same one. To stop: `handover` in seat b, close it, `git worktree remove ../<repo>-b`.
+
 Never print tokens or keys, never edit files outside `.claude/settings.local.json`, the vault and Lightfoot's and Graphify's own config, and never change the shared `.claude/settings.json`.
