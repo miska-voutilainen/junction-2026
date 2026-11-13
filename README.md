@@ -4,6 +4,8 @@
 
 Countersign is a concept and reference implementation for reviewing agent-written pull requests. The AI explains each change as a story traced to its requirement, backs every claim with evidence you can check, routes the human's attention by readable risk rules and states what it refuses to decide. A named engineer then signs a receipt in git for what was checked, what wasn't, and the risk they accept. We test the reviewer itself on planted bugs, so trust is earned per area rather than assumed.
 
+**Live:** https://countersign-junction.com
+
 Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([challenge text](docs/challenge.md)). What we build: [docs/spec.md](docs/spec.md). Why: [docs/decisions.md](docs/decisions.md).
 
 <!-- demo-prep turns this part into the judges' README at the freeze: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools. -->
