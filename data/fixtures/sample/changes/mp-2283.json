@@ -1,0 +1,17 @@
+{
+  "id": "mp-2283",
+  "kind": "tieto",
+  "title": "Fix crash on closed generic structs from referenced assemblies",
+  "requirementId": "MP-2283",
+  "parentChangeId": null,
+  "repo": "miska-voutilainen/junction26-messagepack-csharp",
+  "branch": "agent/mp-2283",
+  "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+  "headSha": "8b2d63b81b6c017ba76db376d280279561e9cde0",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "authorDescription": {
+    "text": "This change stops the source generator and the MsgPack00x analyzer from crashing when a [MessagePackObject] type has a member whose type is a closed generic struct from a referenced assembly. Both read DeclaringSyntaxReferences[0] on a metadata symbol, which has no syntax and so threw IndexOutOfRangeException. The lookups now use FirstOrDefault and fall back to the caller's location. I added regression tests in GenerationTests and AnalyzerTests that compile a small library and reference it from the app project. The change only touches type collection and the analyzer entry point. The analyzer's diagnostics are unchanged: it reports exactly the same set of diagnostics as before and adds none. Generated output for types that were already supported is byte-for-byte identical.",
+    "synthetic": true,
+    "writtenBy": "Kasanen (evidence lane), written blind"
+  }
+}

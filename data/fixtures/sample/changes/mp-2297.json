@@ -1,0 +1,17 @@
+{
+  "id": "mp-2297",
+  "kind": "tieto",
+  "title": "Mark generated formatters and resolver ExcludeFromCodeCoverage",
+  "requirementId": "MP-2297",
+  "parentChangeId": null,
+  "repo": "miska-voutilainen/junction26-messagepack-csharp",
+  "branch": "agent/mp-2297",
+  "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+  "headSha": "d996e3faf7a4a4e4c9f664dbb746eace6596b876",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "authorDescription": {
+    "text": "This change decorates the types the source generator emits with System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage so coverage tools skip them. FormatterTemplate and ResolverTemplate now write the attribute above each generated formatter and above the generated resolver. The attribute is written with its global:: name so it cannot clash with user types. No option was added: it is always emitted, as the issue suggests. The checked-in generator snapshots under tests/.../Resources are updated to match, and one new generation test asserts every generated source contains the attribute. Hand-written formatters and the runtime library are untouched.",
+    "synthetic": true,
+    "writtenBy": "Kasanen (evidence lane), written blind"
+  }
+}
