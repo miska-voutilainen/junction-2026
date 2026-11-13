@@ -8,8 +8,9 @@ const SIZES = {
  * so the drawing and the lettering are hidden from them separately.
  *
  * @param size "lg" for full-page use such as the gate, "sm" for the top bar.
+ * @param showName False shows the mark alone, for the mobile header where the page title sits next to it.
  */
-export function Wordmark({ size = "lg" }: { size?: keyof typeof SIZES }) {
+export function Wordmark({ size = "lg", showName = true }: { size?: keyof typeof SIZES; showName?: boolean }) {
   const { text, logoWidth, logoHeight } = SIZES[size];
   return (
     <span
@@ -35,9 +36,11 @@ export function Wordmark({ size = "lg" }: { size?: keyof typeof SIZES }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span aria-hidden="true" className={`${text} font-bold tracking-[-0.045em]`}>
-        countersign
-      </span>
+      {showName && (
+        <span aria-hidden="true" className={`${text} font-bold tracking-[-0.045em]`}>
+          countersign
+        </span>
+      )}
     </span>
   );
 }

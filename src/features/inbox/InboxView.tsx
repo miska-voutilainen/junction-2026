@@ -1,17 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Disclosure } from "@/components/Disclosure";
 import { SegmentedControl } from "@/components/SegmentedControl";
-import type { ReportCard } from "@/contracts";
-import { useEscapes } from "@/lib/simulation/escapes";
-import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
 import { InboxHeader } from "./InboxHeader";
 import { InboxMobile } from "./InboxMobile";
 import { InboxTable } from "./InboxTable";
 import { SummaryBar } from "./SummaryBar";
-import { buildInboxModel, filterCounts, filterRows, isReviewed, mobileSections } from "./inboxModel";
-import type { InboxRow, InboxSource, StatusFilter } from "./inboxModel";
+import { filterCounts, filterRows, isReviewed, mobileSections } from "./inboxModel";
+import type { InboxModel, InboxRow, StatusFilter } from "./inboxModel";
 import { useRowNavigation } from "./useRowNavigation";
 
 const EMPTY_FILTER_TEXT: Record<StatusFilter, string> = {
@@ -23,22 +20,23 @@ const EMPTY_FILTER_TEXT: Record<StatusFilter, string> = {
 
 /**
  * The inbox body: header, summary, and the list as a table (760 px and up) or
- * as three short lists (below). Tiers are computed here, in the browser, from
- * the report card's trust levels minus any simulated escapes, so recording an
- * escape re-routes every row at once (spec section 3, S1 "Live re-routing").
+ * as three short lists (below). The model arrives already routed with the
+ * current simulated escapes (see `InboxScreen`).
+ *
+ * @param notice A line shown above the list, e.g. that the report card is unreadable.
  */
-export function InboxView({ sources, reportCard }: { sources: InboxSource[]; reportCard: ReportCard | null }) {
-  const { escapes } = useEscapes();
-  const model = useMemo(
-    () => buildInboxModel(sources, applyEscapes(levelsFromReportCard(reportCard), escapes)),
-    [sources, reportCard, escapes],
-  );
+export function InboxView({ model, notice }: { model: InboxModel; notice: string | null }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   useRowNavigation();
 
   return (
     <div className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 py-6 compact:px-8 compact:py-7">
       <InboxHeader reviewNext={model.reviewNext} />
+      {notice && (
+        <p role="status" className="rounded-control border border-amber/40 px-4 py-2.5 text-sm text-amber-light">
+          {notice}
+        </p>
+      )}
       <SummaryBar summary={model.summary} />
       <div className="compact:hidden">
         <InboxMobile sections={mobileSections(model.rows)} />

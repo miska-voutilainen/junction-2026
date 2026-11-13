@@ -92,7 +92,11 @@ function ReviewedCells({ row }: { row: ReviewedRow }) {
         {row.contradictions === 0 && row.refusals === 0 && <span className="text-text-muted">No flags</span>}
       </div>
       <div role="cell" className="text-sm">
-        <ReceiptStatus status={row.receipt} owner={row.signedBy} />
+        {row.isReceiptUnreadable ? (
+          <span className="text-amber-light">Receipt couldn&apos;t be read</span>
+        ) : (
+          <ReceiptStatus status={row.receipt} owner={row.signedBy} />
+        )}
       </div>
     </>
   );

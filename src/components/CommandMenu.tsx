@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, BarChart3, Copy, FileDiff, Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ArrowRight, Copy, FileDiff, Inbox } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -214,15 +214,12 @@ function buildQuickActions(
     const command = `pnpm countersign sign ${changeInView.id}`;
     rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
   }
-  rows.push({ id: "record-escape", label: "Record an escape", meta: "drops an area one level", icon: TriangleAlert, href: "/reviewer" });
   return rows;
 }
 
 function buildPages(needsReviewCount: number): Row[] {
   return [
     { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
-    { id: "go-dashboard", label: "Dashboard", meta: "trust by area", icon: BarChart3, shortcut: ["g", "d"], href: "/dashboard" },
-    { id: "go-reviewer", label: "Reviewer report card", meta: "planted-bug results", icon: ShieldCheck, shortcut: ["g", "r"], href: "/reviewer" },
   ];
 }
 

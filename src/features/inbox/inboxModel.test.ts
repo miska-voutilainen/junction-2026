@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { ReceiptRecord, Review } from "@/contracts";
 import { loadChanges, loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
 import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
-import { buildInboxModel, filterCounts, filterRows, isReviewed, mobileSections } from "./inboxModel";
+import { REPORT_CARD_NOTICE, buildInboxModel, filterCounts, filterRows, inboxLevels, isReviewed, mobileSections, reportCardNotice } from "./inboxModel";
 import type { InboxSource, ReviewedRow } from "./inboxModel";
 
 // The committed fixtures stand in for recorded reviews: four Tieto changes, one signed.
@@ -146,5 +146,22 @@ describe("filters and mobile sections", () => {
     for (const row of sections.signHere) expect(row.tier === "light" || row.receipt === "stale").toBe(true);
     for (const row of sections.needsDesktop.filter(isReviewed)) expect(row.tier).not.toBe("light");
     for (const row of sections.signed) expect(row.receipt).toBe("signed");
+  });
+});
+
+describe("unreadable data", () => {
+  it("explains an unreadable report card and routes every area as Shadow", () => {
+    expect(reportCardNotice({ state: "unreadable" })).toBe(REPORT_CARD_NOTICE);
+    expect(reportCardNotice({ state: "missing" })).toBeNull();
+    expect(Object.values(inboxLevels({ state: "unreadable" }, {})).every((level) => level === "shadow")).toBe(true);
+  });
+
+  it("flags an unreadable receipt on its row and keeps the change needing review", () => {
+    const [first, ...rest] = sources;
+    const row = buildInboxModel([{ ...first, receipt: "unreadable" }, ...rest], levels).rows.find(
+      (candidate) => candidate.id === first.change.id,
+    ) as ReviewedRow;
+    expect(row.isReceiptUnreadable).toBe(true);
+    expect(row.receipt).toBe("needs-review");
   });
 });

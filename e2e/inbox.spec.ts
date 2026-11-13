@@ -5,16 +5,14 @@ import { unlock } from "./unlock";
 // The inbox shows the committed fixtures until recorded reviews exist: four Tieto changes, one signed.
 const SIGNED_CHANGE_HREF = "/changes/mp-2283";
 
-const UNBUILT_ROUTES = ["/changes/", "/dashboard", "/reviewer"];
-
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
 function watchConsole(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
-    // Links prefetch pages that later tasks ship (/changes/<id>, /dashboard, /reviewer); their 404s are not this page's.
-    if (UNBUILT_ROUTES.some((route) => message.location().url.includes(route))) return;
-    problems.push(`${message.type()}: ${message.text()}`);
+    // Row links prefetch /changes/<id>, which 404s until S2 (T18) ships; delete this line with that PR.
+    if (/\/changes\/[\w-]+\?_rsc=/.test(message.location().url)) return;
+    problems.push(`${message.type()}: ${message.text()} ${message.location().url}`);
   });
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));
   return problems;
@@ -26,6 +24,8 @@ test.beforeEach(async ({ page }) => {
 
 test("lists the four changes with their tiers and links each to its review", async ({ page }, testInfo) => {
   const problems = watchConsole(page);
+  // Reduced motion shows every row and the fold at rest, so the screenshots never catch a half-faded row.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeAttached();
@@ -40,6 +40,12 @@ test("lists the four changes with their tiers and links each to its review", asy
 
   const width = testInfo.project.name === "mobile" ? 375 : 1440;
   await page.screenshot({ path: `.review/inbox-${width}.png`, fullPage: true });
+
+  if (testInfo.project.name === "mobile") {
+    await page.getByRole("button", { name: "Search and quick actions" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.screenshot({ path: ".review/inbox-375-menu.png" });
+  }
   expect(problems).toEqual([]);
 });
 

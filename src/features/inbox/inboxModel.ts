@@ -6,16 +6,34 @@
  */
 import type { ShellChange } from "@/components/ShellChange";
 import { tierLabel } from "@/contracts";
-import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, Review, Tier } from "@/contracts";
+import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier } from "@/contracts";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
 import { route } from "@/rules/route";
 
 /** What the server hands over for one change: its input, the state of its review, and its receipt if any. */
 export interface InboxSource {
   change: ChangeInput;
   review: { state: "ok"; data: Review } | { state: "missing" } | { state: "unreadable" };
-  receipt: ReceiptRecord | null;
+  /** "unreadable": a receipt file exists but fails validation. */
+  receipt: ReceiptRecord | "unreadable" | null;
+}
+
+/** The report card as the server found it. */
+export type ReportCardInput = { state: "ok"; data: ReportCard } | { state: "missing" } | { state: "unreadable" };
+
+export const REPORT_CARD_NOTICE =
+  "The report card couldn't be read, so every area counts as Shadow and changes route as if the reviewer had no track record.";
+
+/** The line to show above the list when the report card is unreadable, else null. */
+export function reportCardNotice(reportCard: ReportCardInput): string | null {
+  return reportCard.state === "unreadable" ? REPORT_CARD_NOTICE : null;
+}
+
+/** Trust level per area: the report card (none counts as all Shadow) minus simulated escapes. */
+export function inboxLevels(reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): Record<Area, LadderLevel> {
+  return applyEscapes(levelsFromReportCard(reportCard.state === "ok" ? reportCard.data : null), escapes);
 }
 
 interface RowBase {
@@ -39,6 +57,8 @@ export interface ReviewedRow extends RowBase {
   contradictions: number;
   refusals: number;
   receipt: ReceiptStatusValue;
+  /** The receipt file exists but could not be read; `receipt` then says "needs-review". */
+  isReceiptUnreadable: boolean;
   /** GitHub login of the signer; set only when `receipt` is "signed". */
   signedBy?: string;
 }
@@ -143,7 +163,9 @@ function buildRow({ change, review, receipt }: InboxSource, levels: Record<Area,
   if (review.state !== "ok") return { ...base, state: review.state };
 
   const decision = route(review.data, levels);
-  const status = receiptStatus(review.data, receipt);
+  const isReceiptUnreadable = receipt === "unreadable";
+  const record = isReceiptUnreadable ? null : receipt;
+  const status = receiptStatus(review.data, record);
   return {
     ...base,
     state: "reviewed",
@@ -156,7 +178,8 @@ function buildRow({ change, review, receipt }: InboxSource, levels: Record<Area,
     contradictions: review.data.findings.filter((finding) => finding.kind === "contradiction").length,
     refusals: review.data.refusals.length,
     receipt: status,
-    signedBy: status === "signed" ? receipt?.receipt.owner : undefined,
+    isReceiptUnreadable,
+    signedBy: status === "signed" ? record?.receipt.owner : undefined,
   };
 }
 
