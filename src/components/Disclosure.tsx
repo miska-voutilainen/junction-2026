@@ -4,15 +4,12 @@ import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { EASE_OUT, crossfade } from "@/lib/motion";
-
-const REVEAL_SECONDS = 0.2;
-const COLLAPSE_SECONDS = 0.16;
+import { crossfade, reveal, useMotionPreset } from "@/lib/motion";
 
 /**
  * A button that shows or hides its content. The content is revealed with a
  * clip-path wipe rather than animating height, so the text below does not
- * jump while it opens. With reduced motion it appears at once.
+ * jump while it opens, and closes at once. With reduced motion it opens at once too.
  *
  * @param title What the button says; the section's name.
  * @param defaultOpen Start expanded.
@@ -30,6 +27,8 @@ export function Disclosure({
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentId = useId();
+  const iconSwap = useMotionPreset(crossfade);
+  const contentReveal = useMotionPreset(reveal);
 
   return (
     <div className={className}>
@@ -42,7 +41,7 @@ export function Disclosure({
       >
         <span className="relative size-4 shrink-0">
           <AnimatePresence initial={false} mode="popLayout">
-            <motion.span key={isOpen ? "open" : "closed"} {...crossfade} className="absolute inset-0 flex">
+            <motion.span key={isOpen ? "open" : "closed"} {...iconSwap} className="absolute inset-0 flex">
               {isOpen ? (
                 <ChevronDown aria-hidden="true" className="size-4" />
               ) : (
@@ -58,17 +57,7 @@ export function Disclosure({
           {isOpen && (
             <motion.div
               key="content"
-              initial={{ clipPath: "inset(0 0 100% 0)", opacity: 0 }}
-              animate={{
-                clipPath: "inset(0 0 0% 0)",
-                opacity: 1,
-                transition: { duration: REVEAL_SECONDS, ease: EASE_OUT },
-              }}
-              exit={{
-                clipPath: "inset(0 0 100% 0)",
-                opacity: 0,
-                transition: { duration: COLLAPSE_SECONDS, ease: EASE_OUT },
-              }}
+              {...contentReveal}
               className="pt-1"
             >
               {children}

@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import { IDEAS, ideaUrl } from "@/lib/ideaLinks";
+import { IDEAS, ideaUrl, type IdeaNumber } from "@/lib/ideaLinks";
 import { cn } from "@/lib/utils";
 
 /**
@@ -7,9 +7,8 @@ import { cn } from "@/lib/utils";
  * the seven ideas and links to its page in a new tab. The name comes from
  * `IDEAS`, so a label cannot disagree with the list. Spec section 3.
  *
- * @throws If `n` is not one of the seven ideas.
  */
-export function IdeaLabel({ n, className }: { n: number; className?: string }) {
+export function IdeaLabel({ n, className }: { n: IdeaNumber; className?: string }) {
   const url = ideaUrl(n);
   const name = IDEAS.find((idea) => idea.n === n)?.name;
 
@@ -18,7 +17,7 @@ export function IdeaLabel({ n, className }: { n: number; className?: string }) {
       href={url}
       target="_blank"
       rel="noopener"
-      aria-label={`Idea ${n}: ${name}, opens the idea page`}
+      aria-label={`Idea ${n} · ${name}, opens in a new tab`}
       className={cn(
         "inline-flex items-center gap-1 rounded-chip border border-border-default px-1.5 py-0.5 text-xs text-text-muted transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover hover:text-text-secondary",
         className,

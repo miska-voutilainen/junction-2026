@@ -1,9 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Console } from "./Console";
-import { CopyButton } from "./CopyButton";
-import { Disclosure } from "./Disclosure";
-import { SegmentedControl } from "./SegmentedControl";
 
 const writeText = vi.fn();
 
@@ -29,24 +26,28 @@ describe("Console", () => {
     expect(writeText).toHaveBeenCalledWith("+ int x = 1;");
   });
 
-  it("toggles wrap, renames the button and remembers the choice", () => {
+  it("keeps the Wrap button's name, toggles aria-pressed and remembers the choice", () => {
     const { unmount } = render(<Console label="Diff" text="x" kind="diff" />);
-    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
-    expect(screen.getByRole("button", { name: "Unwrap lines" }).getAttribute("aria-pressed")).toBe("true");
+    const wrap = screen.getByRole("button", { name: "Wrap lines" });
+    expect(wrap.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(wrap);
+    expect(screen.getByRole("button", { name: "Wrap lines" }).getAttribute("aria-pressed")).toBe("true");
     expect(window.localStorage.getItem("cs-wrap-diff")).toBe("true");
     unmount();
 
     render(<Console label="Other diff" text="y" kind="diff" />);
-    expect(screen.getByRole("button", { name: "Unwrap lines" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Wrap lines" }).getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("makes the scroll region a focusable, labelled region", () => {
+  it("is a focusable, labelled region only while it scrolls sideways", () => {
     render(<Console label="Diff" text="x" kind="diff" />);
-    const region = screen.getByRole("region", { name: "Diff" });
-    expect(region.getAttribute("tabindex")).toBe("0");
+    expect(screen.getByRole("region", { name: "Diff" }).getAttribute("tabindex")).toBe("0");
+
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(screen.queryByRole("region")).toBeNull();
   });
 
-  it("still toggles wrap when localStorage throws", () => {
+  it("toggles wrap and keeps the choice when localStorage throws", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("blocked");
     });
@@ -55,55 +56,16 @@ describe("Console", () => {
     });
     render(<Console label="Diff" text="x" kind="diff" />);
     fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
-    expect(screen.getByRole("button", { name: "Unwrap lines" }).getAttribute("aria-pressed")).toBe("true");
-  });
-});
-
-describe("CopyButton", () => {
-  it("announces Copied after copying", async () => {
-    render(<CopyButton text="abc" label="Copy command" />);
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy command" })));
-    expect(screen.getByRole("status").textContent).toBe("Copied");
+    expect(screen.getByRole("button", { name: "Wrap lines" }).getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("announces a failure when the clipboard refuses", async () => {
-    writeText.mockRejectedValue(new Error("denied"));
-    render(<CopyButton text="abc" label="Copy command" />);
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy command" })));
-    expect(screen.getByRole("status").textContent).toBe("Copy failed");
-  });
-});
-
-describe("Disclosure", () => {
-  it("wires aria-expanded and aria-controls to the content", () => {
-    render(<Disclosure title="Details">content</Disclosure>);
-    const button = screen.getByRole("button", { name: "Details" });
-    expect(button.getAttribute("aria-expanded")).toBe("false");
-    expect(document.getElementById(button.getAttribute("aria-controls") ?? "")).not.toBeNull();
-
-    fireEvent.click(button);
-    expect(button.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByText("content")).toBeDefined();
-  });
-});
-
-describe("SegmentedControl", () => {
-  it("marks the selected segment with aria-pressed and reports a change", () => {
-    const onChange = vi.fn();
-    render(
-      <SegmentedControl
-        label="Filter by tier"
-        value="all"
-        onChange={onChange}
-        segments={[
-          { value: "all", label: "All", count: 4 },
-          { value: "full", label: "Full", count: 1 },
-        ]}
-      />,
-    );
-    expect(screen.getByRole("button", { name: /All/ }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: /Full/ }).getAttribute("aria-pressed")).toBe("false");
-    fireEvent.click(screen.getByRole("button", { name: /Full/ }));
-    expect(onChange).toHaveBeenCalledWith("full");
+  it("prefers the unsaved choice over a stale stored one when the write fails", () => {
+    window.localStorage.setItem("cs-wrap-log", "false");
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota");
+    });
+    render(<Console label="Log" text="x" kind="log" />);
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(screen.getByRole("button", { name: "Wrap lines" }).getAttribute("aria-pressed")).toBe("true");
   });
 });

@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import { motion } from "motion/react";
-import { EASE_OUT } from "@/lib/motion";
+import { useEnterTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /** One choice in a `SegmentedControl`; `count` is shown in mono after the label. */
@@ -34,6 +34,7 @@ export function SegmentedControl<Value extends string>({
 }) {
   // Two controls on one page must not share a layoutId, or their highlights would fly between them.
   const highlightId = useId();
+  const slide = useEnterTransition();
 
   return (
     <div
@@ -59,7 +60,7 @@ export function SegmentedControl<Value extends string>({
                 layoutId={highlightId}
                 aria-hidden="true"
                 className="absolute inset-0 rounded-item bg-surface-selected"
-                transition={{ duration: 0.2, ease: EASE_OUT }}
+                transition={slide}
               />
             )}
             <span className="relative">

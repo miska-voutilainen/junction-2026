@@ -1,0 +1,568 @@
+{
+  "schemaVersion": 1,
+  "changeId": "mp-2297",
+  "requirementId": "MP-2297",
+  "title": "Mark generated formatters and resolver ExcludeFromCodeCoverage",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "tieto",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v1",
+      "a4": "a4.v1",
+      "a5": "a5.v1"
+    }
+  },
+  "run": {
+    "id": "run-20261114-mp-2297",
+    "startedAt": "2026-11-14T09:04:55Z",
+    "finishedAt": "2026-11-14T09:05:43.870Z",
+    "durationMs": 48870,
+    "usage": {
+      "inputTokens": 47320,
+      "outputTokens": 3890,
+      "costUsd": 0.74,
+      "calls": 6
+    }
+  },
+  "diff": {
+    "baseSha": "32258fd0c1e5b7a94d2f6e8b3a1c0d9e7f5a4b62",
+    "headSha": "d996e3faf7a4a4e4c9f664dbb746eace6596b876",
+    "baseTree": "f0ebafcdf1d503670be233e2d0cc05525ef460b5",
+    "headTree": "a57004e551cd073955dbd6d62e29876da1d92f3e",
+    "diffSha256": "e56c1e5e096ea18cfe2b11405002c5902d094d1ce388dff0344d530b437c7c7c",
+    "filesChanged": 5,
+    "linesAdded": 10,
+    "linesRemoved": 0
+  },
+  "files": [
+    {
+      "path": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+      "kind": "source",
+      "area": "security",
+      "added": 1,
+      "removed": 0,
+      "hunkIds": [
+        "h1"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+      "kind": "source",
+      "area": "security",
+      "added": 1,
+      "removed": 0,
+      "hunkIds": [
+        "h2"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/GeneratedMessagePackResolver.g.cs",
+      "kind": "generated",
+      "area": null,
+      "added": 1,
+      "removed": 0,
+      "hunkIds": [
+        "h3"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/SimpleFormatter.g.cs",
+      "kind": "generated",
+      "area": null,
+      "added": 1,
+      "removed": 0,
+      "hunkIds": [
+        "h4"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 6,
+      "removed": 0,
+      "hunkIds": [
+        "h5"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+      "header": "@@ -150,3 +150,4 @@",
+      "oldStart": 150,
+      "oldLines": 3,
+      "newStart": 150,
+      "newLines": 4,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 150,
+          "newLine": 150,
+          "text": "        this.Write(\"    internal sealed class \");"
+        },
+        {
+          "kind": "context",
+          "oldLine": 151,
+          "newLine": 151,
+          "text": "        this.Write(this.ToStringHelper.ToStringWithCulture(info.Name));"
+        },
+        {
+          "kind": "context",
+          "oldLine": 152,
+          "newLine": 152,
+          "text": "        this.Write(\"Formatter : IMessagePackFormatter<\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 153,
+          "text": "        this.Write(\"[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n\");"
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+      "header": "@@ -88,2 +88,3 @@",
+      "oldStart": 88,
+      "oldLines": 2,
+      "newStart": 88,
+      "newLines": 3,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 88,
+          "newLine": 88,
+          "text": "        this.Write(\"    internal class GeneratedMessagePackResolver : IFormatterResolver\\r\\n\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 89,
+          "text": "        this.Write(\"    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n\");"
+        },
+        {
+          "kind": "context",
+          "oldLine": 89,
+          "newLine": 90,
+          "text": "        this.Write(\"    {\\r\\n\");"
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/GeneratedMessagePackResolver.g.cs",
+      "header": "@@ -12,3 +12,4 @@",
+      "oldStart": 12,
+      "oldLines": 3,
+      "newStart": 12,
+      "newLines": 4,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 12,
+          "newLine": 12,
+          "text": "    [global::MessagePack.Annotations.GeneratedMessagePackResolver]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 13,
+          "text": "    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]"
+        },
+        {
+          "kind": "context",
+          "oldLine": 13,
+          "newLine": 14,
+          "text": "    internal class GeneratedMessagePackResolver : IFormatterResolver"
+        },
+        {
+          "kind": "context",
+          "oldLine": 14,
+          "newLine": 15,
+          "text": "    {"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/SimpleFormatter.g.cs",
+      "header": "@@ -20,2 +20,3 @@",
+      "oldStart": 20,
+      "oldLines": 2,
+      "newStart": 20,
+      "newLines": 3,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 20,
+          "newLine": 20,
+          "text": "    internal sealed class SimpleFormatter : IMessagePackFormatter<global::Simple>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 21,
+          "text": "    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]"
+        },
+        {
+          "kind": "context",
+          "oldLine": 21,
+          "newLine": 22,
+          "text": "    {"
+        }
+      ]
+    },
+    {
+      "id": "h5",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+      "header": "@@ -77,4 +77,10 @@",
+      "oldStart": 77,
+      "oldLines": 4,
+      "newStart": 77,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 77,
+          "newLine": 77,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 78,
+          "newLine": 78,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 79,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 80,
+          "text": "    public async Task GeneratedTypesAreExcludedFromCodeCoverage()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 81,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 82,
+          "text": "        GeneratorRunResult result = await RunGeneratorAsync(\"[MessagePackObject] public class Simple { [Key(0)] public int Id { get; set; } }\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 83,
+          "text": "        Assert.All(result.GeneratedSources, s => Assert.Contains(\"ExcludeFromCodeCoverage\", s.SourceText.ToString()));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 84,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 79,
+          "newLine": 85,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 80,
+          "newLine": 86,
+          "text": "    [Fact]"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2297",
+    "title": "Add ExcludeFromCodeCoverage attribute to generated code.",
+    "intent": "Coverage tools no longer count code the MessagePack source generator emits.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage."
+      },
+      {
+        "id": "F2",
+        "text": "The generated resolver class is decorated with ExcludeFromCodeCoverage."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "No setting is required to turn the behaviour on."
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2297",
+      "note": "Derived by the evidence lane from the upstream issue text on 2026-11-13; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage."
+        ],
+        "likelyAreas": [
+          "security"
+        ],
+        "expectedTests": [
+          "A test that exercises: Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage"
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "The generated resolver class is decorated with ExcludeFromCodeCoverage."
+        ],
+        "likelyAreas": [
+          "security"
+        ],
+        "expectedTests": [
+          "A test that exercises: The generated resolver class is decorated with ExcludeFromCodeCoverage"
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "Writes ExcludeFromCodeCoverage into the formatter and resolver templates, updates two generator snapshots, and adds a test that every generated source contains the attribute.",
+    "why": "MP-2297 F1-F2: generated code skews coverage numbers on large projects.",
+    "touches": [
+      {
+        "symbol": "FormatterTemplate",
+        "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+        "note": "Emits the attribute on each generated formatter."
+      },
+      {
+        "symbol": "ResolverTemplate",
+        "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+        "note": "Emits the attribute on the generated resolver."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "F1",
+      "text": "Generated formatters carry ExcludeFromCodeCoverage.",
+      "kind": "behaviour",
+      "level": "verified",
+      "hunkIds": [
+        "h1",
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+          "side": "new",
+          "startLine": 152,
+          "endLine": 152,
+          "quote": "        this.Write(\"Formatter : IMessagePackFormatter<\");"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "Generated sources lack the attribute on the base commit and contain it on the change.",
+          "testName": "GenerationTests.GeneratedTypesAreExcludedFromCodeCoverage",
+          "base": {
+            "result": "fail",
+            "output": "Failed GeneratedTypesAreExcludedFromCodeCoverage [301 ms]\n  Assert.Contains() Failure: Sub-string not found\n  String:    internal sealed class SimpleFormatter : IMessagePackFormatter<global::Simple>\n  Not found: ExcludeFromCodeCoverage"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed GeneratedTypesAreExcludedFromCodeCoverage [287 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "F2",
+      "text": "The generated resolver carries ExcludeFromCodeCoverage.",
+      "kind": "behaviour",
+      "level": "verified",
+      "hunkIds": [
+        "h2",
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+          "side": "new",
+          "startLine": 89,
+          "endLine": 89,
+          "quote": "        this.Write(\"    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n\");"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "differential-test",
+          "summary": "Resolver source lacks the attribute on the base commit and contains it on the change.",
+          "testName": "GenerationTests.GeneratedTypesAreExcludedFromCodeCoverage",
+          "base": {
+            "result": "fail",
+            "output": "Failed GeneratedTypesAreExcludedFromCodeCoverage [301 ms]\n  Assert.Contains() Failure: Sub-string not found\n  String:    internal class GeneratedMessagePackResolver : IFormatterResolver\n  Not found: ExcludeFromCodeCoverage"
+          },
+          "head": {
+            "result": "pass",
+            "output": "Passed GeneratedTypesAreExcludedFromCodeCoverage [287 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "N1",
+      "text": "No setting or option is added.",
+      "kind": "structure",
+      "level": "supported",
+      "hunkIds": [
+        "h1",
+        "h2"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+          "side": "new",
+          "startLine": 89,
+          "endLine": 89,
+          "quote": "        this.Write(\"    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n\");"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "The templates write the attribute unconditionally.",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "requirementItemId": "F1",
+      "text": "Adds a test asserting every generated source contains the attribute.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h5"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+          "side": "new",
+          "startLine": 79,
+          "endLine": 83,
+          "quote": "    [Fact]\n    public async Task GeneratedTypesAreExcludedFromCodeCoverage()\n    {\n        GeneratorRunResult result = await RunGeneratorAsync(\"[MessagePackObject] public class Simple { [Key(0)] public int Id { get; set; } }\");\n        Assert.All(result.GeneratedSources, s => Assert.Contains(\"ExcludeFromCodeCoverage\", s.SourceText.ToString()));"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "pr-test",
+          "summary": "Test passes on the change.",
+          "testName": "GenerationTests.GeneratedTypesAreExcludedFromCodeCoverage",
+          "base": null,
+          "head": {
+            "result": "pass",
+            "output": "Passed GeneratedTypesAreExcludedFromCodeCoverage [287 ms]\n\nTest Run Successful.\nTotal tests: 1\n     Passed: 1"
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "missing",
+      "area": "security",
+      "severity": "low",
+      "title": "Generic and nested formatters have no snapshot",
+      "detail": "The test and snapshots cover a plain class. Formatters for generic and nested types come from a different branch of the template.",
+      "statement": null,
+      "hunkIds": [],
+      "citations": []
+    }
+  ],
+  "refusals": [],
+  "quoteCheck": {
+    "checked": 4,
+    "passed": 4,
+    "downgraded": 0,
+    "dropped": 0,
+    "failures": []
+  },
+  "retractions": [],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "Generated formatters and the resolver contain ExcludeFromCodeCoverage (base fails, change passes).",
+        "by": "tool"
+      },
+      {
+        "item": "Snapshots match the template change.",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "Generated code for generic and nested formatters",
+        "reason": "No snapshot covers it (finding f1)."
+      },
+      {
+        "item": "Template edits in the security area",
+        "reason": "Shadow level: the reviewer's output routes nothing there, so both template hunks are for a person to read."
+      }
+    ],
+    "residualRisk": {
+      "text": "Generic and nested generated formatters are not covered by a test.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "focused",
+    "reasons": [
+      {
+        "ruleId": "R-area-level",
+        "text": "Security: Shadow, the AI's output routes nothing here",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "read",
+      "h2": "read",
+      "h3": "verified",
+      "h4": "verified",
+      "h5": "supported"
+    },
+    "readHunks": 2,
+    "totalHunks": 5,
+    "readLines": 2,
+    "totalLines": 10,
+    "readMinutes": 1,
+    "fullMinutes": 1
+  }
+}

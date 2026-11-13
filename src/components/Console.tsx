@@ -9,9 +9,6 @@ import { useWrapPreference } from "@/lib/useWrapPreference";
 import type { ConsoleKind } from "@/lib/useWrapPreference";
 import { cn } from "@/lib/utils";
 
-/** What the toolbar's Wrap button is named, given the current state. */
-const wrapActionName = (isWrapped: boolean) => (isWrapped ? "Unwrap lines" : "Wrap lines");
-
 interface ConsoleProps {
   /** Names the box for screen readers and the toolbar, e.g. "Diff of Generator.cs". */
   label: string;
@@ -28,14 +25,14 @@ interface ConsoleProps {
 /**
  * A box for code or command output with a Wrap and Copy toolbar. Long lines
  * scroll sideways inside the box only, or wrap when the visitor chooses; the
- * choice is remembered per `kind`. The scroll region takes focus so arrow
- * keys work without a mouse. UI plan section 6.
+ * choice is remembered per `kind`. The scroll region takes focus when it
+ * scrolls, so arrow keys work without a mouse. UI plan section 6.
  */
 export function Console({ label, text, kind, defaultWrap = false, children, className }: ConsoleProps) {
   const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
 
   return (
-    <div className={cn("rounded-control border border-border-subtle bg-surface-code", className)}>
+    <div className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
         <span className="truncate text-xs text-text-muted">{label}</span>
         <div className="flex items-center gap-0.5">
@@ -44,9 +41,7 @@ export function Console({ label, text, kind, defaultWrap = false, children, clas
         </div>
       </div>
       <div
-        role="region"
-        aria-label={label}
-        tabIndex={0}
+        {...(isWrapped ? {} : { role: "region", "aria-label": label, tabIndex: 0 })}
         className={cn(
           "rounded-b-control p-3 font-mono text-sm text-text-secondary",
           isWrapped
@@ -61,7 +56,6 @@ export function Console({ label, text, kind, defaultWrap = false, children, clas
 }
 
 function WrapButton({ isWrapped, onToggle }: { isWrapped: boolean; onToggle: () => void }) {
-  const name = wrapActionName(isWrapped);
   return (
     <TooltipProvider>
       <Tooltip>
@@ -70,15 +64,15 @@ function WrapButton({ isWrapped, onToggle }: { isWrapped: boolean; onToggle: () 
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={name}
+            aria-label="Wrap lines"
             aria-pressed={isWrapped}
             onClick={onToggle}
-            className="text-text-muted hover:bg-surface-hover hover:text-text-primary aria-pressed:text-text-primary"
+            className="text-text-muted hover:bg-surface-hover hover:text-text-primary aria-pressed:bg-surface-hover aria-pressed:text-text-primary"
           >
             <WrapText aria-hidden="true" className="size-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{name}</TooltipContent>
+        <TooltipContent>{isWrapped ? "Unwrap lines" : "Wrap lines"}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

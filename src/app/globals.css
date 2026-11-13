@@ -109,13 +109,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: var(--radius-item);
+  --radius-md: var(--radius-button);
+  --radius-lg: var(--radius-control);
+  --radius-xl: var(--radius-menu);
 }
 
 :root {
@@ -127,7 +124,7 @@
   --popover: var(--surface-raised);
   --popover-foreground: var(--text-primary);
   --primary: var(--brand);
-  --primary-foreground: #ffffff;
+  --primary-foreground: var(--text-on-brand);
   --secondary: var(--surface-control);
   --secondary-foreground: var(--text-primary);
   --muted: var(--surface-panel);
@@ -148,7 +145,7 @@
   --sidebar: var(--surface-raised);
   --sidebar-foreground: var(--text-primary);
   --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-foreground: var(--text-on-brand);
   --sidebar-accent: var(--surface-selected);
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);

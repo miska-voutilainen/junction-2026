@@ -6,8 +6,11 @@
  */
 
 /** One of the seven ideas: its number and short name as shown in the label. */
+/** The number of one of the seven ideas. */
+export type IdeaNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
 export interface Idea {
-  n: number;
+  n: IdeaNumber;
   name: string;
 }
 
@@ -29,12 +32,10 @@ export const IDEA_LINK_BASE =
 /**
  * The page that explains idea `n`.
  *
- * @throws If `n` is not one of the seven ideas.
  * @example ideaUrl(3) // ".../docs/spec.md#3-screens"
  */
-export function ideaUrl(n: number): string {
-  if (!IDEAS.some((idea) => idea.n === n)) {
-    throw new Error(`There is no idea ${n}. Ideas are numbered 1 to ${IDEAS.length}.`);
-  }
+// Every idea shares one page until T25, so `_n` is unused but kept for callers.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ideaUrl(_n: IdeaNumber): string {
   return IDEA_LINK_BASE;
 }

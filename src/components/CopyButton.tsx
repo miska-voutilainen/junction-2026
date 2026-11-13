@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Copy } from "lucide-react";
-import { crossfade, press } from "@/lib/motion";
+import { Check, CircleAlert, Copy } from "lucide-react";
+import { crossfade, useMotionPreset, usePress } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const CONFIRMATION_MS = 1500;
 
 /**
- * An icon button that copies `text` and shows a check for 1.5 s. The button
+ * An icon button that copies `text` and shows a check, or an alert icon when the browser refuses, for 1.5 s. The button
  * keeps a fixed size so the icon swap never shifts the toolbar, and a polite
  * live region announces the result to screen readers.
  *
@@ -20,6 +20,8 @@ const CONFIRMATION_MS = 1500;
  */
 export function CopyButton({ text, label, className }: { text: string; label: string; className?: string }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const iconSwap = useMotionPreset(crossfade);
+  const press = usePress();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -50,12 +52,10 @@ export function CopyButton({ text, label, className }: { text: string; label: st
             )}
           >
             <AnimatePresence initial={false} mode="popLayout">
-              <motion.span key={status === "copied" ? "copied" : "copy"} {...crossfade} className="flex">
-                {status === "copied" ? (
-                  <Check aria-hidden="true" className="size-4 text-text-primary" />
-                ) : (
-                  <Copy aria-hidden="true" className="size-4" />
-                )}
+              <motion.span key={status === "idle" ? "copy" : status} {...iconSwap} className="flex">
+                {status === "copied" && <Check aria-hidden="true" className="size-4 text-text-primary" />}
+                {status === "failed" && <CircleAlert aria-hidden="true" className="size-4 text-rose" />}
+                {status === "idle" && <Copy aria-hidden="true" className="size-4" />}
               </motion.span>
             </AnimatePresence>
           </motion.button>
