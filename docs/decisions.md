@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · App lane moves to Miska for the UI build
+
+- **Context:** The final design is a finished canvas with every screen, state and the shared components drawn. Building it is one connected job (tokens, shell, five screens) that needs judgment on layout and motion.
+- **Decision:** Miska (`miska-voutilainen`, Max) owns the app lane and builds the UI from the canvas, in phases. Elias takes over UI changes once the design is built; polishing the UI happens in the last hours.
+- **Why:** One Max session holding the whole design builds a consistent UI faster than handing a large design across machines.
+- **Rejected:** Keeping the lane with Elias and handing over the canvas (more handoffs for one connected job).
+- **PR:** –
+
 ## 2026-11-13 22:10 · Lanes: engine (Miska), app (Elias), evidence (Veijo)
 
 - **Context:** Three people: Miska on Claude Max 5x, Elias and Veijo on Pro (Sonnet at medium effort). The critical path of the demo is the real pipeline run on Tieto's change; the planted bugs must be written by someone who never sees the reviewer's prompts.
