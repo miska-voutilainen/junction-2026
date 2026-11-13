@@ -1,0 +1,63 @@
+{
+  "lanes": {
+    "engine": {
+      "owner": "miska-voutilainen",
+      "paths": [
+        "src/ai/**",
+        "src/prompts/**",
+        "src/pipeline/**",
+        "src/rules/**",
+        "src/policy/**",
+        "src/lib/git/**",
+        "data/runs/**",
+        "data/eval/**",
+        "data/recordings/**"
+      ]
+    },
+    "app": {
+      "owner": "eliasnorta",
+      "paths": [
+        "src/app/**",
+        "src/features/inbox/**",
+        "src/features/review/**",
+        "src/components/**",
+        "src/lib/data/**",
+        "src/lib/simulation/**",
+        "src/lib/utils.ts",
+        "data/fixtures/**",
+        "e2e/**",
+        "public/**"
+      ]
+    },
+    "evidence": {
+      "owner": "Kasanen",
+      "paths": [
+        "src/receipt/**",
+        "src/features/report-card/**",
+        "data/sample/**",
+        "data/receipts/**",
+        "scripts/**"
+      ]
+    }
+  },
+  "shared": [
+    "src/contracts/**",
+    "src/styles/tokens.css",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "*.config.*",
+    "components.json",
+    "vercel.json",
+    ".prettierrc.json",
+    ".env.example",
+    ".gitignore",
+    ".gitattributes",
+    "LICENSE",
+    "docs/spec.md",
+    ".github/**",
+    ".claude/**"
+  ],
+  "open": ["README.md", "CLAUDE.md", "AGENTS.md", "docs/**"]
+}
