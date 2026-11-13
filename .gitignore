@@ -1,0 +1,11 @@
+.env*
+!.env.example
+.claude/settings.local.json
+.scratch/
+.review/
+graphify-out/
+.obsidian/
+.lightfoot/
+
+# Kit-only prep notes (team plans and accounts); kept locally, never committed
+checklist.md
