@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 266" width="880" height="266" role="img" aria-labelledby="evidence-levels-t evidence-levels-d"><title id="evidence-levels-t">Evidence levels instead of confidence</title><desc id="evidence-levels-d">Three levels from strongest to weakest: Verified, a test fails on base and passes on head; Supported, a quoted citation matched; Unverified, no citation matched. Separately, Refused: a written rule says the AI doesn&#x27;t decide. The model&#x27;s confidence is never shown.</desc><style>
+.frame{fill:#0d0f12;stroke:#262c34;stroke-width:1}
+.node{fill:#111418;stroke:#2a3038;stroke-width:1.5}
+.node-acc{fill:#111418;stroke:#93aaff;stroke-width:1.5}
+.tint-acc{fill:#3558e8;fill-opacity:.16}
+.tint-acc2{fill:#3558e8;fill-opacity:.24}
+.node-amber{fill:#111418;stroke:#e2b04a;stroke-width:1.5}
+.tint-amber{fill:#e2b04a;fill-opacity:.12}
+.node-rose{fill:#111418;stroke:#ef7a85;stroke-width:1.5;stroke-dasharray:5 4}
+.node-dash{fill:none;stroke:#2a3038;stroke-width:1.5;stroke-dasharray:5 4}
+text{font-family:-apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif;font-size:12px;fill:#9aa3af}
+.t{font-size:13px;font-weight:600;fill:#e6e8eb}
+.h{font-size:14px;font-weight:600;fill:#e6e8eb}
+.s{fill:#9aa3af}
+.c{font-family:ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;, monospace;fill:#c4cad3}
+.ta{fill:#93aaff}.tam{fill:#e2b04a}.tr{fill:#ef7a85}.tg{fill:#57c98b}
+.ln{stroke:#9aa3af;stroke-width:1.5;fill:none}
+.la{stroke:#93aaff;stroke-width:2;fill:none}
+.lr{stroke:#ef7a85;stroke-width:1.5;fill:none;stroke-dasharray:5 4}
+.lh{stroke:#262c34;stroke-width:1;fill:none}
+.fn{fill:#9aa3af}.fa{fill:#93aaff}.fr{fill:#ef7a85}
+.dot{fill:#3558e8}.dott{fill:#ffffff;font-size:12px;font-weight:600}
+.strike{stroke:#ef7a85;stroke-width:1.5}
+</style><defs><marker id="ah-n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fn"/></marker><marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fa"/></marker><marker id="ah-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fr"/></marker></defs><rect class="frame" x="0.5" y="0.5" width="879" height="265" rx="8"/><path class="ln" d="M572,30 L36,30" marker-end="url(#ah-n)"/><text x="304" y="22" class="s" text-anchor="middle">stronger evidence</text><rect class="node-acc" x="32" y="44" width="180" height="104" rx="6"/><rect class="tint-acc2" x="32" y="44" width="180" height="104" rx="6"/><text x="48" y="72" class="t">Verified</text><text x="48" y="94" class="s">A test fails on base</text><text x="48" y="111" class="s">and passes on head</text><text x="48" y="176" class="s">Reader checks:</text><text x="48" y="194" class="c">both test outputs</text><rect class="node-acc" x="212" y="44" width="180" height="104" rx="0"/><rect class="tint-acc" x="212" y="44" width="180" height="104" rx="0"/><text x="228" y="72" class="t">Supported</text><text x="228" y="94" class="s">A quoted citation</text><text x="228" y="111" class="s">matched the code</text><text x="228" y="176" class="s">Reader checks:</text><text x="228" y="194" class="c">file:41–48 + quote</text><rect class="node" x="392" y="44" width="180" height="104" rx="6"/><text x="408" y="72" class="t">Unverified</text><text x="408" y="94" class="s">The model said it;</text><text x="408" y="111" class="s">no citation matched</text><text x="408" y="176" class="s">Reader checks:</text><text x="408" y="194" class="c">the claim only</text><rect class="node-amber" x="628" y="44" width="220" height="104" rx="6"/><rect class="tint-amber" x="628" y="44" width="220" height="104" rx="6"/><text x="644" y="72" class="t">Refused</text><text x="644" y="94" class="s">Not the AI&#x27;s decision:</text><text x="644" y="111" class="s">a written rule applies</text><text x="644" y="176" class="s">Reader checks:</text><text x="644" y="194" class="c">R7 · API owner decides</text><text x="32" y="240" class="t">Never shown:</text><text x="126" y="240" class="c">confidence: 0.92</text><line class="strike" x1="122" y1="236" x2="250" y2="236"/><text x="262" y="240" class="s">the model&#x27;s opinion of itself, which no reader can check</text></svg>
