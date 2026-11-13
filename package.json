@@ -14,7 +14,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:hooks": "node --test \".claude/hooks/**/*.test.mjs\"",
     "e2e": "playwright test",
