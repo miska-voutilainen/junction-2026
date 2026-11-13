@@ -6,6 +6,9 @@
   --surface-panel: #111418;
   --surface-code: #0b0d10;
   --surface-hover: #13171e;
+  /* Fill of an input box: lighter than the panels so an empty field still reads as a field. */
+  --surface-control: #22272e;
+  --surface-control-hover: #2a3038;
 
   /* Borders */
   --border-subtle: #1f242b;

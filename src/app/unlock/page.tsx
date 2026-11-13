@@ -24,7 +24,7 @@ export default async function UnlockPage({ searchParams }: PageProps<"/unlock">)
           <h1 className="text-[22px] font-semibold tracking-[-0.015em] text-balance">
             This project is private
           </h1>
-          <p className="text-text-muted">Enter the code the Countersign team gave you.</p>
+          <p className="text-text-muted">Enter the code our team gave you.</p>
         </div>
         <UnlockForm codeLength={code.length} next={next} />
       </div>

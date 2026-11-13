@@ -22,7 +22,6 @@ const IDLE: UnlockState = { status: "idle" };
 export function UnlockForm({ codeLength, next }: { codeLength: number; next: string }) {
   const [state, formAction, isPending] = useActionState(unlock, IDLE);
   const [code, setCode] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const [lastSeenState, setLastSeenState] = useState(state);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +51,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
       </label>
       <div className="group relative">
         {isBoxed && (
-          <CodeBoxes code={code} isFocused={isFocused} hasError={hasError} length={codeLength} />
+          <CodeBoxes code={code} hasError={hasError} length={codeLength} />
         )}
         <input
           ref={inputRef}
@@ -64,8 +63,6 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
               isBoxed ? event.target.value.replace(/\D/g, "") : event.target.value,
             )
           }
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           inputMode={isBoxed ? "numeric" : "text"}
           autoComplete="one-time-code"
           maxLength={codeLength}
@@ -76,7 +73,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
           className={
             isBoxed
               ? "absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent outline-none"
-              : `h-12 w-full rounded-control border-2 bg-surface-hover px-4 text-lg text-text-primary outline-none transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none ${hasError ? "border-rose" : "border-transparent focus:border-focus-ring"}`
+              : `h-12 w-full rounded-control border-2 bg-surface-control px-4 text-lg text-text-primary outline-none transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none ${hasError ? "border-rose" : "border-transparent focus:border-focus-ring"}`
           }
         />
       </div>
@@ -104,31 +101,23 @@ function statusMessage(state: UnlockState, isPending: boolean): string {
   return "Type or paste the code.";
 }
 
-/** The decorative boxes behind the input; the box at the cursor gets the focus border. */
-function CodeBoxes({
-  code,
-  isFocused,
-  hasError,
-  length,
-}: {
-  code: string;
-  isFocused: boolean;
-  hasError: boolean;
-  length: number;
-}) {
+/**
+ * The decorative boxes behind the input; the box at the cursor gets the focus
+ * border. Focus comes from CSS (`group-focus-within`), not an onFocus handler:
+ * the input autofocuses before hydration, so a handler would miss that focus.
+ */
+function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean; length: number }) {
   const cursorIndex = Math.min(code.length, length - 1);
   return (
     <div aria-hidden="true" className="flex gap-[10px]">
       {Array.from({ length }, (_, index) => {
-        const border = hasError
-          ? "border-rose"
-          : isFocused && index === cursorIndex
-            ? "border-focus-ring"
-            : "border-transparent";
+        let border = "border-transparent";
+        if (hasError) border = "border-rose";
+        else if (index === cursorIndex) border = "border-transparent group-focus-within:border-focus-ring";
         return (
           <div
             key={index}
-            className={`flex aspect-[76/100] min-w-0 flex-[0_1_76px] items-center justify-center rounded-control border-2 bg-surface-hover text-[40px] font-semibold transition-colors duration-150 ease-[var(--ease-out)] group-hover:bg-border-subtle motion-reduce:transition-none ${border}`}
+            className={`flex aspect-[76/100] min-w-0 flex-[0_1_76px] items-center justify-center rounded-control border-2 bg-surface-control text-[40px] font-semibold transition-colors duration-150 ease-[var(--ease-out)] group-hover:bg-surface-control-hover motion-reduce:transition-none ${border}`}
           >
             {code[index] ?? ""}
           </div>
