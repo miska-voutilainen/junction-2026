@@ -1,11 +1,12 @@
 /**
- * `pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]`: records the eval's runs (unless
+ * `pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only | --check]`: records the eval's runs (unless
  * scoring only), scores them against the answer keys, writes the report card,
  * routes the Tieto reviews again with the levels it measured and logs the
- * anchored-versus-blind result in docs/lessons.md. Spec section 5, Pipeline CLI.
+ * anchored-versus-blind result in docs/lessons.md. `--check` only verifies that
+ * the committed card matches the runs on disk (CI). Spec section 5, Pipeline CLI.
  */
 import { existsSync } from "node:fs";
-import { parseArgs } from "node:util";
+import { isDeepStrictEqual, parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../../ai/client";
 import type { Area, AnswerKey, LadderLevel, ReportCard, Review } from "../../contracts";
 import { levelsFromReportCard } from "../../rules/ladder";
@@ -46,7 +47,7 @@ const LESSONS_FILE = "docs/lessons.md";
 /** The most comparison runs per mode `--score-only` looks for; far above what the eval records. */
 const MAX_RUNS_SCANNED = 50;
 
-const usage = "Usage: pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]";
+const usage = "Usage: pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only | --check]";
 
 /** Runs the eval. @throws when the answer keys, runs or report card can't be read or written. */
 export async function runEvalCommand(argv: string[]): Promise<void> {
@@ -56,6 +57,7 @@ export async function runEvalCommand(argv: string[]): Promise<void> {
       runs: { type: "string" },
       "plant-runs": { type: "string" },
       "score-only": { type: "boolean" },
+      check: { type: "boolean" },
     },
   });
   const isScoreOnly = values["score-only"] === true;
@@ -71,11 +73,14 @@ export async function runEvalCommand(argv: string[]): Promise<void> {
 
   const startedAt = Date.now();
   const keys = await loadAnswerKeys();
+  if (values.check === true) return checkReportCard(keys);
   const costUsd = isScoreOnly ? 0 : await recordRuns(keys, requestedRuns, requestedPlantRuns);
   const runsPerMode = isScoreOnly ? await measuredRunsPerMode(keys) : requestedRuns;
   const plantRuns = isScoreOnly ? await measuredPlantRuns(keys) : requestedPlantRuns;
 
-  const card = await scoreAndReroute(keys, runsPerMode, plantRuns, !isScoreOnly);
+  const { card, rerouted } = await scoreFromDisk(keys, runsPerMode, plantRuns, !isScoreOnly);
+  await writeReportCard(card);
+  for (const review of rerouted) await writeRecordedReview(review);
   const verdict = anchoredVsBlindVerdict(card.anchoredVsBlind);
   await appendLessonsEntry(LESSONS_FILE, {
     title: "Anchored versus blind-first",
@@ -158,9 +163,9 @@ async function measuredRunsPerMode(keys: readonly AnswerKey[]): Promise<number> 
 /** The most blind runs any planted bug has on disk (run 1 is review.json), so a score-only card says "of 3" after three runs. */
 async function measuredPlantRuns(keys: readonly AnswerKey[]): Promise<number> {
   const plantKeys = keys.filter((key) => key.kind === "planted-bug");
-  const hasFirstRun = (await Promise.all(plantKeys.map((key) => loadRecordedRun(key.plantId)))).some(
-    (run) => run !== null,
-  );
+  const hasFirstRun = (
+    await Promise.all(plantKeys.map((key) => loadRecordedRun(key.plantId)))
+  ).some((run) => run !== null);
   let highest = hasFirstRun ? 1 : 0;
   for (let k = 2; k <= MAX_RUNS_SCANNED; k++) {
     const runs = await Promise.all(
@@ -171,13 +176,52 @@ async function measuredPlantRuns(keys: readonly AnswerKey[]): Promise<number> {
   return highest;
 }
 
-/** Scores the runs on disk, writes the card, then re-routes the Tieto reviews with the card's levels. */
-async function scoreAndReroute(
+/**
+ * Replay gate for CI: re-scores the committed runs and fails when the committed
+ * report card is not what they score to. It makes no model call and writes
+ * nothing, so it needs no key and costs no credits. It catches a card edited by
+ * hand, runs committed without a re-score, and a reviewer version changed
+ * without re-recording (scoring refuses mixed versions).
+ *
+ * @throws when the card is missing or differs; the message names the fields.
+ */
+async function checkReportCard(keys: readonly AnswerKey[]): Promise<void> {
+  const committed = await loadReportCard();
+  if (committed === null)
+    throw new Error(
+      "No report card at data/eval/report-card.json. Run pnpm evals --score-only and commit it.",
+    );
+  const { card } = await scoreFromDisk(
+    keys,
+    await measuredRunsPerMode(keys),
+    await measuredPlantRuns(keys),
+    false,
+  );
+
+  // generatedAt is the scoring time, so it differs on every run. The JSON round trip drops
+  // undefined fields, as the committed file has.
+  const scored = JSON.parse(JSON.stringify(card)) as ReportCard;
+  const differing = (Object.keys(scored) as (keyof ReportCard)[]).filter(
+    (field) => field !== "generatedAt" && !isDeepStrictEqual(scored[field], committed[field]),
+  );
+  if (differing.length > 0)
+    throw new Error(
+      `The committed report card is out of date with the runs on disk (differs in: ${differing.join(", ")}). Run pnpm evals --score-only and commit data/eval/ and data/runs/.`,
+    );
+  const planted = card.areas.reduce((total, area) => total + area.planted, 0);
+  const caught = card.areas.reduce((total, area) => total + area.caught, 0);
+  console.log(
+    `evals --check · ${caught}/${planted} planted caught · matches the committed report card`,
+  );
+}
+
+/** Scores the runs on disk and re-routes the Tieto reviews with the card's levels. Writes nothing. */
+async function scoreFromDisk(
   keys: readonly AnswerKey[],
   runsPerMode: number,
   plantRuns: number,
   dropStaleRuns: boolean,
-): Promise<ReportCard> {
+): Promise<{ card: ReportCard; rerouted: Review[] }> {
   const plantedBugs = await Promise.all(
     keys
       .filter((key) => key.kind === "planted-bug")
@@ -210,11 +254,7 @@ async function scoreAndReroute(
   const rerouted = tietoReviews.map((review) =>
     rerouteReview(review, levelsFromReportCard(measured)),
   );
-  const card = { ...measured, routingSpread: routingSpreadOf(rerouted) };
-
-  await writeReportCard(card);
-  for (const review of rerouted) await writeRecordedReview(review);
-  return card;
+  return { card: { ...measured, routingSpread: routingSpreadOf(rerouted) }, rerouted };
 }
 
 /** A planted bug's runs: run 1 is review.json, run k >= 2 is blind/<k>.json. */

@@ -109,6 +109,12 @@ jobs:
         if: steps.scope.outputs.slow == 'true'
         run: pnpm test
 
+      # Replay, not a live eval: re-scores the committed runs against the answer keys and fails when
+      # data/eval/report-card.json does not match. No model call, no key, no credits.
+      - name: 4. Eval replay
+        if: steps.scope.outputs.slow == 'true'
+        run: pnpm evals --check
+
       - name: 4. Build
         if: steps.scope.outputs.slow == 'true'
         run: pnpm build
