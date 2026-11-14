@@ -46,15 +46,27 @@ export const fadeUpItem: Preset = {
 /** A popover or menu opening: scales up from 95% while fading in. */
 export const popover: Preset = {
   initial: { opacity: 0, scale: 0.95 },
-  animate: { opacity: 1, scale: 1, transition: { duration: POPOVER_ENTER_SECONDS, ease: EASE_OUT } },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: POPOVER_ENTER_SECONDS, ease: EASE_OUT },
+  },
   exit: { opacity: 0, scale: 0.95, transition: { duration: POPOVER_EXIT_SECONDS, ease: EASE_OUT } },
 };
 
 /** Swapping one icon or label for another: opacity plus a 2 px blur hides the cut. */
 export const crossfade: Preset = {
   initial: { opacity: 0, filter: "blur(2px)" },
-  animate: { opacity: 1, filter: "blur(0px)", transition: { duration: CROSSFADE_ENTER_SECONDS, ease: EASE_OUT } },
-  exit: { opacity: 0, filter: "blur(2px)", transition: { duration: CROSSFADE_EXIT_SECONDS, ease: EASE_OUT } },
+  animate: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: CROSSFADE_ENTER_SECONDS, ease: EASE_OUT },
+  },
+  exit: {
+    opacity: 0,
+    filter: "blur(2px)",
+    transition: { duration: CROSSFADE_EXIT_SECONDS, ease: EASE_OUT },
+  },
 };
 
 /** Content revealed by a clip-path wipe; it closes at once so no blank gap opens below it. */
@@ -102,7 +114,11 @@ const subscribeNever = () => () => {};
 
 /** False on the server and during hydration, true for anything that mounts afterwards. */
 function useHasHydrated(): boolean {
-  return useSyncExternalStore(subscribeNever, () => true, () => false);
+  return useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
 }
 
 /**
@@ -114,7 +130,10 @@ function useHasHydrated(): boolean {
  * HTML must show them, and an opacity-0 start would leave them invisible until
  * scripts run. Only rows that mount later (a filter change, a menu opening) fade up.
  */
-export function useStaggeredPreset(preset: Preset, index: number): Omit<Preset, "initial"> & { initial: Preset["initial"] | false } {
+export function useStaggeredPreset(
+  preset: Preset,
+  index: number,
+): Omit<Preset, "initial"> & { initial: Preset["initial"] | false } {
   const resolved = useMotionPreset(preset);
   const hasHydrated = useHasHydrated();
   const initial = hasHydrated ? resolved.initial : false;

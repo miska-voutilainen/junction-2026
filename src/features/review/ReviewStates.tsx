@@ -15,7 +15,10 @@ export function ReviewMissing({ changeId }: Readonly<{ changeId: string }>) {
 }
 
 /** The review file exists but fails validation; `details` is the validation error. */
-export function ReviewUnreadable({ changeId, details }: Readonly<{ changeId: string; details: string | null }>) {
+export function ReviewUnreadable({
+  changeId,
+  details,
+}: Readonly<{ changeId: string; details: string | null }>) {
   return (
     <ErrorState
       title="This review couldn't be read."
@@ -31,8 +34,8 @@ export function EmptyDiff({ change, review }: Readonly<{ change: ChangeInput; re
     <section className="mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center">
       <h2 className="text-lg font-semibold">This change has no diff</h2>
       <p className="text-text-muted">
-        The branch <span className="font-mono text-text-secondary">{change.branch}</span> matches its base, so there is nothing to review
-        or sign.
+        The branch <span className="font-mono text-text-secondary">{change.branch}</span> matches
+        its base, so there is nothing to review or sign.
       </p>
       <p className="font-mono text-xs break-all text-text-muted">
         base {review.diff.baseSha} · head {review.diff.headSha}
@@ -52,7 +55,8 @@ export function EvidenceUnavailable({ alert }: Readonly<{ alert: EvidenceAlert }
       <div className="flex flex-col gap-0.5 text-base">
         <p className="font-medium text-amber-light">{alert.title}</p>
         <p className="text-text-secondary">
-          {alert.verb} <code className="font-mono text-sm">{alert.command}</code> to measure the reviewer. {alert.consequence}
+          {alert.verb} <code className="font-mono text-sm">{alert.command}</code> to measure the
+          reviewer. {alert.consequence}
         </p>
       </div>
     </div>
@@ -69,7 +73,10 @@ export interface EvidenceAlert {
 }
 
 /** The alert for a report card that is not readable, from the decision that applies without it. */
-export function evidenceAlert(state: "missing" | "unreadable", decision: TierDecision): EvidenceAlert {
+export function evidenceAlert(
+  state: "missing" | "unreadable",
+  decision: TierDecision,
+): EvidenceAlert {
   return {
     title: state === "missing" ? "No report card yet" : "Couldn't read the report card",
     verb: state === "missing" ? "Run" : "Re-run",

@@ -36,11 +36,19 @@ export interface DiffIdentity {
  */
 export function pinnedDiffArgs(baseSha: string, headSha: string, extraOptions: string[]): string[] {
   return [
-    "-c", "core.quotepath=false",
-    "-c", "diff.algorithm=myers",
-    "diff", ...extraOptions, "--no-ext-diff", "--no-color", "--no-renames",
-    "--src-prefix=a/", "--dst-prefix=b/",
-    baseSha, headSha,
+    "-c",
+    "core.quotepath=false",
+    "-c",
+    "diff.algorithm=myers",
+    "diff",
+    ...extraOptions,
+    "--no-ext-diff",
+    "--no-color",
+    "--no-renames",
+    "--src-prefix=a/",
+    "--dst-prefix=b/",
+    baseSha,
+    headSha,
   ];
 }
 
@@ -62,7 +70,9 @@ export async function computeDiffIdentity(
   const [baseTree, headTree, rawDiff] = await Promise.all([
     readTreeSha(repoDir, baseSha),
     readTreeSha(repoDir, headSha),
-    runGit(repoDir, pinnedDiffArgs(baseSha, headSha, ["--binary", "--full-index"]), { isolated: true }),
+    runGit(repoDir, pinnedDiffArgs(baseSha, headSha, ["--binary", "--full-index"]), {
+      isolated: true,
+    }),
   ]);
   return { baseTree, headTree, diffSha256: createHash("sha256").update(rawDiff).digest("hex") };
 }

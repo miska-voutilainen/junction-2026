@@ -76,27 +76,45 @@ function groupClaims(review: Review): ClaimGroup[] {
   }));
   // A claim naming an item the requirement doesn't have is as untraced as one naming none.
   const knownIds = new Set(items.map((item) => item.id));
-  const untraced = storyClaims.filter(({ claim }) => claim.requirementItemId === null || !knownIds.has(claim.requirementItemId));
-  return [...groups, { heading: UNTRACED_HEADING, claims: untraced }].filter((group) => group.claims.length > 0);
+  const untraced = storyClaims.filter(
+    ({ claim }) => claim.requirementItemId === null || !knownIds.has(claim.requirementItemId),
+  );
+  return [...groups, { heading: UNTRACED_HEADING, claims: untraced }].filter(
+    (group) => group.claims.length > 0,
+  );
 }
 
 /** The findings of one kind, each with its citations checked. */
 export function findingViews(review: Review, kind: Finding["kind"]): FindingView[] {
   return review.findings
     .filter((finding) => finding.kind === kind)
-    .map((finding) => ({ finding, citations: splitCitations(review, finding.id, finding.citations) }));
+    .map((finding) => ({
+      finding,
+      citations: splitCitations(review, finding.id, finding.citations),
+    }));
 }
 
 /** A failed quote downgrades its claim or drops its finding; the two are counted apart. */
-function quoteCheckLine({ checked, passed, downgraded, dropped }: Review["quoteCheck"]): string | null {
+function quoteCheckLine({
+  checked,
+  passed,
+  downgraded,
+  dropped,
+}: Review["quoteCheck"]): string | null {
   if (checked === 0) return null;
   const base = `Quote check: ${passed} of ${checked} quotes found in the code`;
-  const outcomes = [downgraded > 0 && countOf(downgraded, "claim") + " downgraded", dropped > 0 && countOf(dropped, "finding") + " dropped"].filter(Boolean);
+  const outcomes = [
+    downgraded > 0 && countOf(downgraded, "claim") + " downgraded",
+    dropped > 0 && countOf(dropped, "finding") + " dropped",
+  ].filter(Boolean);
   return outcomes.length === 0 ? `${base}.` : `${base}, ${outcomes.join(", ")}.`;
 }
 
 /** The "file:line" text of a citation: "TypeCollector.cs:737–740", or one line when it cites one. */
 export function citationLabel(citation: Citation): string {
-  const lines = citation.startLine === citation.endLine ? String(citation.startLine) : `${citation.startLine}–${citation.endLine}`;
+  const lines =
+    citation.startLine === citation.endLine
+      ? String(citation.startLine)
+      : `${citation.startLine}–${citation.endLine}`;
   return `${fileName(citation.file)}:${lines}`;
 }

@@ -10,16 +10,27 @@ import type { Coverage, Receipt } from "@/contracts";
 /**
  * The hunks that now need a person but that the signer did not read.
  *
- * A hunk is reopened when the current routing says "read" and the signed ledger
- * has no reader for it. Ledger entries the current diff doesn't know are ignored:
- * only hunks the routing mentions can have been re-routed.
+ * A hunk is reopened when the current routing says "read", the routing without
+ * escapes did not, and the signed ledger has no reader for it. The baseline keeps
+ * hunks that are "read" for another reason (a finding, a missing report card)
+ * from being blamed on an escape. Hunks the routing doesn't know are ignored.
  *
  * @param ledger the signed receipt's `hunks`
  * @param currentCoverage `TierDecision.coverage` computed with today's trust levels
+ * @param baselineCoverage the same routing with no escapes
  * @returns hunk ids, in ledger order
  */
-export function reopenedHunks(ledger: Receipt["hunks"], currentCoverage: Record<string, Coverage>): string[] {
+export function reopenedHunks(
+  ledger: Receipt["hunks"],
+  currentCoverage: Record<string, Coverage>,
+  baselineCoverage: Record<string, Coverage>,
+): string[] {
   return ledger
-    .filter((entry) => entry.readBy === null && currentCoverage[entry.hunkId] === "read")
+    .filter(
+      (entry) =>
+        entry.readBy === null &&
+        currentCoverage[entry.hunkId] === "read" &&
+        baselineCoverage[entry.hunkId] !== "read",
+    )
     .map((entry) => entry.hunkId);
 }

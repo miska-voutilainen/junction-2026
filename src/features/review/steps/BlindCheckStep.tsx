@@ -21,17 +21,14 @@ export function BlindCheckStep({ blindCheck }: Readonly<{ blindCheck: BlindCheck
           <IdeaLabel n={2} />
         </div>
         <p className="text-sm text-text-muted">
-          The reviewer wrote down what it expected from the requirement before it saw the diff or the author&apos;s description.
+          The reviewer wrote down what it expected from the requirement before it saw the diff or
+          the author&apos;s description.
         </p>
       </header>
       <Expected requirementId={blindCheck.requirementId} expected={blindCheck.expected} />
       <Contradictions contradictions={blindCheck.contradictions} />
       <ReadingOrder blindCheck={blindCheck} />
-      <FindingList
-        heading="Missing"
-        emptyText="Nothing missing."
-        findings={blindCheck.missing}
-      />
+      <FindingList heading="Missing" emptyText="Nothing missing." findings={blindCheck.missing} />
       <FindingList
         heading="Scope creep"
         emptyText="No scope creep found."
@@ -41,7 +38,10 @@ export function BlindCheckStep({ blindCheck }: Readonly<{ blindCheck: BlindCheck
   );
 }
 
-function Expected({ requirementId, expected }: Readonly<Pick<BlindCheck, "requirementId" | "expected">>) {
+function Expected({
+  requirementId,
+  expected,
+}: Readonly<Pick<BlindCheck, "requirementId" | "expected">>) {
   // Anchored runs have no expectation: nothing was written down before the diff.
   if (expected.length === 0) return null;
   return (
@@ -70,11 +70,20 @@ function Contradictions({ contradictions }: Readonly<{ contradictions: FindingVi
       <h4 id="contradictions-heading" className="text-sm font-semibold text-text-primary">
         Contradictions ({contradictions.length})
       </h4>
-      {contradictions.length === 0 && <p className="text-sm text-text-secondary">No contradictions between the PR description and the code.</p>}
+      {contradictions.length === 0 && (
+        <p className="text-sm text-text-secondary">
+          No contradictions between the PR description and the code.
+        </p>
+      )}
       <ul className="flex flex-col gap-4">
         {contradictions.map((view) => (
-          <li key={view.finding.id} className="flex flex-col gap-2 rounded-item border border-border-default bg-surface-raised p-3">
-            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
+          <li
+            key={view.finding.id}
+            className="flex flex-col gap-2 rounded-item border border-border-default bg-surface-raised p-3"
+          >
+            <p data-written-text className="text-base font-medium text-text-primary">
+              {view.finding.title}
+            </p>
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-muted">The PR says: </span>
               {view.finding.statement}
@@ -111,7 +120,7 @@ function ReadingOrder({ blindCheck }: Readonly<{ blindCheck: BlindCheck }>) {
               caught {row.anchoredCaught} of {row.runs} runs
             </dd>
             <dt>Blind-first</dt>
-            <dd className="font-medium tabular-nums text-text-primary">
+            <dd className="font-medium text-text-primary tabular-nums">
               caught {row.blindCaught} of {row.runs} runs
             </dd>
           </dl>
@@ -122,7 +131,11 @@ function ReadingOrder({ blindCheck }: Readonly<{ blindCheck: BlindCheck }>) {
   );
 }
 
-function FindingList({ heading, emptyText, findings }: Readonly<{ heading: string; emptyText: string; findings: FindingView[] }>) {
+function FindingList({
+  heading,
+  emptyText,
+  findings,
+}: Readonly<{ heading: string; emptyText: string; findings: FindingView[] }>) {
   return (
     <section aria-label={heading} className="flex flex-col gap-2">
       <h4 className="text-sm font-semibold text-text-primary">
@@ -132,7 +145,9 @@ function FindingList({ heading, emptyText, findings }: Readonly<{ heading: strin
       <ul className="flex flex-col gap-3">
         {findings.map((view) => (
           <li key={view.finding.id} className="flex flex-col gap-1">
-            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">
+              {view.finding.title}
+            </p>
             <p className="text-sm text-text-secondary">{view.finding.detail}</p>
             <FindingLocations view={view} />
           </li>

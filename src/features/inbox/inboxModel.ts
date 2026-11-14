@@ -117,7 +117,8 @@ export function filterRows(rows: InboxRow[], filter: StatusFilter): InboxRow[] {
     (row) =>
       isReviewed(row) &&
       (row.receipt === wanted ||
-        (wanted === "needs-review" && (row.receipt === "unverified" || row.receipt === "reopened"))),
+        (wanted === "needs-review" &&
+          (row.receipt === "unverified" || row.receipt === "reopened"))),
   );
 }
 
@@ -172,7 +173,7 @@ function buildRow(
   const { decision } = decideChange(review.data, reportCard, escapes);
   const isReceiptUnreadable = receipt === "unreadable";
   const record = isReceiptUnreadable ? null : receipt;
-  const { status } = receiptUnderEscapes(review.data, record, decision, escapes);
+  const { status } = receiptUnderEscapes(review.data, record, decision, reportCard, escapes);
   return {
     ...base,
     state: "reviewed",

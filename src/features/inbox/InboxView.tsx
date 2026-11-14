@@ -38,7 +38,10 @@ export function InboxView({
     <div className="mx-auto flex w-full max-w-content flex-col gap-5 px-4 py-6 compact:px-8 compact:py-7">
       <InboxHeader reviewNext={model.reviewNext} />
       {notice && (
-        <p role="status" className="rounded-control border border-amber/40 px-4 py-2.5 text-sm text-amber-light">
+        <p
+          role="status"
+          className="rounded-control border border-amber/40 px-4 py-2.5 text-sm text-amber-light"
+        >
           {notice}
         </p>
       )}
@@ -47,7 +50,12 @@ export function InboxView({
         <InboxMobile sections={mobileSections(model.rows)} highlightedIds={highlightedIds} />
       </div>
       <div className="hidden flex-col gap-4 compact:flex">
-        <DesktopList rows={model.rows} highlightedIds={highlightedIds} filter={filter} onFilterChange={setFilter} />
+        <DesktopList
+          rows={model.rows}
+          highlightedIds={highlightedIds}
+          filter={filter}
+          onFilterChange={setFilter}
+        />
       </div>
     </div>
   );
@@ -85,16 +93,28 @@ function DesktopList({
         ]}
         className="self-start"
       />
-      <InboxTable rows={listed} highlightedIds={highlightedIds} label="Changes" emptyText={EMPTY_FILTER_TEXT[filter]} />
+      <InboxTable
+        rows={listed}
+        highlightedIds={highlightedIds}
+        label="Changes"
+        emptyText={EMPTY_FILTER_TEXT[filter]}
+      />
       {folded.length > 0 && (
         <Disclosure
           title={
             <span className="flex items-center gap-2 font-semibold text-text-primary">
-              Signed <span className="font-mono text-sm font-normal text-text-muted">{folded.length}</span>
+              Signed{" "}
+              <span className="font-mono text-sm font-normal text-text-muted">{folded.length}</span>
             </span>
           }
         >
-          <InboxTable rows={folded} highlightedIds={highlightedIds} label="Signed changes" emptyText="" withHeader={false} />
+          <InboxTable
+            rows={folded}
+            highlightedIds={highlightedIds}
+            label="Signed changes"
+            emptyText=""
+            withHeader={false}
+          />
         </Disclosure>
       )}
     </>

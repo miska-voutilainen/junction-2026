@@ -45,11 +45,18 @@ export function ReviewScreen({
 }>) {
   const shellChanges = useShellChanges(sources, reportCard);
   const current = sources.find((source) => source.change.id === currentId);
-  if (!current) throw new Error(`No change with id ${currentId} among the loaded sources. The page must call notFound() for an unknown id before rendering ReviewScreen.`);
+  if (!current)
+    throw new Error(
+      `No change with id ${currentId} among the loaded sources. The page must call notFound() for an unknown id before rendering ReviewScreen.`,
+    );
   const { change, review, receipt } = current;
   const record = receipt === "unreadable" ? null : receipt;
   const isReceiptUnreadable = receipt === "unreadable";
-  const reopened = useReceiptUnderEscapes(review.state === "ok" ? review.data : null, record, reportCard);
+  const reopened = useReceiptUnderEscapes(
+    review.state === "ok" ? review.data : null,
+    record,
+    reportCard,
+  );
 
   return (
     <AppShell
@@ -64,20 +71,35 @@ export function ReviewScreen({
       {usesFixture && <MockDataBanner />}
       <SelectionProvider>
         <ReviewStepProvider>
-        <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7 wide:max-w-review">
-          <ReviewHeader
-            change={change}
-            review={review.state === "ok" ? review.data : undefined}
-            receiptStatus={review.state === "ok" ? receiptStatus(review.data, record) : undefined}
-            isReopened={reopened?.status === "reopened"}
-            signer={signerOf(receipt)}
-            receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
-            isReceiptUnreadable={isReceiptUnreadable}
-          />
-          {review.state === "missing" && <ReviewMissing changeId={change.id} />}
-          {review.state === "unreadable" && <ReviewUnreadable changeId={change.id} details={reviewError} />}
-          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} reopened={reopened} isReceiptUnreadable={isReceiptUnreadable} tokens={tokens} />}
-        </div>
+          <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7 wide:max-w-review">
+            <ReviewHeader
+              change={change}
+              review={review.state === "ok" ? review.data : undefined}
+              receiptStatus={
+                review.state === "ok"
+                  ? (reopened?.status ?? receiptStatus(review.data, record))
+                  : undefined
+              }
+              signer={signerOf(receipt)}
+              receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
+              isReceiptUnreadable={isReceiptUnreadable}
+            />
+            {review.state === "missing" && <ReviewMissing changeId={change.id} />}
+            {review.state === "unreadable" && (
+              <ReviewUnreadable changeId={change.id} details={reviewError} />
+            )}
+            {review.state === "ok" && (
+              <ReviewBody
+                change={change}
+                review={review.data}
+                reportCard={reportCard}
+                record={record}
+                reopened={reopened}
+                isReceiptUnreadable={isReceiptUnreadable}
+                tokens={tokens}
+              />
+            )}
+          </div>
         </ReviewStepProvider>
       </SelectionProvider>
     </AppShell>

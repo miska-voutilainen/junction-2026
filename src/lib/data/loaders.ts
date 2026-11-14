@@ -114,7 +114,9 @@ async function listJson(directory: string): Promise<string[]> {
  * show a fixture change next to a real one. Planted-bug and contradiction-plant
  * inputs live in the same folder and are filtered out.
  */
-export async function loadChanges(root: string = defaultDataRoot): Promise<LoadResult<ChangeInput[]>> {
+export async function loadChanges(
+  root: string = defaultDataRoot,
+): Promise<LoadResult<ChangeInput[]>> {
   const recordedDirectory = path.join(root, "sample", "changes");
   try {
     let directory = recordedDirectory;
@@ -139,12 +141,18 @@ export async function loadChanges(root: string = defaultDataRoot): Promise<LoadR
 }
 
 /** One change input by id, e.g. `loadChange("mp-2283")`. */
-export function loadChange(id: string, root: string = defaultDataRoot): Promise<LoadResult<ChangeInput>> {
+export function loadChange(
+  id: string,
+  root: string = defaultDataRoot,
+): Promise<LoadResult<ChangeInput>> {
   return loadById(id, (changeId) => `sample/changes/${changeId}.json`, ChangeInputSchema, root);
 }
 
 /** The recorded blind-first review of a change. */
-export function loadReview(changeId: string, root: string = defaultDataRoot): Promise<LoadResult<Review>> {
+export function loadReview(
+  changeId: string,
+  root: string = defaultDataRoot,
+): Promise<LoadResult<Review>> {
   return loadById(changeId, (id) => `runs/${id}/review.json`, ReviewSchema, root);
 }
 
@@ -172,7 +180,10 @@ async function receiptFolders(changeId: string, root: string): Promise<string[]>
  * The receipt file's exact text from the review's source (see `receiptFolders`), or null when there is none.
  * "Copy JSON" on the receipt page copies this, so the copy is byte-for-byte what is in git.
  */
-export async function loadReceiptText(changeId: string, root: string = defaultDataRoot): Promise<string | null> {
+export async function loadReceiptText(
+  changeId: string,
+  root: string = defaultDataRoot,
+): Promise<string | null> {
   if (!safeId.test(changeId)) return null;
   for (const folder of await receiptFolders(changeId, root)) {
     try {
@@ -185,12 +196,23 @@ export async function loadReceiptText(changeId: string, root: string = defaultDa
 }
 
 /** The exported signed receipt of a change, from the review's source; "missing" means nobody has signed it for this review. */
-export async function loadReceipt(changeId: string, root: string = defaultDataRoot): Promise<LoadResult<ReceiptRecord>> {
+export async function loadReceipt(
+  changeId: string,
+  root: string = defaultDataRoot,
+): Promise<LoadResult<ReceiptRecord>> {
   if (!safeId.test(changeId)) return { status: "missing" };
   try {
     for (const folder of await receiptFolders(changeId, root)) {
-      const record = await readValidated(path.join(root, folder, "receipts", `${changeId}.json`), ReceiptRecordSchema);
-      if (record !== null) return { status: "ok", data: record, source: folder === RECORDED_FOLDER ? "recorded" : "fixture" };
+      const record = await readValidated(
+        path.join(root, folder, "receipts", `${changeId}.json`),
+        ReceiptRecordSchema,
+      );
+      if (record !== null)
+        return {
+          status: "ok",
+          data: record,
+          source: folder === RECORDED_FOLDER ? "recorded" : "fixture",
+        };
     }
     return { status: "missing" };
   } catch (error) {

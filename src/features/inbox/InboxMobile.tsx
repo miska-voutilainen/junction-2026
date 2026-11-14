@@ -26,7 +26,14 @@ export function InboxMobile({
       {sections.signHere.length > 0 && (
         <Section title="Sign here" count={sections.signHere.length}>
           {sections.signHere.map((row) => (
-            <li key={row.id} className={rowClass("flex flex-col gap-2 border-t border-border-subtle pt-3", row.id, highlightedIds)}>
+            <li
+              key={row.id}
+              className={rowClass(
+                "flex flex-col gap-2 border-t border-border-subtle pt-3",
+                row.id,
+                highlightedIds,
+              )}
+            >
               {/* Plain text: the button below is this row's one link. */}
               <RowTitle row={row} isLink={false} isHighlighted={highlightedIds.has(row.id)} />
               <RowMeta row={row} />
@@ -35,7 +42,9 @@ export function InboxMobile({
                 data-inbox-row-link
                 className="flex min-h-11 items-center justify-center rounded-control bg-brand text-base font-semibold text-primary-foreground hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand"
               >
-                {row.receipt === "stale" || row.receipt === "unverified" ? "Review and re-sign" : "Review and sign"}
+                {row.receipt === "stale" || row.receipt === "unverified"
+                  ? "Review and re-sign"
+                  : "Review and sign"}
               </Link>
             </li>
           ))}
@@ -44,11 +53,21 @@ export function InboxMobile({
       {sections.needsDesktop.length > 0 && (
         <Section title="Needs a desktop" count={sections.needsDesktop.length}>
           {sections.needsDesktop.map((row) => (
-            <li key={row.id} className={rowClass("flex flex-col gap-1.5 border-t border-border-subtle pt-3", row.id, highlightedIds)}>
+            <li
+              key={row.id}
+              className={rowClass(
+                "flex flex-col gap-1.5 border-t border-border-subtle pt-3",
+                row.id,
+                highlightedIds,
+              )}
+            >
               <RowTitle row={row} dataRowLink isHighlighted={highlightedIds.has(row.id)} />
               <RowMeta row={row} />
               {isReviewed(row) && (
-                <Link href={`/changes/${row.id}`} className="flex min-h-11 items-center text-sm text-link">
+                <Link
+                  href={`/changes/${row.id}`}
+                  className="flex min-h-11 items-center text-sm text-link"
+                >
                   Open read-only
                 </Link>
               )}
@@ -60,13 +79,19 @@ export function InboxMobile({
         <Disclosure
           title={
             <span className="flex items-center gap-2 font-semibold text-text-primary">
-              Signed <span className="font-mono text-sm font-normal text-text-muted">{sections.signed.length}</span>
+              Signed{" "}
+              <span className="font-mono text-sm font-normal text-text-muted">
+                {sections.signed.length}
+              </span>
             </span>
           }
         >
           <ul className="flex flex-col gap-3 pb-2 pl-6">
             {sections.signed.map((row) => (
-              <li key={row.id} className={rowClass("flex flex-col gap-0.5", row.id, highlightedIds)}>
+              <li
+                key={row.id}
+                className={rowClass("flex flex-col gap-0.5", row.id, highlightedIds)}
+              >
                 <RowTitle row={row} isHighlighted={highlightedIds.has(row.id)} />
                 <RowMeta row={row} />
               </li>
@@ -78,7 +103,11 @@ export function InboxMobile({
   );
 }
 
-function Section({ title, count, children }: Readonly<{ title: string; count: number; children: ReactNode }>) {
+function Section({
+  title,
+  count,
+  children,
+}: Readonly<{ title: string; count: number; children: ReactNode }>) {
   return (
     <section aria-label={title} className="flex flex-col gap-3">
       <h2 className="flex items-baseline gap-2 text-sm font-semibold">
@@ -109,7 +138,11 @@ function RowTitle({
     );
   }
   return (
-    <Link href={`/changes/${row.id}`} data-inbox-row-link={dataRowLink || undefined} className="font-medium text-text-primary">
+    <Link
+      href={`/changes/${row.id}`}
+      data-inbox-row-link={dataRowLink || undefined}
+      className="font-medium text-text-primary"
+    >
       {row.title}
       {isHighlighted && <ReroutedNote />}
     </Link>
@@ -121,9 +154,7 @@ function RowMeta({ row }: Readonly<{ row: InboxRow }>) {
   return (
     <div className="flex flex-col gap-1 text-sm text-text-muted">
       <p>{metaLine(row)}</p>
-      {row.hasSyntheticDescription && (
-        <SyntheticTag className="self-start" />
-      )}
+      {row.hasSyntheticDescription && <SyntheticTag className="self-start" />}
     </div>
   );
 }
@@ -142,7 +173,8 @@ function metaLine(row: InboxRow): ReactNode {
   }
   return (
     <>
-      {id} · {tierLabel[row.tier]} · {readCount(row)} · <span className={metaFlagClass(row)}>{receiptOrFlags(row)}</span>
+      {id} · {tierLabel[row.tier]} · {readCount(row)} ·{" "}
+      <span className={metaFlagClass(row)}>{receiptOrFlags(row)}</span>
     </>
   );
 }
@@ -156,7 +188,8 @@ function receiptOrFlags(row: ReviewedRow): string {
 }
 
 function metaFlagClass(row: ReviewedRow): string {
-  if (row.isReceiptUnreadable || row.receipt === "stale" || row.receipt === "reopened") return "text-amber-light";
+  if (row.isReceiptUnreadable || row.receipt === "stale" || row.receipt === "reopened")
+    return "text-amber-light";
   if (row.receipt === "unverified") return "text-rose-light";
   return row.contradictions > 0 ? "text-rose-light" : "";
 }

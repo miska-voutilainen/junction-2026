@@ -23,7 +23,11 @@ import { countOf } from "@/lib/countOf";
  * @param index Position in the list, for the entrance stagger.
  * @param isHighlighted Tints the row: the last simulated escape re-routed it.
  */
-export function InboxRow({ row, index, isHighlighted }: Readonly<{ row: Row; index: number; isHighlighted: boolean }>) {
+export function InboxRow({
+  row,
+  index,
+  isHighlighted,
+}: Readonly<{ row: Row; index: number; isHighlighted: boolean }>) {
   const entrance = useStaggeredPreset(fadeUpItem, index);
 
   return (
@@ -63,9 +67,7 @@ function ChangeCell({ row, isHighlighted }: Readonly<{ row: Row; isHighlighted: 
         <span>{row.requirementId}</span>
         <span aria-hidden="true">·</span>
         <span className="truncate">{row.authorAgent}</span>
-        {row.hasSyntheticDescription && (
-          <SyntheticTag className="font-sans" />
-        )}
+        {row.hasSyntheticDescription && <SyntheticTag className="font-sans" />}
       </p>
     </div>
   );
@@ -94,7 +96,9 @@ function ReviewedCells({ row }: Readonly<{ row: ReviewedRow }>) {
             {row.refusals} refused
           </span>
         )}
-        {row.contradictions === 0 && row.refusals === 0 && <span className="text-text-muted">No flags</span>}
+        {row.contradictions === 0 && row.refusals === 0 && (
+          <span className="text-text-muted">No flags</span>
+        )}
       </div>
       <div role="cell" className="text-sm">
         {row.isReceiptUnreadable ? (

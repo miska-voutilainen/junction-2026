@@ -53,8 +53,13 @@ export function locationsOf(review: Review, hunkIds: string[]): HunkLocation[] {
  * refusal ids ("r1") are numbered per run, so another run's "r2" may be a
  * different refusal. In those cases the decision stays open.
  */
-export function buildRefusals(review: Review, record: ReceiptRecord | null, signState: SignState): Refusals {
-  const isAcceptanceCurrent = signState === "signed" && record !== null && record.receipt.reviewRunId === review.run.id;
+export function buildRefusals(
+  review: Review,
+  record: ReceiptRecord | null,
+  signState: SignState,
+): Refusals {
+  const isAcceptanceCurrent =
+    signState === "signed" && record !== null && record.receipt.reviewRunId === review.run.id;
   const accepted = isAcceptanceCurrent ? record.receipt.residualRisk.acceptedRefusalIds : [];
   return {
     policyVersion: refusalPolicyVersion,

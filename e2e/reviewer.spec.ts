@@ -104,7 +104,11 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
   await expect(page.getByText(ESCAPE_NOTICE)).toBeVisible();
   await page.evaluate(() => Object.assign(window, { stillSamePage: true }));
 
-  await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: /^Inbox/ })
+    .first()
+    .click();
   await page.waitForURL((url) => url.pathname === "/");
   // The same document: no reload happened between the report card and the inbox.
   expect(await page.evaluate(() => "stillSamePage" in window)).toBe(true);
@@ -124,14 +128,21 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
   expect(readAfter).toBeGreaterThan(readBefore);
 });
 
-const inboxRowOf = (page: Page, id: string) => page.getByRole("row").filter({ hasText: new RegExp(id, "i") });
+const inboxRowOf = (page: Page, id: string) =>
+  page.getByRole("row").filter({ hasText: new RegExp(id, "i") });
 
-test("tints the re-routed inbox row after an escape, and not after Undo", async ({ page }, testInfo) => {
+test("tints the re-routed inbox row after an escape, and not after Undo", async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
   // Wait for the inbox's URL and the Signed fold: under a full parallel run the click
   // can otherwise land on the fold before the client-side navigation has rendered it.
   const openInbox = async () => {
-    await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+    await page
+      .getByRole("navigation")
+      .getByRole("link", { name: /^Inbox/ })
+      .first()
+      .click();
     await page.waitForURL((url) => url.pathname === "/");
     await expect(page.getByRole("button", { name: "Signed 1", expanded: false })).toBeVisible();
   };

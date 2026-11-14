@@ -58,7 +58,9 @@ function StoryText({ heading, text }: Readonly<{ heading: string; text: string }
   return (
     <div className="flex flex-col gap-0.5">
       <h3 className="text-xs font-medium text-text-muted">{heading}</h3>
-      <p data-written-text className="text-base text-text-secondary">{text}</p>
+      <p data-written-text className="text-base text-text-secondary">
+        {text}
+      </p>
     </div>
   );
 }
@@ -71,7 +73,8 @@ function Touches({ touches }: Readonly<{ touches: Story["touches"] }>) {
       <ul className="flex flex-col gap-1.5">
         {touches.map((touch) => (
           <li key={`${touch.file}:${touch.symbol}`} className="text-base text-text-secondary">
-            <span className="font-mono text-sm break-all text-text-primary">{touch.symbol}</span> <span data-written-text>· {touch.note}</span>
+            <span className="font-mono text-sm break-all text-text-primary">{touch.symbol}</span>{" "}
+            <span data-written-text>· {touch.note}</span>
           </li>
         ))}
       </ul>
@@ -79,27 +82,42 @@ function Touches({ touches }: Readonly<{ touches: Story["touches"] }>) {
   );
 }
 
-function ClaimGroupList({ group, onOpenRefused }: Readonly<{ group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">>) {
+function ClaimGroupList({
+  group,
+  onOpenRefused,
+}: Readonly<{ group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">>) {
   return (
     <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
       <h4 className="text-xs font-medium text-text-muted">{group.heading}</h4>
       <ul className="flex flex-col gap-1">
         {group.claims.map((storyClaim) => (
-          <ClaimRow key={storyClaim.claim.id} storyClaim={storyClaim} onOpenRefused={onOpenRefused} />
+          <ClaimRow
+            key={storyClaim.claim.id}
+            storyClaim={storyClaim}
+            onOpenRefused={onOpenRefused}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function ClaimRow({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
+function ClaimRow({
+  storyClaim,
+  onOpenRefused,
+}: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
   const { claim, retraction } = storyClaim;
   const { selectedClaimId, setSelectedClaimId } = useSelection();
   const isSelected = selectedClaimId === claim.id;
   const detailsId = `claim-details-${claim.id}`;
 
   return (
-    <li className={cn("rounded-item border border-transparent", isSelected && "border-border-default bg-surface-selected")}>
+    <li
+      className={cn(
+        "rounded-item border border-transparent",
+        isSelected && "border-border-default bg-surface-selected",
+      )}
+    >
       <button
         type="button"
         aria-expanded={isSelected}
@@ -108,11 +126,21 @@ function ClaimRow({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryCla
         className="flex w-full flex-col items-start gap-1.5 rounded-item px-2 py-2 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
         {retraction ? <RetractedBadge /> : <EvidenceBadge level={claim.level} />}
-        <span data-written-text className={cn("max-w-full text-sm text-text-primary [overflow-wrap:anywhere]", retraction && "text-text-muted line-through")}>{claim.text}</span>
+        <span
+          data-written-text
+          className={cn(
+            "max-w-full text-sm [overflow-wrap:anywhere] text-text-primary",
+            retraction && "text-text-muted line-through",
+          )}
+        >
+          {claim.text}
+        </span>
       </button>
       {retraction && <Retraction retraction={retraction} />}
       <div id={detailsId} hidden={!isSelected} className="px-2 pb-2">
-        {isSelected && !retraction && <ClaimEvidence storyClaim={storyClaim} onOpenRefused={onOpenRefused} />}
+        {isSelected && !retraction && (
+          <ClaimEvidence storyClaim={storyClaim} onOpenRefused={onOpenRefused} />
+        )}
       </div>
     </li>
   );
@@ -143,7 +171,10 @@ function Retraction({ retraction }: Readonly<{ retraction: Review["retractions"]
   );
 }
 
-function ClaimEvidence({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
+function ClaimEvidence({
+  storyClaim,
+  onOpenRefused,
+}: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
   const { claim } = storyClaim;
   return (
     <div className="flex flex-col gap-3 text-sm text-text-secondary">
@@ -172,10 +203,16 @@ function Citations({ storyClaim }: Readonly<{ storyClaim: StoryClaim }>) {
   return (
     <ul className="flex flex-col gap-2">
       {storyClaim.citations.map(({ citation, isQuoteFound }) => (
-        <li key={`${citation.file}:${citation.startLine}:${citation.endLine}`} className="flex flex-col gap-1">
+        <li
+          key={`${citation.file}:${citation.startLine}:${citation.endLine}`}
+          className="flex flex-col gap-1"
+        >
           {isQuoteFound ? (
             <>
-              <LocationButton label={citationLabel(citation)} onShow={() => setSelectedClaimId(storyClaim.claim.id, citation)} />
+              <LocationButton
+                label={citationLabel(citation)}
+                onShow={() => setSelectedClaimId(storyClaim.claim.id, citation)}
+              />
               <pre className="rounded-item border border-border-subtle bg-surface-code p-2 font-mono text-xs break-words whitespace-pre-wrap text-text-secondary">
                 {citation.quote}
               </pre>
@@ -183,7 +220,8 @@ function Citations({ storyClaim }: Readonly<{ storyClaim: StoryClaim }>) {
           ) : (
             // The quote check did not find this quote in the cited lines: it is not evidence, so neither the quote nor a highlight is offered.
             <p className="font-mono text-xs break-all text-text-muted">
-              {citationLabel(citation)} <span className="font-sans">· Quote not found in the code</span>
+              {citationLabel(citation)}{" "}
+              <span className="font-sans">· Quote not found in the code</span>
             </p>
           )}
         </li>
@@ -200,10 +238,16 @@ function TestEvidence({ claim }: Readonly<{ claim: Claim }>) {
       {tests.map((test) => (
         <div key={test.testName ?? test.summary} className="flex flex-col gap-1">
           <p>{test.summary}</p>
-          {test.testName && <p className="font-mono text-xs break-all text-text-muted">{test.testName}</p>}
+          {test.testName && (
+            <p className="font-mono text-xs break-all text-text-muted">{test.testName}</p>
+          )}
           {test.base && (
             <Disclosure title={`${verbOf(test.base.result)} on the base commit`}>
-              <Console label="Test output on the base commit" text={test.base.output} kind="output" />
+              <Console
+                label="Test output on the base commit"
+                text={test.base.output}
+                kind="output"
+              />
             </Disclosure>
           )}
           {test.head && (
@@ -259,19 +303,28 @@ function SupportedEvidence({ claim }: Readonly<{ claim: Claim }>) {
 
 function Defects({ defects }: Readonly<{ defects: Story["defects"] }>) {
   return (
-    <section aria-labelledby="defects-heading" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
+    <section
+      aria-labelledby="defects-heading"
+      className="flex flex-col gap-2 border-t border-border-subtle pt-4"
+    >
       <h3 id="defects-heading" className="text-base font-semibold text-text-primary">
         Defects found ({defects.length})
       </h3>
-      {defects.length === 0 && <p className="text-sm text-text-secondary">No defects found in the four area checklists.</p>}
+      {defects.length === 0 && (
+        <p className="text-sm text-text-secondary">No defects found in the four area checklists.</p>
+      )}
       <ul className="flex flex-col gap-3">
         {defects.map((view) => (
           <li key={view.finding.id} className="flex flex-col gap-1">
             <p className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-              <span className="font-medium text-text-secondary capitalize">{view.finding.severity}</span>
+              <span className="font-medium text-text-secondary capitalize">
+                {view.finding.severity}
+              </span>
               {view.finding.area && <AreaChip area={view.finding.area} />}
             </p>
-            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">
+              {view.finding.title}
+            </p>
             <p className="text-sm text-text-secondary">{view.finding.detail}</p>
             <FindingLocations view={view} />
           </li>

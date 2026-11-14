@@ -34,7 +34,10 @@ export function InboxTable({
     <div className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
       <div role="table" aria-label={label}>
         {withHeader && (
-          <div role="row" className={`${ROW_GRID} h-9 border-b border-border-subtle text-xs font-semibold whitespace-nowrap text-text-muted`}>
+          <div
+            role="row"
+            className={`${ROW_GRID} h-9 border-b border-border-subtle text-xs font-semibold whitespace-nowrap text-text-muted`}
+          >
             <span role="columnheader" aria-label="Status" className="size-4" />
             <span role="columnheader">Change</span>
             <span role="columnheader" className="flex min-w-0 items-center gap-2">
@@ -49,7 +52,12 @@ export function InboxTable({
         )}
         <div role="rowgroup">
           {rows.map((row, index) => (
-            <InboxRow key={row.id} row={row} index={index} isHighlighted={highlightedIds.has(row.id)} />
+            <InboxRow
+              key={row.id}
+              row={row}
+              index={index}
+              isHighlighted={highlightedIds.has(row.id)}
+            />
           ))}
         </div>
       </div>

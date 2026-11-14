@@ -21,11 +21,21 @@ type Segment = { coverage: Coverage; isCollapsedRun: boolean };
  * A long run of generated hunks is one wider block. The row's text already says
  * the numbers, so the strip is for the eye and hidden from assistive tech.
  */
-export function CoverageStrip({ coverage, className }: Readonly<{ coverage: Coverage[]; className?: string }>) {
+export function CoverageStrip({
+  coverage,
+  className,
+}: Readonly<{ coverage: Coverage[]; className?: string }>) {
   return (
     <span aria-hidden="true" className={cn("flex flex-wrap gap-0.5", className)}>
       {toSegments(coverage).map((segment, index) => (
-        <span key={index} className={cn("h-2 rounded-chip", segment.isCollapsedRun ? "w-6" : "w-1.5", CELL[segment.coverage])} />
+        <span
+          key={index}
+          className={cn(
+            "h-2 rounded-chip",
+            segment.isCollapsedRun ? "w-6" : "w-1.5",
+            CELL[segment.coverage],
+          )}
+        />
       ))}
     </span>
   );
@@ -43,7 +53,8 @@ function toSegments(coverage: readonly Coverage[]): Segment[] {
     if (state === "generated" && runLength >= MIN_GENERATED_RUN_TO_COLLAPSE) {
       segments.push({ coverage: state, isCollapsedRun: true });
     } else {
-      for (let cell = 0; cell < runLength; cell++) segments.push({ coverage: state, isCollapsedRun: false });
+      for (let cell = 0; cell < runLength; cell++)
+        segments.push({ coverage: state, isCollapsedRun: false });
     }
     index = runEnd;
   }

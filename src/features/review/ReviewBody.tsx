@@ -41,7 +41,8 @@ const COMPACT_UP_QUERY = "(min-width: 760px)";
  * diff on narrower screens) and selects claims through `useSelection`.
  *
  * Routing is decided here, once per review, report card and set of escapes,
- * so nothing downstream re-runs (or re-scrolls) on an unrelated render.
+ * so nothing downstream re-runs (or re-scrolls) on an unrelated render. The
+ * receipt state arrives as a prop; the hook behind it routes once more for itself.
  */
 export function ReviewBody({
   change,
@@ -64,8 +65,14 @@ export function ReviewBody({
   tokens: HighlightedHunks;
 }>) {
   const { escapes } = useEscapes();
-  const { decision, levels, isEvidenceAvailable } = useMemo(() => decideChange(review, reportCard, escapes), [review, reportCard, escapes]);
-  const sections = useMemo(() => buildSections(review, decision, levels), [review, decision, levels]);
+  const { decision, levels, isEvidenceAvailable } = useMemo(
+    () => decideChange(review, reportCard, escapes),
+    [review, reportCard, escapes],
+  );
+  const sections = useMemo(
+    () => buildSections(review, decision, levels),
+    [review, decision, levels],
+  );
   const groups = useMemo(() => buildNavigator(sections), [sections]);
   const reveal = useDiffReveal(sections);
   const { readIds, toggle } = useReadHunks(change.id);
@@ -83,10 +90,19 @@ export function ReviewBody({
   return (
     <>
       <CoverageLine decision={decision} />
-      {reopened?.status === "reopened" && <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />}
-      {reportCard.state !== "ok" && !isEvidenceAvailable && <EvidenceUnavailable alert={evidenceAlert(reportCard.state, decision)} />}
+      {reopened?.status === "reopened" && (
+        <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />
+      )}
+      {reportCard.state !== "ok" && !isEvidenceAvailable && (
+        <EvidenceUnavailable alert={evidenceAlert(reportCard.state, decision)} />
+      )}
       <div className="flex flex-col gap-6 wide:flex-row wide:items-start">
-        <HunkNavigator groups={groups} activeHunkId={reveal.activeHunkId} readIds={readIds} onJump={reveal.jumpTo} />
+        <HunkNavigator
+          groups={groups}
+          activeHunkId={reveal.activeHunkId}
+          readIds={readIds}
+          onJump={reveal.jumpTo}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <HunkDropdown groups={groups} activeHunkId={reveal.activeHunkId} onJump={reveal.jumpTo} />
           {hasFullDiff && (
@@ -133,7 +149,10 @@ function useHighlightedLines(
   showHighlight: (hunkId: string) => void,
 ): HighlightedLines[] {
   const { selection } = useSelection();
-  const highlightedLines = useMemo(() => highlightedLinesOfSelection(review, selection), [review, selection]);
+  const highlightedLines = useMemo(
+    () => highlightedLinesOfSelection(review, selection),
+    [review, selection],
+  );
 
   // An effect event reads the latest sections without re-running when they change: only a new selection scrolls.
   const showTarget = useEffectEvent((lines: HighlightedLines[], focus: Citation | undefined) => {
@@ -149,7 +168,11 @@ function useHighlightedLines(
 }
 
 /** `j` and `k` jump to the next and previous hunk in navigator order, except while typing. */
-function useHunkKeys(groups: NavigatorGroup[], activeHunkId: string | null, jumpTo: (hunkId: string) => void): void {
+function useHunkKeys(
+  groups: NavigatorGroup[],
+  activeHunkId: string | null,
+  jumpTo: (hunkId: string) => void,
+): void {
   useEffect(() => {
     const items = groups.flatMap((group) => group.items);
     function onKeyDown(event: KeyboardEvent) {

@@ -8,6 +8,8 @@
 import type { Area, ReceiptRecord, Review, TierDecision } from "@/contracts";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import { decideChange } from "@/lib/decideChange";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { reopenedHunks } from "@/lib/reopenedHunks";
 
 /** The receipt badge's values: `receiptStatus()` plus "reopened", which only escapes can cause. */
@@ -22,34 +24,43 @@ export interface ReceiptUnderEscapes {
   escapedAreas: Area[];
 }
 
+/** Shared so the "no escapes" argument is one stable object. */
+const NO_ESCAPES: Readonly<Partial<Record<Area, number>>> = Object.freeze({});
+
 /**
  * "reopened" only when the receipt is otherwise "signed" (verifies, diff unchanged)
- * and an escaped area now sends hunks to a person that the signer did not read.
+ * and an escape moved hunks to "Read this" that the signer did not read.
  * Stale and failed verification outrank it: those say the signature no longer holds.
  *
+ * @param review the recorded review the receipt was signed against
+ * @param record the change's receipt, or null when it has none
  * @param decision the routing with the current escapes, from `decideChange`
+ * @param reportCard the report card behind the routing, to route again without escapes
  * @param escapes simulated escapes per area
  */
 export function receiptUnderEscapes(
   review: Review,
   record: ReceiptRecord | null,
   decision: TierDecision,
+  reportCard: ReportCardInput,
   escapes: Partial<Record<Area, number>>,
 ): ReceiptUnderEscapes {
   const status = receiptStatus(review, record);
   const hasEscape = Object.values(escapes).some((count) => count > 0);
   // Without an escape nothing can have been re-routed after signing, whatever the report card says.
-  if (status !== "signed" || record === null || !hasEscape) return { status, reopenedHunkIds: [], escapedAreas: [] };
+  if (status !== "signed" || record === null || !hasEscape)
+    return { status, reopenedHunkIds: [], escapedAreas: [] };
 
-  // Only escaped areas count: a hunk re-routed by anything else is not "an escape" in the copy.
-  const areaOfFile = new Map(review.files.map((file) => [file.path, file.area]));
-  const areaOfHunk = new Map(review.hunks.map((hunk) => [hunk.id, areaOfFile.get(hunk.file) ?? null]));
-  const reopenedHunkIds = reopenedHunks(record.receipt.hunks, decision.coverage).filter((hunkId) => {
-    const area = areaOfHunk.get(hunkId);
-    return area != null && (escapes[area] ?? 0) > 0;
-  });
+  // Only hunks the escape moved count: one that was "read" anyway (a finding, no report card) is not the escape's doing.
+  const baseline = decideChange(review, reportCard, NO_ESCAPES).decision.coverage;
+  const reopenedHunkIds = reopenedHunks(record.receipt.hunks, decision.coverage, baseline);
   if (reopenedHunkIds.length === 0) return { status, reopenedHunkIds, escapedAreas: [] };
 
-  const escapedAreas = [...new Set(reopenedHunkIds.map((hunkId) => areaOfHunk.get(hunkId) as Area))];
+  // Areas in order of first appearance in the diff.
+  const areaOfFile = new Map(review.files.map((file) => [file.path, file.area]));
+  const areaOfHunk = new Map(review.hunks.map((hunk) => [hunk.id, areaOfFile.get(hunk.file)]));
+  const escapedAreas = [...new Set(reopenedHunkIds.map((hunkId) => areaOfHunk.get(hunkId)))].filter(
+    (area): area is Area => area !== undefined,
+  );
   return { status: "reopened", reopenedHunkIds, escapedAreas };
 }
