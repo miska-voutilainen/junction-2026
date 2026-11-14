@@ -28,7 +28,7 @@ No rates to measure. The MP-2283 receipt lists 8 checked items (2 by `tool`, 6 `
 
 - **You need:** git, `ssh-keygen` (OpenSSH 8.2 or newer) and an `allowed_signers` file.
 - **It costs:** no service, no model calls; a small CLI around `git notes` and `ssh-keygen`.
-- **First step:** a CI step that fails when the head commit has no valid note under `refs/notes/countersign`. Start with a receipt naming only the owner and diff hash.
+- **First step:** a CI step that fails when the head commit has no valid note under `refs/notes/countersign`. Start with a receipt naming only the owner and diff hash. We built that step: the `receipt` job in [`countersign.yml`](../../.github/workflows/countersign.yml) runs `pnpm countersign verify` for the change a PR names and fails on any exit code but 0 (1 stale, 2 no receipt, 3 signature invalid). Add it to branch protection and "no valid receipt for this diff, no merge" holds. Run by hand on mp-2283 it passes; on v01, which has no receipt, it fails with exit 2.
 
 ## Limits and failure modes
 

@@ -2,6 +2,16 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · The ideas that were manual now run in CI, opt-in
+
+- **Context:** Four ideas needed a person at a laptop with nothing in the repo saying so: the receipt as a merge gate and the pipeline on an agent PR (both "pitch only"), the trust ladder re-levelling after a prompt change (a manual `pnpm evals`), and a stale report card (nothing checked it). The grade rewards the depth of the idea, and a feature that exists only in a pitch is not alive.
+- **Decision (Miska):** `countersign.yml` (receipt gate, review comment) and `countersign-eval.yml` (eval on a prompt or policy change, level drops fail) are built and documented, opt-in per PR with a `Countersign: <changeId>` line. The free staleness check is `pnpm evals --check` in `ci.yml`. The spec's out-of-scope line for CI integration is narrowed to what is still not built.
+- **Why:** The pieces already existed as commands with exit codes written for a gate; the workflows wire them and the logic is tested without a model call (`prComment.test.ts`, `checkScripts.test.mjs`). The gate was run against a fresh `pnpm seed` clone: mp-2283 exits 0, v01 exits 2.
+- **Rejected:** a generic `pnpm review pr --base --head` for any repository (new input contract, edge cases in frozen prompts, credits to test); turning the gate on for this repository's own PRs (they review no registered change, so it would only add a skipped check); an eval on every PR (credits).
+- **Also decided:** levels apply only to the model the report card measured (`levelsForReviewer`), so a review by another model, such as Kimi, routes every area as Shadow and the PR comment says so; and `ci.yml` fails a prompt change that does not bump `reviewerVersion`, because the eval reuses runs by that version and would otherwise show no change.
+- **Limit:** the workflows run against our fork's registered changes and receipts; pointing them at an organisation's own repository is the part not built. The two workflows' YAML has not run on GitHub yet.
+- **PR:** feat/ci-countersign
+
 ## 2026-11-14 · T16: 2 runs per mode, blind runs shared by prompt, counts are the measured n
 
 - **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants, about 30 more reviews of a shared credit budget. Stage 1 ran 2 per mode and both modes caught 10 of 10.

@@ -217,8 +217,9 @@ There is no HTTP API: the contracts are data files, one shared function and two 
 | `route()` | `src/rules/route.ts` | engine | app, evidence (S3) |
 | `ladderLevel()`, `applyEscapes()`, `levelsFromReportCard()` | `src/rules/ladder.ts` | engine | app, evidence |
 | Diff hash | `computeDiffIdentity()` in `src/lib/git/diffIdentity.ts` | engine | evidence (receipt) |
-| Pipeline CLI | `pnpm review run <changeId> [--anchored] [--run <k>]`, `pnpm review check <changeId>`, `pnpm evals` | engine | people |
-| Receipt CLI | `pnpm countersign draft|sign|verify|export <changeId>` | evidence | people, CI later |
+| Pipeline CLI | `pnpm review run <changeId> [--anchored] [--run <k>]`, `pnpm review check <changeId>`, `pnpm review comment <changeId>`, `pnpm evals` | engine | people, CI |
+| Receipt CLI | `pnpm countersign draft|sign|verify|export <changeId>` | evidence | people, CI |
+| CI workflows | `.github/workflows/countersign.yml`, `countersign-eval.yml`, `.github/scripts/` | engine | people, CI |
 | Simulated escapes | `useEscapes()` in `src/lib/simulation/escapes.ts` | app | app, evidence (S3) |
 | Policy | `src/policy/*.ts` | engine | app, evidence (rule titles, thresholds) |
 
@@ -311,7 +312,7 @@ Reading time: `readMinutes = ceil(readLines / 25)` (minimum 1 when readLines > 0
 
 ### Ladder (`src/rules/ladder.ts`)
 
-`ladderLevel({ planted, caught, spotChecksClean }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Escapes are applied afterwards, one level per escape (trusted → calibrated → shadow; shadow stays): `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so.
+`ladderLevel({ planted, caught, spotChecksClean }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Escapes are applied afterwards, one level per escape (trusted → calibrated → shadow; shadow stays): `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so. A track record belongs to the model that earned it: `levelsForReviewer(reportCard, model)` returns the card's levels only when `reportCard.reviewer.model` is the model running the review, and all Shadow otherwise. `pnpm review run` routes with it, and `pnpm review comment` adds "Reviewer not measured" to the PR comment when the review's model is not the card's.
 
 ### `ReportCard` (`src/contracts/reportCard.ts`)
 
@@ -356,6 +357,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 ### Pipeline CLI (`src/pipeline/cli.ts`)
 
 - `pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
+- `pnpm review comment <changeId> [--receipt-exit <code>]`: prints the pull request comment for the recorded review (`renderReviewComment()` in `src/pipeline/prComment.ts`): tier and the rules behind it, hunks to read of the total, Verified, Supported and Read this counts, findings and refusals, the receipt status read from `pnpm countersign verify`'s exit code (0 signed, 1 stale, 2 not signed, 3 signature invalid; any other value reads "not checked"), reviewer version and cost. It starts with `<!-- countersign -->` so CI updates its own comment.
 - `pnpm evals`: blind runs (no A5) of every `planted-bug` input, 2 anchored and 2 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
 - Env: `AI_BACKEND` (`claude-code` default | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
 
@@ -366,6 +368,17 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 - `pnpm countersign verify <changeId>`: reads the note, splits it at the `-----BEGIN SSH SIGNATURE-----` line, runs `ssh-keygen -Y verify -f data/sample/allowed_signers -I <owner> -n countersign-receipt -s <sig>` with the payload on stdin, checks `commit === headSha` and recomputes `computeDiffIdentity()`. Prints the ssh-keygen line and "diff unchanged" (exit 0), or "Stale: the diff changed since signing" (exit 1), or "No receipt for <changeId>. Run pnpm countersign sign <changeId> first." (exit 2), or "Signature invalid" (exit 3). The exit code is the merge gate a CI step would use.
 - `pnpm countersign export <changeId>`: runs verify and writes `data/receipts/<changeId>.json`.
 - ssh-keygen: on Windows `C:\Program Files\Git\usr\bin\ssh-keygen.exe` (OpenSSH 10.2), else `ssh-keygen` on the PATH; paths passed with forward slashes, `cwd` set.
+
+### CI workflows (`.github/workflows/countersign.yml`, `countersign-eval.yml`)
+
+The ideas that need a person or a command on a laptop in this reference run on their own in CI. Nothing here is switched on for this repository's own pull requests, because they are not reviews of registered changes; the workflows run when a PR carries the opt-in line, by hand, or when a prompt changes, and the logic under them is tested without a model call.
+
+- **Opt-in.** A PR body line `Countersign: <changeId>` (or the `change_id` input of a manual run) names the change. `.github/scripts/countersignChange.mjs` reads it: no line means the jobs skip, a line naming an id with no change input fails the run (a typo must not turn the gate off).
+- **`receipt` (the merge gate).** `pnpm seed`, then `pnpm countersign verify <changeId>`; any exit code but 0 fails the job and the job summary says why (1 stale, 2 no receipt, 3 invalid). Adding `receipt` to the branch protection rule makes "no valid receipt for this diff, no merge" real; a PR without the line skips the job, which counts as passing.
+- **`review` (the PR comment).** After `receipt`, even when it failed: `pnpm review run <changeId>` with `AI_BACKEND=api`, then `pnpm review comment` posted or updated as the PR's one Countersign comment and copied to the job summary. With `ANTHROPIC_API_KEY` (a spending limit on the key) it calls the model; without it, it replays the committed recordings (`AI_MODE=replay`), so no model is called and the comment says so. A change with no recording fails the job. Docker runs A5's tests either way; fork PRs skip. Nothing is committed back.
+- **`countersign-eval.yml` (the ladder).** When `src/prompts/**` or `src/policy/**` changes, `pnpm evals` re-runs and `.github/scripts/levelDiff.mjs` compares the new report card with the committed one: it prints each area's level before and after and fails when an area dropped. The new card and runs are uploaded as an artifact; a person commits them when the drop is accepted. `pnpm evals --check` in `ci.yml` is the free version that re-scores the committed runs and fails on a stale card.
+- **Prompt freeze (`ci.yml`).** `.github/scripts/checkReviewerVersion.mjs` fails a PR that changes a file the model reads (`src/prompts/**` without tests, `src/policy/areaChecklists.ts`, `src/policy/refusals.ts`) without changing `reviewerVersion` in `src/pipeline/assembleReview.ts`. Without it, `pnpm evals` would reuse the runs of the old prompts (they carry the old version) and the ladder would not move. It needs no key.
+- **Reference scope.** Change ids are the registered changes of our fork of Tieto's repository, so the workflows run against that fork's receipts. In a deployment they point at the repository itself and the agent's PRs; that wiring is the only part not built.
 
 ### Simulated escapes (`src/lib/simulation/escapes.ts`)
 
@@ -433,13 +446,13 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - Docker on the pipeline laptop for A5 (the .NET SDK 8.0 image runs the tests).
 - Vercel: project "junction-2026" (team "junction"), Git integration, a preview per PR, production from `main`; `vercel.json` sets the framework to Next.js and the pnpm commands.
 - Stretch goals: dropped on 2026-11-13 (ideas first, section 1). Both are described in "Beyond the reference" instead: a GitHub PR comment with the story and a link to the receipt, and a live "Prove it" button that reruns A5 on one claim.
-- Not built, pitch only: in a real team the receipt becomes a required merge check (`pnpm countersign verify` exit code: "no valid receipt for this diff, no merge"), and the pipeline runs on every agent PR.
+- GitHub Actions: the receipt merge gate, the review comment on a PR and the eval on a prompt change are built as opt-in workflows (section 5, CI workflows). Not built: a GitHub App, enabling the gate on this repository's `main`, and registering PRs of arbitrary repositories.
 
 ## 8. Out of scope
 
 - A finished product, model training or fine-tuning, vendor or model selection (challenge rules).
 - Accounts, multi-user collaboration, review of arbitrary repos or PRs (our fork of Tieto's repo only).
-- Real CI integration of the reviewer; a server or database of any kind.
+- A server or database of any kind; CI beyond the workflows in section 5 (a GitHub App, review of arbitrary repositories' PRs, a live "Prove it" button).
 - Specialist multi-agent reviewer swarms and reviewer debate.
 - Live model calls during the demo, including the "Prove it" button (vision only).
 - UI polish beyond the definition of done (`.claude/rules/quality.md`): screens are clean and correct; spare time goes to the idea pages and readable code.
