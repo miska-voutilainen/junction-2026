@@ -20,13 +20,13 @@ One file, CSS custom properties on `:root`, dark only. `globals.css` maps them i
 | Borders | `subtle #1F242B`, `default #262C34`, `strong #2A3038` |
 | Text | `primary #E6E8EB`, `secondary #C4CAD3`, `muted #9AA3AF`, `faint #939CA8` (floor). The canvas's in-between greys (`#8A939F`, `#8C95A2`, `#AEB6C1`, `#B7BFCA`) map to the nearest token at or above the floor. |
 | Brand | `brand #3558E8`, `brand-hover #4566F2`, `focus-ring #4566F2`, `focus-ring-on-brand #93AAFF`, `link #93AAFF`, logo colours (logo only) |
-| Semantic | `amber`/`amber-light` (Read this, Unverified, Stale), `rose`/`rose-light` (contradiction, escape, error), `green`/`green-light` (only "Signature verified" and "Unlocked") |
-| Type | Inter (sans) and JetBrains Mono (mono). Scale: `xs 12` (floor; the canvas's 10.5 px kbd chips go up to 12), `sm 13`, `base 14`, `md 15`, `lg 18`, `xl 22`, `2xl 24`, `display 40` (gate digits). `tabular-nums` everywhere, `text-wrap: balance` on headings. |
+| Semantic | `amber`/`amber-light` (Read this, Unverified, Stale), `rose`/`rose-light` (contradiction, escape, error), `green`/`green-light` (only "Signature verified") |
+| Type | Inter (sans) and JetBrains Mono (mono). Scale: `xs 12` (floor; the canvas's 10.5 px kbd chips go up to 12), `sm 13`, `base 14`, `md 15`, `lg 18`, `xl 22`, `2xl 24`. `tabular-nums` everywhere, `text-wrap: balance` on headings. |
 | Radius | `page 12`, `menu 14` (command menu), `control 10`, `button 9`, `item 7` (nav and menu rows), `chip 4`. Nested radius = outer minus padding. |
 | Layout | `topbar 56`, `nav 248`, `navigator 264`, `steps-panel 392`, `content-max 1280`, `prose-max 820` (receipt) |
 | Motion | `ease-out cubic-bezier(.2,.8,.2,1)`, `ease-in-out cubic-bezier(.4,0,.2,1)`, `dur-fast 150`, `dur-base 200`, `dur-slow 250`, `stagger 30` (cap 10 rows), exits at 0.8× |
 
-Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`, `max-w-[380px]`) move onto these tokens.
+Spacing stays on Tailwind's 4 px scale.
 
 ## 3. App shell
 

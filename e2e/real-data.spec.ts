@@ -89,8 +89,6 @@ for (const id of changeIds) {
 }
 
 test("planted inputs are not reviewable changes", async ({ page }) => {
-  // Sets the gate cookie in the context, which page.request shares.
-  await bypassVercelAuth(page);
   const plantIds = readdirSync(changesFolder)
     .filter((name) => name.endsWith(".json"))
     .map((name) => name.replace(/\.json$/, ""))

@@ -99,4 +99,4 @@ Due Sun 15.11 10:00, hard (the form closes); our target is 07:00, then update. S
 - [ ] Pitch deck as PDF
 - [ ] Phone numbers and Discord usernames for Miska, Elias and Veijo
 - [ ] Status set to **FINAL**, not Draft
-- [ ] After judging: revoke or restrict the API keys used for recording, then remove the gate's code (#73)
+- [ ] After judging: revoke or restrict the API keys used for recording

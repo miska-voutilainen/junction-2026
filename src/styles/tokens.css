@@ -94,7 +94,6 @@
   --layout-review-max: 1680px;
   /* The receipt reads as a document: about 70 characters a line. */
   --layout-prose-max: 820px;
-  --layout-gate-max: 380px;
 
   /* Motion. Exits run at 0.8x of the entrance. */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
