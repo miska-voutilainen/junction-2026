@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The shell: the Ctrl+K menu's position, the navigation sheet below 900 px and the pinned side nav.
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test.describe("command menu position", () => {

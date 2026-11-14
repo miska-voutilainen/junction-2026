@@ -1,6 +1,6 @@
 # API
 
-Countersign has no HTTP endpoints. The site is statically generated and reads committed files under `data/`; there are no `/api` routes and no server state. The only server-side code is the temporary access gate (`src/proxy.ts`, `src/features/access-gate/`), which redirects visitors without the code cookie to `/unlock`; see its [README](../src/features/access-gate/README.md).
+Countersign has no HTTP endpoints. The site is statically generated and reads committed files under `data/`; there are no `/api` routes and no server state.
 
 What the parts exchange instead: data files, two pure functions and two command-line tools. The zod schemas in `src/contracts/` are the source of truth; this page describes them for people. Spec section 5 in [spec.md](spec.md) is the agreed interface.
 

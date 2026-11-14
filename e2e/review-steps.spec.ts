@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The review page shows the committed fixtures until recorded reviews exist:
 // mp-2283 is signed, mp-2129 has a receipt for an older diff, mp-2234 has none.
@@ -33,7 +33,7 @@ async function openStep(page: Page, name: RegExp): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("moves between the four steps with the arrow keys, Home, End and the keys 1 to 4", async ({ page }) => {

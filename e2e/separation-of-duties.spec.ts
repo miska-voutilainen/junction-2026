@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // Idea 8 (the author never checks its own work) and the signed ledger on the committed fixtures:
 // mp-2283 is signed and current, mp-2129 is signed for an older diff, mp-2234 has no receipt.
@@ -9,7 +9,7 @@ const OWN_TEST_NOTE = "The same agent wrote the code and this test, so it can't 
 const ESCAPE_REASON = "Analyzer: a bug escaped here, the next changes get a full read";
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
   // Reduced motion shows everything at rest, so screenshots never catch a half-faded element.
   await page.emulateMedia({ reducedMotion: "reduce" });
 });

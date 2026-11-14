@@ -8,7 +8,7 @@ import { TopBar } from "@/components/TopBar";
 import type { BreadcrumbItem } from "@/components/TopBar";
 
 /**
- * The frame every page except the access gate sits in: top bar, side nav and
+ * The frame every page sits in: top bar, side nav and
  * the content column, plus the command menu and its shortcuts. Pages opt in by
  * wrapping their content; the shell has no data of its own.
  *

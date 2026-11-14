@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // Fixtures: mp-2283 signed and current, mp-2129 signed for an older diff, mp-2234 not signed.
 const SIGNED_DIFF_HASH = "4324d7fc9bf1398271864e2d529054c4f28b9dc911d42b3bb4184463d2f3a322";
@@ -35,7 +35,7 @@ async function hasHorizontalScroll(page: Page): Promise<boolean> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("a signed receipt shows the seal, the diff hash and the verify output", async ({ page }, testInfo) => {

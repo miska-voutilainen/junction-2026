@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // On the fixtures mp-2283 is signed, and its two Generator hunks were covered by tests when it was signed.
 const REOPENED = "Reopened by an escape";
@@ -9,7 +9,7 @@ const shot = (name: string, projectName: string) =>
   `.review/reopened-${name}-${projectName === "mobile" ? 375 : 1440}.png`;
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 

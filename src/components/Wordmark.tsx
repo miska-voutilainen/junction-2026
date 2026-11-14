@@ -7,7 +7,7 @@ const SIZES = {
  * The Countersign logo and name. Read by screen readers as one "Countersign",
  * so the drawing and the lettering are hidden from them separately.
  *
- * @param size "lg" for full-page use such as the gate, "sm" for the top bar.
+ * @param size "sm" for the top bar and mobile header, "lg" for a larger mark.
  * @param showName False shows the mark alone, for the mobile header where the page title sits next to it.
  */
 export function Wordmark({ size = "lg", showName = true }: Readonly<{ size?: keyof typeof SIZES; showName?: boolean }>) {

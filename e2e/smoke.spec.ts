@@ -1,8 +1,8 @@
 import { expect, test } from "./fixtures";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("the inbox opens with a clean console", async ({ page }) => {
