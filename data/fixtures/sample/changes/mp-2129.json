@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change adds a [GeneratedMessagePackFormatter] attribute to MessagePack.Annotations. Placed on a partial class that implements IMessagePackFormatter<T>, it asks the source generator to emit the formatter body for T, including when T lives in a referenced assembly that does not reference MessagePack. TypeCollector recognises the attribute, reads T from the implemented interface and collects it like any other formatter target. I added one generation test that builds a library and generates a formatter for one of its types in the app project. The attribute has no properties yet, so keys and unions follow the type's own attributes. No existing public API is changed and no new package reference is added.",
     "synthetic": true,
-    "writtenBy": "Kasanen (evidence lane), written blind"
+    "writtenBy": "engine lane (Miska), synthetic, drafted without opening prompts, pipeline or review output"
   }
 }

@@ -22,7 +22,7 @@ export interface AreaCardModel {
   area: Area;
   /** Level after simulated escapes. */
   level: LadderLevel;
-  /** "3 of 4 planted bugs caught · written blind", or "No track record". */
+  /** "3 of 4 planted bugs caught · planted before the prompts", or "No track record". */
   headline: string;
   /** What a change in this area can and cannot get from the AI at this level. */
   effect: string;
@@ -62,7 +62,7 @@ export function areaCardModel(area: Area, entry: ReportCardArea | undefined, esc
   return {
     area,
     level,
-    headline: planted > 0 ? `${caught} of ${planted} planted bugs caught · written blind` : "No track record",
+    headline: planted > 0 ? `${caught} of ${planted} planted bugs caught · planted before the prompts` : "No track record",
     effect: EFFECT[level],
     nextStep: nextStep({ level, earned, planted, caught, spotChecksClean, escapes }),
     nextStepNote: level === "calibrated" && level === earned && spotChecksClean === 0 ? NO_SPOT_CHECKS_NOTE : null,
@@ -122,7 +122,7 @@ function nextStep(input: {
 export function measuredLine(reportCard: ReportCard): string {
   const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
   const { version, model } = reportCard.reviewer;
-  return `Reviewer ${version} · ${model} · measured on ${planted} planted bugs written blind`;
+  return `Reviewer ${version} · ${model} · measured on ${planted} planted bugs, planted before the prompts were written`;
 }
 
 /** A planted bug the reviewer did not find. */
@@ -159,16 +159,42 @@ export interface FailedQuote {
   reason: string;
 }
 
+/**
+ * The quote check also strikes a refusal whose rule id is not in the written
+ * policy. Those failures are about the id, not a quote, so the lists below
+ * keep them apart. Matched on the phrase, case-insensitively, because the
+ * reason text is written by the pipeline, not fixed by the schema.
+ */
+function isUnknownRuleFailure(reason: string): boolean {
+  return /unknown rule id/i.test(reason);
+}
+
 /** Quotes that failed the check, across the recorded reviews. */
 export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures.map(({ itemId, citation, reason }) => ({
-      changeId,
-      itemId,
-      location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
-      quote: citation.quote,
-      reason,
-    })),
+    review.quoteCheck.failures
+      .filter(({ reason }) => !isUnknownRuleFailure(reason))
+      .map(({ itemId, citation, reason }) => ({
+        changeId,
+        itemId,
+        location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
+        quote: citation.quote,
+        reason,
+      })),
+  );
+}
+
+/** A refusal struck because the rule id it named is not in the refusal policy: the AI invented a rule. */
+export interface UnknownRuleRefusal {
+  changeId: string;
+  /** The refusal's id in its review, e.g. "r3". */
+  itemId: string;
+}
+
+/** Refusals struck for an unknown rule id, across the recorded reviews. */
+export function unknownRuleRefusals(reviews: ReviewOfChange[]): UnknownRuleRefusal[] {
+  return reviews.flatMap(({ changeId, review }) =>
+    review.quoteCheck.failures.filter(({ reason }) => isUnknownRuleFailure(reason)).map(({ itemId }) => ({ changeId, itemId })),
   );
 }
 
