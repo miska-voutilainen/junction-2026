@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DOTNET_SDK_IMAGE, NUGET_VOLUME } from "../../policy/differentialTests";
-import { restoreArguments, testArguments, warmupArguments } from "./dotnetRunner";
+import { restoreArguments, testArguments, warmupArguments } from "./dockerArguments";
 
 const request = { worktreeDir: "C:\\Temp\\cs-a5-x\\base", projectDir: "tests/X" };
 
