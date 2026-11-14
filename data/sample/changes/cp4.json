@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change adds a GeneratedMessagePackFormatter attribute so a project can get a source-generated formatter for a type it does not own (issue 2129). You declare a partial class that implements IMessagePackFormatter of the external type, and the generator writes its body and registers it in GeneratedMessagePackResolver. By default the type is serialized in contractless mode, using public read-write members under their names as string keys. An optional SurrogateType property names a class whose Key and IgnoreMember attributes set the keys and membership. A new GeneratedFormatterCollector does the analysis, and four analyzers, MsgPack019 to MsgPack022, flag a class that is not partial, does not implement the formatter interface, names an unsupported type, or has a surrogate that does not match it. Generic types are supported as long as every type argument is closed. I added unit tests, execution tests and a project with external sample types.",
     "synthetic": true,
-    "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output"
+    "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output"
   }
 }

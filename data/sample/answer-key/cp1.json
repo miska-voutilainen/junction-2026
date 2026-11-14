@@ -1,13 +1,13 @@
 {
   "plantId": "cp1",
-  "changeId": "cp1",
+  "changeId": "mp-2283",
   "kind": "contradiction",
   "area": null,
   "file": null,
   "startLine": null,
   "endLine": null,
-  "defect": "The change touches only TypeCollector.cs and the test file; the README and the analyzer documentation are not edited.",
-  "why": "The diff also edits README.md and doc/analyzers/MsgPack004.md, so the change does not touch only the type collector and the tests.",
-  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
-  "writtenAt": "2026-11-14T07:20:00.000Z"
+  "defect": "The new helper falls back to the location of the containing type when the property has no source declaration.",
+  "why": "The helper returns null when the property has no declaration in source (its doc comment says so); it never falls back to the containing type.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T03:07:06.691Z"
 }

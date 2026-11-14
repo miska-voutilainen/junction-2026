@@ -1,6 +1,6 @@
 {
   "plantId": "cp2",
-  "changeId": "cp2",
+  "changeId": "mp-2283",
   "kind": "contradiction",
   "area": null,
   "file": null,
@@ -8,6 +8,6 @@
   "endLine": null,
   "defect": "Diagnostics whose location is outside the compilation being analysed are now reported with no location instead of being dropped, so the consuming project still sees them.",
   "why": "The wrapper added by the change drops those diagnostics (it reports only locations inside the compilation); nothing reports them with no location.",
-  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
-  "writtenAt": "2026-11-14T07:20:00.000Z"
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T03:07:06.692Z"
 }

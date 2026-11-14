@@ -7,7 +7,7 @@
   "repo": "miska-voutilainen/junction26-messagepack-csharp",
   "branch": "variant/v03",
   "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
-  "headSha": "56e0d4149c159c80fc9504c79e5ef5cc38f27c23",
+  "headSha": "953c2918c7bd7efd18a65dab88556f0f6cdfac02",
   "authorAgent": "Coding agent (Tieto sample)",
   "authorDescription": {
     "text": "This change fixes the IndexOutOfRangeException that the generator and the analyzer threw for a closed generic struct defined in a referenced assembly (issue 2283). The type collector read DeclaringSyntaxReferences[0] when reporting a diagnostic, and that list is empty for types loaded from metadata. It now uses FirstOrDefault through a new helper, GetPropertyIdentifierLocation, and the MemberNeedsKey diagnostic does the same. Diagnostics whose location is outside the compilation being analysed are dropped, because the assembly that defines the type reports them. The change also adds a new analyzer diagnostic, MsgPack023, that warns when a member's type comes from a referenced assembly. I added three tests to GenericsFormatterTests.cs: a closed generic struct, a closed generic record struct and a closed generic struct with an unkeyed member, all taken from a metadata reference. The README and the MsgPack004 page explain that diagnostics for such types are reported by the defining project.",

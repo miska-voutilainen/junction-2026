@@ -3,11 +3,11 @@
   "changeId": "v01",
   "kind": "planted-bug",
   "area": "analyzer",
-  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-  "startLine": 1446,
-  "endLine": 1446,
-  "defect": "The location filter also lets diagnostics without a location through, so diagnostics about members of types from referenced assemblies are reported again instead of being dropped.",
-  "why": "Members loaded from metadata have no source location, so their diagnostics carry Location.None. Dropping exactly those is the point of the filter; the added Location.None branch defeats it.",
-  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
-  "writtenAt": "2026-11-14T07:20:00.000Z"
+  "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+  "startLine": 375,
+  "endLine": 375,
+  "defect": "The nullable-annotation filter matches formatters whose type argument is already annotated (NullableAnnotation.Annotated) instead of those that are not (NotAnnotated).",
+  "why": "The NullableReferenceTypeFormatter warning exists for formatters that implement IMessagePackFormatter<T> without the nullable annotation. With the test flipped it fires on correct formatters and stays silent on the ones it is meant to flag.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T03:03:05.000Z"
 }

@@ -7,7 +7,7 @@
   "repo": "miska-voutilainen/junction26-messagepack-csharp",
   "branch": "variant/v09",
   "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
-  "headSha": "f3d1e8e6ec6f4cda899ae06be90eb84a8f30cc9d",
+  "headSha": "a98cf821b00b0d92d1348190c877e66b4706a8c7",
   "authorAgent": "Coding agent (Tieto sample)",
   "authorDescription": {
     "text": "This change fixes analyzer failures on types marked with SuppressSourceGeneration = true (issue 2234). Those types are still serialized at run time, so they still need a valid contract. The cause was in the type collector: duplicate integer or string keys, and members whose key kind differed from the rest, made it throw while building its member tables. It now adds a key only if it is not already present, and skips a member with a mismatched key kind after the diagnostic has been reported. The analyzer therefore reports the problem instead of failing. I added analyzer tests for missing keys, AllowPrivate, duplicate keys and mixed key kinds, plus two execution tests: no formatter is generated for a suppressed type, and it round-trips through the dynamic resolver. The README gains a section on opting out of source generation and lists which diagnostics still apply.",

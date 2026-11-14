@@ -3,11 +3,11 @@
   "changeId": "v10",
   "kind": "planted-bug",
   "area": "security",
-  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-  "startLine": 1039,
-  "endLine": 1039,
-  "defect": "Duplicate string keys overwrite the earlier entry (stringMembers[key] = ...) instead of keeping the first, so the later member silently replaces the first in the member table.",
-  "why": "With duplicate keys the formatter table then binds the wire key to the second member while the diagnostic points at the first, so an input value can be read into a different member than the one the author sees.",
-  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
-  "writtenAt": "2026-11-14T07:20:00.000Z"
+  "file": "src/MessagePack/MessagePackSecurity.cs",
+  "startLine": 233,
+  "endLine": 233,
+  "defect": "DepthStep throws only when the depth is greater than the maximum (>) instead of when it reaches it (>=), so MaximumObjectGraphDepth + 1 levels of nesting are accepted.",
+  "why": "An off-by-one in the limit on object graph depth for untrusted input: the configured maximum is exceeded by one level before the exception is thrown.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T03:03:35.000Z"
 }

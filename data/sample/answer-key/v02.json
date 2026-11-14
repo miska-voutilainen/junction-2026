@@ -3,11 +3,11 @@
   "changeId": "v02",
   "kind": "planted-bug",
   "area": "analyzer",
-  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-  "startLine": 1077,
-  "endLine": 1077,
-  "defect": "The MemberNeedsKey diagnostic is created with its two message arguments in swapped order.",
-  "why": "The descriptor's message format expects the type first and the member name second, so the reported text names the member where the type belongs and the type where the member belongs.",
-  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
-  "writtenAt": "2026-11-14T07:20:00.000Z"
+  "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+  "startLine": 429,
+  "endLine": 429,
+  "defect": "The symbol switch collects [MessagePackObject] types only when they are classes (case TypeKind.Class); structs, including record structs, are no longer analysed.",
+  "why": "The analyzer must analyse closed generic structs and record structs as members (F2); with structs dropped from the switch none of their diagnostics are ever reported.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T03:03:11.000Z"
 }
