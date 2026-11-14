@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
@@ -10,10 +10,13 @@ const WIDTHS = [320, 375, 768, 1440, 1920];
 
 const normalizeLineEndings = (text: string): string => text.replaceAll("\r\n", "\n");
 
-/** The receipt file as the site reads it: the recorded one, else the fixture. */
+/**
+ * The receipt file as this project's server reads it. The behaviour specs serve
+ * fixture data only (playwright.config.ts), so comparing against the recorded
+ * receipt in data/receipts/ would fail as soon as a real one is signed.
+ */
 function receiptFileText(changeId: string): string {
-  const recorded = path.join("data", "receipts", `${changeId}.json`);
-  return readFileSync(existsSync(recorded) ? recorded : path.join("data", "fixtures", "receipts", `${changeId}.json`), "utf8");
+  return readFileSync(path.join("data", "fixtures", "receipts", `${changeId}.json`), "utf8");
 }
 
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
