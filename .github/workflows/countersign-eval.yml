@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      SAMPLE_REPO_DIR: ${{ runner.temp }}/fork
       AI_BACKEND: api
       AI_MODE: record
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -38,6 +37,8 @@ jobs:
         id: key
         shell: bash
         run: |
+          # A job's env: may not use the runner context, so the clone's path is set here.
+          echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
           if [ -z "$ANTHROPIC_API_KEY" ]; then
             echo "No ANTHROPIC_API_KEY secret: the eval is skipped, so this prompt or policy change has no measured effect on the ladder." | tee -a "$GITHUB_STEP_SUMMARY"
             echo "has_key=false" >> "$GITHUB_OUTPUT"

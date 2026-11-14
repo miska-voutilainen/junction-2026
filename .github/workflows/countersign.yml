@@ -58,7 +58,6 @@ jobs:
       exit_code: ${{ steps.verify.outputs.exit_code }}
     env:
       CHANGE_ID: ${{ needs.change.outputs.change_id }}
-      SAMPLE_REPO_DIR: ${{ runner.temp }}/fork
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -67,6 +66,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # A job's env: may not use the runner context, so the clone's path is set from a step.
+      - run: echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
 
       # Clones the sample fork and fetches refs/notes/countersign, where the signed receipts live.
       - run: pnpm seed
@@ -107,7 +109,6 @@ jobs:
     env:
       CHANGE_ID: ${{ needs.change.outputs.change_id }}
       RECEIPT_EXIT: ${{ needs.receipt.outputs.exit_code }}
-      SAMPLE_REPO_DIR: ${{ runner.temp }}/fork
       AI_BACKEND: api
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
@@ -129,6 +130,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # A job's env: may not use the runner context, so the clone's path is set from a step.
+      - run: echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
       - run: pnpm seed
 
       # The recorded review in this checkout is replaced by a fresh one; nothing is committed back.
