@@ -3,6 +3,8 @@
  * fork's history (idea 9): each one failed before the fix. They are about names
  * that are too common to count as evidence (a licence file, `Add`) and about
  * a restructure that put one card on every file. The fake tree stands in for git.
+ * How the commits were chosen and what each case cost: docs/lessons.md, "The legacy
+ * guard on 28 real commits".
  */
 import { describe, expect, it } from "vitest";
 import { fakeTree, find, hunk } from "./legacyGuardFixtures";
@@ -49,6 +51,15 @@ describe("a non-source file in a legacy zone", () => {
     ]);
   });
 
+  it("treats an upper-case .CS extension as source", async () => {
+    const formatter = hunk("h1", "src/MessagePack.UnityClient/Assets/Scripts/Foo.CS", [
+      ["add", "x = 1;"],
+    ]);
+    const tree = fakeTree({ mentions: { Foo: ["tests/MessagePack.Tests/FooTests.cs"] } });
+    const [point] = await find([formatter], tree);
+    expect(point.guard.status).toBe("guarded");
+  });
+
   it("still names a source file in the zone and guards it by its type", async () => {
     const formatter = hunk(
       "h1",
@@ -77,6 +88,19 @@ describe("a call into a zone symbol", () => {
       outsideSymbols: { Serialize: ["src/MessagePack/Formatters/StringFormatter.cs"] },
     });
     expect(await find([calls], tree)).toEqual([]);
+  });
+
+  it("is still found in a zone that does not copy the library, though a formatter declares the name", async () => {
+    // Skipping Write because some formatter also declares it would hide a real call into the wire format.
+    const calls = hunk("h1", "src/MessagePack/Formatters/ListFormatter.cs", [
+      ["add", "writer.Write(value);"],
+    ]);
+    const tree = fakeTree({
+      zoneSymbols: { Write: "src/MessagePack/MessagePackWriter.cs" },
+      outsideSymbols: { Write: ["src/MessagePack/Formatters/ListFormatter.cs"] },
+    });
+    const points = await find([calls], tree);
+    expect(points.map((point) => point.detail)).toEqual(["Write: calls into Wire format"]);
   });
 
   it("is still found when only zone files declare the name", async () => {

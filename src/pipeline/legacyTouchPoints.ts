@@ -110,7 +110,11 @@ function zoneSighting(path: string, hunkId: string | null, note = ""): Sighting[
   ];
 }
 
-/** The subject of a non-source file: nothing a test could name. */
+/**
+ * The subject of a non-source file: nothing a test could name. It is the empty
+ * string so `groupSightings` still groups by detail; `guardByTests` reads it
+ * and returns "unguarded" without searching.
+ */
 const nonSourceSubject = "";
 
 /**
@@ -164,11 +168,14 @@ async function reachInSightings(hunks: readonly Hunk[], tree: BaseTree): Promise
     for (const symbol of calls) {
       const zoneFile = zoneSymbols.get(symbol);
       if (!zoneFile) continue;
-      // The Unity client holds a copy of the library, so `Serialize`, `Add` and
-      // `Create` are declared in a zone as well as outside it; a call to one of
-      // them cannot be told apart by name, the same reason a changed declaration is skipped above.
-      declaredOutside ??= await outsideDeclarations(tree);
-      if (declaredOutside.has(symbol)) continue;
+      // A zone that copies the library (the Unity client) declares the same names
+      // as the library, so a call to `Serialize`, `Add` or `Create` can't be told
+      // from a call to the copy. Other zones keep every call: skipping `Write`
+      // because some formatter also declares it would hide a real wire-format call.
+      if (legacyZoneOf(zoneFile)?.copiesLibrary) {
+        declaredOutside ??= await outsideDeclarations(tree);
+        if (declaredOutside.has(symbol)) continue;
+      }
       sightings.push(reachIn(hunk, symbol, "calls into", zoneFile));
     }
   }
