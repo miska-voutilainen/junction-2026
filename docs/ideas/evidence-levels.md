@@ -55,5 +55,5 @@ Retractions and build errors we saw go in `docs/lessons.md`.
 ## In the code
 
 - [`src/contracts/common.ts`](../../src/contracts/common.ts): `EvidenceLevel`
-- `src/prompts/a5.ts` and the .NET differential test runner in `src/pipeline/differential/`: run the change's tests in a git worktree and set the level
+- [`src/prompts/a5.ts`](../../src/prompts/a5.ts) and the .NET differential test runner, [`src/pipeline/differential/runDifferentialTests.ts`](../../src/pipeline/differential/runDifferentialTests.ts): run the change's tests in a git worktree and set the level
 - Shown on S2, the Story tab: level badge and evidence per claim

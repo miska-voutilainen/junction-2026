@@ -48,9 +48,9 @@ pnpm test                         # unit, Vitest (config: T02)
 pnpm test:hooks                   # harness hook tests, node --test (T00)
 pnpm e2e                          # Playwright (T03); E2E_BASE_URL=<url> for a preview or production
 pnpm screenshots                  # into .review/, for ux-reviewer (T03)
-pnpm evals                        # planted-bug eval and report card, costs model credits (T16)
-pnpm review run <changeId>      # record one review into data/runs/ (T12-T14)
-pnpm countersign sign <changeId>  # draft | sign | verify | export a receipt (T20)
+pnpm evals                        # planted-bug eval and report card, costs model credits
+pnpm review run <changeId>      # record one review into data/runs/
+pnpm countersign sign <changeId>  # draft | sign | verify | export a receipt
 pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_REPO_DIR and fetch notes (T07)
 ```
 

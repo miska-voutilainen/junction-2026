@@ -44,6 +44,6 @@ Separation of duties: the person who makes a change isn't the one who approves i
 
 ## In the code
 
-- The A5 test runner in `src/pipeline/`: tests the PR added give Supported at most
-- `src/receipt/`: only `sign` writes the signed note
+- [`src/pipeline/differential/runDifferentialTests.ts`](../../src/pipeline/differential/runDifferentialTests.ts): the A5 test runner; tests the PR added give Supported at most
+- [`src/receipt/sign.ts`](../../src/receipt/sign.ts): only `sign` writes the signed note (the rest of [`src/receipt/`](../../src/receipt/) drafts and verifies)
 - Shown on S2 (roles line, "the PR's own test" lines) and S4 (roles line)
