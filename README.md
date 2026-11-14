@@ -19,6 +19,8 @@ Agent-written pull requests now outnumber human ones, and line-by-line review do
 
 Each idea has its own page in [`docs/ideas/`](docs/ideas/): the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
 
+What the AI does in the product, what stays with rules and people, and why the reviewer doesn't learn on its own: [How Countersign uses AI](docs/how-countersign-uses-ai.md).
+
 ## See them working
 
 **Live:** https://countersign-junction.com, the review of one agent-written change (MP-2283), with each idea labelled where it appears.
