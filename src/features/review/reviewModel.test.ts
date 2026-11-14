@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { Review } from "@/contracts";
-import { buildInboxModel, decideChange, isReviewed } from "@/features/inbox";
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import { buildInboxModel, isReviewed } from "@/features/inbox";
+import { decideChange } from "@/lib/decideChange";
+import type { InboxSource } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { loadChanges, loadReportCard, loadReview } from "@/lib/data/loaders";
 import {
   buildNavigator,

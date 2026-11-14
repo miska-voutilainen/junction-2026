@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { UnlockForm } from "@/features/access-gate";
-import { readAccessCode, safeNextPath } from "@/features/access-gate/accessGate";
+import { UnlockForm, readAccessCode, safeNextPath } from "@/features/access-gate";
 import { Wordmark } from "@/components/Wordmark";
 
 export const metadata: Metadata = {

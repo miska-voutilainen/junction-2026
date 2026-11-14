@@ -1,5 +1,6 @@
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import type { InboxSource } from "@/features/inbox";
 import { loadChanges, loadReceipt, loadReportCard, loadReview } from "./loaders";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /** Repository label when no change is recorded. */
 export const FALLBACK_REPO = "No repository";

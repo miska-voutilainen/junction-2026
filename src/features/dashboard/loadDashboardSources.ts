@@ -5,8 +5,9 @@
  * page (spec section 3, S5: "never show partial counts as if complete").
  * Server-only: it reads `data/`.
  */
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import type { InboxSource } from "@/features/inbox";
 import { loadInboxData } from "@/lib/data/loadInboxSources";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /** What the dashboard needs, or the validation errors that stop it. */
 export type DashboardSources =
