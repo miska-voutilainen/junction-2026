@@ -1,3 +1,9 @@
+/**
+ * The C# line readers the reach-in detector stands on. Name matching is coarse on
+ * purpose, so these pin down what it must not read as code: text in strings,
+ * comments and T4 template output, which would otherwise route a hunk to the
+ * wrong owner.
+ */
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
 import { addedCalls, changedDeclarations, declaredName } from "./csharpSymbols";

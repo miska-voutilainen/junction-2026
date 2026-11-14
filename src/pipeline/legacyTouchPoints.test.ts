@@ -1,3 +1,9 @@
+/**
+ * Examples for the legacy guard detectors (idea 9): each kind of touch, found or
+ * skipped, and the guard it gets. A false negative lets a legacy touch skip its
+ * owner, so most cases here are near misses that must still be caught; a false
+ * positive costs one extra read. The fake tree below stands in for git.
+ */
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
 import { legacyTouchRefusalsFor } from "./checkFindings";
