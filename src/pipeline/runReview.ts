@@ -14,6 +14,7 @@ import * as a1 from "../prompts/a1";
 import * as a2 from "../prompts/a2";
 import * as a3 from "../prompts/a3";
 import * as a4 from "../prompts/a4";
+import * as a5 from "../prompts/a5";
 import { assembleReview } from "./assembleReview";
 import {
   checkAreaFindings,
@@ -22,6 +23,8 @@ import {
   fixedRefusalsFor,
   type UnnumberedRefusal,
 } from "./checkFindings";
+import { runDotnetTest, type DotnetRunner } from "./differential/dotnetRunner";
+import { runDifferentialTests } from "./differential/runDifferentialTests";
 import { buildPromptContext } from "./promptContext";
 import { checkClaims, type SideReader } from "./quoteCheck";
 import {
@@ -32,9 +35,13 @@ import {
 } from "./steps";
 import type { UsageTally } from "./usageTally";
 
-/** A model step of the pipeline; A5 (tests) is not a model step here. */
-export type ModelStep = "a1" | "a2" | "a3" | "a4";
+/** A step of the pipeline. A5 writes tests with the model, then runs them on .NET. */
+export type ModelStep = "a1" | "a2" | "a3" | "a4" | "a5";
 
+/** The steps of a full blind-first review; the CLI uses this unless `--no-tests`. */
+export const reviewStepsWithTests: readonly ModelStep[] = ["a1", "a2", "a3", "a4", "a5"];
+
+// A5 is opt-in: it needs .NET and minutes per run, so only a caller that has them lists it.
 const allSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
 const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
 
@@ -58,11 +65,13 @@ export interface RunReviewInput {
   steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
   runIndex?: number;
+  /** Runs `dotnet test` for A5; defaults to the real SDK. Tests pass a fake. */
+  testRunner?: DotnetRunner;
 }
 
 /**
- * Runs the pipeline's model steps and returns the review. A5 (differential tests)
- * is not part of this function; its prompt version stays "none".
+ * Runs the pipeline's steps and returns the review. A5 (differential tests) runs
+ * only when `steps` lists it; otherwise its prompt version stays "none".
  *
  * @throws if git or the model fails, or an answer fails validation twice; no partial review is returned.
  */
@@ -84,6 +93,8 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   const steps = new Set(input.steps ?? (isAnchored ? anchoredSteps : allSteps));
   if (steps.has("a3") && !steps.has("a1"))
     throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
+  if (steps.has("a5") && !steps.has("a1"))
+    throw new Error("A5 needs A1's expectation. Add a1 to the steps or drop a5.");
   if (isAnchored && steps.has("a1"))
     throw new Error("Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.");
 
@@ -136,6 +147,23 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     ? await checkContradictions(description.statements, claims, loadedDiff.hunks, readSide, quoteCheck)
     : [];
 
+  // The tests run last: they need the quote-checked claims, and only a claim that passed that check can become Verified.
+  const tests =
+    steps.has("a5") && expectation
+      ? await runDifferentialTests({
+          repoDir,
+          change,
+          requirement,
+          expectation,
+          claims,
+          files: loadedDiff.files,
+          hunks: loadedDiff.hunks,
+          client,
+          runIndex,
+          runner: input.testRunner ?? runDotnetTest,
+        })
+      : null;
+
   const finishedAt = new Date();
   return assembleReview({
     change,
@@ -143,7 +171,8 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     loadedDiff,
     expectation,
     story: answer.story,
-    checkedClaims,
+    checkedClaims: tests ? { ...checkedClaims, claims: tests.claims } : checkedClaims,
+    retractions: tests?.retractions ?? [],
     mode,
     findings: [...areaFindings, ...contradictions].map((finding, index) => ({
       ...finding,
@@ -155,7 +184,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       a2: a2.version,
       a3: areaReview ? a3.version : "none",
       a4: description ? a4.version : "none",
-      a5: "none",
+      a5: tests?.didRun ? a5.version : "none",
     },
     levels: input.levels,
     run: {

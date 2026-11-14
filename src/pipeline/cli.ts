@@ -1,6 +1,6 @@
 /**
  * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
- * review, `check <changeId>` runs the eval cases of A1 to A4 on it. Spec section 5,
+ * review, `check <changeId>` runs the eval cases of A1 to A5 on it. Spec section 5,
  * Pipeline CLI.
  */
 import { existsSync } from "node:fs";
@@ -15,7 +15,7 @@ import {
   loadReportCard,
   writeRecordedReview,
 } from "./reviewFiles";
-import { runReview } from "./runReview";
+import { reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
@@ -30,7 +30,7 @@ async function main(argv: string[]): Promise<void> {
     args: argv,
     allowPositionals: true,
     options: {
-      // Accepted for the spec's command line; A5 (T14) is not built, so no run includes tests yet.
+      // Skips A5: the differential tests need .NET and minutes per run.
       "no-tests": { type: "boolean" },
       anchored: { type: "boolean" },
       run: { type: "string" },
@@ -44,17 +44,22 @@ async function main(argv: string[]): Promise<void> {
     return printChecks(review, await loadContradictionKey(changeId));
   }
 
-  if (values["no-tests"]) console.error("--no-tests has no effect until T14: no run includes tests yet.");
   const k = values.run === undefined ? undefined : Number(values.run);
   if (k !== undefined && (!Number.isInteger(k) || k < 1))
     fail(`--run takes a whole number from 1, got "${values.run}".`);
-  return recordReview(changeId, { isAnchored: values.anchored === true, k });
+  return recordReview(changeId, {
+    isAnchored: values.anchored === true,
+    k,
+    runsTests: values["no-tests"] !== true,
+  });
 }
 
 /** How a run is recorded: the plain run is the change's review; --anchored or --run <k> is a comparison run. */
 interface RunOptions {
   isAnchored: boolean;
   k: number | undefined;
+  /** False with --no-tests. */
+  runsTests: boolean;
 }
 
 async function recordReview(changeId: string, options: RunOptions): Promise<void> {
@@ -79,7 +84,7 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     levels: levelsFromReportCard(await loadReportCard()),
     mode: options.isAnchored ? "anchored" : "blind-first",
     // Comparison runs are A1, A2 and A4: A3 is most of a run's cost and not what they compare.
-    steps: isComparison && !options.isAnchored ? ["a1", "a2", "a4"] : undefined,
+    steps: stepsFor(options, isComparison),
     runIndex: isComparison ? k : 0,
   });
   await writeRecordedReview(
@@ -87,6 +92,13 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     isComparison ? { mode: options.isAnchored ? "anchored" : "blind", k } : undefined,
   );
   console.log(summaryLine(review));
+}
+
+/** The steps of a run: comparison runs and --no-tests skip A5; the recorded review runs it (spec section 5). */
+function stepsFor(options: RunOptions, isComparison: boolean): readonly ModelStep[] | undefined {
+  if (options.isAnchored) return undefined;
+  if (isComparison) return ["a1", "a2", "a4"];
+  return options.runsTests ? reviewStepsWithTests : undefined;
 }
 
 /** "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s" */

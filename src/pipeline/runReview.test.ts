@@ -287,6 +287,17 @@ describe("runReview with a fake model", () => {
     await expect(review([goodClaim], { steps: ["a2", "a3"] })).rejects.toThrow(/A3 needs A1/);
   });
 
+  it("refuses a steps list A5 cannot run on", async () => {
+    await expect(review([goodClaim], { steps: ["a2", "a5"] })).rejects.toThrow(/A5 needs A1/);
+  });
+
+  it("leaves A5 at none when the change touches no test project", async () => {
+    const { result, prompts } = await review([goodClaim], { steps: ["a1", "a2", "a5"] });
+    expect(prompts["a5.v1"]).toBeUndefined();
+    expect(result.reviewer.promptVersions.a5).toBe("none");
+    expect(result.retractions).toEqual([]);
+  });
+
   it("passes the run index to every call", async () => {
     const { runIndexes } = await review([goodClaim], { runIndex: 2 });
     expect(runIndexes).toEqual([2, 2, 2, 2]);
