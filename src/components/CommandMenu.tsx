@@ -230,7 +230,7 @@ function buildPages(needsReviewCount: number): Row[] {
   return [
     { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
     { id: "go-dashboard", label: "Dashboard", meta: "Signed, accepted risk, open decisions", icon: LayoutDashboard, shortcut: ["g", "d"], href: "/dashboard" },
-    { id: "go-reviewer", label: "Reviewer report card", meta: "Trust by area", icon: Gauge, shortcut: ["g", "r"], href: "/reviewer" },
+    { id: "go-reviewer", label: "Reviewer Report Card", meta: "Trust by area", icon: Gauge, shortcut: ["g", "r"], href: "/reviewer" },
   ];
 }
 

@@ -8,6 +8,7 @@ How the design canvas ([Countersign design](https://claude.ai/artifact/PAtNks6ii
 2. **Our areas, our ids.** The areas are generator, analyzer, security and performance (not Frontend or Backend). The ids are `mp-2283` and `MP-2283`. Deciders come from `src/policy/refusals.ts`.
 3. **Honest states.** The site is static, so there is no "fetching from GitHub". Loading is the route skeleton during client navigation. Errors are a data file that is missing or fails validation. We keep the canvas's state layouts, rewrite their copy to what can really happen, and show the real error text in a console.
 4. **Spec copy wins** where the spec gives exact copy (tier banner reasons with rule ids, empty-state commands). The canvas wins on layout and on copy the spec doesn't give.
+5. **Copy style.** Page titles (the h1, the breadcrumb name, the `<title>`) are in Title Case: "Reviewer Report Card". Everything else (section headings, buttons, tabs, labels, nav items) is sentence case. Copy we write has no semicolons and no "→" (split the sentence, or say "then"); code, CLI output and text written by the AI or people keep their own punctuation. `e2e/a11y.spec.ts` guards the punctuation.
 
 ## 2. Tokens: `src/styles/tokens.css`
 
@@ -41,7 +42,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 
 **AppNav** (248 px, ≥ 900 px; below that a menu button in the top bar opens it as a sheet)
 - Review: Inbox, with a badge for the number of changes needing review.
-- Insights: Dashboard, Reviewer report card.
+- Insights: Dashboard, Reviewer.
 - Footer: "Keyboard shortcuts" disclosure, listing only the shortcuts we build.
 - The selected item's background moves between items with a shared `layoutId`.
 - Cut: "Calibration · Synthetic changes" (planted bugs never appear as changes; the report card lists them), Settings.
@@ -49,7 +50,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 **CommandMenu** (⌘K / Ctrl+K)
 - A Radix Dialog with a cmdk list. It opens from the search button's position (scale .95 to 1, opacity) and closes back to it. Esc returns focus to the trigger; arrow keys move; Enter opens.
 - Quick actions: Review next change (the first in inbox order), Copy sign command (for the change in view, else the next), Record an escape (to `/reviewer`).
-- Go to: Inbox, Dashboard, Reviewer report card.
+- Go to: Inbox, Dashboard, Reviewer Report Card.
 - Changes: the four Tieto changes with tier and receipt status.
 - Empty: "No match for "…". Try a change id, a requirement or a page."
 - Rows fade up with the stagger. "Copied" is announced politely.
@@ -72,7 +73,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 | `CoverageMark` | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid) |
 | `TierBadge` | Signal bars (1–3) and "Light", "Focused" or "Full" |
 | `ReceiptStatus` | "Needs review", "Signed by <owner>" or "Stale" (spec T06) |
-| `LevelLadder` | Shadow → Calibrated → Trusted, three steps, current one marked |
+| `LevelLadder` | Shadow, Calibrated and Trusted, three steps, current one marked |
 | `Console` | Code or output box with a Wrap/Copy toolbar (section 6) |
 | `CopyButton` | Copy-to-check icon crossfade for 1.5 s, fixed width, "Copied" announced politely |
 | `Disclosure` | Accordion with `aria-expanded`/`aria-controls` and a clip reveal (no height jank) |
@@ -127,7 +128,7 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
    - Per-hunk hashes are cut: the receipt signs one `diffSha256`, and we show that.
    - Not signed: "No receipt for mp-2283 yet." and the sign command. Stale: banner.
 4. **Reviewer `/reviewer`** (Phase 4). Canvas Reviewer, ReviewerMobile, ReviewerStates.
-   - h1 "Reviewer report card"; "Measured on n planted bugs and p planted contradictions, written blind".
+   - h1 "Reviewer Report Card"; "Measured on n planted bugs and p planted contradictions, written blind".
    - "How levels work" disclosure.
    - Four area cards: level, ladder, "3 of 4 planted bugs caught · written blind", blind-first vs described-first counts, "Effect now", next step, "Record escape" with Undo (simulated, toast, re-routes).
    - Lists: Missed planted bugs, Hallucinations caught, Retracted claims, all from the report card and reviews.
