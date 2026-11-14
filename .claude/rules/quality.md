@@ -1,6 +1,6 @@
 # Quality bar
 
-The judges and partners ship production software for a living (frontier AI labs, GPU companies, top accelerators). They notice a spinner that never ends, a layout that breaks at 375 px and a model answer that takes 12 seconds. The product must feel finished. **Cut scope, never quality.**
+The judges and partners ship production software for a living (frontier AI labs, GPU companies, top accelerators). They notice a spinner that never ends, a layout that breaks at 375 px and a model answer that takes 12 seconds. Countersign is a reference implementation built to production quality: everything shown, the design included, is finished, polished and deployed. "Finished product" in Tieto's out of scope means product features nobody needs to see an idea working (accounts, settings, real CI integration, arbitrary repositories), not a lower bar for what we do build. **Cut scope, never quality.**
 
 ## Definition of done (every user-facing change)
 
