@@ -152,6 +152,24 @@ describe("trimOutput", () => {
     expect(trimOutput(`${noise.repeat(300)}${failure}`)).toBe(failure);
   });
 
+  it("starts a build error excerpt at a whole line, so the first error read from it is not cut mid-path", () => {
+    // At this line length a plain 2,000-character tail starts at ">/tests/…", and that cut line
+    // still reads as a build error: the shape of mp-2129's recorded reasons.
+    const error =
+      "<worktree>/tests/T/A5_F1RunTests.cs(58,36): error CS0117: 'Foo' does not contain a definition for 'Bar' [<worktree>/tests/T/T.csproj]";
+    const output = `${error}\n`.repeat(20).trim();
+    expect(output.slice(-2000).startsWith(">/tests/")).toBe(true);
+    const excerpt = trimOutput(output);
+    expect(excerpt.length).toBeLessThanOrEqual(2000);
+    expect(buildErrorLine(excerpt)).toBe(error);
+  });
+
+  it("keeps the whole 2,000-character tail when it already starts at a line", () => {
+    // 19 lines of 99 characters plus their breaks, then a last line of 100: exactly 2,000 characters after a break.
+    const tail = `${`${"x".repeat(99)}\n`.repeat(19)}${"x".repeat(100)}`;
+    expect(trimOutput(`${"y".repeat(500)}\n${tail}`)).toBe(tail);
+  });
+
   it("keeps the last 2,000 characters of output with no test lines", () => {
     const trimmed = trimOutput(`${"x".repeat(5000)}END`);
     expect(trimmed).toHaveLength(2000);

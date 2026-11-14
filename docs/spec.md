@@ -284,7 +284,7 @@ There is no HTTP API: the contracts are data files, one shared function and two 
 }
 ```
 
-Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, no Markdown. Lines in `hunks[].lines[].text` exclude the `+`/`-`/space prefix. Output `output` strings are a 2,000-character excerpt: each failed test's name, error message and first repository frames, then the summary (a run without failures keeps the passed tests and the summary; output with no test lines keeps its last 2,000 characters).
+Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, no Markdown. Lines in `hunks[].lines[].text` exclude the `+`/`-`/space prefix. Output `output` strings are a 2,000-character excerpt: each failed test's name, error message and first repository frames, then the summary (a run without failures keeps the passed tests and the summary; output with no test lines keeps up to its last 2,000 characters, from the first whole line in them).
 
 ### `TierDecision` and `route()` (`src/rules/route.ts`)
 

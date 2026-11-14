@@ -227,8 +227,23 @@ export function trimOutput(output: string): string {
   const text = (excerpt ?? lines.join("\n")).trim();
   if (text.length <= TEST_OUTPUT_MAX_CHARS) return text;
   return excerpt === null
-    ? text.slice(-TEST_OUTPUT_MAX_CHARS)
+    ? tailFromWholeLine(text)
     : `${text.slice(0, TEST_OUTPUT_MAX_CHARS - 1)}…`;
+}
+
+/**
+ * At most the last TEST_OUTPUT_MAX_CHARS characters, from the first whole line
+ * in them. A plain slice usually begins mid-line, and the build error read from
+ * it then starts mid-path ("ktree>/tests/…" in mp-2129's recorded reasons). One
+ * line with no break in the kept part is returned as cut, since nothing whole remains.
+ */
+function tailFromWholeLine(text: string): string {
+  const tail = text.slice(-TEST_OUTPUT_MAX_CHARS);
+  const startsAtLine = text.at(-TEST_OUTPUT_MAX_CHARS - 1) === "\n";
+  const firstBreak = tail.indexOf("\n");
+  if (startsAtLine || firstBreak === -1) return tail;
+  // trimStart: dotnet prints a blank line after "Build FAILED.", and every other excerpt is trimmed.
+  return tail.slice(firstBreak + 1).trimStart();
 }
 
 function isResultLine(line: string): boolean {
