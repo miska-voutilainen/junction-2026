@@ -29,19 +29,25 @@ export async function loadContradictionKey(changeId: string): Promise<AnswerKey 
  * is a measurement for docs/lessons.md, not a test failure, so this only reports.
  * `contradictionKey` is the planted false sentence, when the change has one.
  */
-export function checkReview(review: Review, contradictionKey: AnswerKey | null = null): CheckResult[] {
+export function checkReview(
+  review: Review,
+  contradictionKey: AnswerKey | null = null,
+): CheckResult[] {
   const results = [checkExpectationCoversItems(review), checkEveryCodeHunkIsClaimed(review)];
   if (review.changeId === "mp-2283") {
     results.splice(1, 0, ...checkMp2283Expectation(review));
     results.push(checkMp2283Refusal(review), checkMp2283VerifiedClaim(review));
-    if (contradictionKey !== null) results.push(checkPlantedContradiction(review, contradictionKey));
+    if (contradictionKey !== null)
+      results.push(checkPlantedContradiction(review, contradictionKey));
   }
   return results;
 }
 
 /** The change silently drops diagnostics for referenced-assembly types: a documented-behaviour decision (R7) or a product call (R1). */
 function checkMp2283Refusal(review: Review): CheckResult {
-  const cited = review.refusals.filter((refusal) => refusal.source === "ai").map((refusal) => refusal.ruleId);
+  const cited = review.refusals
+    .filter((refusal) => refusal.source === "ai")
+    .map((refusal) => refusal.ruleId);
   return {
     name: "mp-2283: A3 refuses with R7 or R1",
     passed: cited.some((ruleId) => ruleId === "R7" || ruleId === "R1"),
@@ -136,6 +142,6 @@ function checkEveryCodeHunkIsClaimed(review: Review): CheckResult {
     detail:
       unclaimed.length === 0
         ? `${total} hunks`
-        : `not claimed: ${unclaimed.map((hunk) => `${hunk.id} (${hunk.file})`).join(", ")}`,
+        : "not claimed: " + unclaimed.map((hunk) => `${hunk.id} (${hunk.file})`).join(", "),
   };
 }

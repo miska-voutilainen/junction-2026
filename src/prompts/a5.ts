@@ -124,12 +124,12 @@ export function outputSchema({ requirementItemId, projectDir }: A5Reference): z.
 function testFilePathProblem(testFile: string, projectDir: string): string | null {
   if (!/^[A-Za-z0-9_./-]+$/.test(testFile) || testFile.startsWith("/"))
     return "use a repository-relative path of letters, digits, underscores, dots, dashes and forward slashes";
-  const segments = testFile.split("/");
-  if (segments.includes("..") || segments.includes("."))
+  const segments = new Set(testFile.split("/"));
+  if (segments.has("..") || segments.has("."))
     return 'the path must not contain "." or ".." segments';
   if (!testFile.startsWith(`${projectDir}/`)) return `the file must be inside ${projectDir}/`;
   if (!testFile.endsWith(".cs")) return "the file must end in .cs";
-  if (segments.includes("bin") || segments.includes("obj"))
+  if (segments.has("bin") || segments.has("obj"))
     return "the file must not be in a bin or obj folder";
   return null;
 }

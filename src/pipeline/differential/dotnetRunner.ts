@@ -17,6 +17,9 @@
  */
 import { execFile, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import {
   CONTAINER_USER,
   DOTNET_SDK_IMAGE,
@@ -271,12 +274,15 @@ function runDocker(
 ): Promise<ProcessResult> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
-    const child = spawn("docker", args, { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+    const child = spawn(dockerPath(), args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
     let isTimeout = false;
     const timer = setTimeout(() => {
       isTimeout = true;
       if (containerToKill !== undefined)
-        execFile("docker", ["kill", containerToKill], () => undefined);
+        execFile(dockerPath(), ["kill", containerToKill], () => undefined);
       child.kill();
     }, timeoutMs);
     const collect = (chunk: Buffer) => chunks.push(chunk);
@@ -289,4 +295,32 @@ function runDocker(
     child.on("error", (error) => finish(null, `\nCould not start docker: ${error.message}`));
     child.on("close", (exitCode) => finish(exitCode));
   });
+}
+
+/**
+ * Docker's install locations: per-user and machine-wide Docker Desktop on Windows,
+ * Docker Desktop on macOS, the distribution packages on Linux.
+ */
+const DOCKER_LOCATIONS = [
+  join(homedir(), "AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe"),
+  "C:/Program Files/Docker/Docker/resources/bin/docker.exe",
+  "/Applications/Docker.app/Contents/Resources/bin/docker",
+  "/usr/local/bin/docker",
+  "/usr/bin/docker",
+];
+
+/**
+ * The docker binary by absolute path. A bare "docker" would be looked up on PATH,
+ * so a writable folder early on PATH could put another program in its place, and
+ * that program would run the model-written tests outside the container.
+ *
+ * @throws when Docker is in none of the known locations.
+ */
+function dockerPath(): string {
+  const found = DOCKER_LOCATIONS.find((location) => existsSync(location));
+  if (found === undefined)
+    throw new Error(
+      `Docker not found in ${DOCKER_LOCATIONS.join(", ")}. Install Docker Desktop, or run with --no-tests.`,
+    );
+  return found;
 }
