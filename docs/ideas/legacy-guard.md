@@ -24,7 +24,7 @@ An agent-written change can be correct, pass its tests and still break a system 
 4. **Guards come from before the change.** A test counts as a guard only if it was in the base commit, so the authoring agent didn't write it ([Idea 8](separation-of-duties.md)).
 5. **The model never sees R8.** It doesn't know the zone map, so R8 lives outside the refusal rules the model reads, and adding it didn't change the measured reviewer ([decision](../decisions.md)).
 
-`pnpm review legacy <changeId>` adds the touch points to a recorded review in place, with no model call. It appends R8 refusals and never renumbers the existing ones.
+`pnpm review legacy <changeId>` adds the touch points to a recorded review in place, with no model call. It replaces the R8 refusals it added before and appends the new ones after the others, so existing refusal ids never change. A hunk an `R7` refusal already gives to the API owner gets no second refusal for a consumer-contract touch.
 
 ## What we measured
 
