@@ -8818,6 +8818,15 @@
         "h5",
         "h6"
       ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R8",
+      "source": "rule",
+      "reason": "Consumer contract: contract paths, public surface, diagnostic ids, wire attributes (guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more); the API owner (the maintainers) decides",
+      "hunkIds": [
+        "h12"
+      ]
     }
   ],
   "quoteCheck": {
@@ -9140,7 +9149,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The change adds a new public GeneratedMessagePackFormatterAttribute with a SurrogateType property, new diagnostic IDs MsgPack019-022 as public constants and descriptors, public GeneratedFormatterRequest and ObjectSerializationInfo.IsUserDeclaredFormatter members, and documented behaviour for them. Whether to accept that public contract is for the API owners to decide.",
+      "text": "r1 (R7): The change adds a new public GeneratedMessagePackFormatterAttribute with a SurrogateType property, new diagnostic IDs MsgPack019-022 as public constants and descriptors, public GeneratedFormatterRequest and ObjectSerializationInfo.IsUserDeclaredFormatter members, and documented behaviour for them. Whether to accept that public contract is for the API owners to decide. r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids, wire attributes (guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more); the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
@@ -9151,9 +9160,12 @@
         "h7",
         "h9",
         "h10",
-        "h11"
+        "h11",
+        "h12",
+        "h13",
+        "h14"
       ],
-      "detail": "Attributes.cs, MsgPack00xMessagePackAnalyzer.cs",
+      "detail": "contract paths, public surface, diagnostic ids, wire attributes",
       "owner": "API owner (the maintainers)",
       "guard": {
         "status": "guarded",
@@ -9178,12 +9190,12 @@
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "2 items refused: a human decides",
         "tier": "focused"
       },
       {
         "ruleId": "R-legacy-guard",
-        "text": "Consumer contract: Attributes.cs, MsgPack00xMessagePackAnalyzer.cs in 4 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "text": "Consumer contract: contract paths, public surface, diagnostic ids, wire attributes in 7 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
         "tier": "light"
       },
       {
