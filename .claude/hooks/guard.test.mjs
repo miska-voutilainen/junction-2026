@@ -376,3 +376,88 @@ test("normalisePath collapses dot segments before classification", () => {
   assert.match(edit("src/../.claude/hooks/guard.mjs").reason, /harness file/);
   assert.equal(kind(edit("src/../..", {})), null);
 });
+
+test("gh: flags before the subcommand are skipped", () => {
+  state.author = "someone-else";
+  denies("gh pr -R owner/repo merge 12");
+  denies("gh -R owner/repo pr merge 12");
+  denies("gh pr merge -R owner/repo 12");
+  state.author = "me";
+  allows("gh pr -R owner/repo merge 12");
+  denies("gh issue -R o/r close 1");
+  denies("gh issue --repo=o/r edit 1");
+  allows("gh issue -R o/r close 10");
+  denies("gh pr -R o/r review --approve");
+  denies("gh pr -R o/r create --title x");
+});
+
+test("chaining and wrappers are checked as commands", () => {
+  for (const cmd of [
+    "git status & git push -f origin x",
+    "(git push -f origin x)",
+    "echo $(git push -f origin x)",
+    'echo "$(git push -f origin x)"',
+    "echo `git push -f origin x`",
+    "env FOO=1 git push -f origin x",
+    "sudo -u bob git push -f origin x",
+    "time git push -f origin x",
+    "nohup git push -f origin x",
+    "command git push -f origin x",
+    "exec git push -f origin x",
+    "echo x | xargs -n 1 git push -f origin",
+    'bash -c "git push -f origin x"',
+    "sh -c 'git push -f origin x'",
+    'bash -c "echo $(git push -f origin x)"',
+  ])
+    denies(cmd);
+  for (const cmd of [
+    "if ($true) { git push -f origin x }",
+    'pwsh -Command "git push -f origin x"',
+    'powershell -c "git push -f origin x"',
+    'iex "git push -f origin x"',
+    "(git push -f origin x)",
+  ])
+    denies(cmd, "PowerShell");
+  // Redirects keep their `&`, and ordinary commands still pass.
+  allows("pnpm test 2>&1 | tail -5");
+  allows("pnpm test &> out.log");
+  allows("git status & git log");
+  allows('bash -c "git status"');
+  denies("git status && git push --force origin x");
+});
+
+test("git and gh lookups run in the session cwd or the -C directory", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), cwd.endsWith("wt") ? "main" : "feat/x") };
+  const run = (command, cwd) =>
+    kind(decide({ tool_name: "Bash", tool_input: { command }, cwd }, ctx({ io: spy })));
+  assert.equal(run("git push", resolve(root, "wt")), "deny");
+  assert.equal(run("git push", resolve(root, "other")), null);
+  assert.equal(run("git -C wt push", root), "deny");
+  assert.deepEqual(seen.map((s) => s.replaceAll("\\", "/").split("/").pop()), ["wt", "other", "wt"]);
+
+  const ghSeen = [];
+  const ghSpy = { ...io, ghUser: (cwd) => (ghSeen.push(cwd), "me"), prAuthor: (n, cwd) => (ghSeen.push(cwd), "me") };
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge 5" }, cwd: "/some/worktree" }, ctx({ io: ghSpy }));
+  assert.deepEqual(ghSeen, ["/some/worktree", "/some/worktree"]);
+});
+
+test("a leading .claude/worktrees/<name>/ is stripped before classifying a path", () => {
+  const inWorktree = (p) => edit(`.claude/worktrees/seat2/${p}`);
+  assert.equal(kind(inWorktree("src/ai/client.ts")), null);
+  assert.equal(inWorktree("src/app/page.tsx").decision, "ask");
+  assert.match(inWorktree("src/app/page.tsx").reason, /belongs to lane app/);
+  assert.match(inWorktree(".claude/hooks/guard.mjs").reason, /harness file/);
+  assert.equal(kind(edit(resolve(root, ".claude/worktrees/seat2/src/ai/client.ts"))), null);
+  // Without a worktree name nothing is stripped, and the old cases still hold.
+  assert.equal(edit(".claude/hooks/guard.mjs").decision, "ask");
+});
+
+test("PowerShell writes to harness files ask", () => {
+  for (const verb of ["Add-Content", "ac", "Copy-Item", "cpi", "copy", "New-Item", "ni", "sc", "del", "ri"])
+    assert.equal(kind(shell(`${verb} .claude\\hooks\\guard.mjs x`, "PowerShell")), "ask", verb);
+  assert.equal(kind(shell("ni .claude/settings.json", "PowerShell")), "ask");
+  assert.equal(kind(shell("Get-Content .claude/hooks/guard.mjs", "PowerShell")), null);
+  assert.equal(kind(shell("Set-Content .claude/hooks/guard.mjs x", "PowerShell")), "ask");
+  assert.equal(kind(shell("ni notes.txt", "PowerShell")), null);
+});
