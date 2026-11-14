@@ -18,7 +18,7 @@ An AI reviewer gives an opinion on anything. Some questions aren't its to answer
    - `R7` public contract: new or changed public API, diagnostic IDs, documented behaviour. API owner (the maintainers).
 2. **The reviewer reads the policy.** The area review (A3) gets rule ids, titles and deciders. For a hunk under a rule it outputs a refusal (rule id, reason, hunks) with `source: "ai"`. The quote check strikes a refusal whose rule id isn't in the policy ([Idea 4](quote-check.md)).
 3. **Some refusals don't depend on the model.** Fixed rules match paths and produce `source: "rule"` refusals. `R7` is fixed for `**/PublicAPI.Unshipped.txt` and `src/MessagePack.Annotations/**`: those changes reach a human whatever the model says.
-4. **A refusal routes to a person.** It sends the change to at least Focused review (`R-refusal`, [Idea 3](coverage-map.md)) and marks its hunks Read this.
+4. **A refusal routes to a person.** It sends the change to at least Focused review (`R-refusal`, [Idea 3](coverage-map.md)) and marks its hunks Read this. On S2, "Who reads what" groups the reading list by these roles, one role per hunk.
 5. **The owner accepts it in writing.** The draft receipt lists each refusal as residual risk ([Idea 7](signed-receipt.md)), so removing one is a visible edit the owner signs.
 
 Example, Tieto's MP-2283: the fix stops the generator crashing on types from a referenced assembly and silently drops a diagnostic for them. That is documented behaviour, so the reviewer should refuse under `R7` (or `R1`) and hand it to the maintainers.
