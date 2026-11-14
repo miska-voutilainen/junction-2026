@@ -95,6 +95,9 @@ function isAllowedRootFile(name, rootFiles) {
  * @example bannedSegment("src/lib/utils2.ts") // "utils2"
  */
 export function bannedSegment(path) {
+  // A recording is named <prompt version>-<key hash>.json, e.g. "a5.v2-0ab111c4672f9269.json":
+  // its "v2" is the prompt's version from the spec, not a stray second copy.
+  if (/^data\/recordings\/[a-z0-9]+\.v\d+-[0-9a-f]{16}\.json$/.test(path)) return undefined;
   for (const part of path.split("/")) {
     const stem = part.replace(/\.[^.]+$/, "").toLowerCase();
     const candidates = [part.toLowerCase(), stem, ...stem.split(/[-_.]+/)];

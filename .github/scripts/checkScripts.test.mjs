@@ -120,6 +120,8 @@ test("tree: banned names match whole segments, not substrings", () => {
   assert.equal(bannedSegment("a/helpers-new.ts"), "helpers-new");
   assert.equal(bannedSegment("src/temperature.ts"), undefined);
   assert.equal(bannedSegment("src/finalize.ts"), undefined);
+  assert.equal(bannedSegment("data/recordings/a5.v2-0ab111c4672f9269.json"), undefined);
+  assert.equal(bannedSegment("data/runs/notes-v2.json"), "v2");
 });
 
 test("lanes: the summary lists paths no lane claims", () => {
