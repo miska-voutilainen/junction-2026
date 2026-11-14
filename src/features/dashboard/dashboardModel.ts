@@ -168,15 +168,15 @@ function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
   return risks.sort((a, b) => RISK_ORDER[a.status] - RISK_ORDER[b.status] || a.changeId.localeCompare(b.changeId));
 }
 
-/**
- * Refusals no signed receipt has accepted, grouped by the decider the refusal
- * policy names. A stale receipt accepts nothing: it vouches for older code.
- */
 /** The policy rule behind a refusal id; undefined for an id the policy does not list. */
 function refusalRule(ruleId: string) {
   return refusalRules.find((rule) => rule.id === ruleId);
 }
 
+/**
+ * Refusals no signed receipt has accepted, grouped by the decider the refusal
+ * policy names. A stale receipt accepts nothing: it vouches for older code.
+ */
 function collectDeciderQueues(sources: InboxSource[]): DeciderQueue[] {
   const decisionsByRule = new Map<string, OpenDecision>();
   for (const { change, review, receipt } of sources) {
