@@ -43,5 +43,5 @@ Tieto's changes: `R7` (public contract) in 3 of 4. MP-2283 on its README and Msg
 ## In the code
 
 - [`src/policy/refusals.ts`](../../src/policy/refusals.ts): the seven rules, `refusalPolicyVersion = "v1"`
-- `src/prompts/a3.ts`: the area review that outputs refusals
+- [`src/prompts/a3.ts`](../../src/prompts/a3.ts): the area review that outputs refusals
 - Shown on S2, the Refused tab: rule, reason, decider, hunks, source
