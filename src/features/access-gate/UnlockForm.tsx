@@ -72,6 +72,8 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
           pattern={isBoxed ? "[0-9]*" : undefined}
           aria-invalid={hasError}
           aria-describedby="access-code-status"
+          // The unlock page has one field and nothing else to do, so focusing it is the expected start.
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           className={
             isBoxed
