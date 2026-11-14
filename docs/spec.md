@@ -6,7 +6,7 @@ Write it so an agent can build any task below without asking a question: concret
 Every task in section 9 becomes a GitHub issue; "go" works through them.
 -->
 
-Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-14, legacy guard (sections 1, 5); before it, eight ideas and four next ideas (sections 1, 3, 9) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
+Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-14, legacy guard (sections 1, 5); before it, eight ideas and four next ideas (sections 1, 3, 9) · Feature freeze: none (removed by Miska, Sat 14.11 23:55; features land until the submission) · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
 
 Event milestones: Fri 23:59 pre-submission ✅ done Fri 13.11 by Miska (draft "Countersign", Tieto challenge; name, punchline, description; status Draft) · Sat 12:00 submissions open · Sun 10:00 final (set to FINAL, not DRAFT) · Sun 10:30–13:00 live peer review at our table (all present, else no main prize) · Sun 14:15 top-5 pitches (3 min + 3 min Q&A).
 
