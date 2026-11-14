@@ -33,7 +33,33 @@
       "acceptedRefusalIds": [
         "r1"
       ]
-    }
+    },
+    "hunks": [
+      {
+        "hunkId": "h1",
+        "file": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
+        "coverage": "read",
+        "readBy": "miska-voutilainen"
+      },
+      {
+        "hunkId": "h2",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "coverage": "read",
+        "readBy": "miska-voutilainen"
+      },
+      {
+        "hunkId": "h3",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "coverage": "read",
+        "readBy": "miska-voutilainen"
+      },
+      {
+        "hunkId": "h4",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+        "coverage": "supported",
+        "readBy": null
+      }
+    ]
   },
   "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgFIXTUREBLeVLOGRBm3sKq7dH\nqPzJ0nN2xTq8dQmV3S8AAAAUY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEy\nAAAAUwAAAAtzc2gtZWQyNTUxOQAAAEC2m9Zr1vD0kPq7sLxUe3YhT8cNwJ4aGfR5oB6d\n-----END SSH SIGNATURE-----",
   "notesRef": "refs/notes/countersign",
