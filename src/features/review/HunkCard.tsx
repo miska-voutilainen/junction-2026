@@ -98,7 +98,7 @@ function HunkHeading({ entry }: { entry: HunkEntry }) {
         <span className="truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
         <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
       </div>
-      <p data-written-text className="text-xs text-text-muted">{evidence}</p>
+      <p className="text-xs text-text-muted">{evidence}</p>
     </div>
   );
 }

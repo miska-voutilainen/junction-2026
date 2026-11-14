@@ -12,7 +12,7 @@ import type { ReceiptDocumentView } from "./receiptModel";
 /**
  * The receipt as a document a person can read and verify: toolbar, a notice when
  * it no longer vouches for the diff, then the card with the seal (signed only),
- * identity, the signer's words, the hunk ledger and the signer. A stale or
+ * identity with the roles line, the signer's words, the signed hunk ledger and the signer. A stale or
  * unverified receipt shows what was signed but no seal.
  */
 export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
@@ -34,9 +34,9 @@ export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
           </div>
           {view.status === "signed" && <ReceiptSeal />}
         </header>
-        <IdentityList rows={view.identity} />
+        <IdentityList rows={view.identity} roles={view.roles} />
         <SignedSections view={view} />
-        {view.ledger?.length ? <HunkLedger rows={view.ledger} /> : null}
+        {view.ledger.length > 0 && <HunkLedger rows={view.ledger} owner={view.owner} status={view.status} />}
         {showVerify && <VerifySection view={view} />}
         <Disclosure title="Receipt JSON">
           <Console label="Receipt JSON" kind="log" text={view.recordJson} />

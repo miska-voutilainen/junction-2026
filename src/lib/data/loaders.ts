@@ -56,9 +56,10 @@ async function readValidated<T>(file: string, schema: z.ZodType<T>): Promise<T |
   const parsed = schema.safeParse(json);
   if (parsed.success) return parsed.data;
   const issues = parsed.error.issues
-    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+    // Zod messages sometimes end in a period already; strip it so the join doesn't write "..".
+    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message.replace(/\.$/, "")}`)
     .join(". ");
-  throw new Error(`${file} does not match its schema. ${issues}`);
+  throw new Error(`${file} does not match its schema. ${issues}.`);
 }
 
 /** Recorded file first, then the fixture with the same relative path. */

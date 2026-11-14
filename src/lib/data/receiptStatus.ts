@@ -20,3 +20,22 @@ export function receiptStatus(review: Review, record: ReceiptRecord | null): Rec
   if (!record.verify.ok) return "unverified";
   return record.receipt.diffSha256 === review.diff.diffSha256 ? "signed" : "stale";
 }
+
+/**
+ * Who signed, as the roles line shows it. A receipt whose recorded signature
+ * check failed names nobody: "Signed by <owner>" would vouch for a signature
+ * that does not verify. A stale receipt was still signed by its owner, for an
+ * older diff.
+ */
+export type SignerState =
+  | { kind: "signed"; owner: string }
+  | { kind: "unsigned" }
+  | { kind: "unreadable" }
+  | { kind: "unverified" };
+
+/** The signer state of a change's receipt: `"unreadable"` is a receipt file that fails validation, null is no file. */
+export function signerOf(receipt: ReceiptRecord | "unreadable" | null): SignerState {
+  if (receipt === null) return { kind: "unsigned" };
+  if (receipt === "unreadable") return { kind: "unreadable" };
+  return receipt.verify.ok ? { kind: "signed", owner: receipt.receipt.owner } : { kind: "unverified" };
+}

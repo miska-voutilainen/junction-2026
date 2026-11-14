@@ -11,6 +11,7 @@ import {
   measuredLine,
   missedPlants,
   retractedClaims,
+  unknownRuleRefusals,
 } from "./reportCardModel";
 
 const fixtureRoot = path.join(process.cwd(), "data", "fixtures");
@@ -97,6 +98,24 @@ describe("report card lists", () => {
     const retracted = retractedClaims(reviews);
     expect(retracted).toHaveLength(review.retractions.length);
     expect(retracted[0].claimText).toBe(review.claims.find((claim) => claim.id === review.retractions[0].claimId)?.text);
+  });
+
+  it("lists refusals struck for an unknown rule id apart from failed quotes, matching the phrase in any case", () => {
+    const [failure] = review.quoteCheck.failures;
+    const synthetic = {
+      ...review,
+      quoteCheck: {
+        ...review.quoteCheck,
+        failures: [failure, { ...failure, itemId: "r3", reason: "Unknown rule ID R9: not in refusal policy 1" }],
+      },
+    };
+    const reviews = [{ changeId: "mp-2283", review: synthetic }];
+    expect(unknownRuleRefusals(reviews)).toEqual([{ changeId: "mp-2283", itemId: "r3" }]);
+    expect(failedQuotes(reviews).map((quote) => quote.itemId)).toEqual([failure.itemId]);
+  });
+
+  it("finds no unknown-rule refusals in the recorded fixtures", () => {
+    expect(unknownRuleRefusals([{ changeId: "mp-2283", review }])).toEqual([]);
   });
 
   it("summarises described-first against blind-first per plant", () => {
