@@ -122,7 +122,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   const { claims, quoteCheck } = checkedClaims;
 
   const didRunA3 = expectation !== null && steps.has("a3");
-  const { areaFindings, refusals } = didRunA3
+  const { areaFindings, refusals: aiRefusals } = didRunA3
     ? await reviewAreas(
         client,
         { requirement, hunks: loadedDiff.hunks, context, expectation, claims, runIndex },
@@ -130,6 +130,8 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
         quoteCheck,
       )
     : { areaFindings: [], refusals: [] };
+  // The fixed rules need no model, so they apply on every run, whichever steps ran.
+  const refusals = mergeFixedRefusals(aiRefusals, fixedRefusalsFor(loadedDiff.hunks));
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {
@@ -247,7 +249,7 @@ function checkedSteps(
   return steps;
 }
 
-/** A3, then the quote check on its findings and refusals, with the fixed rule refusals merged in. */
+/** A3, then the quote check on its findings and refusals. The fixed rule refusals are added by the caller. */
 async function reviewAreas(
   client: Parameters<typeof writeAreaReview>[0],
   areaInput: Parameters<typeof writeAreaReview>[1],
@@ -260,10 +262,7 @@ async function reviewAreas(
   const areaReview = await writeAreaReview(client, areaInput);
   return {
     areaFindings: await checkAreaFindings(areaReview.findings, readSide, quoteCheck),
-    refusals: mergeFixedRefusals(
-      checkRefusals(areaReview.refusals, quoteCheck),
-      fixedRefusalsFor(areaInput.hunks),
-    ),
+    refusals: checkRefusals(areaReview.refusals, quoteCheck),
   };
 }
 
