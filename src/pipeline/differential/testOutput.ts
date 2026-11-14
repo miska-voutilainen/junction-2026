@@ -232,17 +232,18 @@ export function trimOutput(output: string): string {
 }
 
 /**
- * The last TEST_OUTPUT_MAX_CHARS characters, starting at a line start. A plain
- * slice usually begins mid-line, and the build error read from it then starts
- * mid-path ("ktree>/tests/…" in mp-2129's recorded reasons). One line with no
- * break in the kept part is returned as cut, since nothing whole remains.
+ * At most the last TEST_OUTPUT_MAX_CHARS characters, from the first whole line
+ * in them. A plain slice usually begins mid-line, and the build error read from
+ * it then starts mid-path ("ktree>/tests/…" in mp-2129's recorded reasons). One
+ * line with no break in the kept part is returned as cut, since nothing whole remains.
  */
 function tailFromWholeLine(text: string): string {
   const tail = text.slice(-TEST_OUTPUT_MAX_CHARS);
   const startsAtLine = text.at(-TEST_OUTPUT_MAX_CHARS - 1) === "\n";
   const firstBreak = tail.indexOf("\n");
   if (startsAtLine || firstBreak === -1) return tail;
-  return tail.slice(firstBreak + 1);
+  // trimStart: dotnet prints a blank line after "Build FAILED.", and every other excerpt is trimmed.
+  return tail.slice(firstBreak + 1).trimStart();
 }
 
 function isResultLine(line: string): boolean {
