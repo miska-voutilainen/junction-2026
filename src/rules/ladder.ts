@@ -48,7 +48,7 @@ export function applyEscapes(
 }
 
 /** Levels from the recorded report card; with none, no area has a track record, so all are Shadow. */
-export function levelsFromReportCard(reportCard: ReportCard | null): Record<Area, LadderLevel> {
+export function levelsFromReportCard(reportCard: Pick<ReportCard, "areas"> | null): Record<Area, LadderLevel> {
   const levels: Record<Area, LadderLevel> = {
     generator: "shadow",
     analyzer: "shadow",

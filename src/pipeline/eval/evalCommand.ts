@@ -7,7 +7,7 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../../ai/client";
-import type { AnswerKey, ReportCard, Review } from "../../contracts";
+import type { Area, AnswerKey, LadderLevel, ReportCard, Review } from "../../contracts";
 import { levelsFromReportCard } from "../../rules/ladder";
 import {
   hasChangeInput,
@@ -15,11 +15,13 @@ import {
   loadChangeAndRequirement,
   loadChangeInput,
   loadRecordedRun,
+  type ComparisonRun,
   loadReportCard,
   writeRecordedReview,
   writeReportCard,
 } from "../reviewFiles";
 import { runReview } from "../runReview";
+import { reviewerVersion } from "../assembleReview";
 import { createUsageTally } from "../usageTally";
 import { appendLessonsEntry } from "./lessonsLog";
 import { rerouteReview, routingSpreadOf } from "./rerouteReview";
@@ -55,7 +57,7 @@ export async function runEvalCommand(argv: string[]): Promise<void> {
   const costUsd = isScoreOnly ? 0 : await recordRuns(keys, requestedRuns);
   const runsPerMode = isScoreOnly ? await measuredRunsPerMode(keys) : requestedRuns;
 
-  const card = await scoreAndReroute(keys, runsPerMode);
+  const card = await scoreAndReroute(keys, runsPerMode, !isScoreOnly);
   const verdict = anchoredVsBlindVerdict(card.anchoredVsBlind);
   await appendLessonsEntry(LESSONS_FILE, {
     title: "Anchored versus blind-first",
@@ -89,7 +91,7 @@ function changeInputIdOf(key: AnswerKey): string {
   return hasChangeInput(key.plantId) ? key.plantId : key.changeId;
 }
 
-function modelStore(repoDir: string, levels: ReturnType<typeof levelsFromReportCard>): EvalStore {
+function modelStore(repoDir: string, levels: Record<Area, LadderLevel>): EvalStore {
   return {
     load: (job) => loadRecordedRun(job.changeInputId, job.comparison),
     async record(job: EvalJob) {
@@ -134,6 +136,7 @@ async function measuredRunsPerMode(keys: readonly AnswerKey[]): Promise<number> 
 async function scoreAndReroute(
   keys: readonly AnswerKey[],
   runsPerMode: number,
+  dropStaleRuns: boolean,
 ): Promise<ReportCard> {
   const plantedBugs = await Promise.all(
     keys
@@ -141,7 +144,7 @@ async function scoreAndReroute(
       .map(async (key) => ({
         key,
         change: await loadChangeInput(key.plantId),
-        review: await loadRecordedRun(key.plantId),
+        review: await loadEvalRun(key.plantId, undefined, dropStaleRuns),
       })),
   );
   const contradictions: ContradictionRuns[] = await Promise.all(
@@ -149,8 +152,8 @@ async function scoreAndReroute(
       .filter((key) => key.kind === "contradiction")
       .map(async (key) => ({
         key,
-        anchored: await loadRuns(changeInputIdOf(key), "anchored", runsPerMode),
-        blind: await loadRuns(changeInputIdOf(key), "blind", runsPerMode),
+        anchored: await loadRuns(changeInputIdOf(key), "anchored", runsPerMode, dropStaleRuns),
+        blind: await loadRuns(changeInputIdOf(key), "blind", runsPerMode, dropStaleRuns),
       })),
   );
   const tietoReviews = (
@@ -162,7 +165,6 @@ async function scoreAndReroute(
     contradictions,
     runsPerMode,
     otherReviews: tietoReviews,
-    routingSpread: routingSpreadOf([]),
     now: new Date(),
   });
   const rerouted = tietoReviews.map((review) =>
@@ -179,12 +181,43 @@ function loadRuns(
   changeInputId: string,
   mode: "anchored" | "blind",
   count: number,
+  dropStaleRuns: boolean,
 ): Promise<(Review | null)[]> {
   return Promise.all(
     Array.from({ length: count }, (_, index) =>
-      loadRecordedRun(changeInputId, { mode, runNumber: index + 1 }),
+      loadEvalRun(changeInputId, { mode, runNumber: index + 1 }, dropStaleRuns),
     ),
   );
+}
+
+/**
+ * A run for scoring. It must be the run its file name says: a review of another
+ * change or of the other mode would score as if it were this one. After a full
+ * run, a run from another reviewer version counts as no run (not caught), so
+ * the report card is still written; `--score-only` keeps the stricter check in
+ * scoreReportCard, which refuses mixed versions.
+ *
+ * @throws when the file holds another change or mode.
+ */
+export async function loadEvalRun(
+  changeInputId: string,
+  comparison: ComparisonRun | undefined,
+  dropStaleRuns: boolean,
+): Promise<Review | null> {
+  const review = await loadRecordedRun(changeInputId, comparison);
+  if (review === null) return null;
+  const expectedMode = comparison?.mode === "anchored" ? "anchored" : "blind-first";
+  if (review.changeId !== changeInputId || review.mode !== expectedMode)
+    throw new Error(
+      `The run for ${changeInputId} (${expectedMode}) holds ${review.changeId} (${review.mode}). Delete it and run pnpm evals again.`,
+    );
+  if (dropStaleRuns && review.reviewer.version !== reviewerVersion) {
+    console.error(
+      `${changeInputId} run is from ${review.reviewer.version}, not ${reviewerVersion}: counted as no run.`,
+    );
+    return null;
+  }
+  return review;
 }
 
 /** "evals · <c>/<p> planted caught · anchored <a>/<t> · blind <b>/<t> · $<cost> · <min> min" */

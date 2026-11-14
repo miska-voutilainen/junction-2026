@@ -46,15 +46,15 @@ export interface EvalInput {
   runsPerMode: number;
   /** Reviews counted for hallucinations only, e.g. the four Tieto reviews. */
   otherReviews: readonly Review[];
-  routingSpread: ReportCard["routingSpread"];
   now: Date;
 }
 
 /**
  * The report card for these runs.
+ * The routing spread is added by the caller, after the Tieto reviews are routed again.
  * @throws "mixed reviewer versions: rerun all" when the runs come from different reviewer versions.
  */
-export function scoreReportCard(input: EvalInput): ReportCard {
+export function scoreReportCard(input: EvalInput): Omit<ReportCard, "routingSpread"> {
   const runs = [
     ...input.plantedBugs.map((plant) => plant.review),
     ...input.contradictions.flatMap((plant) => [...plant.anchored, ...plant.blind]),
@@ -68,7 +68,6 @@ export function scoreReportCard(input: EvalInput): ReportCard {
     anchoredVsBlind: scoreAnchoredVsBlind(input.contradictions, input.runsPerMode),
     hallucinations: countHallucinations([...runs, ...input.otherReviews]),
     findingsOnPlants: sumFindingsOnPlants(input.plantedBugs),
-    routingSpread: input.routingSpread,
   };
 }
 
@@ -129,6 +128,11 @@ function scoreAnchoredVsBlind(
   };
 }
 
+/**
+ * Sums over every review read, so the A1/A2 claims that blind runs of one
+ * Tieto change share (same recording) are counted once per run: the total is
+ * "quote checks run", not distinct quotes.
+ */
 function countHallucinations(reviews: readonly Review[]): ReportCard["hallucinations"] {
   const sum = (count: (review: Review) => number) =>
     reviews.reduce((total, review) => total + count(review), 0);

@@ -78,7 +78,9 @@ export async function loadRecordedRun(
   if (!existsSync(file)) return null;
   try {
     return await readJson(file, ReviewSchema);
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`${file} does not match the Review contract, counted as no run: ${message}`);
     return null;
   }
 }

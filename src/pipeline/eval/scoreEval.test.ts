@@ -4,17 +4,6 @@ import { anchoredVsBlindVerdict, scoreReportCard, type EvalInput } from "./score
 
 type Finding = Review["findings"][number];
 
-const noSpread = {
-  changes: 0,
-  light: 0,
-  focused: 0,
-  full: 0,
-  readHunks: 0,
-  totalHunks: 0,
-  readMinutes: 0,
-  fullMinutes: 0,
-};
-
 function bugKey(
   plantId: string,
   area: AnswerKey["area"],
@@ -99,7 +88,6 @@ function input(overrides: Partial<EvalInput>): EvalInput {
     contradictions: [],
     runsPerMode: 0,
     otherReviews: [],
-    routingSpread: noSpread,
     now: new Date("2026-11-14T10:00:00Z"),
     ...overrides,
   };
@@ -170,7 +158,17 @@ describe("scoreReportCard planted bugs", () => {
     const card = scoreReportCard(
       input({ plantedBugs: [plant(bugKey("v01", "security"), review([defect("security", 22)]))] }),
     );
-    expect(ReportCardSchema.safeParse(card).success).toBe(true);
+    const routingSpread = {
+      changes: 0,
+      light: 0,
+      focused: 0,
+      full: 0,
+      readHunks: 0,
+      totalHunks: 0,
+      readMinutes: 0,
+      fullMinutes: 0,
+    };
+    expect(ReportCardSchema.safeParse({ ...card, routingSpread }).success).toBe(true);
   });
 });
 

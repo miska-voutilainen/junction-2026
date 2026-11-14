@@ -2,20 +2,12 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
-## 2026-11-14 · T16: stopped at 2 runs per mode
+## 2026-11-14 · T16: 2 runs per mode, blind runs shared by prompt, counts are the measured n
 
-- **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants. Stage 1 ran 2 per mode.
-- **Decision:** 2 runs per mode is the eval's size: `pnpm evals` defaults to `--runs 2`, and the spec's counts read "of 10" (5 plants x 2 runs). Miska approved the cut.
-- **Why:** Both modes caught 10 of 10 at n = 2. A third run would add about 10 Opus runs and could not separate them.
-- **Rejected:** 3 runs per mode as in the spec (cost with no information gained).
-- **PR:** T16
-
-## 2026-11-14 · T16 choices: staged contradiction runs, blind runs shared by prompt, the count is the measured n
-
-- **Context:** `pnpm evals` makes about 30 reviews of a 90-minute budget, and the credits are shared.
-- **Decision:** `pnpm evals --runs <n>` (default 3) runs comparison runs k = 1..n per mode and plant, and reuses any run already in `data/runs/` for the current reviewer version, so stage 1 can be `--runs 2` and a later `--runs 3` records only the third. The report card counts the runs that exist ("of 10" after two, "of 15" after three) and the S3 copy reads that n. A blind run never sees the author description, so its A1 and A2 prompts are identical across the plants of one Tieto change; those runs go through one job group in turn and the later ones reuse the recording. After scoring, the four Tieto reviews are routed again with the measured levels and their receipt drafts rebuilt, so "not checked" matches the routing.
-- **Why:** Credits, and a result sooner: two runs per mode already show a direction. Sharing A1 and A2 saves a third of the blind calls.
-- **Rejected:** A hard-coded 15; one group per plant (identical blind calls would race instead of reuse).
+- **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants, about 30 more reviews of a shared credit budget. Stage 1 ran 2 per mode and both modes caught 10 of 10.
+- **Decision:** `pnpm evals` defaults to `--runs 2`, and the spec's counts read "of 10" (5 plants x 2 runs); Miska approved the cut. `--runs <n>` still runs k = 1..n per mode and plant and reuses any run in `data/runs/` for the current reviewer version, so a later `--runs 3` would record only the third. The report card counts the runs that exist and the S3 copy reads that n. A blind run never sees the author description, so its A1 and A2 prompts are identical across the plants of one Tieto change; those runs go through one job group in turn and the later ones reuse the recording. `quotesChecked` sums over every run read, so those shared claims count once per run: it is "quote checks run", not distinct quotes. After scoring, the four Tieto reviews are routed again with the measured levels and their receipt drafts rebuilt, so "not checked" matches the routing.
+- **Why:** A third run would add about 10 Opus runs and could not separate two modes already at the ceiling. Sharing A1 and A2 saves a third of the blind calls.
+- **Rejected:** 3 runs per mode as in the spec (cost, no information); a fixed run count in the copy; one group per plant (identical blind calls would race instead of reuse); deduplicating shared claims by recording key (more code for a count that is only a denominator).
 - **PR:** T16
 
 ## 2026-11-14 · Record mode reuses a recording with the same key; A3 cites source first, A4 copies statements exactly
