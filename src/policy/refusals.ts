@@ -5,7 +5,7 @@
  */
 
 /** Version of the rule set; bump it when a rule changes meaning. */
-export const refusalPolicyVersion = "v1";
+export const refusalPolicyVersion = "v2";
 
 /** One refusal rule: what the AI won't judge and who decides instead. */
 export interface RefusalRule {
@@ -14,7 +14,7 @@ export interface RefusalRule {
   decider: string;
 }
 
-/** R1 to R7, in id order. */
+/** R1 to R8, in id order. */
 export const refusalRules: RefusalRule[] = [
   {
     id: "R1",
@@ -43,6 +43,11 @@ export const refusalRules: RefusalRule[] = [
     id: "R7",
     title: "Public contract: new or changed public API, diagnostic IDs or documented behaviour",
     decider: "API owner (the maintainers)",
+  },
+  {
+    id: "R8",
+    title: "Legacy contract: behaviour that old systems depend on",
+    decider: "the zone's owner (src/policy/legacy.ts)",
   },
 ];
 

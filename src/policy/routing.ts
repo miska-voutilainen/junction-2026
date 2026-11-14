@@ -59,6 +59,7 @@ export type RoutingRuleId =
   | "R-read-share"
   | "R-escape"
   | "R-refusal"
+  | "R-legacy"
   | "R-contradiction"
   | "R-defect"
   | "R-sensitive-path"
@@ -76,6 +77,7 @@ const ROUTING_RULE_LABEL: Record<RoutingRuleId, string> = {
   "R-read-share": "Most hunks need a human",
   "R-escape": "A bug escaped in this area",
   "R-refusal": "Refused item: a human decides",
+  "R-legacy": "Touches legacy code",
   "R-contradiction": "Description contradicts the code",
   "R-defect": "Defect found",
   "R-sensitive-path": "Touches a sensitive path",
