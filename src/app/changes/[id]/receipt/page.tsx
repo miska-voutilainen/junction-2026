@@ -1,10 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError } from "@/features/inbox";
 import { ReceiptScreen } from "@/features/receipt-view";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
-import { loadChanges, loadReceipt, loadReceiptText } from "@/lib/data/loaders";
+import { loadChange, loadChanges, loadReceipt, loadReceiptText } from "@/lib/data/loaders";
 
 // No `dynamicParams = false`: it would answer an unknown id with Next's unstyled 404 instead of the not-found.tsx with the shell.
 
@@ -13,6 +14,15 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
   const changes = await loadChanges();
   if (changes.status !== "ok") return [];
   return changes.data.filter((change) => change.kind === "tieto").map((change) => ({ id: change.id }));
+}
+
+/** Tab title "Receipt · <requirement> · Countersign"; plain "Countersign" when the change can't be read. */
+export async function generateMetadata({ params }: Readonly<{ params: Promise<{ id: string }> }>): Promise<Metadata> {
+  const { id } = await params;
+  const change = await loadChange(id);
+  if (change.status === "missing") return { title: `No change with id ${id} · Countersign` };
+  if (change.status !== "ok") return { title: "Countersign" };
+  return { title: `Receipt · ${change.data.requirementId} · Countersign` };
 }
 
 /**
