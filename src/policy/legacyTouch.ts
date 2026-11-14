@@ -60,11 +60,14 @@ export const ignoredSymbolNames = new Set([
 // --- Old platform: code only old targets compile, and whether a test runs it ---
 
 /**
- * A preprocessor line that only some old targets compile.
- * @example "#if !NETSTANDARD2_0 && !NETFRAMEWORK" matches; "#if DEBUG" does not.
+ * A preprocessor line that only some old targets compile: one naming an old
+ * target, or one negating a current one (`!NET6_0_OR_GREATER` is code only
+ * .NET Framework and netstandard build). The `#else` of `#if NET8_0_OR_GREATER`
+ * is old-only too, but one line can't see which `#if` an `#else` closes.
+ * @example "#if !NETSTANDARD2_0 && !NETFRAMEWORK" and "#if !NET6_0_OR_GREATER" match; "#if DEBUG" and "#if NET8_0_OR_GREATER" do not.
  */
 export const oldPlatformDirective =
-  /^\s*#\s*(?:if|elif)\b.*\b(?:NETFRAMEWORK|NETSTANDARD\w*|NET[34]\w*|UNITY\w*)\b/;
+  /^\s*#\s*(?:if|elif)\b.*(?:\b(?:NETFRAMEWORK|NETSTANDARD\w*|NET[34]\w*|UNITY\w*)\b|!\s*(?:NET\d+_\d+\w*|NETCOREAPP\w*)\b)/;
 
 /**
  * A test project target that runs old code: .NET Framework 4.x or netstandard.
@@ -133,17 +136,29 @@ export const contractShapes: ReadonlyArray<{
   { label: "diagnostic ids", pattern: diagnosticIdLiteral, appliesInAnalyzer: true },
 ];
 
-/** What tells consumers about a contract change; any of these in the same change guards it. */
-export const consumerNoteGlobs = ["**/AnalyzerReleases.*.md", "doc/**", "**/CHANGELOG*"];
+/**
+ * What tells consumers about a contract change; any of these in the same change
+ * guards it. The root README is the library's user guide.
+ */
+export const consumerNoteGlobs = [
+  "**/AnalyzerReleases.*.md",
+  "doc/**",
+  "**/CHANGELOG*",
+  "README.md",
+];
 
 // --- Build: inputs that change what ships, with no guard a rule can check ---
 
-/** Build inputs whose effect no test shows; tests/** is excluded on purpose. */
+/**
+ * Build inputs whose effect no test shows: src/ and the root, which the shipped
+ * packages build from. tests/, benchmark/ and sandbox/ have their own
+ * Directory.Build files and ship nothing.
+ */
 export const buildGlobs = [
   "src/**/*.csproj",
   "src/**/*.props",
   "src/**/*.targets",
-  "**/Directory.Build.*",
+  "Directory.Build.*",
   "Directory.Packages.props",
   "global.json",
 ];

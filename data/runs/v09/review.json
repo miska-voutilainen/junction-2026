@@ -2695,6 +2695,15 @@
       "hunkIds": [
         "h1"
       ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R8",
+      "source": "rule",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md); the API owner (the maintainers) decides",
+      "hunkIds": [
+        "h2"
+      ]
     }
   ],
   "quoteCheck": {
@@ -2783,10 +2792,27 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The new README section sets which analyzer diagnostics are documented as reported for suppressed types and which are not (MsgPack011, MsgPack016 and MsgPack017), and that documented behaviour is for the API owner to decide.",
+      "text": "r1 (R7): The new README section sets which analyzer diagnostics are documented as reported for suppressed types and which are not (MsgPack011, MsgPack016 and MsgPack017), and that documented behaviour is for the API owner to decide. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md); the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [
+    {
+      "kind": "consumer-contract",
+      "hunkIds": [
+        "h2"
+      ],
+      "detail": "contract paths",
+      "owner": "API owner (the maintainers)",
+      "guard": {
+        "status": "guarded",
+        "evidence": "the same change updates README.md",
+        "files": [
+          "README.md"
+        ]
+      }
+    }
+  ],
   "routing": {
     "tier": "full",
     "reasons": [
@@ -2797,8 +2823,13 @@
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "2 items refused: a human decides",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-legacy-guard",
+        "text": "Consumer contract: contract paths in 1 hunk, guarded: the same change updates README.md",
+        "tier": "light"
       },
       {
         "ruleId": "R-defect",

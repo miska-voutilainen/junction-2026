@@ -36,8 +36,26 @@ describe("C# hunk readers", () => {
     ]);
     expect(addedCalls(lines)).toEqual(["Real"]);
   });
-});
 
+  it("reads no call from strings, template output or block comments", () => {
+    const lines = hunk("h", "Transforms/FormatterTemplate.cs", [
+      ["add", 'this.Write("            writer.WriteArrayHeader(");'],
+      ["add", 'throw new InvalidOperationException("call WriteNil() first");'],
+      ["add", "/* writer.WriteArrayHeader(2) used to go here */ Kept(1);"],
+      ["add", " * then writer.WriteArrayHeader(count) is written"],
+      ["add", 'var path = @"C:\\Old("; Real(2); // and Trailing()'],
+    ]);
+    expect(addedCalls(lines)).toEqual(["Kept", "Real"]);
+  });
+
+  it("reads no declaration from a comment", () => {
+    const lines = hunk("h", "a.cs", [
+      ["add", "// public void Serialize(ref MessagePackWriter writer) is the shape callers use"],
+      ["del", "/// public static int Helper(int a)"],
+    ]);
+    expect(changedDeclarations(lines)).toEqual([]);
+  });
+});
 
 describe("declaredName", () => {
   it("names a type or method and ignores fields and constructors", () => {
@@ -45,5 +63,10 @@ describe("declaredName", () => {
     expect(declaredName("public static Foo<T>? Bar<T>(int a)")).toBe("Bar");
     expect(declaredName("private int writer;")).toBeNull();
     expect(declaredName("public Baz(int a)")).toBeNull();
+  });
+
+  it("finds no declaration in a comment or a string", () => {
+    expect(declaredName("// public void Serialize(int a)")).toBeNull();
+    expect(declaredName('this.Write("public void Serialize(");')).toBeNull();
   });
 });

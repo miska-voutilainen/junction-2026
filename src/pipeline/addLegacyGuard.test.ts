@@ -51,6 +51,18 @@ describe("addLegacyGuard", () => {
     expect(after.legacyTouchPoints?.[0].kind).toBe("old-platform");
   });
 
+  it("numbers R8 after the highest kept id, so a gap in the ids can't collide", async () => {
+    const refusal = (id: string) => ({
+      id,
+      ruleId: "R7",
+      source: "ai" as const,
+      reason: "x",
+      hunkIds: [],
+    });
+    const after = await run({ ...base, refusals: [refusal("r1"), refusal("r3")] });
+    expect(after.refusals.map((each) => each.id)).toEqual(["r1", "r3", "r4"]);
+  });
+
   it("is a no-op the second time", async () => {
     const once = await run(base);
     expect(await run(once)).toEqual(once);
