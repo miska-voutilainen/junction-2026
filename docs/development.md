@@ -6,7 +6,7 @@
 
 - Node 24 or newer and pnpm 12.11.2 (set by `packageManager` in `package.json`).
 - Git, for `pnpm seed` and the receipt CLI. The receipt CLI also needs `ssh-keygen`.
-- .NET SDK 8.0.4xx, only on the laptop that runs the pipeline: step A5 runs `dotnet test` on the fork. Not needed to run the site.
+- Docker, only on the laptop that runs the pipeline: step A5 runs `dotnet restore` and `dotnet test` on the fork in temporary worktrees inside the pinned .NET SDK 8.0 image (the limit is 15 min per run; the first run pulls the image and fills the NuGet volume `countersign-a5-nuget`). The host needs no .NET SDK. Without Docker, `pnpm review run` stops with "Docker is not running. Start Docker Desktop, or run with --no-tests." Not needed to run the site.
 
 ## Setup
 
@@ -40,7 +40,7 @@
 | `pnpm e2e`                                                | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                                                                                                                                                                                         |
 | `pnpm screenshots`                                        | Runs the `screenshots` Playwright project (`e2e/screenshots.spec.ts`): full-page PNGs of every screen at phone and desktop widths into `.review/`                                                                                                                                                                             |
 | `pnpm seed`                                               | Clone the fork and fetch notes                                                                                                                                                                                                                                                                                                |
-| `pnpm review`, `pnpm evals`                               | `pnpm review run <changeId>` records a blind-first review (A1 to A4, quote check on claims, findings and contradictions) into `data/runs/` and `data/recordings/`; `pnpm review check <changeId>` runs its eval cases. `pnpm review` is a built-in pnpm 12 command, so the script is named `review`. `evals` is not built yet |
+| `pnpm review`, `pnpm evals`                               | `pnpm review run <changeId>` records a blind-first review (A1 to A5, quote check on claims, findings and contradictions; `--no-tests` skips A5) into `data/runs/` and `data/recordings/`; `pnpm review check <changeId>` runs its eval cases. `pnpm review` is a built-in pnpm 12 command, so the script is named `review`. `evals` is not built yet |
 | `pnpm countersign draft\|sign\|verify\|export <changeId>` | The receipt CLI (`src/receipt/`); needs `SAMPLE_REPO_DIR` and an ed25519 key (default `~/.ssh/countersign_ed25519`, or `--key`; `sign` asks for its passphrase in the terminal). Commands and exit codes: [api.md](api.md#receipt-cli)                                                                                        |
 
 ## Testing

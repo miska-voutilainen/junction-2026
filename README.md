@@ -53,7 +53,7 @@ cp .env.example .env   # the app runs without values; see development.md
 pnpm dev               # http://localhost:3000
 ```
 
-Needs Node 24 and pnpm. The site reads the committed files under `data/`. The receipt CLI is built, and so are review steps A1 to A4 with the quote check (A5 is not built yet); the fork clone (`pnpm seed`), the .NET SDK, every command and the env vars are in [docs/development.md](docs/development.md).
+Needs Node 24 and pnpm. The site reads the committed files under `data/`. The receipt CLI is built, and so are review steps A1 to A5 with the quote check; the fork clone (`pnpm seed`), the .NET SDK, every command and the env vars are in [docs/development.md](docs/development.md).
 
 ## Agent environment
 

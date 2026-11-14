@@ -283,7 +283,7 @@ There is no HTTP API: the contracts are data files, one shared function and two 
 }
 ```
 
-Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, no Markdown. Lines in `hunks[].lines[].text` exclude the `+`/`-`/space prefix. Output `output` strings are trimmed to the last 2,000 characters.
+Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, no Markdown. Lines in `hunks[].lines[].text` exclude the `+`/`-`/space prefix. Output `output` strings are a 2,000-character excerpt: each failed test's name, error message and first repository frames, then the summary (a run without failures keeps the passed tests and the summary; output with no test lines keeps its last 2,000 characters).
 
 ### `TierDecision` and `route()` (`src/rules/route.ts`)
 
@@ -413,12 +413,12 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - **Anchored run for comparison:** with `--anchored`, A2 sees the author description first and A1 is skipped; A4 runs the same (A3 and A5 are skipped in the comparison runs, 9.1 T16). A planted contradiction counts as caught in a run when A4 marks the planted sentence (case- and whitespace-insensitive match, or ≥ 80% token overlap) as `contradicted` or `unsupported`.
 - **Eval cases:** the 5 contradiction plants (`cp0`–`cp4`), 3 runs per mode.
 
-### A5 · Differential test evidence (`a5.v1`, offline inside `pnpm review run`)
+### A5 · Differential test evidence (`a5.v2`, offline inside `pnpm review run`)
 
 - **Two sources of tests:** (1) the PR's own added or changed test methods; (2) one test per functional requirement item, written by A5 **from the requirement and A1's expectation, not from the diff**.
 - **A5 input:** the requirement item, A1's expectation for it, and the base-side text of one existing test file in the touched test project as a style example. No hunks.
 - **A5 output:** `{ testFile: string /* path inside the test project */, code: string, testNames: string[], requirementItemId: string }`.
-- **Run:** in two git worktrees of `SAMPLE_REPO_DIR` (base and head), the test file is added to each, then `dotnet test <project> --filter "FullyQualifiedName~<name>"` runs on both (timeout 15 min per side). For (1) the base worktree gets only the PR's test files. A claim citing hunks of that requirement item becomes `verified` only when an A5 test (2) **fails on base and passes on head**; both outputs are attached as evidence. A PR's own test (1) that does the same makes the claim at most `supported`, noted "the PR's own test: the same agent wrote the code and the test" (an agent can encode one mistake in both; `docs/research.md`). Passes on both: the claim stays `supported`, noted "the test doesn't tell the versions apart". Fails on head with a test failure (not a build error): the claim is retracted (`retractions`, logged in `docs/lessons.md`). Build error: logged and counted, the claim stays as it was.
+- **Run:** in two git worktrees of `SAMPLE_REPO_DIR` (base and head), the test file is added to each, then `dotnet test <project> --filter "FullyQualifiedName~<name>"` runs on both (timeout 15 min per side). For (1) the base worktree gets only the PR's test files. A claim citing hunks of that requirement item becomes `verified` only when an A5 test (2) **fails on base and passes on head**; both outputs are attached as evidence. A PR's own test (1) that does the same makes the claim at most `supported`, noted "the PR's own test: the same agent wrote the code and the test" (an agent can encode one mistake in both; `docs/research.md`). Passes on both: the claim stays `supported`, noted "the test doesn't tell the versions apart". Passes on base and fails on head: the claim is retracted (`retractions`, logged in `docs/lessons.md`), because the change broke the behaviour. Only A5 tests retract; the PR's own tests add evidence and never change a level. A run holds several test methods and each is judged on its own: a method that passes on the base and fails on the head wins, else one that fails on the base and passes on the head verifies. Fails on both versions: the test doesn't test the change, so it says nothing and the claim stays as it was. Build error, no matching test or timeout on either side: the same. Every such test is stored in `inconclusiveTests` with its reason (the first build error line, "no test matches the filter", "timed out", or "the test fails on both versions: it doesn't test the change"), counted and logged (Miska, 14.11, after the first mp-2283 recording).
 - **Go/no-go Sat 01:00 (Miska):** `dotnet test tests/MessagePack.SourceGenerator.Tests` runs on the pipeline laptop (.NET SDK 8.0.4xx installed). With the ideas-first emphasis, a borderline result (it runs only after workarounds, or a run takes over 15 min) counts as no-go. If not, A5 is cut, no claim can be Verified, S2 shows Supported as the top level, and the concept card's limits say why.
 
 ### Planted-bug eval
@@ -430,7 +430,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 
 - Claude through `src/ai/client.ts`, with record/replay: Claude Code headless on Miska's Max plan by default (recording runs are scheduled outside build sessions, checked against `/usage`); the Anthropic API (`ANTHROPIC_API_KEY`, spending limit set by Miska) as the alternative backend.
 - git and GitHub: our fork of Tieto's repo (branches, worktrees, notes under `refs/notes/countersign`, pushed with `git push origin refs/notes/countersign`); SSH signing with `ssh-keygen -Y` (namespace `countersign-receipt`).
-- .NET SDK 8.0.4xx on the pipeline laptop for A5.
+- Docker on the pipeline laptop for A5 (the .NET SDK 8.0 image runs the tests).
 - Vercel: project "junction-2026" (team "junction"), Git integration, a preview per PR, production from `main`; `vercel.json` sets the framework to Next.js and the pnpm commands.
 - Stretch goals: dropped on 2026-11-13 (ideas first, section 1). Both are described in "Beyond the reference" instead: a GitHub PR comment with the story and a link to the receipt, and a live "Prove it" button that reruns A5 on one claim.
 - Not built, pitch only: in a real team the receipt becomes a required merge check (`pnpm countersign verify` exit code: "no valid receipt for this diff, no merge"), and the pipeline runs on every agent PR.

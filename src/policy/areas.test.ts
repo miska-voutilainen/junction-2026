@@ -23,7 +23,12 @@ describe("classifyFile", () => {
 
 describe("areaChecklists", () => {
   it("has six to ten checks for each of the four areas", () => {
-    expect(Object.keys(areaChecklists).sort()).toEqual(["analyzer", "generator", "performance", "security"]);
+    expect(Object.keys(areaChecklists).sort()).toEqual([
+      "analyzer",
+      "generator",
+      "performance",
+      "security",
+    ]);
     for (const items of Object.values(areaChecklists)) {
       expect(items.length).toBeGreaterThanOrEqual(6);
       expect(items.length).toBeLessThanOrEqual(10);

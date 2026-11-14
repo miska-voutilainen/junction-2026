@@ -28,7 +28,10 @@ export const routingPolicy: RoutingPolicy = {
   readShareFull: 0.75,
   linesPerMinute: 25,
   sensitivePaths: [
-    { glob: "src/MessagePack.Annotations/**", label: "public attributes (MessagePack.Annotations)" },
+    {
+      glob: "src/MessagePack.Annotations/**",
+      label: "public attributes (MessagePack.Annotations)",
+    },
     { glob: "**/AnalyzerReleases.*.md", label: "diagnostic IDs (analyzer releases)" },
     { glob: "src/MessagePack/**", label: "the runtime serializer" },
   ],
