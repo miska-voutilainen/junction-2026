@@ -24,7 +24,7 @@ The named owner signs a receipt of what was checked, what wasn't and what risk t
 
 ## What we measured
 
-Nothing to measure in rates. The MP-2283 draft lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked; the signed receipt goes to `data/receipts/` with its verify output.
+No rates to measure. The MP-2283 draft lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked; the signed receipt goes to `data/receipts/` with its verify output.
 
 ## How to adopt it
 
@@ -45,6 +45,6 @@ Auditors already ask who approved a change, what was checked and what risk was a
 
 ## In the code
 
-- `src/receipt/`: the countersign CLI (T20)
-- `src/lib/git/diffIdentity.ts`: `computeDiffIdentity()`, which feeds both review and receipt (T09)
+- `src/receipt/`: the countersign CLI: draft, sign, verify and export a receipt
+- `src/lib/git/diffIdentity.ts`: `computeDiffIdentity()`, which feeds both review and receipt
 - Shown on S2, the Receipt tab (signed, unsigned or stale), and S4, the full receipt

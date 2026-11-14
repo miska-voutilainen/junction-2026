@@ -47,7 +47,7 @@ Studies of code review with AI hints find reviewers' attention pulled to what th
 
 ## In the code
 
-- `src/prompts/a1.ts`: the expectation; never receives the diff or description (T12)
-- `src/prompts/a4.ts`: the description check, run last (T13)
-- Step order and the `--anchored` flag in `src/pipeline/` (T12–T13)
+- `src/prompts/a1.ts`: writes the expectation; never receives the diff or the description
+- `src/prompts/a4.ts`: checks the description against the code, run last
+- Step order and the `--anchored` flag (which shows the description first, for the comparison) in `src/pipeline/`
 - Shown on S2, the Blind check tab

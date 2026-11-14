@@ -36,7 +36,7 @@ The levels feed the coverage map: a Verified claim makes its hunk Verified, a Su
 
 ## What we measured
 
-MP-2283: 8 claims, **2 Verified, 6 Supported, 0 Unverified**. Both Verified claims rest on A5 tests that fail on base and pass on head; two more A5 tests didn't build on the base, so their claim kept its level. The 10 planted-bug runs have 96 claims, all Supported: none carries a test result, so Verified there is not measured yet.
+MP-2283: 8 claims, **2 Verified, 6 Supported, 0 Unverified**. Both Verified claims rest on A5 tests failing on base and passing on head; two more didn't build on the base. All 96 claims in the 10 planted-bug runs are Supported; none has a test result.
 
 ## How to adopt it
 
@@ -55,5 +55,5 @@ Retractions and build errors we saw go in `docs/lessons.md`.
 ## In the code
 
 - [`src/contracts/common.ts`](../../src/contracts/common.ts): `EvidenceLevel`
-- `src/prompts/a5.ts` and the worktree test runner in `src/pipeline/` (T14)
+- `src/prompts/a5.ts` and the .NET differential test runner in `src/pipeline/differential/`: run the change's tests in a git worktree and set the level
 - Shown on S2, the Story tab: level badge and evidence per claim

@@ -29,9 +29,9 @@ Decided at kickoff (`.claude/rules/lanes.md`). Every code path belongs to exactl
 | Lane | Owner (GitHub login) | Owns (paths) | Responsible for |
 | --- | --- | --- | --- |
 | engine | `miska-voutilainen` | `src/ai/**`, `src/prompts/**`, `src/pipeline/**`, `src/rules/**`, `src/policy/**`, `src/lib/git/**`, `data/runs/**`, `data/eval/**`, `data/recordings/**` | The review pipeline (A1–A5, quote check, .NET differential tests), routing rules and trust ladder, the planted-bug eval and report card, the AI client and prompts, CI and the harness; the critical path of the demo (heaviest) |
-| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt-view/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots. Co-owner: `eliasnorta` (UI changes after the design build; `coOwners` in `lanes.json`) |
+| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt-view/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots. Co-owner: `eliasnorta` (UI changes after the design build; `coOwners` in `lanes.json`) |
 | evidence | `Kasanen` | `src/receipt/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants (data only; the plants were written by an isolated agent in the engine lane's session, see `docs/decisions.md`), the receipt CLI (SSH-signed git notes), the report card's data with the engine lane, quality hooks, the concept card (lightest) |
-| _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
+| _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.prettierignore`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
 
 The planted bugs were written by an isolated agent in the engine lane's session, blind to `src/prompts/`, `src/pipeline/` and recorded review output; the agents writing the prompts never open the plants (`data/sample/answer-key/`, the variant branches).
 
@@ -75,7 +75,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 .
 ├── README.md, CLAUDE.md, AGENTS.md, LICENSE
 ├── package.json, pnpm-lock.yaml, pnpm-workspace.yaml, tsconfig.json, components.json, vercel.json,
-│   next.config.ts, eslint.config.mjs, vitest.config.ts, playwright.config.ts, .prettierrc.json, .env.example
+│   next.config.ts, eslint.config.mjs, vitest.config.ts, playwright.config.ts, .prettierrc.json, .prettierignore, .env.example
 ├── .github/      workflows/, scripts/ (CI lane and tree checks), pull_request_template.md
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
 ├── docs/         challenge, gemma-bounty (proposal), spec, concept-card, lessons, architecture, decisions, research, research/ (raw research passes, unverified), api, development, setup, demo, pitch, design/, ideas/ (one page per idea), img/ (architecture diagram)
@@ -110,7 +110,6 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   ├── receipts/               exported signed receipts with verify output
 │   └── fixtures/               mock data for UI work and tests
 ├── e2e/                        Playwright specs
-├── public/                     static assets
 └── scripts/                    seed (clone the fork, fetch branches and notes), idea-diagrams (draws docs/ideas/img and docs/img)
 ```
 

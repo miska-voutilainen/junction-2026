@@ -57,5 +57,5 @@ Continuous sampling plans in manufacturing inspection (Dodge, 1943; Dodge and To
 
 - [`src/rules/ladder.ts`](../../src/rules/ladder.ts): `ladderLevel()` and `applyEscapes()`
 - [`src/policy/ladder.ts`](../../src/policy/ladder.ts): `minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`
-- [`src/pipeline/eval/`](../../src/pipeline/eval/): `isPlantedBugMatch()` and `scoreReportCard()`
+- Eval scoring in `src/pipeline/eval/`: `pnpm evals` scores the planted-bug runs and writes `data/eval/report-card.json`
 - Shown on S3, "Can the reviewer be trusted?"
