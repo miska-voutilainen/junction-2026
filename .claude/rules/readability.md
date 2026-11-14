@@ -21,7 +21,7 @@ A giving comment tells the reader something the code can't: **why** it's done th
 
 ### Three kinds, all required where they apply
 
-1. **Idea header** at the top of every module that implements one of the concept's ideas: two to five lines naming the idea in plain words, why it exists, and the spec section. The seven ideas and their homes:
+1. **Idea header** at the top of every module that implements one of the concept's ideas: two to five lines naming the idea in plain words, why it exists, and the spec section. The eight ideas and their homes:
    - Planted-bug calibration and the trust ladder: `src/rules/ladder.ts`, `src/policy/ladder.ts`, eval scoring in `src/pipeline/`
    - Blind-first review: `src/prompts/a1.ts`, `src/prompts/a4.ts`, the pipeline's step order
    - Hunk coverage map and routing: `src/rules/route.ts`, `src/policy/routing.ts`
@@ -29,6 +29,7 @@ A giving comment tells the reader something the code can't: **why** it's done th
    - Refusal policy: `src/policy/refusals.ts`
    - Evidence levels: `src/contracts/common.ts`, the A5 test runner
    - Signed receipt in git: `src/receipt/`, `src/lib/git/diffIdentity.ts`
+   - The author never checks its own work: the A5 test runner (the PR's own test gives Supported at most), `src/receipt/` (the AI drafts, a person signs)
 2. **Doc comment on every export** (`docs.md`): one-line summary, the why when it isn't obvious, params, returns, throws, and a short example for anything with a non-obvious input or output.
 3. **Inline why-comments** at decisions, trade-offs, workarounds and gotchas: the reason, the alternative rejected, the failure it prevents, or a link to the issue, `docs/decisions.md` entry or spec section.
 
