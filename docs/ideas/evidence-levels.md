@@ -36,7 +36,7 @@ The levels feed the coverage map: a Verified claim makes its hunk Verified, a Su
 
 ## What we measured
 
-MP-2283: 8 claims, **2 Verified, 6 Supported, 0 Unverified**. Both Verified claims rest on A5 tests failing on base and passing on head; two more didn't build on the base. All 96 claims in the 10 planted-bug runs are Supported; none has a test result.
+Tieto's 4 changes: **9 Verified, 39 Supported, 0 Unverified** of 48 claims. MP-2283 2 of 8 Verified, MP-2297 7 of 13; every Verified claim rests on an A5 test failing on base and passing on head. MP-2129 (0 of 17) and MP-2234 (0 of 10) add API that doesn't compile on the base, so no differential test can run there and no claim is Verified ([lessons](../lessons.md)). All 96 claims in the 10 planted-bug runs are Supported.
 
 ## How to adopt it
 

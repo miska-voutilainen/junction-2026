@@ -2,8 +2,6 @@
 
 The named owner signs a receipt of what was checked, what wasn't and what risk they accept, stored in git next to the commit and bound to a hash of the exact diff.
 
-> Draft. The demo receipt for MP-2283 is signed in T23.
-
 ## The problem
 
 "Approved by" on a pull request says almost nothing: on what evidence, with which parts unread, accepting which risks? It lives in the hosting platform, not with the code, and stays green when the diff changes after approval. Accountability needs a record of what the person took responsibility for, signed so they can't deny it, that goes stale once the code moves.
@@ -24,7 +22,7 @@ The named owner signs a receipt of what was checked, what wasn't and what risk t
 
 ## What we measured
 
-No rates to measure. The MP-2283 draft lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked; the signed receipt goes to `data/receipts/` with its verify output.
+No rates to measure. The MP-2283 receipt lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked. It is signed with a real ED25519 key and committed with its verify output to [`data/receipts/mp-2283.json`](../../data/receipts/mp-2283.json): "Good "countersign-receipt" signature for miska-voutilainen", "diff unchanged".
 
 ## How to adopt it
 
