@@ -3,6 +3,8 @@ import type { Requirement, Review } from "../contracts";
 import type { PromptContext } from "../pipeline/promptContext";
 import * as a1 from "./a1";
 import * as a2 from "./a2";
+import * as a3 from "./a3";
+import * as a4 from "./a4";
 
 const requirement: Requirement = {
   id: "MP-1",
@@ -160,5 +162,95 @@ describe("a2", () => {
     expect(blind).not.toContain("<author-description>");
     expect(blind).toContain("<expectation>");
     expect(a2.version).toBe("a2.v1");
+  });
+});
+
+describe("a3", () => {
+  const hunks = [{ id: "h1" }] as Review["hunks"];
+  const schema = a3.outputSchema(hunks);
+  const context: PromptContext = { hunksBlock: "<hunk>", filesBlock: "<file>", wasCut: false };
+  const finding = {
+    kind: "defect",
+    severity: "high",
+    title: "t",
+    detail: "d",
+    hunkIds: ["h1"],
+    citations: [{ file: "src/A.cs", side: "new", startLine: 1, endLine: 1, quote: "x" }],
+  };
+
+  it("renders the four checklists, every refusal rule and no author description", () => {
+    const text = a3.render({ requirement, context, expectation: "{}", claims: "[]" });
+    for (const area of ["generator:", "analyzer:", "security:", "performance:"])
+      expect(text).toContain(area);
+    for (const id of ["R1:", "R2:", "R3:", "R4:", "R5:", "R6:", "R7:"]) expect(text).toContain(id);
+    expect(text).not.toContain("author-description");
+    expect(a3.version).toBe("a3.v1");
+  });
+
+  it("does not ask the model for an area, and rejects one", () => {
+    expect(a3.system).toContain("Do not choose an area");
+    expect(schema.safeParse({ findings: [finding], refusals: [] }).success).toBe(true);
+  });
+
+  it("rejects a finding kind that is not defect, missing or scope-creep", () => {
+    expect(
+      schema.safeParse({ findings: [{ ...finding, kind: "contradiction" }], refusals: [] }).success,
+    ).toBe(false);
+  });
+
+  it("rejects an unknown hunk id in a finding or a refusal", () => {
+    expect(
+      problems(schema.safeParse({ findings: [{ ...finding, hunkIds: ["h9"] }], refusals: [] })),
+    ).toContain('unknown hunk id "h9"');
+    expect(
+      schema.safeParse({ findings: [], refusals: [{ ruleId: "R7", reason: "r", hunkIds: ["h9"] }] })
+        .success,
+    ).toBe(false);
+  });
+
+  it("accepts an unknown rule id, which the pipeline drops and records", () => {
+    expect(
+      schema.safeParse({ findings: [], refusals: [{ ruleId: "R99", reason: "r", hunkIds: [] }] })
+        .success,
+    ).toBe(true);
+  });
+});
+
+describe("a4", () => {
+  const authorDescription = "Fixes the crash. It also adds a resolver.";
+  const schema = a4.outputSchema({ authorDescription, claimIds: ["c1"] });
+  const statement = (overrides: Record<string, unknown> = {}) => ({
+    statement: "It also adds a resolver.",
+    verdict: "supported",
+    claimIds: ["c1"],
+    explanation: "Claim c1 shows it.",
+    citations: [],
+    ...overrides,
+  });
+
+  it("renders the description, the story and the claims", () => {
+    const text = a4.render({ authorDescription, story: "STORY", claims: "CLAIMS" });
+    expect(text).toContain("Fixes the crash.");
+    expect(text).toContain("STORY");
+    expect(text).toContain("CLAIMS");
+    expect(a4.version).toBe("a4.v1");
+  });
+
+  it("accepts a sentence of the description, whitespace aside", () => {
+    expect(
+      schema.safeParse({ statements: [statement({ statement: "Fixes   the crash." })] }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a statement that is not in the description", () => {
+    const result = schema.safeParse({ statements: [statement({ statement: "It is fast." })] });
+    expect(problems(result)).toContain("not a sentence of the author description");
+  });
+
+  it("rejects an unknown claim id and a contradiction without a citation", () => {
+    expect(schema.safeParse({ statements: [statement({ claimIds: ["c9"] })] }).success).toBe(false);
+    expect(schema.safeParse({ statements: [statement({ verdict: "contradicted" })] }).success).toBe(
+      false,
+    );
   });
 });
