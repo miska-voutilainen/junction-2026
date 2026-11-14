@@ -99,7 +99,7 @@ describe("evidence line", () => {
     const review = await load("mp-2283");
     const broken = { ...review, files: review.files.filter((file) => file.path !== review.hunks[0].file) };
     const { decision, levels } = decideChange(broken, await readableCard(), {});
-    expect(() => buildSections(broken, decision, levels)).toThrow(/mp-2283.*h1.*pnpm pipeline run mp-2283/);
+    expect(() => buildSections(broken, decision, levels)).toThrow(/mp-2283.*h1.*pnpm review run mp-2283/);
   });
 });
 

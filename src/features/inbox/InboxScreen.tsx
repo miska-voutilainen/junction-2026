@@ -46,7 +46,7 @@ export function InboxScreen({
         <EmptyState
           title="No recorded reviews yet."
           body="Run this command to record one."
-          command="pnpm pipeline run mp-2283"
+          command="pnpm review run mp-2283"
         />
       )}
     </AppShell>

@@ -113,7 +113,7 @@ function UnreviewedCells({ row }: { row: Row }) {
         ) : (
           <>
             This review couldn&apos;t be read. Re-record it with{" "}
-            <code className="font-mono text-xs text-text-secondary">pnpm pipeline run {row.id}</code>.
+            <code className="font-mono text-xs text-text-secondary">pnpm review run {row.id}</code>.
           </>
         )}
       </div>

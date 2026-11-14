@@ -5,7 +5,7 @@
     "allow": [
       "Bash(pnpm run *)", "Bash(pnpm dev *)", "Bash(pnpm build *)", "Bash(pnpm start *)", "Bash(pnpm lint *)",
       "Bash(pnpm typecheck *)", "Bash(pnpm test *)", "Bash(pnpm e2e *)", "Bash(pnpm evals *)",
-      "Bash(pnpm screenshots *)", "Bash(pnpm seed *)", "Bash(pnpm format *)", "Bash(pnpm pipeline *)",
+      "Bash(pnpm screenshots *)", "Bash(pnpm seed *)", "Bash(pnpm format *)", "Bash(pnpm review *)",
       "Bash(pnpm countersign *)", "Bash(pnpm test:hooks *)",
       "Bash(pnpm exec playwright *)", "Bash(pnpm exec vitest *)", "Bash(pnpm exec tsc *)",
       "Bash(pnpm exec eslint *)", "Bash(pnpm exec prettier *)", "Bash(pnpm exec tsx *)",

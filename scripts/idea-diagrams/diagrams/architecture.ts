@@ -101,7 +101,7 @@ function dataAndRules(): string[] {
     label(
       312,
       242,
-      "writes JSON: pnpm pipeline, evals, countersign",
+      "writes JSON: pnpm review, evals, countersign",
       "s",
       "start",
     ),

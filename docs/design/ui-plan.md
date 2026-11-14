@@ -103,7 +103,7 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
    - Signed changes sit in a "Signed" fold.
    - Mobile: Sign here (Light or stale), Needs a desktop (Focused/Full, "Open read-only"), Signed fold.
    - Cut: "Decide" approve/reject and "Send to my desktop" (no backend). Mobile shows open refusals as "Waiting on a decision" links to step 3.
-   - States: empty "No recorded reviews yet." plus the `pnpm pipeline run mp-2283` command; per-row "Not reviewed yet" and "couldn't be read"; error "Couldn't read the recorded reviews" with the validation error in a console.
+   - States: empty "No recorded reviews yet." plus the `pnpm review run mp-2283` command; per-row "Not reviewed yet" and "couldn't be read"; error "Couldn't read the recorded reviews" with the validation error in a console.
 2. **Review `/changes/[id]`** (Phase 4). Canvas Review, ReviewMobile, ReviewStates, Sidebar, SidebarTabs.
    - Header: title, id, receipt status only when it asks for action (Stale, Signature failed verification) with "View full receipt", "Sign" primary (`4`). The author agent chip is gone: the roles line states it.
    - Coverage line: "Focused: read 2 of 8 hunks · ~2 min (full read ~10 min)", then the spec's reasons, one line each with rule id, under a disclosure. Idea 3. A simulated escape adds "R-escape" (Full) for each touched area, e.g. "Analyzer: a bug escaped here, the next changes get a full read".
@@ -166,7 +166,7 @@ Only these scroll sideways, inside their own box. Copy takes the raw text. The W
 | Hunk ledger, when its lines exceed the width | Receipt | No wrap |
 | Plant-a-bug steps | Reviewer dialog | No wrap |
 | Error details (validation error, file path) | Every error state | Wrap (prose-like) |
-| `pnpm pipeline run` / `pnpm evals` in empty states | Inbox, Reviewer | No wrap |
+| `pnpm review run` / `pnpm evals` in empty states | Inbox, Reviewer | No wrap |
 
 Claim quotes and the contradiction snippet stay plain mono blocks that wrap, without a toolbar: they're one or two lines, and the Copy affordance belongs to the hunk they cite.
 
