@@ -10,6 +10,7 @@ import path from "node:path";
 import type { z } from "zod";
 import { apiTransport } from "./apiTransport";
 import { claudeCodeTransport } from "./claudeCodeTransport";
+import { kimiTransport } from "./kimiTransport";
 import {
   ModelRefusalError,
   ModelTimeoutError,
@@ -118,7 +119,7 @@ export function createModelClientFromEnv(
     "AI_BACKEND",
     env.AI_BACKEND,
     "claude-code",
-    ["claude-code", "api"],
+    ["claude-code", "api", "kimi"],
   );
   const mode = parseChoice<AiMode>("AI_MODE", env.AI_MODE, "record", [
     "record",
@@ -127,10 +128,16 @@ export function createModelClientFromEnv(
   ]);
   return createModelClient({
     mode,
-    transport: backend === "api" ? apiTransport : claudeCodeTransport,
+    transport: transports[backend],
     usageSink,
   });
 }
+
+const transports: Record<AiBackend, Transport> = {
+  "claude-code": claudeCodeTransport,
+  api: apiTransport,
+  kimi: kimiTransport,
+};
 
 function parseChoice<T extends string>(
   name: string,
