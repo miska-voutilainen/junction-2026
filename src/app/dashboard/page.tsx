@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
-import { DashboardError, DashboardScreen, loadDashboardSources } from "@/features/dashboard";
+import { DashboardError, DashboardScreen, FALLBACK_REPO, loadDashboardSources } from "@/features/dashboard";
 
 /**
  * S5 · Dashboard. Reads every review, receipt and the report card on the
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     return (
       <AppShell
         changes={[]}
-        repo="No repository"
+        repo={FALLBACK_REPO}
         title="Dashboard"
         breadcrumb={[{ label: "Dashboard" }]}
         escapeSlot={<EscapeCounter />}

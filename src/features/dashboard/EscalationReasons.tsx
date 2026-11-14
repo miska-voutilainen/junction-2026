@@ -15,7 +15,7 @@ export function EscalationReasons({ reasons, changes }: { reasons: EscalationRea
           <span className="font-semibold text-text-primary">Why changes were escalated above Light</span>
           {mostFrequent && (
             <span className="text-sm text-text-muted">
-              most often: {mostFrequent.label.toLowerCase()}, {mostFrequent.changes}
+              Most often: {mostFrequent.label}, {mostFrequent.changes}
             </span>
           )}
         </span>
@@ -30,7 +30,7 @@ export function EscalationReasons({ reasons, changes }: { reasons: EscalationRea
               <span className="min-w-0 flex-1">{reason.label}</span>
               <span className="font-mono text-xs text-text-muted">{reason.ruleId}</span>
               <span className="w-28 shrink-0 text-right tabular-nums text-text-secondary">
-                {reason.changes} of {changes} changes
+                {reason.changes} of {changes} reviewed
               </span>
             </li>
           ))}

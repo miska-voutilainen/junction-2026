@@ -1,7 +1,8 @@
 import type { DashboardFacts } from "./dashboardModel";
 
 /**
- * Five numbers, each with its sample size. "Median time to sign" is not
+ * Five numbers, each with its sample size: signed of all changes, hunks and
+ * contradictions over the changes that have a review. "Median time to sign" is not
  * measured: a receipt records when it was signed but not when review began,
  * so the cell says so instead of showing a made-up figure.
  */
@@ -9,8 +10,8 @@ export function FactsStrip({ facts, className }: { facts: DashboardFacts; classN
   return (
     <dl className={className}>
       <Fact term="Signed" value={`${facts.signed} of ${facts.changes} changes`} />
-      <Fact term="Hunks read by a person" value={`${facts.readHunks} of ${facts.totalHunks}`} note="Live: follows simulated escapes" />
-      <Fact term="Contradictions caught" value={String(facts.contradictions)} note="Description against code" />
+      <Fact term="Hunks read by a person" value={`${facts.readHunks} of ${facts.totalHunks}`} note={hunkNote(facts)} />
+      <Fact term="Contradictions caught" value={String(facts.contradictions)} note={`In ${facts.reviewedChanges} reviewed ${facts.reviewedChanges === 1 ? "change" : "changes"}`} />
       <Fact term="Escapes recorded" value={`${facts.escapes} simulated`} />
       <Fact
         term="Median time to sign"
@@ -20,6 +21,11 @@ export function FactsStrip({ facts, className }: { facts: DashboardFacts; classN
       />
     </dl>
   );
+}
+
+/** Live with escapes; says how many changes the hunks come from when some have no review yet. */
+function hunkNote({ reviewedChanges, changes }: DashboardFacts): string {
+  return reviewedChanges < changes ? `Across ${reviewedChanges} of ${changes} changes · live` : "Live: follows simulated escapes";
 }
 
 function Fact({ term, value, note, isMuted = false }: { term: string; value: string; note?: string; isMuted?: boolean }) {

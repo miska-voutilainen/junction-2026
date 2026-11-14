@@ -1,35 +1,31 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import type { ReportCard, Review } from "@/contracts";
+// @vitest-environment node
+import { cp, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { InboxSource, ReportCardInput } from "@/features/inbox";
-import { loadChanges, loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
-import { attentionSummary, buildDashboardModel } from "./dashboardModel";
+import { attentionSummary, buildDashboardModel, reasonLabel } from "./dashboardModel";
+import { loadDashboardSources } from "./loadDashboardSources";
 
-// The committed fixtures stand in for recorded data: four Tieto changes, mp-2283 signed, mp-2129 stale.
+// Pinned to the committed fixtures, so recorded data landing under data/ cannot change these counts.
+// They stand in for recorded data: four Tieto changes, mp-2283 signed, mp-2129 amended after signing.
+const fixtureRoot = "data/fixtures";
+
 let sources: InboxSource[];
 let reportCard: ReportCardInput;
 
 beforeAll(async () => {
-  const changes = await loadChanges();
-  const card = await loadReportCard();
-  if (changes.status !== "ok" || card.status !== "ok") throw new Error("fixtures are missing");
-  reportCard = { state: "ok", data: card.data as ReportCard };
-  sources = await Promise.all(
-    changes.data.map(async (change) => {
-      const review = await loadReview(change.id);
-      const receipt = await loadReceipt(change.id);
-      return {
-        change,
-        review: review.status === "ok" ? ({ state: "ok", data: review.data } as const) : ({ state: "missing" } as const),
-        receipt: receipt.status === "ok" ? receipt.data : null,
-      };
-    }),
-  );
+  const loaded = await loadDashboardSources(fixtureRoot);
+  if (loaded.status !== "ok") throw new Error(`fixtures are invalid: ${loaded.errors.join("; ")}`);
+  sources = loaded.sources;
+  reportCard = loaded.reportCard;
 });
 
-function withReview(id: string, edit: (review: Review) => Review): InboxSource[] {
+/** The sources with one change's receipt marked as failing its signature check. */
+function withFailedCheck(id: string): InboxSource[] {
   return sources.map((source) =>
-    source.change.id === id && source.review.state === "ok"
-      ? { ...source, review: { state: "ok", data: edit(source.review.data) } }
+    source.change.id === id && source.receipt !== null && source.receipt !== "unreadable"
+      ? { ...source, receipt: { ...source.receipt, verify: { ...source.receipt.verify, ok: false } } }
       : source,
   );
 }
@@ -58,11 +54,27 @@ describe("accepted risk", () => {
   it("lists a signed receipt as holding and an amended one as stale, stale first", () => {
     const { acceptedRisks, hasReceipts } = buildDashboardModel(sources, reportCard, {});
     expect(hasReceipts).toBe(true);
-    expect(acceptedRisks.map((risk) => [risk.changeId, risk.isStale])).toEqual([
-      ["mp-2129", true],
-      ["mp-2283", false],
+    expect(acceptedRisks.map((risk) => [risk.changeId, risk.status])).toEqual([
+      ["mp-2129", "stale"],
+      ["mp-2283", "signed"],
     ]);
     expect(acceptedRisks[1].text.length).toBeGreaterThan(0);
+  });
+
+  it("keeps a receipt whose check failed out of Signed, lists it first and leaves its refusals open", () => {
+    const failed = buildDashboardModel(withFailedCheck("mp-2283"), reportCard, {});
+    const normal = buildDashboardModel(sources, reportCard, {});
+    expect(failed.facts.signed).toBe(0);
+    expect(failed.acceptedRisks[0]).toMatchObject({ changeId: "mp-2283", status: "unverified" });
+    const open = (queues: typeof normal.deciderQueues) => queues.reduce((sum, queue) => sum + queue.count, 0);
+    expect(open(failed.deciderQueues)).toBeGreaterThan(open(normal.deciderQueues));
+  });
+
+  it("counts a stale-only set of receipts as receipts, so the rows still show", () => {
+    const staleOnly = sources.map((source) => (source.change.id === "mp-2283" ? { ...source, receipt: null } : source));
+    const model = buildDashboardModel(staleOnly, reportCard, {});
+    expect(model.hasReceipts).toBe(true);
+    expect(model.facts.signed).toBe(0);
   });
 
   it("has no receipts, and says so, when nobody has signed", () => {
@@ -152,6 +164,16 @@ describe("escalation reasons", () => {
   });
 });
 
+describe("reasonLabel", () => {
+  it("names the routing rules it knows", () => {
+    expect(reasonLabel("R-area-level", "Security: Shadow, the AI's output routes nothing here")).toBe("Area not yet Trusted");
+  });
+
+  it("falls back to the sentence route() gave for a rule it has no label for", () => {
+    expect(reasonLabel("R-new-rule", "2 files use a new thing")).toBe("2 files use a new thing");
+  });
+});
+
 describe("reviewer trust by area", () => {
   it("lists the four areas and treats a missing report card as Shadow everywhere", () => {
     const model = buildDashboardModel(sources, { state: "missing" }, {});
@@ -168,12 +190,40 @@ describe("reviewer trust by area", () => {
 });
 
 describe("unrecorded changes", () => {
-  it("counts a change without a review in the total but not in the hunks", () => {
-    const unreviewed = withReview("mp-2234", (review) => review).map((source) =>
+  it("counts a change without a review in the total but not in the hunks, and says how many were reviewed", () => {
+    const unreviewed = sources.map((source) =>
       source.change.id === "mp-2234" ? { ...source, review: { state: "missing" } as const } : source,
     );
     const model = buildDashboardModel(unreviewed, reportCard, {});
     expect(model.facts.changes).toBe(sources.length);
+    expect(model.facts.reviewedChanges).toBe(sources.length - 1);
     expect(model.facts.totalHunks).toBeLessThan(buildDashboardModel(sources, reportCard, {}).facts.totalHunks);
+  });
+});
+
+describe("loadDashboardSources", () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(path.join(tmpdir(), "countersign-dashboard-"));
+    await cp(fixtureRoot, root, { recursive: true });
+    await writeFile(path.join(root, "receipts", "mp-2283.json"), '{"changeId": 7}');
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("fails as a whole, naming the file, when one data file is invalid, so no partial counts show", async () => {
+    const loaded = await loadDashboardSources(root);
+    expect(loaded.status).toBe("invalid");
+    if (loaded.status !== "invalid") return;
+    expect(loaded.errors).toHaveLength(1);
+    expect(loaded.errors[0]).toContain("mp-2283.json");
+  });
+
+  it("loads every change, review and receipt from a valid data folder", async () => {
+    const loaded = await loadDashboardSources(fixtureRoot);
+    expect(loaded.status === "ok" && loaded.sources).toHaveLength(4);
   });
 });

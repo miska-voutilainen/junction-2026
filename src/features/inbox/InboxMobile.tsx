@@ -29,7 +29,7 @@ export function InboxMobile({ sections }: { sections: MobileSections }) {
                 data-inbox-row-link
                 className="flex min-h-11 items-center justify-center rounded-control bg-brand text-base font-semibold text-primary-foreground hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand"
               >
-                {row.receipt === "stale" ? "Review and re-sign" : "Review and sign"}
+                {row.receipt === "stale" || row.receipt === "unverified" ? "Review and re-sign" : "Review and sign"}
               </Link>
             </li>
           ))}
@@ -125,10 +125,13 @@ function metaLine(row: InboxRow): ReactNode {
 
 function receiptOrFlags(row: ReviewedRow): string {
   if (row.isReceiptUnreadable) return "Receipt couldn't be read";
-  return row.receipt === "stale" ? "Stale" : flagsText(row);
+  if (row.receipt === "stale") return "Stale";
+  if (row.receipt === "unverified") return "Signature failed verification";
+  return flagsText(row);
 }
 
 function metaFlagClass(row: ReviewedRow): string {
   if (row.isReceiptUnreadable || row.receipt === "stale") return "text-amber-light";
+  if (row.receipt === "unverified") return "text-rose-light";
   return row.contradictions > 0 ? "text-rose-light" : "";
 }

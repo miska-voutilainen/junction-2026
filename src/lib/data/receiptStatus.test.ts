@@ -19,6 +19,17 @@ describe("receiptStatus", () => {
     expect(receiptStatus(review, record)).toBe("signed");
   });
 
+  it("is unverified when the recorded signature check failed, even if the diff matches", () => {
+    const failed = { ...record, verify: { ...record.verify, ok: false } };
+    expect(receiptStatus(review, failed)).toBe("unverified");
+  });
+
+  it("reports unverified before stale when the check failed and the diff changed", () => {
+    const failed = { ...record, verify: { ...record.verify, ok: false } };
+    const amended = { ...review, diff: { ...review.diff, diffSha256: "0".repeat(64) } };
+    expect(receiptStatus(amended, failed)).toBe("unverified");
+  });
+
   it("is stale when the diff changed after signing", () => {
     const amended = { ...review, diff: { ...review.diff, diffSha256: "0".repeat(64) } };
     expect(receiptStatus(amended, record)).toBe("stale");

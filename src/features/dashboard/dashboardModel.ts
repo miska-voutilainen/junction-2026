@@ -10,6 +10,7 @@ import type { Area, LadderLevel, Tier } from "@/contracts";
 import { buildInboxModel, inboxLevels, isReviewed } from "@/features/inbox";
 import type { InboxModel, InboxSource, ReportCardInput } from "@/features/inbox";
 import { receiptStatus } from "@/lib/data/receiptStatus";
+import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
 import { route } from "@/rules/route";
 
@@ -21,8 +22,11 @@ export const AREAS: readonly Area[] = ["generator", "analyzer", "security", "per
 
 /** The counts in the facts strip. "Median time to sign" is not here: it is not measured. */
 export interface DashboardFacts {
+  /** Receipts whose signature verified and whose diff still matches the review. */
   signed: number;
   changes: number;
+  /** Changes with a readable review: the sample behind the hunk and contradiction counts. */
+  reviewedChanges: number;
   readHunks: number;
   totalHunks: number;
   contradictions: number;
@@ -30,14 +34,17 @@ export interface DashboardFacts {
   escapes: number;
 }
 
-/** One residual-risk line from a receipt, with whether its code is still the code that was signed. */
+/** What a receipt that carries a residual-risk line can say: it holds, its code changed, or its signature failed verification. */
+export type RiskStatus = Exclude<ReceiptStatusValue, "needs-review">;
+
+/** One residual-risk line from a receipt, with whether it still holds. */
 export interface AcceptedRisk {
   changeId: string;
   text: string;
   /** GitHub login of the signer. */
   owner: string;
   signedAt: string;
-  isStale: boolean;
+  status: RiskStatus;
 }
 
 /** Refusals of one rule across changes, still waiting on their decider. */
@@ -83,7 +90,7 @@ export interface DashboardModel {
   /** The inbox model: the shell's change list and the "Review next" pick come from it. */
   inbox: InboxModel;
   facts: DashboardFacts;
-  /** False until at least one readable receipt exists; the signing sections then show an empty state. */
+  /** False until any readable receipt exists, stale or unverified included; the signing sections then show an empty state. */
   hasReceipts: boolean;
   acceptedRisks: AcceptedRisk[];
   deciderQueues: DeciderQueue[];
@@ -93,7 +100,8 @@ export interface DashboardModel {
 }
 
 // route() reasons carry sentences with the numbers in them ("3 items refused");
-// counting by rule id needs one stable name per rule.
+// counting by rule id needs one stable name per rule. A rule added to route()
+// without a label here shows the sentence route() gave, so it is never unnamed.
 const REASON_LABEL: Record<string, string> = {
   "R-size": "Large change outside generated files",
   "R-read-share": "Most hunks need a human",
@@ -104,6 +112,8 @@ const REASON_LABEL: Record<string, string> = {
   "R-area-level": "Area not yet Trusted",
   "R-unread": "Hunks without checked evidence",
 };
+
+const RISK_ORDER: Record<RiskStatus, number> = { unverified: 0, stale: 1, signed: 2 };
 
 const UNLISTED_DECIDER = "No decider in the refusal policy";
 
@@ -137,6 +147,7 @@ function collectFacts(inbox: InboxModel, escapes: Partial<Record<Area, number>>)
   return {
     signed: summary.signed,
     changes: summary.changes,
+    reviewedChanges: rows.filter(isReviewed).length,
     readHunks: summary.readHunks,
     totalHunks: summary.totalHunks,
     contradictions: rows.filter(isReviewed).reduce((total, row) => total + row.contradictions, 0),
@@ -144,7 +155,7 @@ function collectFacts(inbox: InboxModel, escapes: Partial<Record<Area, number>>)
   };
 }
 
-/** Stale lines first: they are the ones asking for action; then by change id. */
+/** Lines that no longer hold (failed verification, then stale) first: they ask for action; then by change id. */
 function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
   const risks: AcceptedRisk[] = [];
   for (const { change, review, receipt } of sources) {
@@ -154,10 +165,10 @@ function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
       text: receipt.receipt.residualRisk.text,
       owner: receipt.receipt.owner,
       signedAt: receipt.receipt.signedAt,
-      isStale: receiptStatus(review.data, receipt) === "stale",
+      status: receiptStatus(review.data, receipt) as RiskStatus,
     });
   }
-  return risks.sort((a, b) => Number(b.isStale) - Number(a.isStale) || a.changeId.localeCompare(b.changeId));
+  return risks.sort((a, b) => RISK_ORDER[a.status] - RISK_ORDER[b.status] || a.changeId.localeCompare(b.changeId));
 }
 
 /**
@@ -215,17 +226,25 @@ function collectAttention(inbox: InboxModel): TierAttention[] {
 
 /** Rules that asked for more than Light, by the number of changes each fired in, most frequent first. */
 function collectEscalationReasons(sources: InboxSource[], levels: Record<Area, LadderLevel>): EscalationReason[] {
-  const changesByRule = new Map<string, number>();
-  for (const { review } of sources) {
+  const byRule = new Map<string, { changes: number; text: string; lastChange: string }>();
+  for (const { change, review } of sources) {
     if (review.state !== "ok") continue;
     const escalating = route(review.data, levels).reasons.filter((reason) => reason.tier !== "light");
-    for (const ruleId of new Set(escalating.map((reason) => reason.ruleId))) {
-      changesByRule.set(ruleId, (changesByRule.get(ruleId) ?? 0) + 1);
+    for (const reason of escalating) {
+      const seen = byRule.get(reason.ruleId);
+      // R-area-level can fire once per area in one change; count the change once.
+      if (seen && seen.lastChange === change.id) continue;
+      byRule.set(reason.ruleId, { changes: (seen?.changes ?? 0) + 1, text: seen?.text ?? reason.text, lastChange: change.id });
     }
   }
-  return [...changesByRule]
-    .map(([ruleId, changes]) => ({ ruleId, label: REASON_LABEL[ruleId] ?? ruleId, changes }))
+  return [...byRule]
+    .map(([ruleId, { changes, text }]) => ({ ruleId, label: reasonLabel(ruleId, text), changes }))
     .sort((a, b) => b.changes - a.changes || a.ruleId.localeCompare(b.ruleId));
+}
+
+/** The stable name for a rule id, or the sentence `route()` gave when the id has no label here. */
+export function reasonLabel(ruleId: string, routedText: string): string {
+  return REASON_LABEL[ruleId] ?? routedText;
 }
 
 /** Text for a tier's bar, e.g. "Focused: a person read 2 of 8 hunks, about 3 min". */

@@ -1,4 +1,4 @@
-import { ReviewNextLink } from "@/features/inbox";
+import { ReviewNextLink } from "@/components/ReviewNextLink";
 import type { ReviewedRow } from "@/features/inbox";
 
 /**

@@ -14,17 +14,22 @@ export type DashboardSources =
   | { status: "ok"; sources: InboxSource[]; reportCard: ReportCardInput; repo: string; usesFixture: boolean }
   | { status: "invalid"; errors: string[] };
 
-const FALLBACK_REPO = "No repository";
+/** Repository label when no change is recorded. */
+export const FALLBACK_REPO = "No repository";
 
-/** Loads every file the dashboard counts; "invalid" lists each failing file's error, one per entry. */
-export async function loadDashboardSources(): Promise<DashboardSources> {
-  const changes = await loadChanges();
+/**
+ * Loads every file the dashboard counts; "invalid" lists each failing file's error, one per entry.
+ *
+ * @param root data folder to read; defaults to the repository's `data/` (tests pass the fixtures)
+ */
+export async function loadDashboardSources(root?: string): Promise<DashboardSources> {
+  const changes = await loadChanges(root);
   if (changes.status === "invalid") return { status: "invalid", errors: [changes.error] };
 
   const changeInputs = changes.status === "ok" ? changes.data : [];
-  const reportCard = await loadReportCard();
+  const reportCard = await loadReportCard(root);
   const loaded = await Promise.all(
-    changeInputs.map(async (change) => ({ change, review: await loadReview(change.id), receipt: await loadReceipt(change.id) })),
+    changeInputs.map(async (change) => ({ change, review: await loadReview(change.id, root), receipt: await loadReceipt(change.id, root) })),
   );
 
   const results: LoadResult<unknown>[] = [changes, reportCard, ...loaded.flatMap(({ review, receipt }) => [review, receipt])];

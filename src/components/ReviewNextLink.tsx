@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * The primary action on the inbox and the dashboard: opens the first change
- * that still needs a signature, with its id and the N shortcut that does the same.
+ * that still needs a signature, with its id and, from 760 px, the N shortcut
+ * that does the same (a phone has no keyboard).
  *
  * @param changeId The change to open.
  * @param className Layout classes, e.g. to hide it on a phone.
@@ -21,7 +22,7 @@ export function ReviewNextLink({ changeId, className }: { changeId: string; clas
     >
       Review next
       <span className="font-mono text-xs font-medium opacity-85">{changeId}</span>
-      <Kbd className="bg-primary-foreground/15 text-primary-foreground">N</Kbd>
+      <Kbd className="hidden bg-primary-foreground/15 text-primary-foreground compact:inline-flex">N</Kbd>
       <ArrowRight aria-hidden="true" className="size-4" />
     </Link>
   );

@@ -85,7 +85,7 @@ export function DashboardScreen({
           <AttentionByTier rows={model.attention} />
         </div>
         <div className="hidden flex-col gap-2 compact:flex">
-          <EscalationReasons reasons={model.escalationReasons} changes={facts.changes} />
+          <EscalationReasons reasons={model.escalationReasons} changes={facts.reviewedChanges} />
           <TrustByArea trust={model.trust} reportCard={reportCard} />
         </div>
       </div>

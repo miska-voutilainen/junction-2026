@@ -1,5 +1,6 @@
+import { ReviewNextLink } from "@/components/ReviewNextLink";
 import type { ReviewedRow } from "./inboxModel";
-import { ReviewNextLink } from "./ReviewNextLink";
+
 
 /**
  * Page title, one line of purpose and the primary action: "Review next" opens
