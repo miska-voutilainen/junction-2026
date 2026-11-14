@@ -8,6 +8,7 @@
 import type { ReceiptRecord, Review } from "@/contracts";
 import { buildRefusals, openRefusalCount } from "./refusalsModel";
 import type { SignState } from "./signModel";
+import { countOf } from "@/lib/countOf";
 
 /** The four steps, in the order the person works through them. */
 export type StepId = "read" | "blind" | "refused" | "sign";
@@ -28,11 +29,6 @@ const STEP_LABELS: Record<StepId, string> = { read: "Read", blind: "Blind check"
 /** The step ids in tab order; the `1` to `4` keys index into it. */
 export const STEP_IDS: readonly StepId[] = ["read", "blind", "refused", "sign"];
 
-/** "1 claim", "2 claims"; pass the plural form when adding "s" is wrong. */
-export function plural(count: number, singular: string, pluralForm = `${singular}s`): string {
-  return `${count} ${count === 1 ? singular : pluralForm}`;
-}
-
 /** The Refused tab's count: "None" without refusals, "All accepted" once the receipt took them all, else how many wait. */
 function refusedCount(review: Review, openRefusals: number): string {
   if (review.refusals.length === 0) return "None";
@@ -52,7 +48,7 @@ export function buildStepTabs(review: Review, record: ReceiptRecord | null, sign
     unreadable: { count: "Unreadable", tone: "rose" },
   };
   const counts: Record<StepId, Pick<StepTab, "count" | "tone">> = {
-    read: { count: plural(review.claims.length, "claim"), tone: "neutral" },
+    read: { count: countOf(review.claims.length, "claim"), tone: "neutral" },
     blind: {
       count: contradictionCount === 0 ? "None found" : `${contradictionCount} found`,
       tone: contradictionCount === 0 ? "neutral" : "rose",

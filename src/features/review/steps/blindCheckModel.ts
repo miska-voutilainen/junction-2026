@@ -7,7 +7,7 @@ import type { Review } from "@/contracts";
 import type { ReportCardInput } from "@/lib/decideChange";
 import { findingViews } from "./storyModel";
 import type { FindingView } from "./storyModel";
-import { plural } from "./stepsModel";
+import { countOf } from "@/lib/countOf";
 
 /** What the reviewer expected from one requirement item before it saw the diff. */
 export interface ExpectedItem {
@@ -48,7 +48,7 @@ export function buildBlindCheck(review: Review, reportCard: ReportCardInput): Bl
     overallLine:
       comparison === null
         ? null
-        : `Across ${plural(comparison.plants, "planted contradiction")} × ${comparison.runsPerMode} runs: given the description first caught ${comparison.anchored.caught} of ${comparison.anchored.total} · blind-first caught ${comparison.blind.caught} of ${comparison.blind.total}`,
+        : `Across ${countOf(comparison.plants, "planted contradiction")} × ${comparison.runsPerMode} runs: given the description first caught ${comparison.anchored.caught} of ${comparison.anchored.total} · blind-first caught ${comparison.blind.caught} of ${comparison.blind.total}`,
     missing: findingViews(review, "missing"),
     scopeCreep: findingViews(review, "scope-creep"),
   };

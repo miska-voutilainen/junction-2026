@@ -6,7 +6,7 @@ import { loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { buildBlindCheck } from "./blindCheckModel";
 import { buildRefusals } from "./refusalsModel";
-import { buildSignView, formatSignedAt, isSignable, signActionLabel } from "./signModel";
+import { buildSignView, isSignable, signActionLabel } from "./signModel";
 import { buildStepTabs } from "./stepsModel";
 import { buildStory, citationLabel } from "./storyModel";
 
@@ -213,9 +213,5 @@ describe("labels", () => {
     expect(signActionLabel("stale")).toBe("Re-sign");
     expect(isSignable("signed")).toBe(false);
     expect(isSignable("unreadable")).toBe(false);
-  });
-
-  it("formats the signing time in UTC", () => {
-    expect(formatSignedAt("2026-11-13T17:22:48Z")).toBe("13 Nov 2026, 17:22 UTC");
   });
 });

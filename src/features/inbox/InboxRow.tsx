@@ -9,10 +9,11 @@ import { TierBadge } from "@/components/TierBadge";
 import { fadeUpItem, useStaggeredPreset } from "@/lib/motion";
 import { CoverageStrip } from "./CoverageStrip";
 import { StatusIcon } from "./StatusIcon";
-import { countOf, readingText } from "./rowText";
+import { readingText } from "./rowText";
 import { ReroutedNote } from "./ReroutedNote";
 import { REROUTED_TINT, ROW_GRID } from "./tableLayout";
 import type { InboxRow as Row, ReviewedRow } from "./inboxModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * One change as a table row. The whole row is one link: the title link is

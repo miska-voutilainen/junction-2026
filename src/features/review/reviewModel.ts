@@ -6,6 +6,7 @@
  */
 import { coverageLabel } from "@/contracts";
 import type { Area, Citation, Coverage, LadderLevel, Review, TierDecision } from "@/contracts";
+import { countOf } from "@/lib/countOf";
 import { countGenerated } from "@/rules/route";
 import { isLineHighlighted } from "./citationHighlights";
 
@@ -33,6 +34,12 @@ export interface HunkSections {
   covered: HunkEntry[];
   /** Hunks route() marked "generated"; shown collapsed as snapshot files, outside the reading count. */
   generated: HunkEntry[];
+}
+
+/** "3 generated snapshot files": how many files the generated hunks come from, as one phrase. */
+export function generatedFilesLabel(entries: readonly HunkEntry[]): string {
+  const fileCount = new Set(entries.map((entry) => entry.hunk.file)).size;
+  return countOf(fileCount, "generated snapshot file");
 }
 
 /** One line of the navigator: a hunk, or all covered generated files of a group as one item. */
@@ -213,11 +220,11 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
       isGenerated: false,
     }));
     if (generated.length > 0) {
-      const fileCount = new Set(generated.map((entry) => entry.hunk.file)).size;
+      const generatedLabel = generatedFilesLabel(generated);
       items.push({
         hunkId: generated[0].hunk.id,
-        fileName: `${fileCount} generated snapshot ${fileCount === 1 ? "file" : "files"}`,
-        label: `${fileCount} generated snapshot ${fileCount === 1 ? "file" : "files"}`,
+        fileName: generatedLabel,
+        label: generatedLabel,
         lineRange: null,
         coverage,
         area: null,

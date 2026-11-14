@@ -1,4 +1,5 @@
 import type { DashboardFacts } from "./dashboardModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * Five numbers, each with its sample size: signed of all changes, hunks and
@@ -11,7 +12,7 @@ export function FactsStrip({ facts, className }: Readonly<{ facts: DashboardFact
     <dl className={className}>
       <Fact term="Signed" value={`${facts.signed} of ${facts.changes} changes`} />
       <Fact term="Hunks read by a person" value={`${facts.readHunks} of ${facts.totalHunks}`} note={hunkNote(facts)} />
-      <Fact term="Contradictions caught" value={String(facts.contradictions)} note={`In ${facts.reviewedChanges} reviewed ${facts.reviewedChanges === 1 ? "change" : "changes"}`} />
+      <Fact term="Contradictions caught" value={String(facts.contradictions)} note={`In ${countOf(facts.reviewedChanges, "reviewed change")}`} />
       <Fact term="Escapes recorded" value={`${facts.escapes} simulated`} />
       <Fact
         term="Median time to sign"

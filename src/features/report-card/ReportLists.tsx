@@ -7,10 +7,12 @@ import {
   failedQuotes,
   hallucinationLines,
   missedPlants,
+  plantedTotal,
   retractedClaims,
   unknownRuleRefusals,
 } from "./reportCardModel";
 import type { ReviewOfChange } from "./reportCardModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * The three lists under the ladder: planted bugs the reviewer missed, what the
@@ -27,12 +29,11 @@ export function ReportLists({
   hasRealVariants,
 }: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[]; hasRealVariants: boolean }>) {
   const missed = missedPlants(reportCard);
-  const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
+  const planted = plantedTotal(reportCard);
   const quotes = failedQuotes(reviews);
   const unknownRules = unknownRuleRefusals(reviews);
   const retracted = retractedClaims(reviews);
-  const inReviews =
-    reviews.length === 1 ? "In the 1 recorded review" : `In the ${reviews.length} recorded reviews`;
+  const inReviews = `In the ${countOf(reviews.length, "recorded review")}`;
 
   return (
     <div className="grid grid-cols-1 items-start gap-4 nav:grid-cols-2 wide:grid-cols-3">
@@ -78,7 +79,7 @@ export function ReportLists({
         </ul>
         <div className="mt-3 border-t border-border-subtle pt-3">
           <Scope>
-            {inReviews}: {quotes.length} quote{quotes.length === 1 ? "" : "s"} failed the check
+            {inReviews}: {countOf(quotes.length, "quote")} failed the check
           </Scope>
           {quotes.length > 0 && (
             <ul className="flex flex-col divide-y divide-border-subtle">
@@ -106,11 +107,11 @@ export function ReportLists({
           <Scope>
             {unknownRules.length === 0
               ? "Refusals struck for an unknown rule id"
-              : `${inReviews}: ${unknownRules.length} refusal${unknownRules.length === 1 ? "" : "s"} struck for an unknown rule id`}
+              : `${inReviews}: ${countOf(unknownRules.length, "refusal")} struck for an unknown rule id`}
           </Scope>
           {unknownRules.length === 0 ? (
             <p className="text-text-muted">
-              None in the {reviews.length} recorded {reviews.length === 1 ? "review" : "reviews"}.
+              None in the {countOf(reviews.length, "recorded review")}.
             </p>
           ) : (
             <ul className="flex flex-col divide-y divide-border-subtle">
