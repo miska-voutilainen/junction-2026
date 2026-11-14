@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import type { KeyboardEvent } from "react";
 import { motion } from "motion/react";
 import type { ReceiptRecord, Review } from "@/contracts";
-import type { ReportCardInput } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { useEnterTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { BlindCheckStep } from "./BlindCheckStep";
