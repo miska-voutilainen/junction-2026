@@ -1,0 +1,2843 @@
+{
+  "schemaVersion": 1,
+  "changeId": "v07",
+  "requirementId": "MP-2234",
+  "title": "Keep the analyzer working when source generation is suppressed",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "planted-bug",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv2",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v2",
+      "a4": "none",
+      "a5": "none"
+    }
+  },
+  "run": {
+    "id": "20261114T142910Z",
+    "startedAt": "2026-11-14T14:29:10.563Z",
+    "finishedAt": "2026-11-14T14:31:16.973Z",
+    "durationMs": 126410,
+    "usage": {
+      "inputTokens": 163675,
+      "outputTokens": 15357,
+      "costUsd": 2.1940094,
+      "calls": 4
+    }
+  },
+  "diff": {
+    "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+    "headSha": "dbee4cc8ff96bbbd3220fadeec92fb2c2000dc30",
+    "baseTree": "b5d1e9794b7253350ede75f5c38cf8b5906d63b7",
+    "headTree": "c19f9b49ac7c565585a26cd95c8a2d8c1399563f",
+    "diffSha256": "16d5f59d1e1e97f395cccc4a2306f44808b5b8258c601b149c412e2b0b05b993",
+    "filesChanged": 4,
+    "linesAdded": 263,
+    "linesRemoved": 5
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "kind": "docs",
+      "area": null,
+      "added": 14,
+      "removed": 0,
+      "hunkIds": [
+        "h1"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "kind": "source",
+      "area": "generator",
+      "added": 19,
+      "removed": 5,
+      "hunkIds": [
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "h7",
+        "h8"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 37,
+      "removed": 0,
+      "hunkIds": [
+        "h9"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 193,
+      "removed": 0,
+      "hunkIds": [
+        "h10"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "README.md",
+      "header": "@@ -1617,6 +1617,20 @@",
+      "oldStart": 1617,
+      "oldLines": 6,
+      "newStart": 1617,
+      "newLines": 20,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1617,
+          "newLine": 1617,
+          "text": "> Note: When using Unity, dynamic code generation only works when targeting .NET Framework 4.x + mono runtime."
+        },
+        {
+          "kind": "context",
+          "oldLine": 1618,
+          "newLine": 1618,
+          "text": "For all other Unity targets, AOT is required."
+        },
+        {
+          "kind": "context",
+          "oldLine": 1619,
+          "newLine": 1619,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1620,
+          "text": "### Opting out of source generation"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1621,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1622,
+          "text": "A `[MessagePackObject]` type can opt out of source generation with `[MessagePackObject(SuppressSourceGeneration = true)]`."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1623,
+          "text": "No formatter is generated for that type. It is serialized at run time by the dynamic resolvers, which use reflection, so such a type is not AOT-safe."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1624,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1625,
+          "text": "The analyzer still validates these types, because they are serialized at run time and must still have a valid contract:"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1626,
+          "text": "- Members have a `[Key]` or `[IgnoreMember]` attribute ([MsgPack004](doc/analyzers/MsgPack004.md))."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1627,
+          "text": "- Keys are unique and all of the same kind ([MsgPack005](doc/analyzers/MsgPack005.md))."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1628,
+          "text": "- Non-public members require `AllowPrivate` ([MsgPack015](doc/analyzers/MsgPack015.md))."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1629,
+          "text": "- Members have types that are themselves serializable ([MsgPack003](doc/analyzers/MsgPack003.md))."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1630,
+          "text": "- Types are accessible to the resolver ([MsgPack012](doc/analyzers/MsgPack012.md))."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1631,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1632,
+          "text": "The analyzer does not report the partial-class requirement ([MsgPack011](doc/analyzers/MsgPack011.md)) or the AOT-only checks ([MsgPack016](doc/analyzers/MsgPack016.md) and [MsgPack017](doc/analyzers/MsgPack017.md)) for these types, because they only apply when a formatter is generated."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1633,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1620,
+          "newLine": 1634,
+          "text": "### Customizations"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1621,
+          "newLine": 1635,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1622,
+          "newLine": 1636,
+          "text": "You can customize the generated source through properties on the `GeneratedMessagePackResolverAttribute`."
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1005,6 +1005,7 @@",
+      "oldStart": 1005,
+      "oldLines": 6,
+      "newStart": 1005,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1005,
+          "newLine": 1005,
+          "text": "                        if ((isIntKey && intKey == null) || (!isIntKey && stringKey == null))"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1006,
+          "newLine": 1006,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1007,
+          "newLine": 1007,
+          "text": "                            this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.DoNotMixStringAndIntKeys, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1008,
+          "text": "                            continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        },
+        {
+          "kind": "context",
+          "oldLine": 1008,
+          "newLine": 1009,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1009,
+          "newLine": 1010,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1010,
+          "newLine": 1011,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1019,7 +1020,10 @@",
+      "oldStart": 1019,
+      "oldLines": 7,
+      "newStart": 1020,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1019,
+          "newLine": 1020,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1020,
+          "newLine": 1021,
+          "text": "                            DeclaringType = GetDeclaringTypeIfColliding(item),"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1021,
+          "newLine": 1022,
+          "text": "                        };"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1022,
+          "newLine": null,
+          "text": "                        intMembers.Add(member.IntKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1023,
+          "text": "                        if (!intMembers.ContainsKey(member.IntKey))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1024,
+          "text": "                        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1025,
+          "text": "                            intMembers.Add(member.IntKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1026,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1023,
+          "newLine": 1027,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1024,
+          "newLine": 1028,
+          "text": "                    else if (stringKey is not null)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1025,
+          "newLine": 1029,
+          "text": "                    {"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1032,7 +1036,10 @@",
+      "oldStart": 1032,
+      "oldLines": 7,
+      "newStart": 1036,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1032,
+          "newLine": 1036,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1033,
+          "newLine": 1037,
+          "text": "                            DeclaringType = GetDeclaringTypeIfColliding(item),"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1034,
+          "newLine": 1038,
+          "text": "                        };"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1035,
+          "newLine": null,
+          "text": "                        stringMembers.Add(member.StringKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1039,
+          "text": "                        if (!stringMembers.ContainsKey(member.StringKey))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1040,
+          "text": "                        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1041,
+          "text": "                            stringMembers.Add(member.StringKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1042,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1036,
+          "newLine": 1043,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1037,
+          "newLine": 1044,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1038,
+          "newLine": 1045,
+          "text": "                    var messagePackFormatter = item.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.FormatterAttribute))?.ConstructorArguments[0];"
+        }
+      ]
+    },
+    {
+      "id": "h5",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1138,6 +1145,7 @@",
+      "oldStart": 1138,
+      "oldLines": 6,
+      "newStart": 1145,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1138,
+          "newLine": 1145,
+          "text": "                        if ((isIntKey && intKey == null) || (!isIntKey && stringKey == null))"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1139,
+          "newLine": 1146,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1140,
+          "newLine": 1147,
+          "text": "                            this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.DoNotMixStringAndIntKeys, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1148,
+          "text": "                            continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        },
+        {
+          "kind": "context",
+          "oldLine": 1141,
+          "newLine": 1149,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1142,
+          "newLine": 1150,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1143,
+          "newLine": 1151,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "id": "h6",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1152,7 +1160,10 @@",
+      "oldStart": 1152,
+      "oldLines": 7,
+      "newStart": 1160,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1152,
+          "newLine": 1160,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1153,
+          "newLine": 1161,
+          "text": "                            DeclaringType = GetDeclaringTypeIfColliding(item),"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1154,
+          "newLine": 1162,
+          "text": "                        };"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1155,
+          "newLine": null,
+          "text": "                        intMembers.Add(member.IntKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1163,
+          "text": "                        if (!intMembers.ContainsKey(member.IntKey))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1164,
+          "text": "                        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1165,
+          "text": "                            intMembers.Add(member.IntKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1166,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1156,
+          "newLine": 1167,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1157,
+          "newLine": 1168,
+          "text": "                    else"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1158,
+          "newLine": 1169,
+          "text": "                    {"
+        }
+      ]
+    },
+    {
+      "id": "h7",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1165,7 +1176,10 @@",
+      "oldStart": 1165,
+      "oldLines": 7,
+      "newStart": 1176,
+      "newLines": 10,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1165,
+          "newLine": 1176,
+          "text": "                        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1166,
+          "newLine": 1177,
+          "text": "                            DeclaringType = GetDeclaringTypeIfColliding(item),"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1167,
+          "newLine": 1178,
+          "text": "                        };"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1168,
+          "newLine": null,
+          "text": "                        stringMembers.Add(member.StringKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1179,
+          "text": "                        if (!stringMembers.ContainsKey(member.StringKey))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1180,
+          "text": "                        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1181,
+          "text": "                            stringMembers.Add(member.StringKey, (member, item.Type));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1182,
+          "text": "                        }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1169,
+          "newLine": 1183,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1170,
+          "newLine": 1184,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1171,
+          "newLine": 1185,
+          "text": "                    var messagePackFormatter = item.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.FormatterAttribute))?.ConstructorArguments[0];"
+        }
+      ]
+    },
+    {
+      "id": "h8",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1181,7 +1195,7 @@",
+      "oldStart": 1181,
+      "oldLines": 7,
+      "newStart": 1195,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1181,
+          "newLine": 1195,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1182,
+          "newLine": 1196,
+          "text": "        // If we discovered midway through that we should be reporting diagnostics for non-public members,"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1183,
+          "newLine": 1197,
+          "text": "        // report the ones we missed along the way."
+        },
+        {
+          "kind": "del",
+          "oldLine": 1184,
+          "newLine": null,
+          "text": "        if ((nonPublicMembersAreSerialized || allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1198,
+          "text": "        if ((nonPublicMembersAreSerialized && allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1185,
+          "newLine": 1199,
+          "text": "        {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1186,
+          "newLine": 1200,
+          "text": "            foreach (Diagnostic deferred in deferredDiagnosticsForNonPublicMembers)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1187,
+          "newLine": 1201,
+          "text": "            {"
+        }
+      ]
+    },
+    {
+      "id": "h9",
+      "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+      "header": "@@ -0,0 +1,37 @@",
+      "oldStart": 0,
+      "oldLines": 0,
+      "newStart": 1,
+      "newLines": 37,
+      "lines": [
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1,
+          "text": "// Copyright (c) All contributors. All rights reserved."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 2,
+          "text": "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 3,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 4,
+          "text": "/// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 5,
+          "text": "/// A type that opts out of source generation (https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234)."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 6,
+          "text": "/// It must still serialize correctly through the run-time (dynamic) resolver."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 7,
+          "text": "/// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 8,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 9,
+          "text": "public class SuppressedSourceGenerationType"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 10,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 11,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 12,
+          "text": "    public int Id { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 13,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 14,
+          "text": "    [Key(1)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 15,
+          "text": "    public string Name { get; set; } = string.Empty;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 16,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 17,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 18,
+          "text": "public class SuppressedSourceGenerationTests"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 19,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 20,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 21,
+          "text": "    public void NoFormatterIsGeneratedForSuppressedType()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 22,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 23,
+          "text": "        Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 24,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 25,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 26,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 27,
+          "text": "    public void SuppressedTypeRoundTripsThroughDynamicResolver()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 28,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 29,
+          "text": "        var value = new SuppressedSourceGenerationType { Id = 7, Name = \"seven\" };"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 30,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 31,
+          "text": "        byte[] bytes = MessagePackSerializer.Serialize(value, MessagePackSerializerOptions.Standard);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 32,
+          "text": "        SuppressedSourceGenerationType result = MessagePackSerializer.Deserialize<SuppressedSourceGenerationType>(bytes, MessagePackSerializerOptions.Standard);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 33,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 34,
+          "text": "        Assert.Equal(7, result.Id);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 35,
+          "text": "        Assert.Equal(\"seven\", result.Name);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 36,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 37,
+          "text": "}"
+        }
+      ]
+    },
+    {
+      "id": "h10",
+      "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+      "header": "@@ -0,0 +1,193 @@",
+      "oldStart": 0,
+      "oldLines": 0,
+      "newStart": 1,
+      "newLines": 193,
+      "lines": [
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1,
+          "text": "// Copyright (c) All contributors. All rights reserved."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 2,
+          "text": "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 3,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 4,
+          "text": "using MessagePack.Analyzers.CodeFixes;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 5,
+          "text": "using Microsoft.CodeAnalysis.CSharp;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 6,
+          "text": "using Microsoft.CodeAnalysis.Testing;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 7,
+          "text": "using VerifyCS = CSharpCodeFixVerifier<MessagePack.SourceGenerator.Analyzers.MsgPack00xMessagePackAnalyzer, MessagePack.Analyzers.CodeFixes.MessagePackCodeFixProvider>;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 8,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 9,
+          "text": "/// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 10,
+          "text": "/// Verifies that the analyzer keeps validating <c>[MessagePackObject(SuppressSourceGeneration = true)]</c> types"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 11,
+          "text": "/// (https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234)."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 12,
+          "text": "/// Opting out of source generation only skips generation; the type is still serialized at run time, so its contract must still be checked."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 13,
+          "text": "/// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 14,
+          "text": "public class SuppressSourceGenerationAnalyzerTests"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 15,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 16,
+          "text": "    private const string Preamble = @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 17,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 18,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 19,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 20,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 21,
+          "text": "    public async Task MemberWithoutKeyIsReported()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 22,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 23,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 24,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 25,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 26,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 27,
+          "text": "    public string {|MsgPack004:Member|} { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 28,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 29,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 30,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 31,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 32,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 33,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 34,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 35,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 36,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 37,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 38,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 39,
+          "text": "    public async Task AllowPrivateRequiredIsReported()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 40,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 41,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 42,
+          "text": "[{|MsgPack015:MessagePackObject(SuppressSourceGeneration = true)|}]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 43,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 44,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 45,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 46,
+          "text": "    private string member;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 47,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 48,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 49,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 50,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 51,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 52,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 53,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 54,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 55,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 56,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 57,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 58,
+          "text": "    public async Task MemberTypeMustBeMessagePackObjectIsReported()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 59,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 60,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 61,
+          "text": "public class Other"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 62,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 63,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 64,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 65,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 66,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 67,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 68,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 69,
+          "text": "    public Other {|MsgPack003:Member|} { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 70,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 71,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 72,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 73,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 74,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 75,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 76,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 77,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 78,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 79,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 80,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 81,
+          "text": "    public async Task DuplicateIntKeysAreReportedWithoutAnalyzerFailure()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 82,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 83,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 84,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 85,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 86,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 87,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 88,
+          "text": "    public string Member1 { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 89,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 90,
+          "text": "    {|MsgPack005:[Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 91,
+          "text": "    public string Member2 { get; set; }|}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 92,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 93,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 94,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 95,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 96,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 97,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 98,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 99,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 100,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 101,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 102,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 103,
+          "text": "    public async Task DuplicateStringKeysAreReportedWithoutAnalyzerFailure()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 104,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 105,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 106,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 107,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 108,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 109,
+          "text": "    [Key(\"\"a\"\")]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 110,
+          "text": "    public string Member1 { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 111,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 112,
+          "text": "    {|MsgPack005:[Key(\"\"a\"\")]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 113,
+          "text": "    public string Member2 { get; set; }|}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 114,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 115,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 116,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 117,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 118,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 119,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 120,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 121,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 122,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 123,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 124,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 125,
+          "text": "    public async Task MixedKeyKindsAreReportedWithoutAnalyzerFailure()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 126,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 127,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 128,
+          "text": "[MessagePackObject(SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 129,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 130,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 131,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 132,
+          "text": "    public string Member1 { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 133,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 134,
+          "text": "    {|MsgPack005:[Key(\"\"Member2\"\")]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 135,
+          "text": "    public string Member2 { get; set; }|}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 136,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 137,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 138,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 139,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 140,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 141,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 142,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 143,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 144,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 145,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 146,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 147,
+          "text": "    public async Task DuplicateKeysAreReportedWithoutAnalyzerFailureForGeneratedTypes()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 148,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 149,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 150,
+          "text": "[MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 151,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 152,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 153,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 154,
+          "text": "    public string Member1 { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 155,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 156,
+          "text": "    {|MsgPack005:[Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 157,
+          "text": "    public string Member2 { get; set; }|}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 158,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 159,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 160,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 161,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 162,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 163,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 164,
+          "text": "            MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 165,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 166,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 167,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 168,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 169,
+          "text": "    public async Task SourceGenerationOnlyDiagnosticsAreNotReportedWhenSuppressed()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 170,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 171,
+          "text": "        // The partial-class requirement (MsgPack011) and the AOT-only checks (MsgPack016, MsgPack017)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 172,
+          "text": "        // only matter when a formatter is generated, so they are not reported for a suppressed type."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 173,
+          "text": "        string input = Preamble + @\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 174,
+          "text": "[MessagePackObject(AllowPrivate = true, SuppressSourceGeneration = true)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 175,
+          "text": "public class Foo"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 176,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 177,
+          "text": "    [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 178,
+          "text": "    private string member;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 179,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 180,
+          "text": "    [Key(1)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 181,
+          "text": "    public string Prop1 { get; init; } = \"\"some default\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 182,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 183,
+          "text": "    [Key(2)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 184,
+          "text": "    public string Prop2 { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 185,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 186,
+          "text": "\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 187,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 188,
+          "text": "        await new VerifyCS.Test"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 189,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 190,
+          "text": "            TestCode = input,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 191,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 192,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 193,
+          "text": "}"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2234",
+    "title": "The analyzer does not work if SuppressSourceGeneration = true",
+    "intent": "The analyzer must report its diagnostics for types that set SuppressSourceGeneration = true, as it did in version 3.1.0.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "The analyzer reports diagnostics for a [MessagePackObject] type with SuppressSourceGeneration = true."
+      },
+      {
+        "id": "F2",
+        "text": "The analyzer behaves for such types as it did in version 3.1.0, before the regression in 3.1.1."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "The analyzer must not crash on invalid input in a suppressed type; it reports the problem instead. (inferred)"
+      },
+      {
+        "id": "N2",
+        "text": "Types that do not suppress source generation keep their current diagnostics. (inferred)"
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234",
+      "note": "Derived by the engine lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "A [MessagePackObject] type with SuppressSourceGeneration = true that breaks an analyzer rule (for example a public member without a [Key] attribute) gets the matching MsgPack diagnostic in the IDE and in the build output.",
+          "Diagnostics for suppressed types show up whether or not the source generator writes a formatter for that type.",
+          "Setting SuppressSourceGeneration = true still stops formatter generation for that type. Only the analysis comes back, not code generation."
+        ],
+        "likelyAreas": [
+          "analyzer",
+          "generator"
+        ],
+        "expectedTests": [
+          "An analyzer test with a [MessagePackObject(SuppressSourceGeneration = true)] type that has a member missing its [Key] attribute expects the corresponding MsgPack diagnostic at that member.",
+          "A generator snapshot test confirms that no formatter is generated for the suppressed type, while the analyzer test for the same type still reports its diagnostics."
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "For suppressed types, the analyzer reports the same diagnostic IDs at the same locations as version 3.1.0 did.",
+          "Diagnostics that went silent for suppressed types in 3.1.1 are reported again, and no new diagnostic appears that 3.1.0 did not produce for these types.",
+          "Any code fixes that worked on these diagnostics in 3.1.0 are offered again for suppressed types."
+        ],
+        "likelyAreas": [
+          "analyzer"
+        ],
+        "expectedTests": [
+          "A regression test covers the scenario from the issue: a suppressed type that produced diagnostics in 3.1.0 must produce the same diagnostics now.",
+          "A test runs the same invalid type definition with and without SuppressSourceGeneration = true and expects the same set of analyzer diagnostics in both cases."
+        ]
+      },
+      {
+        "requirementItemId": "N1",
+        "expectedBehaviours": [
+          "A suppressed type with invalid input, such as duplicate keys, bad key types or inaccessible members, gets a diagnostic. The analyzer does not crash.",
+          "The build never shows an AD0001 analyzer exception warning, and no exception escapes the analyzer for suppressed types with malformed input.",
+          "Analysis of the other types in the same compilation keeps running when one suppressed type is invalid."
+        ],
+        "likelyAreas": [
+          "analyzer"
+        ],
+        "expectedTests": [
+          "An analyzer test with a suppressed type that has duplicate [Key] values expects the duplicate-key diagnostic and no AD0001 or other exception diagnostic.",
+          "An analyzer test with a suppressed type mixing int and string keys, or with an unsupported member, expects a reported diagnostic and a compilation that finishes without an analyzer exception."
+        ]
+      },
+      {
+        "requirementItemId": "N2",
+        "expectedBehaviours": [
+          "Types that do not set SuppressSourceGeneration, or set it to false, report exactly the same diagnostics as before the change.",
+          "Generated formatters and resolvers for unsuppressed types are unchanged, and the existing generator snapshot outputs under Resources still match.",
+          "Diagnostics are not reported twice for any type."
+        ],
+        "likelyAreas": [
+          "analyzer",
+          "generator"
+        ],
+        "expectedTests": [
+          "The existing analyzer test suite for unsuppressed types passes without changes to the expected diagnostics.",
+          "The existing generator snapshot tests pass without updating the expected output files.",
+          "A test with an invalid unsuppressed type checks that each expected diagnostic is reported exactly once."
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "In TypeCollector.GetObjectInfo, the property and field loops for key-attributed members now skip a member once the mixed int/string key diagnostic has been reported. They also add a member to intMembers or stringMembers only when its key is not already present, so a duplicate key no longer makes Dictionary.Add throw. The check that flushes deferred diagnostics for non-public members now needs both nonPublicMembersAreSerialized and AllowPrivate = true, where before either one was enough. New analyzer tests and execution tests cover SuppressSourceGeneration = true types, and the README documents which diagnostics still apply to them.",
+    "why": "Issue 2234 says the analyzer stopped working for [MessagePackObject(SuppressSourceGeneration = true)] types. These types are still serialized at run time, so the analyzer has to keep checking their contract and report invalid input such as duplicate or mixed keys without crashing.",
+    "touches": [
+      {
+        "symbol": "TypeCollector.GetObjectInfo",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "Skips members whose key kind is mixed, guards against duplicate-key Add, and changes the condition for flushing deferred non-public diagnostics."
+      },
+      {
+        "symbol": "SuppressSourceGenerationAnalyzerTests",
+        "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+        "note": "New analyzer tests for suppressed types and one unsuppressed duplicate-key case."
+      },
+      {
+        "symbol": "SuppressedSourceGenerationTests",
+        "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+        "note": "New execution tests: no generated formatter, and a round trip through the dynamic resolver."
+      },
+      {
+        "symbol": "Opting out of source generation",
+        "file": "README.md",
+        "note": "New section listing the diagnostics that are and are not reported for suppressed types."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "N1",
+      "text": "In both the property loop and the field loop, after DoNotMixStringAndIntKeys is reported for a member whose key kind differs from the first keyed member, the loop now moves on to the next member. That member is not added to the member dictionaries and is not collected recursively.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h2",
+        "h5"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1005,
+          "endLine": 1009,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1145,
+          "endLine": 1149,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005–1009",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "N1",
+      "text": "When a property or field has an int key that is already used, KeysMustBeUnique is still reported, but the member is added to intMembers only if the key is absent. The first member keeps the key, and Dictionary.Add no longer throws on a duplicate.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h3",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1163,
+          "endLine": 1166,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1023–1026",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "N1",
+      "text": "When a property or field has a string key that is already used, the member is added to stringMembers only if the key is absent. This avoids the exception Dictionary.Add would throw, and the KeysMustBeUnique report earlier in the branch is unchanged.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h4",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1039,
+          "endLine": 1042,
+          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1179,
+          "endLine": 1182,
+          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1039–1042",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "requirementItemId": null,
+      "text": "Deferred diagnostics for non-public members without keys are now flushed only when nonPublicMembersAreSerialized is true and AllowPrivate is explicitly true. Before, either condition was enough. This changes the old || into &&.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1198,
+          "endLine": 1203,
+          "quote": "if ((nonPublicMembersAreSerialized && allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "old",
+          "startLine": 1184,
+          "endLine": 1184,
+          "quote": "if ((nonPublicMembersAreSerialized || allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1198–1203",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "requirementItemId": "F1",
+      "text": "New analyzer tests expect three diagnostics on SuppressSourceGeneration = true types: MsgPack004 on a member without a key, MsgPack015 on the attribute when a private keyed field is used without AllowPrivate, and MsgPack003 on a member whose type is not a MessagePackObject.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h10"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 24,
+          "endLine": 27,
+          "quote": "public string {|MsgPack004:Member|} { get; set; }"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 42,
+          "endLine": 46,
+          "quote": "[{|MsgPack015:MessagePackObject(SuppressSourceGeneration = true)|}]"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 65,
+          "endLine": 69,
+          "quote": "public Other {|MsgPack003:Member|} { get; set; }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:24–27",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "requirementItemId": "N1",
+      "text": "New analyzer tests use suppressed types with duplicate int keys, duplicate string keys, and mixed int and string keys. Each expects exactly one MsgPack005 diagnostic on the second member.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h10"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 81,
+          "endLine": 91,
+          "quote": "public async Task DuplicateIntKeysAreReportedWithoutAnalyzerFailure()"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 109,
+          "endLine": 113,
+          "quote": "{|MsgPack005:[Key(\"\"a\"\")]"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 131,
+          "endLine": 135,
+          "quote": "{|MsgPack005:[Key(\"\"Member2\"\")]"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:81–91",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c7",
+      "requirementItemId": "N2",
+      "text": "A test with a plain [MessagePackObject] type, not suppressed, that has duplicate int keys expects a single MsgPack005 diagnostic.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h10"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 147,
+          "endLine": 157,
+          "quote": "public async Task DuplicateKeysAreReportedWithoutAnalyzerFailureForGeneratedTypes()"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:147–157",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c8",
+      "requirementItemId": "F2",
+      "text": "A test expects no diagnostics for a suppressed type with AllowPrivate = true, a private keyed field and an init property with an initializer. That setup would otherwise trigger the partial-type or AOT-only checks MsgPack011, MsgPack016 and MsgPack017.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h10"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 169,
+          "endLine": 180,
+          "quote": "[MessagePackObject(AllowPrivate = true, SuppressSourceGeneration = true)]"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:169–180",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c9",
+      "requirementItemId": null,
+      "text": "Execution tests check two things for a suppressed type: GeneratedMessagePackResolver returns no formatter for it, and it round-trips through MessagePackSerializerOptions.Standard (the dynamic resolver).",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 21,
+          "endLine": 24,
+          "quote": "Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 31,
+          "endLine": 35,
+          "quote": "byte[] bytes = MessagePackSerializer.Serialize(value, MessagePackSerializerOptions.Standard);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs:21–24",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "requirementItemId": "F1",
+      "text": "A new README section says suppressed types are still validated with MsgPack004, 005, 015, 003 and 012. It says MsgPack011, 016 and 017 are not reported for them.",
+      "kind": "docs",
+      "level": "supported",
+      "hunkIds": [
+        "h1"
+      ],
+      "citations": [
+        {
+          "file": "README.md",
+          "side": "new",
+          "startLine": 1625,
+          "endLine": 1632,
+          "quote": "The analyzer still validates these types, because they are serialized at run time and must still have a valid contract:"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at README.md:1625–1632",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Deferred non-public diagnostics now need both conditions, losing reports",
+      "detail": "The flush of deferred diagnostics for non-public members without keys changed from || to &&. If a type has a keyed non-public member but no AllowPrivate = true, the MsgPack004 diagnostics deferred before that member are never reported. The same happens when AllowPrivate = true is set but no non-public keyed member was found. The change affects all types, not only suppressed ones. Unsuppressed types lose diagnostics they had before (breaks N2), and suppressed types do not behave as in 3.1.0 (breaks F2). The requirement does not ask for this change, and no test covers it.",
+      "statement": null,
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1196,
+          "endLine": 1204,
+          "quote": "if ((nonPublicMembersAreSerialized && allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "old",
+          "startLine": 1184,
+          "endLine": 1184,
+          "quote": "if ((nonPublicMembersAreSerialized || allowPrivateAttribute is true) && this.reportDiagnostic is not null)"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Null key on first keyed field still crashes the analyzer",
+      "detail": "Take a type whose first keyed member is a field with a null key, such as [Key((string)null)]. BothStringAndIntKeyAreNull is reported, and isIntKey becomes false. The field loop then reaches the string branch and calls stringMembers.ContainsKey(null), which throws ArgumentNullException. The property loop guards with 'stringKey is not null', but the field loop does not. The result is an AD0001 analyzer failure instead of a reported problem, so N1 is not fully met. No test covers it.",
+      "statement": null,
+      "hunkIds": [
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1168,
+          "endLine": 1173,
+          "quote": "if (stringMembers.ContainsKey(stringKey!))"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "low",
+      "title": "Skipped mixed-key members also skip recursive type validation",
+      "detail": "The new continue after DoNotMixStringAndIntKeys skips the rest of the member, including the recursive CollectCore over the member type. Diagnostics such as MsgPack003 for an unserializable member type are no longer reported for that member, and they appear only after the key kind is fixed. Only the key handling needed to be skipped.",
+      "statement": null,
+      "hunkIds": [
+        "h2",
+        "h5"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1005,
+          "endLine": 1009,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1145,
+          "endLine": 1149,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "low",
+      "title": "Generator silently drops duplicate-key members from emitted formatter",
+      "detail": "In generator mode, reportDiagnostic is null. For an unsuppressed type with duplicate keys, the generator now keeps the first member and quietly leaves the second out of the generated formatter, instead of failing. Only the separate analyzer diagnostic signals the problem. Before, the generator threw on Dictionary.Add.",
+      "statement": null,
+      "hunkIds": [
+        "h3",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "low",
+      "title": "No test verifies code fixes for suppressed-type diagnostics",
+      "detail": "The new tests use CSharpCodeFixVerifier but never set FixedCode. Nothing checks that the code fixes for MsgPack004 and similar diagnostics are offered again for SuppressSourceGeneration = true types, as they were in 3.1.0 (F2).",
+      "statement": null,
+      "hunkIds": [
+        "h10"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 928,
+          "endLine": 933,
+          "quote": ": Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, identifier?.GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "side": "new",
+          "startLine": 31,
+          "endLine": 35,
+          "quote": "MarkupOptions = MarkupOptions.UseFirstDescriptor,"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "source": "ai",
+      "reason": "The README section sets the documented contract for which diagnostic IDs are reported for suppressed types: MsgPack003, 004, 005, 012 and 015 are, and MsgPack011, 016 and 017 are not. That is a documented-behaviour decision for the maintainers.",
+      "hunkIds": [
+        "h1"
+      ]
+    }
+  ],
+  "quoteCheck": {
+    "checked": 27,
+    "passed": 27,
+    "downgraded": 0,
+    "dropped": 0,
+    "failures": []
+  },
+  "retractions": [],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "In both the property loop and the field loop, after DoNotMixStringAndIntKeys is reported for a member whose key kind differs from the first keyed member, the loop now moves on to the next member. That member is not added to the member dictionaries and is not collected recursively. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "When a property or field has an int key that is already used, KeysMustBeUnique is still reported, but the member is added to intMembers only if the key is absent. The first member keeps the key, and Dictionary.Add no longer throws on a duplicate. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "When a property or field has a string key that is already used, the member is added to stringMembers only if the key is absent. This avoids the exception Dictionary.Add would throw, and the KeysMustBeUnique report earlier in the branch is unchanged. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "Deferred diagnostics for non-public members without keys are now flushed only when nonPublicMembersAreSerialized is true and AllowPrivate is explicitly true. Before, either condition was enough. This changes the old || into &&. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "New analyzer tests expect three diagnostics on SuppressSourceGeneration = true types: MsgPack004 on a member without a key, MsgPack015 on the attribute when a private keyed field is used without AllowPrivate, and MsgPack003 on a member whose type is not a MessagePackObject. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "New analyzer tests use suppressed types with duplicate int keys, duplicate string keys, and mixed int and string keys. Each expects exactly one MsgPack005 diagnostic on the second member. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "A test with a plain [MessagePackObject] type, not suppressed, that has duplicate int keys expects a single MsgPack005 diagnostic. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "A test expects no diagnostics for a suppressed type with AllowPrivate = true, a private keyed field and an init property with an initializer. That setup would otherwise trigger the partial-type or AOT-only checks MsgPack011, MsgPack016 and MsgPack017. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "Execution tests check two things for a suppressed type: GeneratedMessagePackResolver returns no formatter for it, and it round-trips through MessagePackSerializerOptions.Standard (the dynamic resolver). (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "A new README section says suppressed types are still validated with MsgPack004, 005, 015, 003 and 012. It says MsgPack011, 016 and 017 are not reported for them. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "README.md:1617 (h1)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005 (h2)",
+        "reason": "Finding f3 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1020 (h3)",
+        "reason": "Finding f4 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1145 (h5)",
+        "reason": "Finding f3 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1160 (h6)",
+        "reason": "Finding f4 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1176 (h7)",
+        "reason": "Finding f2 (missing) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1195 (h8)",
+        "reason": "Finding f1 (defect) names this hunk"
+      },
+      {
+        "item": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:1 (h10)",
+        "reason": "Finding f5 (missing) names this hunk"
+      }
+    ],
+    "residualRisk": {
+      "text": "r1 (R7): The README section sets the documented contract for which diagnostic IDs are reported for suppressed types: MsgPack003, 004, 005, 012 and 015 are, and MsgPack011, 016 and 017 are not. That is a documented-behaviour decision for the maintainers.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "full",
+    "reasons": [
+      {
+        "ruleId": "R-read-share",
+        "text": "Read 8 of 10 hunks: most of the change needs a human",
+        "tier": "full"
+      },
+      {
+        "ruleId": "R-refusal",
+        "text": "1 item refused: a human decides",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-defect",
+        "text": "3 defects found",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Generator: Calibrated, may route Focused at best",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "read",
+      "h2": "read",
+      "h3": "read",
+      "h4": "supported",
+      "h5": "read",
+      "h6": "read",
+      "h7": "read",
+      "h8": "read",
+      "h9": "supported",
+      "h10": "read"
+    },
+    "readHunks": 8,
+    "totalHunks": 10,
+    "readLines": 226,
+    "totalLines": 268,
+    "readMinutes": 10,
+    "fullMinutes": 11
+  }
+}
