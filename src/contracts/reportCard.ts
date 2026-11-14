@@ -20,7 +20,11 @@ export const ReportCardSchema = z.strictObject({
         z.strictObject({
           plantId: z.string(),
           changeId: z.string(),
-          caught: z.boolean(),
+          caught: z.boolean(), // caught in a strict majority of runs
+          /** Planned runs of this plant; a missing or failed run counts as a miss. */
+          runs: nonNegInt,
+          caughtRuns: nonNegInt,
+          /** The finding from the first run that caught it, which may be blind/<k>.json; null when no run did. */
           findingId: z.string().nullable(),
           defect: z.string(),
           variantUrl: z.string(), // https://github.com/<fork>/commit/<headSha>

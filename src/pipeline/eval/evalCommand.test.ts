@@ -24,7 +24,7 @@ function run(
   changeId: string,
   mode: Review["mode"],
   findings: Review["findings"],
-  version = "rv1",
+  version = "rv2",
 ): Review {
   return {
     ...fixture,
@@ -128,6 +128,18 @@ describe("pnpm evals --score-only", () => {
     expect(card.routingSpread.changes).toBe(1);
   });
 
+  it("measures a planted bug's runs from disk: review.json is run 1, blind/<k>.json the rest", async () => {
+    writeJson("data/runs/v01/blind/2.json", run("v01", "blind-first", []));
+    const { runEvalCommand } = await import("./evalCommand");
+    await runEvalCommand(["--score-only"]);
+
+    const card = ReportCardSchema.parse(
+      JSON.parse(readFileSync(path.join(root, "data/eval/report-card.json"), "utf8")),
+    );
+    const generator = card.areas.find((area) => area.area === "generator");
+    expect(generator?.plants[0]).toMatchObject({ plantId: "v01", runs: 2, caughtRuns: 0 });
+  });
+
   it("writes the Tieto review back routed with the measured levels and logs the verdict", async () => {
     const { runEvalCommand } = await import("./evalCommand");
     await runEvalCommand(["--score-only"]);
@@ -140,6 +152,13 @@ describe("pnpm evals --score-only", () => {
     expect(card.areas.every((area: { level: string }) => area.level === "shadow")).toBe(true);
     expect(rewritten.routing.readHunks).toBeGreaterThanOrEqual(fixture.routing.readHunks);
     expect(readFileSync(path.join(root, "docs/lessons.md"), "utf8")).toContain("No-go: no advantage");
+  });
+
+  it("rejects a --plant-runs that is not a whole number from 1", async () => {
+    const { runEvalCommand } = await import("./evalCommand");
+    await expect(runEvalCommand(["--plant-runs", "0"])).rejects.toThrow(
+      "--plant-runs takes a whole number from 1",
+    );
   });
 
   it("rejects a --runs that is not a whole number from 1", async () => {

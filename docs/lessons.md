@@ -2,6 +2,14 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## Correction (2026-11-14)
+
+The entry below, "Security caught 0 of 3 planted bugs: all three are real misses", was partly wrong. Under rv1, A3 did spot v03 and v10 but filed them as `scope-creep`, which the eval rightly doesn't count (spec 9.1), so the "three real misses" was partly a labelling miss.
+
+- **What we changed:** `a3.v2` tells A3 to file wrong out-of-scope code as a defect. Each planted bug now runs 3 times and counts as caught when at least 2 of 3 runs catch it ([decisions.md](decisions.md)).
+- **Result on rv2:** v06 is caught in 3 of 3 runs. v03 and v10 got no finding in any of 3 runs, so on rv2 they are detection misses. Security is 1 of 3 and stays at Shadow; the R2 and R6 refusals still send every security hunk to a person, which is the point of the ladder.
+- **Scorer:** not changed after seeing results.
+
 ## 2026-11-14 · Security caught 0 of 3 planted bugs: all three are real misses
 
 - **What happened:** The eval scored v03, v06 and v10, the three security plants, as missed (one run each). Miska, who can read the answer keys, compared each key with its run's findings using the eval's own matching rule. In all three runs no defect or missing finding cites the planted file at all. They are not near misses: no finding sits a few lines off or carries the wrong area.

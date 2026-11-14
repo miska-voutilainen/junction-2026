@@ -7,25 +7,25 @@
   "kind": "tieto",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "a4.v1",
       "a5": "a5.v2"
     }
   },
   "run": {
-    "id": "20261114T093420Z",
-    "startedAt": "2026-11-14T09:34:20.469Z",
-    "finishedAt": "2026-11-14T09:38:46.593Z",
-    "durationMs": 266124,
+    "id": "20261114T122418Z",
+    "startedAt": "2026-11-14T12:24:18.963Z",
+    "finishedAt": "2026-11-14T12:36:17.580Z",
+    "durationMs": 718617,
     "usage": {
-      "inputTokens": 235231,
-      "outputTokens": 30011,
-      "costUsd": 3.1986438,
+      "inputTokens": 235313,
+      "outputTokens": 29452,
+      "costUsd": 3.187488,
       "calls": 6
     }
   },
@@ -31662,11 +31662,10 @@
       "kind": "defect",
       "area": "security",
       "severity": "medium",
-      "title": "Guard drops the attribute on targets where it exists",
-      "detail": "Every emitted attribute is wrapped in #if !NETSTANDARD2_0 && !NETFRAMEWORK on the grounds that ExcludeFromCodeCoverageAttribute is missing there. In fact System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute exists in .NET Framework 4.0 and later and in netstandard2.0, and classes and structs are valid targets for it there. Only Assembly as a target was added later. Consumers that build generated code for netstandard2.0 or net472 therefore get no coverage exclusion, which breaks F1 (all generated code decorated) for those targets. Many library consumers multi-target netstandard2.0, so their reports still count generated formatters and resolvers. The README (h1) states the same wrong premise, and the new test ExcludeAttributeIsGuardedForTargetsWhereItIsUnavailable locks in the unnecessary guard. The guard could be removed: the attribute name is already fully qualified with global::.",
+      "title": "Guard drops coverage attribute on netstandard2.0 and .NET Framework",
+      "detail": "Every template wraps the attribute in #if !NETSTANDARD2_0 && !NETFRAMEWORK. The comment in the test and the README say this is because the attribute is missing on those targets, but that is not true. System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute exists in .NET Framework 4.0 and later and in netstandard2.0, and classes are a valid target there. Only the Assembly target was added later, and the generator never uses it. So consumers that build for netstandard2.0 or .NET Framework never get the attribute, and their generated formatters and resolvers still show up in coverage reports. That breaks F1 ('All generated code is decorated') and F2 for a large group of users: libraries targeting netstandard2.0, Unity projects and net4x apps. The guard buys nothing for N1, because the attribute would compile on those targets without it. The README states the same wrong reason in h1. The new test ExcludeAttributeIsGuardedForTargetsWhereItIsUnavailable makes the guard a required pattern, so it would fail if the guard were removed. The fix is to emit the attribute without a guard and update the snapshots, the README and the test.",
       "statement": null,
       "hunkIds": [
-        "h1",
         "h2",
         "h3",
         "h4",
@@ -31685,6 +31684,7 @@
         "h17",
         "h19",
         "h20",
+        "h1",
         "h21"
       ],
       "citations": [
@@ -31698,15 +31698,15 @@
         {
           "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
           "side": "new",
-          "startLine": 14,
-          "endLine": 16,
+          "startLine": 13,
+          "endLine": 17,
           "quote": "#if !NETSTANDARD2_0 && !NETFRAMEWORK\n[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n#endif"
         },
         {
           "file": "README.md",
           "side": "new",
           "startLine": 1639,
-          "endLine": 1640,
+          "endLine": 1641,
           "quote": "The attribute is only emitted for targets where it is available (not `netstandard2.0` or .NET Framework)."
         },
         {
@@ -31723,20 +31723,20 @@
       "kind": "missing",
       "area": "security",
       "severity": "low",
-      "title": "No test compiles generated code for older target frameworks",
-      "detail": "N1 requires that the attribute does not break builds on older targets. The new helper RunGeneratorAsync throws away the updated compilation and its diagnostics, and it only uses the default target framework references. Nothing compiles the generated output against netstandard2.0 or .NET Framework references. Nothing checks either that the new #if blocks, together with the changed brace and line break written in EmitNestingTypesAndNamespaces, produce code that compiles on those targets with no errors or warnings.",
+      "title": "No test compiles generated code against older target frameworks",
+      "detail": "N1 requires that projects targeting older frameworks still build. RunGeneratorAsync uses only the default target framework references and discards both the updated compilation and the diagnostics. Nothing compiles the new output, with its preprocessor directives and attribute, against netstandard2.0 or .NET Framework references, or checks it for CS0246 or CS0592 errors. The only check on the guard is a string match, so a build break on those targets would go unnoticed.",
       "statement": null,
       "hunkIds": [
-        "h18",
-        "h21"
+        "h21",
+        "h9"
       ],
       "citations": [
         {
-          "file": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+          "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
           "side": "new",
-          "startLine": 56,
-          "endLine": 58,
-          "quote": "writer(anyConstraints ? \"{\\r\\n\" : \" {\\r\\n\");"
+          "startLine": 14,
+          "endLine": 17,
+          "quote": "#if !NETSTANDARD2_0 && !NETFRAMEWORK"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs",
@@ -31923,7 +31923,7 @@
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs:55 (h18)",
-        "reason": "Finding f2 (missing) names this hunk"
+        "reason": "Security is at Shadow: the AI's evidence routes nothing here yet"
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs:27 (h19)",

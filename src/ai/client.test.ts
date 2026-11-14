@@ -91,6 +91,9 @@ describe("model client", () => {
     expect(prompts).toHaveLength(2);
     expect(prompts[1]).toContain("verdict");
     expect(prompts[1]).toContain("rendered prompt");
+    expect(prompts[1]).toContain(
+      '<previous-answer>\n{"verdict":"maybe"}\n</previous-answer>',
+    );
     expect(entries.map((entry) => entry.outcome)).toEqual(["invalid", "ok"]);
   });
 

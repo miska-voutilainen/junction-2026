@@ -34,7 +34,7 @@ const inputOf = (answerKey: AnswerKey) =>
 
 describe("planEvalJobs", () => {
   it("plans A1-A3 for a planted bug and A1, A2, A4 blind plus A2, A4 anchored per contradiction run", () => {
-    const jobs = planEvalJobs(keys, 2, inputOf).flat();
+    const jobs = planEvalJobs(keys, 2, 1, inputOf).flat();
     expect(jobs.filter((job) => !job.comparison).map((job) => [job.label, job.steps])).toEqual([
       ["v01", ["a1", "a2", "a3"]],
     ]);
@@ -54,17 +54,37 @@ describe("planEvalJobs", () => {
   });
 
   it("puts the blind runs of one Tieto change and run number in one group, so they run in turn", () => {
-    const groups = planEvalJobs(keys, 1, inputOf);
+    const groups = planEvalJobs(keys, 1, 1, inputOf);
     const blind = groups.find((group) => group.some((job) => job.label === "cp0 blind 1"));
     expect(blind?.map((job) => job.label)).toEqual(["cp0 blind 1", "cp1 blind 1"]);
   });
 
   it("plans only as many runs as asked for", () => {
     expect(
-      planEvalJobs(keys, 3, inputOf)
+      planEvalJobs(keys, 3, 1, inputOf)
         .flat()
         .filter((job) => job.comparison),
     ).toHaveLength(12);
+  });
+
+  it("plans runs 2..n of a planted bug as blind comparison runs, grouped by change and run number", () => {
+    const groups = planEvalJobs(keys, 1, 3, inputOf);
+    const groupOf = (label: string) =>
+      groups.find((group) => group.some((job) => job.label === label));
+    expect(groupOf("v01")?.map((job) => job.label)).toEqual(["v01"]);
+    expect(groupOf("v01 run 2")?.[0].comparison).toEqual({ mode: "blind", runNumber: 2 });
+    expect(groupOf("v01 run 3")?.[0]).toMatchObject({
+      mode: "blind-first",
+      steps: ["a1", "a2", "a3"],
+      comparison: { mode: "blind", runNumber: 3 },
+    });
+  });
+
+  it("puts two plants of one change at the same run number in one group, so they share A1 in turn", () => {
+    const sameChange = [key("v01", "planted-bug"), key("v02", "planted-bug")];
+    const groups = planEvalJobs(sameChange, 1, 2, inputOf);
+    const second = groups.find((group) => group.some((job) => job.label === "v01 run 2"));
+    expect(second?.map((job) => job.label)).toEqual(["v01 run 2", "v02 run 2"]);
   });
 });
 
@@ -82,8 +102,8 @@ describe("runEvalJobs", () => {
   it("reuses a current run without recording and re-records a stale one", async () => {
     const store: EvalStore = {
       load: async (j) =>
-        j.label === "current" ? reviewAt("rv1") : j.label === "stale" ? reviewAt("rv0") : null,
-      record: vi.fn(async () => reviewAt("rv1", 1.25)),
+        j.label === "current" ? reviewAt("rv2") : j.label === "stale" ? reviewAt("rv0") : null,
+      record: vi.fn(async () => reviewAt("rv2", 1.25)),
     };
     const outcomes = await runEvalJobs([[job("current")], [job("stale")], [job("none")]], store);
     const status = Object.fromEntries(
@@ -101,7 +121,7 @@ describe("runEvalJobs", () => {
       load: async () => null,
       record: async () => {
         if (++attempts < 2) throw new Error("schema");
-        return reviewAt("rv1");
+        return reviewAt("rv2");
       },
     };
     expect((await runEvalJobs([[job("a")]], flaky))[0].status).toBe("ran");
@@ -127,7 +147,7 @@ describe("runEvalJobs", () => {
         peak = Math.max(peak, running);
         await new Promise((resolve) => setTimeout(resolve, 5));
         running--;
-        return reviewAt("rv1");
+        return reviewAt("rv2");
       },
     };
     await runEvalJobs(

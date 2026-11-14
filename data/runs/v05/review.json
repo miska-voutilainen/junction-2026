@@ -7,26 +7,26 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T054618Z",
-    "startedAt": "2026-11-14T05:46:18.883Z",
-    "finishedAt": "2026-11-14T05:49:50.463Z",
-    "durationMs": 211580,
+    "id": "20261114T122535Z",
+    "startedAt": "2026-11-14T12:25:35.495Z",
+    "finishedAt": "2026-11-14T12:26:33.958Z",
+    "durationMs": 58463,
     "usage": {
-      "inputTokens": 251301,
-      "outputTokens": 24674,
-      "costUsd": 2.7231638,
-      "calls": 4
+      "inputTokens": 187627,
+      "outputTokens": 16896,
+      "costUsd": 1.8239272,
+      "calls": 3
     }
   },
   "diff": {
@@ -2402,8 +2402,8 @@
       "kind": "defect",
       "area": "generator",
       "severity": "high",
-      "title": "Keyed-property accessibility check inverted, flags every public keyed member",
-      "detail": "In GetObjectInfo, the keyed-property branch now sets nonPublicMembersAreSerialized when the property is public (== Accessibility.Public). The comment above it and the matching field branch at line 1120 still use !=. Nothing in the requirement asks for this. In practice, any ordinary [MessagePackObject] type with a public [Key] property is now treated as serializing non-public members. In analyzer mode, line 1352 then reports MessagePackObjectAllowPrivateRequired on fully public types, and deferred non-public-member diagnostics get reported. In both analyzer and generator mode, the partial-type check at line 1382 now runs for types whose only issue is a private setter, so their formatter is dropped (return null) when the type is not partial. This breaks N2: existing analyzer tests and snapshots will change. The new metadata-reference tests should also fail, because MyObject has a public keyed property and the test expects no diagnostics.",
+      "title": "Inverted accessibility check flags every public keyed property as non-public",
+      "detail": "In GetObjectInfo, the keyed-property branch changed from != Accessibility.Public to == Accessibility.Public. The requirement does not ask for this. nonPublicMembersAreSerialized is now set whenever a type has a public [Key] property, which is almost every [MessagePackObject] type. The comment above the line and the matching field branch at line 1120 still use !=. Effects: (1) Line 1352 now reports MessagePackObjectAllowPrivateRequired on ordinary public types. (2) Non-public unkeyed members start producing MemberNeedsKey, and deferred diagnostics get flushed. (3) At line 1382, nestedFormatterRequired && nonPublicMembersAreSerialized now runs the partial-type check for public properties with private setters. Non-partial types then return null, so no formatter is generated for them. This breaks N2: existing snapshots and analyzer results change. It also breaks the new tests, which expect no diagnostics for a plain public class.",
       "statement": null,
       "hunkIds": [
         "h4"
@@ -2420,22 +2420,15 @@
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
           "startLine": 1352,
-          "endLine": 1363,
+          "endLine": 1352,
           "quote": "if (allowPrivateAttribute is not true && (nonPublicMembersAreSerialized || ctor is { DeclaredAccessibility: not Accessibility.Public } || formattedType.GetEffectiveAccessibility() is not Accessibility.Public))"
         },
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
           "startLine": 1382,
-          "endLine": 1393,
+          "endLine": 1382,
           "quote": "if (nestedFormatterRequired && nonPublicMembersAreSerialized)"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1119,
-          "endLine": 1120,
-          "quote": "nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public;"
         }
       ]
     },
@@ -2444,12 +2437,11 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Filter silently drops in-project diagnostics that have no location",
-      "detail": "ReportIfLocatedInCompilation forwards a diagnostic only when its location is in source. Many diagnostics for types declared in the project are built with locations that can be null, for example FirstOrDefault()?.GetSyntax() or the new GetPropertyIdentifierLocation. Those diagnostics are now dropped instead of being reported without a location. One concrete case: GetPropertyIdentifierLocation only handles PropertyDeclarationSyntax. For a positional record property declared in the project, the declaring syntax is a ParameterSyntax, so the helper returns null and BothStringAndIntKeyAreNull is lost silently. Line 926 already handles ParameterSyntax for MemberNeedsKey; the helper does not. This changes analyzer behaviour for in-project types, which N2 says must not change.",
+      "title": "Location filter also drops diagnostics with no location",
+      "detail": "ReportIfLocatedInCompilation forwards a diagnostic only when Location.IsInSource is true. Any diagnostic created with a null location (Location.None) is now silently discarded, including ones about the compilation's own types. For example, KeysMustBeUnique or DoNotMixStringAndIntKeys are raised for members inherited from a metadata base type. Those fall back to a null location from DeclaringSyntaxReferences.FirstOrDefault(), and the consuming project's real key collision would no longer be reported. Analyzers are allowed to report Location.None. Only locations in syntax trees outside the compilation are forbidden. The filter should drop only in-source locations whose tree is not in the compilation, not every diagnostic without a location. As written, it hides real problems and goes against N1.",
       "statement": null,
       "hunkIds": [
         "h3",
-        "h5",
         "h7"
       ],
       "citations": [
@@ -2463,16 +2455,9 @@
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1434,
-          "endLine": 1434,
-          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 925,
-          "endLine": 926,
-          "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
+          "startLine": 1013,
+          "endLine": 1016,
+          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.KeysMustBeUnique, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()));"
         }
       ]
     },
@@ -2482,7 +2467,7 @@
       "area": "generator",
       "severity": "medium",
       "title": "No check of generated resolver content or runtime round trip",
-      "detail": "F3 requires the consuming assembly to get a working resolver and formatter, as it does for same-project generics. The new tests skip the generated-sources check and only assert that a resolver hint name exists. Nothing checks that the resolver registers a formatter for the cross-assembly closed generic struct, or that serialize and deserialize work through it. A resolver that is empty or wrong would still pass.",
+      "detail": "For F3, the new tests only check that a resolver with the expected hint name is emitted (SkipGeneratedSourcesCheck plus Assert.Contains on the hint name). No snapshot covers the resolver or formatter output for a member of a cross-assembly closed generic struct or record struct. No test serializes and deserializes such an object through the generated resolver. A resolver that lacks the formatter registration for MyGenericStruct<int> or Item<int> would still pass.",
       "statement": null,
       "hunkIds": [
         "h9"
@@ -2501,13 +2486,6 @@
           "startLine": 641,
           "endLine": 641,
           "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 656,
-          "endLine": 658,
-          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
         }
       ]
     },
@@ -2516,8 +2494,8 @@
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "Generator or analyzer failures can still pass as build warnings",
-      "detail": "N1 asks that a generator or analyzer failure not pass silently as a CS8785 or AD0001 warning that leaves the assembly without a resolver. The change fixes the specific crash sites, but adds nothing in the product to surface unexpected exceptions in TypeCollector as an error or an error-level diagnostic. Any other unhandled case will still degrade to a warning and a missing resolver. Only the new tests guard against this.",
+      "title": "Generator failures still surface only as a CS8785 warning",
+      "detail": "N1 asks that a generator or analyzer failure not pass silently as a warning that leaves the assembly without a resolver. The change fixes the specific indexing sites but adds no guard in the collection entry point. Nothing catches unexpected exceptions and reports an error-level diagnostic with a location. Any other unexpected exception would still show up only as CS8785 or AD0001, and the build would succeed without a resolver.",
       "statement": null,
       "hunkIds": [
         "h3"
@@ -2527,7 +2505,7 @@
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
           "startLine": 263,
-          "endLine": 272,
+          "endLine": 273,
           "quote": "FullModel model = collector.Collect();"
         }
       ]
@@ -2538,7 +2516,7 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "ai",
-      "reason": "The README and MsgPack004 help page now document that diagnostics about members of types from referenced assemblies are never reported in the consuming project, which changes documented analyzer behaviour and is for the maintainers to approve.",
+      "reason": "The README and the MsgPack004 help page now state as documented behaviour that diagnostics about members of types from referenced assemblies are reported only by the defining assembly; the maintainers must decide whether to commit to that contract.",
       "hunkIds": [
         "h1",
         "h2"
@@ -2546,8 +2524,8 @@
     }
   ],
   "quoteCheck": {
-    "checked": 29,
-    "passed": 29,
+    "checked": 26,
+    "passed": 26,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2618,14 +2596,6 @@
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h5)",
-        "reason": "Finding f2 (defect) names this hunk"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h6)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h7)",
         "reason": "Finding f2 (defect) names this hunk"
       },
@@ -2635,18 +2605,13 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and MsgPack004 help page now document that diagnostics about members of types from referenced assemblies are never reported in the consuming project, which changes documented analyzer behaviour and is for the maintainers to approve.",
+      "text": "r1 (R7): The README and the MsgPack004 help page now state as documented behaviour that diagnostics about members of types from referenced assemblies are reported only by the defining assembly; the maintainers must decide whether to commit to that contract.",
       "acceptedRefusalIds": []
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
-      {
-        "ruleId": "R-read-share",
-        "text": "Read 8 of 9 hunks: most of the change needs a human",
-        "tier": "full"
-      },
       {
         "ruleId": "R-refusal",
         "text": "1 item refused: a human decides",
@@ -2659,12 +2624,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
@@ -2673,17 +2638,17 @@
       "h2": "read",
       "h3": "read",
       "h4": "read",
-      "h5": "read",
-      "h6": "read",
+      "h5": "supported",
+      "h6": "supported",
       "h7": "read",
       "h8": "supported",
       "h9": "read"
     },
-    "readHunks": 8,
+    "readHunks": 6,
     "totalHunks": 9,
-    "readLines": 228,
+    "readLines": 224,
     "totalLines": 230,
-    "readMinutes": 10,
+    "readMinutes": 9,
     "fullMinutes": 10
   }
 }

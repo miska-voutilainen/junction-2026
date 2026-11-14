@@ -7,7 +7,7 @@
   "kind": "contradiction-plant",
   "mode": "anchored",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "none",
@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T055432Z",
-    "startedAt": "2026-11-14T05:54:32.801Z",
-    "finishedAt": "2026-11-14T05:56:02.324Z",
-    "durationMs": 89523,
+    "id": "20261114T122846Z",
+    "startedAt": "2026-11-14T12:28:46.710Z",
+    "finishedAt": "2026-11-14T12:28:48.025Z",
+    "durationMs": 1315,
     "usage": {
       "inputTokens": 134761,
       "outputTokens": 12041,
@@ -2303,20 +2303,8 @@
     ],
     "notChecked": [
       {
-        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
         "reason": "Finding f1 (contradiction) names this hunk"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
@@ -2338,30 +2326,30 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
     "coverage": {
       "h1": "supported",
-      "h2": "read",
+      "h2": "supported",
       "h3": "read",
-      "h4": "read",
-      "h5": "read",
+      "h4": "supported",
+      "h5": "supported",
       "h6": "read",
       "h7": "supported",
       "h8": "supported"
     },
-    "readHunks": 5,
+    "readHunks": 2,
     "totalHunks": 8,
-    "readLines": 34,
+    "readLines": 25,
     "totalLines": 228,
-    "readMinutes": 2,
+    "readMinutes": 1,
     "fullMinutes": 10
   }
 }

@@ -7,7 +7,7 @@
   "kind": "tieto",
   "mode": "anchored",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "none",
@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T055201Z",
-    "startedAt": "2026-11-14T05:52:01.210Z",
-    "finishedAt": "2026-11-14T05:53:38.063Z",
-    "durationMs": 96853,
+    "id": "20261114T122839Z",
+    "startedAt": "2026-11-14T12:28:39.626Z",
+    "finishedAt": "2026-11-14T12:28:40.873Z",
+    "durationMs": 1247,
     "usage": {
       "inputTokens": 136294,
       "outputTokens": 12956,
@@ -2296,28 +2296,7 @@
         "by": "ai-supported"
       }
     ],
-    "notChecked": [
-      {
-        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      }
-    ],
+    "notChecked": [],
     "residualRisk": {
       "text": "",
       "acceptedRefusalIds": []
@@ -2333,30 +2312,30 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
     "coverage": {
       "h1": "supported",
-      "h2": "read",
-      "h3": "read",
-      "h4": "read",
-      "h5": "read",
-      "h6": "read",
+      "h2": "supported",
+      "h3": "supported",
+      "h4": "supported",
+      "h5": "supported",
+      "h6": "supported",
       "h7": "supported",
       "h8": "supported"
     },
-    "readHunks": 5,
+    "readHunks": 0,
     "totalHunks": 8,
-    "readLines": 34,
+    "readLines": 0,
     "totalLines": 228,
-    "readMinutes": 2,
+    "readMinutes": 0,
     "fullMinutes": 10
   }
 }

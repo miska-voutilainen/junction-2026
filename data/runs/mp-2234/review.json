@@ -7,25 +7,25 @@
   "kind": "tieto",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "a4.v1",
       "a5": "a5.v2"
     }
   },
   "run": {
-    "id": "20261114T093205Z",
-    "startedAt": "2026-11-14T09:32:05.934Z",
-    "finishedAt": "2026-11-14T09:34:18.627Z",
-    "durationMs": 132693,
+    "id": "20261114T122418Z",
+    "startedAt": "2026-11-14T12:24:18.227Z",
+    "finishedAt": "2026-11-14T12:31:47.775Z",
+    "durationMs": 449548,
     "usage": {
-      "inputTokens": 169141,
-      "outputTokens": 18198,
-      "costUsd": 2.2662072,
+      "inputTokens": 169222,
+      "outputTokens": 18589,
+      "costUsd": 2.2740434000000005,
       "calls": 5
     }
   },
@@ -2516,11 +2516,11 @@
   "findings": [
     {
       "id": "f1",
-      "kind": "defect",
+      "kind": "missing",
       "area": "generator",
       "severity": "medium",
-      "title": "Field with null string key still crashes the analyzer",
-      "detail": "In the field loop, a keyed member whose key is neither int nor string (for example [Key(null)], which binds to KeyAttribute(string)) reports BothStringAndIntKeyAreNull. Execution then carries on. If that field is the first keyed member, searchFirst makes isIntKey false, the mismatch check does not fire, and the else branch calls stringMembers.ContainsKey(stringKey!) with null. Dictionary.ContainsKey(null) throws ArgumentNullException. The property loop guards with 'else if (stringKey is not null)' but the field loop uses a bare 'else'. So a suppressed (or any) type made only of fields, with an invalid null key, still produces an analyzer exception (AD0001) instead of only the diagnostic. This is the situation N1 says must not happen, and this change, which is about making invalid suppressed input safe, leaves it in place.",
+      "title": "Field with null key still crashes analyzer with ArgumentNullException",
+      "detail": "N1 requires the analyzer to report invalid input in a suppressed type, not throw. One crash is still there. Take a field marked [Key(null)] that is the first keyed member of the type. BothStringAndIntKeyAreNull is reported and isIntKey becomes false. The field loop then goes to the else branch and calls stringMembers.ContainsKey(null!), which throws ArgumentNullException (AD0001 in the analyzer, CS8785 in the generator). The property loop guards this case with 'else if (stringKey is not null)'; the field loop does not. Also, ConstructorArguments[0] is indexed without a length check. A [Key] attribute with missing or erroneous arguments, which is common while typing in the IDE, therefore throws IndexOutOfRangeException. The change fixes the duplicate-key and mixed-key crashes but leaves these two, and no test covers them.",
       "statement": null,
       "hunkIds": [
         "h6",
@@ -2530,16 +2530,23 @@
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1131,
-          "endLine": 1136,
-          "quote": "if (intKey == null && stringKey == null)"
+          "startLine": 1168,
+          "endLine": 1173,
+          "quote": "if (stringMembers.ContainsKey(stringKey!))"
         },
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1168,
-          "endLine": 1173,
-          "quote": "if (stringMembers.ContainsKey(stringKey!))"
+          "startLine": 1131,
+          "endLine": 1136,
+          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation()));"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1069,
+          "endLine": 1069,
+          "quote": "TypedConstant? key = item.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.KeyAttribute))?.ConstructorArguments[0];"
         }
       ]
     },
@@ -2548,8 +2555,8 @@
       "kind": "defect",
       "area": "generator",
       "severity": "low",
-      "title": "Skipping mixed-key members also skips nested type validation",
-      "detail": "The new continue after DoNotMixStringAndIntKeys jumps past the rest of the loop body. That includes the recursive CollectCore(item.Type, item) call further down. A member with the wrong key kind no longer has its type checked, so diagnostics such as MsgPack003 (type must be a MessagePackObject) for that member's type disappear until the key mix is fixed. Before the regression these checks still ran, so suppressed and non-suppressed types now get fewer diagnostics in this case.",
+      "title": "Mixed-key continue skips recursive collection and hides MsgPack003",
+      "detail": "The new 'continue' after DoNotMixStringAndIntKeys also skips the recursive CollectCore(item.Type, item) at the end of the member block. In the property loop, take a type whose first keyed member uses a string key and a later property uses an int key. That case used to fall through without crashing and still collected the member type, so MsgPack003 (type must be a MessagePackObject) was reported. Now that diagnostic disappears until the user fixes the key kind. This applies to non-suppressed types too, against N2 (types keep their current diagnostics). Skipping the dictionary insertion is enough; the member type could still be collected.",
       "statement": null,
       "hunkIds": [
         "h2",
@@ -2571,37 +2578,6 @@
           "quote": "this.CollectCore(item.Type, item);"
         }
       ]
-    },
-    {
-      "id": "f3",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "No generator test for invalid input after crash fixes",
-      "detail": "The guarded Add and the continue also change the source generator path, where reportDiagnostic is null. For a non-suppressed type with duplicate or mixed keys, the generator used to throw. It now emits a formatter that silently keeps only the first member for a key and leaves out mismatched members. No generator snapshot or run test checks that the generator finishes without exceptions on such input, or what it emits. The new tests only exercise the analyzer and a valid suppressed type at run time.",
-      "statement": null,
-      "hunkIds": [
-        "h3",
-        "h4",
-        "h6",
-        "h7"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1023,
-          "endLine": 1026,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1418,
-          "endLine": 1425,
-          "quote": "members: isIntKey ? intMembers.Values.Select(v => v.Info).ToArray() : stringMembers.Values.Select(v => v.Info).ToArray(),"
-        }
-      ]
     }
   ],
   "refusals": [
@@ -2609,15 +2585,15 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "ai",
-      "reason": "The README adds documented public behaviour stating which analyzer diagnostics (MsgPack003, 004, 005, 012, 015) apply to suppressed types and which (MsgPack011, 016, 017) do not, and that such types are not AOT-safe, which is a documented-contract decision for the maintainers.",
+      "reason": "The new README section fixes documented public behaviour: which analyzer diagnostics (MsgPack003/004/005/012/015 reported, MsgPack011/016/017 not reported) apply to SuppressSourceGeneration types, and that such types are not AOT-safe; the API owners must decide this.",
       "hunkIds": [
         "h1"
       ]
     }
   ],
   "quoteCheck": {
-    "checked": 26,
-    "passed": 26,
+    "checked": 25,
+    "passed": 25,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2638,7 +2614,7 @@
       "testNames": [
         "NoFormatterIsGeneratedForSuppressedType"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs(23,50): error CS0117: 'GeneratedMessagePackResolver' does not contain a definition for 'Instance'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedCompositeResolverTests.cs(15,50): error CS0117: 'MyGeneratedCompositeResolver' does not contain a definition for 'Instance'"
     },
     {
       "source": "pr-test",
@@ -2646,7 +2622,7 @@
       "testNames": [
         "SuppressedTypeRoundTripsThroughDynamicResolver"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs(23,50): error CS0117: 'GeneratedMessagePackResolver' does not contain a definition for 'Instance'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedCompositeResolverTests.cs(15,50): error CS0117: 'MyGeneratedCompositeResolver' does not contain a definition for 'Instance'"
     }
   ],
   "receiptDraft": {
@@ -2702,39 +2678,26 @@
         "reason": "Finding f2 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1020 (h3)",
-        "reason": "Finding f3 (missing) names this hunk"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1036 (h4)",
-        "reason": "Finding f3 (missing) names this hunk"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1145 (h5)",
         "reason": "Finding f2 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1160 (h6)",
-        "reason": "Finding f1 (defect) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1176 (h7)",
-        "reason": "Finding f1 (defect) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README adds documented public behaviour stating which analyzer diagnostics (MsgPack003, 004, 005, 012, 015) apply to suppressed types and which (MsgPack011, 016, 017) do not, and that such types are not AOT-safe, which is a documented-contract decision for the maintainers.",
+      "text": "r1 (R7): The new README section fixes documented public behaviour: which analyzer diagnostics (MsgPack003/004/005/012/015 reported, MsgPack011/016/017 not reported) apply to SuppressSourceGeneration types, and that such types are not AOT-safe; the API owners must decide this.",
       "acceptedRefusalIds": []
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
-      {
-        "ruleId": "R-read-share",
-        "text": "Read 7 of 9 hunks: most of the change needs a human",
-        "tier": "full"
-      },
       {
         "ruleId": "R-refusal",
         "text": "1 item refused: a human decides",
@@ -2742,7 +2705,7 @@
       },
       {
         "ruleId": "R-defect",
-        "text": "2 defects found",
+        "text": "1 defect found",
         "tier": "focused"
       },
       {
@@ -2754,17 +2717,17 @@
     "coverage": {
       "h1": "read",
       "h2": "read",
-      "h3": "read",
-      "h4": "read",
+      "h3": "supported",
+      "h4": "supported",
       "h5": "read",
       "h6": "read",
       "h7": "read",
       "h8": "supported",
       "h9": "supported"
     },
-    "readHunks": 7,
+    "readHunks": 5,
     "totalHunks": 9,
-    "readLines": 36,
+    "readLines": 26,
     "totalLines": 266,
     "readMinutes": 2,
     "fullMinutes": 11

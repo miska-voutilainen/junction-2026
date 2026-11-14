@@ -7,26 +7,26 @@
   "kind": "tieto",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "a4.v1",
       "a5": "a5.v2"
     }
   },
   "run": {
-    "id": "20261114T092637Z",
-    "startedAt": "2026-11-14T09:26:37.042Z",
-    "finishedAt": "2026-11-14T09:32:04.325Z",
-    "durationMs": 327283,
+    "id": "20261114T141924Z",
+    "startedAt": "2026-11-14T14:19:24.700Z",
+    "finishedAt": "2026-11-14T14:24:10.784Z",
+    "durationMs": 286084,
     "usage": {
-      "inputTokens": 581478,
-      "outputTokens": 65183,
-      "costUsd": 6.7572624,
-      "calls": 10
+      "inputTokens": 349887,
+      "outputTokens": 53655,
+      "costUsd": 5.117463600000001,
+      "calls": 9
     }
   },
   "diff": {
@@ -8606,28 +8606,33 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Pipeline steps cache ISymbol and re-run on every compilation",
-      "detail": "GeneratedFormatterRequest is a record that holds two INamedTypeSymbol values, and it is the cached output of the ForAttributeWithMetadataName step. The diagnostics pipeline then combines each request with CompilationProvider and runs GeneratedFormatterCollector again. Symbols are not stable from one compilation to the next, so this step never compares equal to its cached value. The collector re-runs on every keystroke, and both pipelines keep compilations alive. The checklist forbids holding an ISymbol or Compilation in cached output. The main pipeline also repeats the same collection work, this time with diagnostics turned off.",
+      "title": "Read-only and empty member sets are dropped silently",
+      "detail": "In contractless mode the collector keeps only public read-write members (IsPublicReadWrite) and reports nothing for members it skips. Take a struct with get-only properties and a parameterized constructor, or a class whose state is all read-only: it passes every check (structs skip the constructor check) and gets a formatter that writes an empty map and deserializes to default. That is silent data loss. Surrogate mode has the same problem: a surrogate whose members are all [IgnoreMember], or that has no members, produces an empty formatter with no diagnostic. The expectation (F5) says such types must either round-trip correctly or be reported. Here they do neither.",
       "statement": null,
       "hunkIds": [
-        "h13",
-        "h17",
-        "h19"
+        "h12"
       ],
       "citations": [
         {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterRequest.cs",
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
           "side": "new",
-          "startLine": 13,
-          "endLine": 13,
-          "quote": "public sealed record GeneratedFormatterRequest(INamedTypeSymbol Formatter, INamedTypeSymbol? Surrogate);"
+          "startLine": 131,
+          "endLine": 141,
+          "quote": "List<ISymbol> targets = GetInstanceMembers(type).Where(IsPublicReadWrite).OrderBy(m => m.Name, StringComparer.Ordinal).ToList();"
         },
         {
-          "file": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs",
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
           "side": "new",
-          "startLine": 117,
-          "endLine": 126,
-          "quote": "var generatedFormatterDiagnostics = generatedFormatters"
+          "startLine": 76,
+          "endLine": 81,
+          "quote": "if (isClass && !type.InstanceConstructors.Any(c => c.Parameters.Length == 0 && compilation.IsSymbolAccessibleWithin(c, formatter)))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
+          "side": "new",
+          "startLine": 211,
+          "endLine": 212,
+          "quote": "isIntKey = keyKindIsInt ?? false;"
         }
       ]
     },
@@ -8636,72 +8641,21 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Non-partial containing types of the formatter are not checked",
-      "detail": "IsPartial only checks the formatter's own declaration. The templates emit the generated part inside EmitNestingTypesAndNamespaces, which follows the formatter's containing types. If the formatter is nested in a class that is not partial, the generated source does not compile, and MsgPack019 is not reported. The MsgPack019 help page says containing types must be partial, but nothing enforces it.",
-      "statement": null,
-      "hunkIds": [
-        "h12",
-        "h2"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
-          "side": "new",
-          "startLine": 293,
-          "endLine": 299,
-          "quote": ".Any(c => c.Modifiers.Any(SyntaxKind.PartialKeyword));"
-        },
-        {
-          "file": "doc/analyzers/MsgPack019.md",
-          "side": "new",
-          "startLine": 26,
-          "endLine": 26,
-          "quote": "Any nesting types that contain the formatter must also be declared `partial`."
-        }
-      ]
-    },
-    {
-      "id": "f3",
-      "kind": "defect",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Formatter instantiability and accessibility are never validated",
-      "detail": "Classes with the attribute are removed from the known-formatter discovery, so the existing MsgPack010 and MsgPack013 checks (formatter accessible, constructor or Instance available) no longer run for them. The collector checks only partial and the interface. It does not check whether the user's class is abstract, static, private or protected nested, or has only a non-accessible constructor. The generated resolver still registers it and has to create it, so the result is a compiler error in generated code instead of a diagnostic.",
+      "title": "No collision diagnostic for duplicate formatters of the same type",
+      "detail": "GeneratorUtilities now removes [GeneratedMessagePackFormatter] classes from KnownFormatters. The existing colliding-formatter check (MsgPack009, which uses GetCollidingFormatterDataTypes) therefore never sees them. The main pipeline adds one model per request with no check that T is unique. Several cases are not diagnosed: two generated formatters for the same T, a generated formatter for a T that is also a [MessagePackObject], and a generated formatter alongside a hand-written formatter for T. Depending on how ObjectInfos are merged, the resolver either gets duplicate registrations that fail to compile, or one formatter is silently dropped.",
       "statement": null,
       "hunkIds": [
         "h16",
-        "h12"
+        "h18"
       ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/GeneratorUtilities.cs",
           "side": "new",
           "startLine": 37,
-          "endLine": 42,
+          "endLine": 40,
           "quote": "&& !symbol.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == $\"{AttributeNamespace}.{GeneratedMessagePackFormatterAttributeName}\")"
         },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
-          "side": "new",
-          "startLine": 47,
-          "endLine": 51,
-          "quote": "if (!IsPartial(formatter, cancellationToken))"
-        }
-      ]
-    },
-    {
-      "id": "f4",
-      "kind": "defect",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Colliding formatters for the same type get no diagnostic",
-      "detail": "Each generated-formatter model is added to modelPerType without checking for other formatters of the same data type. Such a formatter may already come from another [GeneratedMessagePackFormatter] class, a [MessagePackObject] type in the same compilation, or a hand-written formatter. Generated formatters are left out of KnownFormatters, so GetCollidingFormatterDataTypes and MsgPack009 cannot see them. Two registrations for one type can produce duplicate resolver entries or pick a formatter by chance, with no diagnostic.",
-      "statement": null,
-      "hunkIds": [
-        "h18",
-        "h16"
-      ],
-      "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs",
           "side": "new",
@@ -8712,41 +8666,42 @@
       ]
     },
     {
-      "id": "f5",
+      "id": "f3",
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Surrogate rejects members without a key, unlike its documentation",
-      "detail": "CreateSurrogateMembers walks every instance field and property of the surrogate, private ones included, and reports MsgPack004 for any member that has neither [Key] nor [IgnoreMember]. The attribute docs say only members that carry KeyAttribute must match. A surrogate with a private helper field or an unannotated property therefore fails. The MsgPack004 message it reports talks about MessagePackObject-attributed types, which is misleading here.",
+      "title": "Formatter shape not validated before emitting partial class",
+      "detail": "IsPartial checks only the formatter's own declaration. MsgPack019.md says containing types must also be partial, but nothing checks them. The collector also never checks that the generated resolver can access and construct the user's class: a private nested formatter, or one with only a parameterized or private constructor, passes. Record classes are excluded by the ClassDeclarationSyntax predicate without any diagnostic. In all these cases the generator emits code that does not compile (a non-partial container redeclared, or the resolver unable to instantiate the formatter) instead of reporting a located diagnostic, which the generator checklist asks for.",
       "statement": null,
       "hunkIds": [
         "h12",
-        "h7"
+        "h21",
+        "h23"
       ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
           "side": "new",
-          "startLine": 169,
-          "endLine": 178,
-          "quote": "MsgPack00xMessagePackAnalyzer.MemberNeedsKey,"
+          "startLine": 293,
+          "endLine": 299,
+          "quote": ".Any(c => c.Modifiers.Any(SyntaxKind.PartialKeyword));"
         },
         {
-          "file": "src/MessagePack.Annotations/Attributes.cs",
+          "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
           "side": "new",
-          "startLine": 171,
-          "endLine": 175,
-          "quote": "/// Each surrogate member that carries a <see cref=\"KeyAttribute\"/> must match a public, read-write instance member of the formatted type by name."
+          "startLine": 14,
+          "endLine": 14,
+          "quote": "<#= Info.IsUserDeclaredFormatter ? \"partial class\" : \"internal sealed class\" #> <#= Info.Formatter.GetQualifiedName(Qualifiers.None) #> : MsgPack::Formatters.IMessagePackFormatter<<#= Info.DataType.GetQualifiedName(genericStyle: GenericParameterStyle.Identifiers) #>>"
         }
       ]
     },
     {
-      "id": "f6",
+      "id": "f4",
       "kind": "defect",
       "area": "generator",
       "severity": "low",
       "title": "Invalid SurrogateType silently falls back to contractless mode",
-      "detail": "The surrogate value is read with 'as INamedTypeSymbol'. A SurrogateType such as typeof(int[]), or any other value that is not a named type, becomes null. The formatter is then generated in contractless mode with no diagnostic, and the wire contract can differ from what the user declared.",
+      "detail": "The transform reads SurrogateType with 'as INamedTypeSymbol'. A typeof argument that is an array, pointer or other non-named type becomes null, and the formatter silently switches to contractless mode, which writes a different wire contract than the user declared. An unresolved (error) type yields a surrogate with no members and therefore an empty formatter. Neither case produces a diagnostic.",
       "statement": null,
       "hunkIds": [
         "h17"
@@ -8762,12 +8717,41 @@
       ]
     },
     {
-      "id": "f7",
+      "id": "f5",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "low",
+      "title": "Pipeline caches symbols and reruns collector on every compilation",
+      "detail": "GeneratedFormatterRequest is a record that holds INamedTypeSymbol values, so the cached pipeline output keeps symbols (and their compilations) alive. Its equality is by symbol, so it never matches across compilations. The new diagnostics pipeline also combines each request with CompilationProvider and runs the full collector again on every edit, on top of the run in the main source pipeline. The generator checklist forbids holding ISymbol or Compilation in cached step output.",
+      "statement": null,
+      "hunkIds": [
+        "h13",
+        "h19"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterRequest.cs",
+          "side": "new",
+          "startLine": 13,
+          "endLine": 13,
+          "quote": "public sealed record GeneratedFormatterRequest(INamedTypeSymbol Formatter, INamedTypeSymbol? Surrogate);"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs",
+          "side": "new",
+          "startLine": 117,
+          "endLine": 125,
+          "quote": ".Combine(context.CompilationProvider)"
+        }
+      ]
+    },
+    {
+      "id": "f6",
       "kind": "defect",
       "area": "analyzer",
       "severity": "low",
-      "title": "New IDs are listed by the analyzer but only the generator reports them",
-      "detail": "MsgPack019 to MsgPack022 are added to the analyzer's SupportedDiagnostics, but AnalyzeSymbol never calls GeneratedFormatterCollector. They are reported only by the source generator, so an analyzer-only setup (the MessagePackAnalyzer package) or an IDE run of the analyzer never shows them.",
+      "title": "Analyzer lists MsgPack019-022 but never reports them",
+      "detail": "The four new descriptors are added to MsgPack00xMessagePackAnalyzer.SupportedDiagnostics, but the analyzer only analyzes [MessagePackObject] and [Union] types. Only the source generator reports these diagnostics. This reverses the existing split, where the analyzer reports and the generator passes a null reporter. Users of the analyzer package alone, or runs where only analyzers execute, never see these diagnostics.",
       "statement": null,
       "hunkIds": [
         "h11",
@@ -8777,109 +8761,30 @@
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
           "side": "new",
+          "startLine": 381,
+          "endLine": 385,
+          "quote": "SurrogateMemberNotFound);"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "new",
           "startLine": 470,
           "endLine": 476,
-          "quote": "TypeCollector.Collect(context.Compilation, options, typeReferences, context.ReportDiagnostic, declaredSymbol, context.CancellationToken);"
+          "quote": "case TypeKind.Class or TypeKind.Struct when declaredSymbol.GetAttributes().Any(x2 => SymbolEqualityComparer.Default.Equals(x2.AttributeClass, typeReferences.MessagePackObjectAttribute)):"
         }
       ]
     },
     {
-      "id": "f8",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Public members without a public setter are dropped silently",
-      "detail": "In contractless mode IsPublicReadWrite drops public properties that have a private, internal or missing setter, and readonly public fields. No diagnostic is reported. A common type like 'public string Name { get; private set; }' with a parameterless constructor loses data on a round trip without any warning. The expectation for F5 was to build such types correctly or report them with a diagnostic.",
-      "statement": null,
-      "hunkIds": [
-        "h12"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
-          "side": "new",
-          "startLine": 277,
-          "endLine": 284,
-          "quote": "&& property.SetMethod is { DeclaredAccessibility: Accessibility.Public },"
-        }
-      ]
-    },
-    {
-      "id": "f9",
-      "kind": "missing",
-      "area": "security",
-      "severity": "medium",
-      "title": "No snapshot test of the generated formatter output",
-      "detail": "No generator test checks the emitted partial class, its int-key or string-key body, or its registration in the resolver. The generator tests cover only diagnostics, and they write the formatter members by hand. The checklist and the F1 and F3 expectations ask for a test over the generated output.",
-      "statement": null,
-      "hunkIds": [
-        "h21",
-        "h23",
-        "h33"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
-          "side": "new",
-          "startLine": 14,
-          "endLine": 14,
-          "quote": "<#= Info.IsUserDeclaredFormatter ? \"partial class\" : \"internal sealed class\" #>"
-        }
-      ]
-    },
-    {
-      "id": "f10",
+      "id": "f7",
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "No test for duplicate surrogate keys",
-      "detail": "The KeysMustBeUnique path for surrogates (MsgPack005 on a repeated key) has no test. F4 expected an analyzer test for a duplicate declared key.",
+      "title": "No trimming or NativeAOT test for generated external formatters",
+      "detail": "N2 asks that generated formatters work under trimming and NativeAOT. No test in the change publishes or analyzes a trimmed or AOT app that uses a [GeneratedMessagePackFormatter] formatter for an external type. Reflection-free output is inferred from the shared templates but never verified.",
       "statement": null,
       "hunkIds": [
         "h12",
-        "h33"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
-          "side": "new",
-          "startLine": 200,
-          "endLine": 204,
-          "quote": "if (!claimedKeys.Add(key))"
-        }
-      ]
-    },
-    {
-      "id": "f11",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "No test for types without a parameterless constructor",
-      "detail": "The MsgPack007 rejection of a class that has only constructors with parameters is not tested. F5 expected this case to be either built correctly or reported, and covered by a test.",
-      "statement": null,
-      "hunkIds": [
-        "h12"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs",
-          "side": "new",
-          "startLine": 76,
-          "endLine": 81,
-          "quote": "if (isClass && !type.InstanceConstructors.Any(c => c.Parameters.Length == 0 && compilation.IsSymbolAccessibleWithin(c, formatter)))"
-        }
-      ]
-    },
-    {
-      "id": "f12",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "No trimming or NativeAOT test for generated formatters",
-      "detail": "N2 expects a trimmed or NativeAOT app that serializes T with the generated formatter and builds with no warnings. No such test or sample is added.",
-      "statement": null,
-      "hunkIds": [
-        "h12"
+        "h26"
       ],
       "citations": [
         {
@@ -8897,19 +8802,27 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "ai",
-      "reason": "The change adds the public GeneratedMessagePackFormatterAttribute with a SurrogateType property and four new diagnostic IDs (MsgPack019 to MsgPack022), which is a decision on the public contract.",
+      "reason": "The change adds a new public GeneratedMessagePackFormatterAttribute with a SurrogateType property, new diagnostic IDs MsgPack019-022 as public constants and descriptors, public GeneratedFormatterRequest and ObjectSerializationInfo.IsUserDeclaredFormatter members, and documented behaviour for them. Whether to accept that public contract is for the API owners to decide.",
       "hunkIds": [
         "h7",
         "h8",
         "h9",
         "h10",
-        "h11"
+        "h11",
+        "h13",
+        "h14",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6"
       ]
     }
   ],
   "quoteCheck": {
-    "checked": 64,
-    "passed": 64,
+    "checked": 61,
+    "passed": 61,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -9010,7 +8923,7 @@
       "testNames": [
         "ContractlessClassRoundTrips"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9018,7 +8931,7 @@
       "testNames": [
         "ContractlessClassUsesStringKeysForPublicReadWriteMembers"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9026,7 +8939,7 @@
       "testNames": [
         "ContractlessClassNullRoundTrips"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9034,7 +8947,7 @@
       "testNames": [
         "ContractlessStructRoundTrips"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9042,7 +8955,7 @@
       "testNames": [
         "SurrogateControlsKeysAndMembership"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9050,7 +8963,7 @@
       "testNames": [
         "MessagePackObjectCanContainExternalTypes"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     },
     {
       "source": "pr-test",
@@ -9058,7 +8971,7 @@
       "testNames": [
         "GeneratedFormattersAreRegisteredInGeneratedResolver"
       ],
-      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Deserialize(ref MessagePackReade…"
+      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
     }
   ],
   "receiptDraft": {
@@ -9134,24 +9047,32 @@
     ],
     "notChecked": [
       {
+        "item": "README.md:1636 (h1)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
         "item": "doc/analyzers/MsgPack019.md:1 (h2)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "doc/analyzers/MsgPack020.md:1 (h3)",
-        "reason": "No Verified or Supported claim covers it"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "doc/analyzers/MsgPack021.md:1 (h4)",
-        "reason": "No Verified or Supported claim covers it"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "doc/analyzers/MsgPack022.md:1 (h5)",
-        "reason": "No Verified or Supported claim covers it"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "doc/analyzers/index.md:23 (h6)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.Annotations/Attributes.cs:139 (h7)",
-        "reason": "Finding f5 (defect) names this hunk"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md:23 (h8)",
@@ -9167,31 +9088,35 @@
       },
       {
         "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:378 (h11)",
-        "reason": "Finding f7 (defect) names this hunk"
+        "reason": "Finding f6 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs:1 (h12)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterRequest.cs:1 (h13)",
-        "reason": "Finding f1 (defect) names this hunk"
+        "reason": "Finding f5 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/ObjectSerializationInfo.cs:10 (h14)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.SourceGenerator/GeneratorUtilities.cs:32 (h16)",
-        "reason": "Finding f3 (defect) names this hunk"
+        "reason": "Finding f2 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:26 (h17)",
-        "reason": "Finding f1 (defect) names this hunk"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:57 (h18)",
         "reason": "Finding f4 (defect) names this hunk"
       },
       {
+        "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:57 (h18)",
+        "reason": "Finding f2 (defect) names this hunk"
+      },
+      {
         "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:112 (h19)",
-        "reason": "Finding f1 (defect) names this hunk"
+        "reason": "Finding f5 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs:30 (h20)",
@@ -9199,7 +9124,7 @@
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt:11 (h21)",
-        "reason": "Finding f9 (missing) names this hunk"
+        "reason": "Finding f3 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs:34 (h22)",
@@ -9207,15 +9132,15 @@
       },
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt:15 (h23)",
-        "reason": "Finding f9 (missing) names this hunk"
+        "reason": "Finding f3 (defect) names this hunk"
       },
       {
-        "item": "tests/MessagePack.SourceGenerator.Tests/GeneratedMessagePackFormatterTests.cs:1 (h33)",
-        "reason": "Finding f9 (missing) names this hunk"
+        "item": "tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypesTests.cs:1 (h26)",
+        "reason": "Finding f7 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The change adds the public GeneratedMessagePackFormatterAttribute with a SurrogateType property and four new diagnostic IDs (MsgPack019 to MsgPack022), which is a decision on the public contract.",
+      "text": "r1 (R7): The change adds a new public GeneratedMessagePackFormatterAttribute with a SurrogateType property, new diagnostic IDs MsgPack019-022 as public constants and descriptors, public GeneratedFormatterRequest and ObjectSerializationInfo.IsUserDeclaredFormatter members, and documented behaviour for them. Whether to accept that public contract is for the API owners to decide.",
       "acceptedRefusalIds": []
     }
   },
@@ -9234,7 +9159,7 @@
       },
       {
         "ruleId": "R-defect",
-        "text": "7 defects found",
+        "text": "6 defects found",
         "tier": "focused"
       },
       {
@@ -9259,12 +9184,12 @@
       }
     ],
     "coverage": {
-      "h1": "supported",
+      "h1": "read",
       "h2": "read",
       "h3": "read",
       "h4": "read",
       "h5": "read",
-      "h6": "supported",
+      "h6": "read",
       "h7": "read",
       "h8": "read",
       "h9": "read",
@@ -9272,7 +9197,7 @@
       "h11": "read",
       "h12": "read",
       "h13": "read",
-      "h14": "supported",
+      "h14": "read",
       "h15": "supported",
       "h16": "read",
       "h17": "read",
@@ -9284,20 +9209,20 @@
       "h23": "read",
       "h24": "supported",
       "h25": "supported",
-      "h26": "supported",
+      "h26": "read",
       "h27": "supported",
       "h28": "supported",
       "h29": "supported",
       "h30": "supported",
       "h31": "supported",
       "h32": "supported",
-      "h33": "read"
+      "h33": "supported"
     },
-    "readHunks": 20,
+    "readHunks": 23,
     "totalHunks": 33,
-    "readLines": 766,
+    "readLines": 713,
     "totalLines": 1043,
-    "readMinutes": 31,
+    "readMinutes": 29,
     "fullMinutes": 42
   }
 }
