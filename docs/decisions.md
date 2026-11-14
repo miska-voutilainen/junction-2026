@@ -50,6 +50,7 @@
 - **Why:** The honest statement is that nobody reads snapshots and the real review is of the template that produces them; the line also says what that leaves unchecked. Recorded reviews without generated files route byte for byte as before; `schemaVersion` stays 1 because the new enum value only appears where generated hunks exist.
 - **Rejected:** Keeping them counted (the count stays unreadable and the tier is driven by snapshots). Dropping `mp-2297` from the sample (it is the one real Tieto change that shows the idea; hiding it would be cherry-picking).
 - **PR:** #113
+- **Figures at the time:** "12 of 423" and "411 are generated" were the numbers when this was decided. The current recorded review (`data/runs/mp-2297/review.json`) reads 21 hunks and marks 402 as generated.
 
 ## 2026-11-14 · Record mode reuses a recording with the same key; A3 cites source first, A4 copies statements exactly
 
@@ -169,6 +170,7 @@
 - **Decision:** Diagrams are SVGs in light and dark versions, shown with `<picture>`, in the app's colour tokens and system fonts. `scripts/idea-diagrams/` draws them from one TypeScript source, so the two themes never drift apart. The architecture diagram stays Mermaid while spec T05 names it. Miska decided; Veijo's agreement for `scripts/` and `.claude/rules/docs.md` was not asked first because he was asleep.
 - **Why:** Mermaid's layout and styling can't match the product's look or keep dense labels readable. GitHub can't load web fonts in images and is retiring its `#gh-dark-mode-only` suffix, so `<picture>` with two files is the documented way to follow the reader's theme.
 - **Rejected:** Mermaid (limited styling); one SVG with an internal `prefers-color-scheme` query (it follows the OS, not GitHub's theme); hand-edited SVGs (two files to keep in sync per diagram).
+- **Superseded in part:** the architecture diagram is an SVG too. See [The architecture diagram is an SVG too](#2026-11-14--the-architecture-diagram-is-an-svg-too-next-dev-no-longer-edits-agentsmd).
 - **PR:** this PR
 
 ## 2026-11-14 · The UI follows the design canvas; S4 receipt and S5 dashboard added; S3 moves to the app lane
@@ -226,6 +228,7 @@
 - **Why:** Opus is the strongest reviewer available and runs offline, so latency doesn't matter; the official SDK supports structured outputs and effort directly. Neutrality lives in our interface, not in a library.
 - **Rejected:** Vercel AI SDK v7 (an extra abstraction over the same calls; its `generateObject` is deprecated). Sonnet 5.5 for the eval runs (the report card must measure the same reviewer the demo shows).
 - **PR:** –
+- **Superseded in part:** the `messages.parse` call. See [The AI client validates answers itself](#2026-11-14--the-ai-client-validates-answers-itself-instead-of-using-messagesparse).
 
 ## 2026-11-13 21:50 · Stack: Next.js 16 static site on Vercel plus a TypeScript pipeline in the same repo
 
