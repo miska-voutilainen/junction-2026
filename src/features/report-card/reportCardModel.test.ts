@@ -24,7 +24,7 @@ describe("areaCardModel", () => {
   it("states the sample size in the headline and the spot-check gap as the next step", () => {
     const card = areaCardModel("generator", entry("generator"), 0);
     expect(card.level).toBe("calibrated");
-    expect(card.headline).toBe("3 of 4 planted bugs caught · planted before the prompts");
+    expect(card.headline).toBe("3 of 4 planted bugs caught · planted blind to the prompts");
     expect(card.nextStep).toBe("Trusted needs 5 clean spot checks: 0 recorded");
     expect(card.nextStepNote).toMatch(/no spot checks/);
     expect(card.effect).toMatch(/Focused at best/);
@@ -74,7 +74,7 @@ describe("areaCardModel", () => {
 
 describe("report card lists", () => {
   it("describes what the levels rest on", () => {
-    expect(measuredLine(reportCard)).toBe("Reviewer rv1 · claude-opus-5-5 · measured on 10 planted bugs, planted before the prompts were written");
+    expect(measuredLine(reportCard)).toBe("Reviewer rv1 · claude-opus-5-5 · measured on 10 planted bugs, planted by an agent that never saw the prompts");
   });
 
   it("lists only the plants the reviewer missed, with their area and variant link", () => {

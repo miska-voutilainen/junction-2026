@@ -12,7 +12,7 @@
 6. **Written refusals.** A versioned list of what the AI never decides, each with the role that does.
 7. **Measured trust, on a ladder.** Areas climb Shadow, Calibrated, Trusted on evidence and drop after an escape.
 8. **Blind first.** Expectations come from the requirement before the author's story; a test counts only if it fails before the change and passes after.
-9. **We don't grade our own homework.** Planted bugs are written before any prompt exists, by an agent that never sees the prompts, and every rate shows its sample size.
+9. **We don't grade our own homework.** Planted bugs come from an agent that never sees the reviewer's prompts, the prompt writers never see the plants, and every rate shows its sample size.
 
 ## Trade-offs
 
@@ -27,7 +27,8 @@
 - **No Trusted area without spot checks.** Catch rate alone never earns Trusted; five clean spot checks do.
 - **Requirements are derived.** Tieto's sample changes have no written requirements, so we derived them; a real team's would be better and worse.
 - **PR descriptions are synthetic.** We wrote the author descriptions and planted one false statement; they are labelled as such.
-- **The plants come from the prompt author's session.** A separate agent wrote them before the prompts and never saw them, but no second person did; a team should have someone outside the prompt work plant them.
+- **The plants come from the prompt author's session.** Separate agents kept each side blind to the other, but no second person planted them; a team should have someone outside the prompt work do it.
+- **Some plants stand alone.** A plant's area follows its file's path, so the analyzer and security plants sit in files the original change doesn't touch; a lone edit there may be easier to spot than a real agent's bug.
 - **Small n per area.** Every rate shows its sample size, and a small one is a weak rate.
 - **Notes are not tamper-evident without the signature.** An unsigned or unverified git note proves nothing.
 - **One repository, one reviewer model.** Results say nothing yet about other code or models.
