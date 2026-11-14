@@ -142,7 +142,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
   - the tier badge: "Light", "Focused" or "Full";
   - the reading estimate: "read 2 of 8 · ~2 min" (the minutes are left out when nothing needs reading; " · <g> generated" follows the counts when g > 0, e.g. "read 12 of 423 · 411 generated");
   - the counts, only when non-zero: "1 contradiction", "2 contradictions", "2 refused";
-  - the receipt status: "Needs review", "Signed by <owner login>", "Stale" or "Signature failed verification" (the receipt's recorded check failed);
+  - the receipt status: "Needs review", "Signed by <owner login>", "Stale", "Reopened by an escape" (signed and valid, but a simulated escape now sends hunks the signer didn't read to a person; counted under the "Needs review" filter) or "Signature failed verification" (the receipt's recorded check failed);
   - a "synthetic PR description" tag when the change's `authorDescription.synthetic` is true.
 - **375 px:** rows stack in three lines: title; chips (requirement ID, tier badge, reading estimate); counts, receipt status and tag. The summary bar wraps to two lines.
 - **States:** empty (no change has a review file): "No recorded reviews yet." and "Run `pnpm review run mp-2283` to record one." · a change whose review file is missing: its row shows the title and "Not reviewed yet" in place of tier and estimate · a review file that fails validation: the row shows the title and "This review couldn't be read. Re-record it with `pnpm review run <id>`." · success as above.
@@ -151,7 +151,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 ### S2 · Review (`/changes/[id]`)
 
 - **Purpose:** review one change: moments 1–3 happen here. Static params: every `kind: "tieto"` change id.
-- **Header:** "← Inbox" link; the title (h1); chips: requirement ID, authoring agent, "synthetic PR description" when applicable; the receipt status only when it needs action, "Stale" or "Signature failed verification". Who signed is on the roles line below the meta row (Idea 8), which never names a signer whose signature failed.
+- **Header:** "← Inbox" link; the title (h1); chips: requirement ID, authoring agent, "synthetic PR description" when applicable; the receipt status only when it needs action, "Stale", "Reopened by an escape" or "Signature failed verification". Under the tier banner, when an escape reopened the receipt: "An escape in <Area> re-routed this change after it was signed: <N> hunks the signer didn't read now need a person." (areas joined with "and", "hunk" and "needs" when N is 1). Who signed is on the roles line below the meta row (Idea 8), which never names a signer whose signature failed.
 - **Tier banner** (below the header, full width): first line "<Tier> · Read <r> of <n> hunks[ · <g> generated] · ~<m> min (full read ~<f> min)" (the generated part only when g > 0; the full-read part only when f differs from m); below it one line per reason, in the order `route()` returns them, each "<reason text>" followed by its rule id in muted text, e.g. "2 items refused: a human decides · R-refusal". A small "How is this computed?" link opens a tooltip: "Tier = the highest tier any rule asks for. Reading time assumes 25 changed lines a minute, a stated assumption."
 - **Left: hunk navigator** (208 px from 1100 px, 264 px from 1600 px, sticky while the diff scrolls; below 1100 px a dropdown; `docs/decisions.md`). On S2 the app nav is a 56 px icon rail, so the diff gets about 700 px at 1440. Four groups in this order, each with a heading and count: "Read this (<n>)", "Supported (<n>)", "Verified (<n>)", "Generated (<n>)"; groups with zero hunks are omitted. Each item: a coverage marker, "<file name>:<line range>" (the name truncates first, the range stays whole) and below it the area chip when the hunk has an area. Clicking an item scrolls the diff to that hunk and focuses its header. Hunks with coverage `generated` are one item: "<n> generated snapshot files".
 - **Centre: diff viewer.** Per file: a header with the path, "+<added> −<removed>" and the area chip; then its hunks. Each hunk: its `@@` header line, a coloured gutter bar showing its coverage (Verified, Supported, Read this, Generated, each with a text label for colour-blind users; Generated is a dotted neutral bar), old and new line numbers, the lines with `+`/`-` markers and C# syntax highlighting (shiki, tokenised per hunk on the server at build time). When a claim is selected, its cited lines get a highlight and the first one scrolls into view. Generated hunks sit in their own collapsed section, outside the reading count: "<n> generated snapshot files · not in the reading count · Show".
@@ -180,7 +180,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 
 - **Purpose:** the signed receipt as a document a person can read, print and verify.
 - **Content:** per the UI plan, section 5: the seal "Signature verified", commit, base, `diffSha256`, author agent and signer key; "Checked", "Not checked", "Residual risk" in the signer's words; a hunk ledger (location, coverage, "Read by <owner>"); open decisions (the refused items the owner accepted); the verify command and its recorded output; Copy verify command, Copy link and Print.
-- **States:** no receipt: "No receipt for <id> yet." and the sign command · stale: the S2 stale warning with both hashes · signature failed (`verify.ok` false): "The signature check failed when this receipt was exported." with the recorded verify output and what was signed, no seal · unchecked (the signature verified but no readable review exists to compare the diff with): "Signature valid" without "diff unchanged", no seal · invalid: "This receipt couldn't be read. Re-export it with `pnpm countersign export <id>`."
+- **States:** no receipt: "No receipt for <id> yet." and the sign command · stale: the S2 stale warning with both hashes · signature failed (`verify.ok` false): "The signature check failed when this receipt was exported." with the recorded verify output and what was signed, no seal · reopened (signed and valid, but an escape sent hunks the signer didn't read to a person): the same line as on S2 above the receipt; the signature and "diff unchanged" stay · unchecked (the signature verified but no readable review exists to compare the diff with): "Signature valid" without "diff unchanged", no seal · invalid: "This receipt couldn't be read. Re-export it with `pnpm countersign export <id>`."
 
 ### S5 · Dashboard (`/dashboard`)
 
@@ -363,7 +363,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 
 - `pnpm countersign draft <changeId>`: writes `.scratch/receipts/<changeId>.json` (a `Receipt` without `signedAt`, from `review.receiptDraft`, owner from `--owner <login>` or `git config github.user`, else asks for `--owner`). The owner edits it.
 - `pnpm countersign sign <changeId> [--key <path>]` (default key `~/.ssh/countersign_ed25519`): sets `signedAt`, serialises the receipt as canonical JSON (keys sorted, 2-space indent, trailing newline), signs it with `ssh-keygen -Y sign -f <key> -n countersign-receipt`, writes the note `<canonical JSON>\n<armored signature>` with `git notes --ref=countersign add --no-stripspace -F <file> <headSha>` in `SAMPLE_REPO_DIR` (fails if a note exists: receipts are append-only by policy), then prints the verify command.
-- `pnpm countersign verify <changeId>`: reads the note, splits it at the `-----BEGIN SSH SIGNATURE-----` line, runs `ssh-keygen -Y verify -f data/sample/allowed_signers -I <owner> -n countersign-receipt -s <sig>` with the payload on stdin, checks `commit === headSha` and recomputes `computeDiffIdentity()`. Prints the ssh-keygen line and "diff unchanged" (exit 0), or "Stale: the diff changed since signing" (exit 1), or "No receipt for <changeId>" (exit 2), or "Signature invalid" (exit 3). The exit code is the merge gate a CI step would use.
+- `pnpm countersign verify <changeId>`: reads the note, splits it at the `-----BEGIN SSH SIGNATURE-----` line, runs `ssh-keygen -Y verify -f data/sample/allowed_signers -I <owner> -n countersign-receipt -s <sig>` with the payload on stdin, checks `commit === headSha` and recomputes `computeDiffIdentity()`. Prints the ssh-keygen line and "diff unchanged" (exit 0), or "Stale: the diff changed since signing" (exit 1), or "No receipt for <changeId>. Run pnpm countersign sign <changeId> first." (exit 2), or "Signature invalid" (exit 3). The exit code is the merge gate a CI step would use.
 - `pnpm countersign export <changeId>`: runs verify and writes `data/receipts/<changeId>.json`.
 - ssh-keygen: on Windows `C:\Program Files\Git\usr\bin\ssh-keygen.exe` (OpenSSH 10.2), else `ssh-keygen` on the PATH; paths passed with forward slashes, `cwd` set.
 
@@ -492,7 +492,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 
 **T06 · loaders and shared pieces.**
 - `src/lib/data/` exports `loadChanges(): Promise<LoadResult<ChangeInput[]>>` (only `kind: "tieto"`, sorted by id), `loadChange(id)`, `loadReview(changeId)`, `loadReportCard()`, `loadReceipt(changeId)`, where `LoadResult<T> = { status: "ok"; data: T; source: "recorded" | "fixture" } | { status: "missing" } | { status: "invalid"; error: string }`. Each reads the recorded path first (`data/sample/…`, `data/runs/…`, `data/eval/…`, `data/receipts/…`) and falls back to the same path under `data/fixtures/`.
-- Also in T06: `receiptStatus(review, receiptRecord | null): "needs-review" | "unverified" | "signed" | "stale"` in `src/lib/data/receiptStatus.ts`, the `ReceiptStatus` component in `src/components/ReceiptStatus.tsx` ("Needs review" · "Signed by <owner>" · "Stale" · "Signature failed verification"), and a `MockDataBanner` in `src/components/MockDataBanner.tsx` that a page renders when any of its loader results has `source: "fixture"`.
+- Also in T06: `receiptStatus(review, receiptRecord | null): "needs-review" | "unverified" | "signed" | "stale"` in `src/lib/data/receiptStatus.ts` (pure; the screens add `"reopened"` through `receiptUnderEscapes()` in `src/lib/receiptUnderEscapes.ts`, never over stale or unverified), the `ReceiptStatus` component in `src/components/ReceiptStatus.tsx` ("Needs review" · "Signed by <owner>" · "Stale" · "Reopened by an escape" · "Signature failed verification"), and a `MockDataBanner` in `src/components/MockDataBanner.tsx` that a page renders when any of its loader results has `source: "fixture"`.
 - The `mp-2283` fixture must route to Focused with at least 2 `read` hunks under `levelsFromReportCard(fixture report card)` and no escapes.
 
 **T07 · sample data.**
@@ -653,8 +653,8 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
   - **Field sources:**
     - `changeId`, `requirementId`, `reviewerVersion` (`review.reviewer.version`), `reviewRunId` (`review.run.id`) and the three lists come from the review.
     - `repo`, `commit` (`headSha`) and `baseCommit` come from the change input.
-    - `baseTree`, `headTree` and `diffSha256` come from `computeDiffIdentity()`. They must equal `review.diff`, else exit 1 "Review is stale: re-run the pipeline".
-  - **Owner:** `--owner <login>`, else `git config github.user` in the repo root, else exit 1 "Pass --owner <github-login>".
+    - `baseTree`, `headTree` and `diffSha256` come from `computeDiffIdentity()`. They must equal `review.diff`, else exit 1 "Review is stale: re-run the pipeline. Run pnpm review run <changeId>, then pnpm countersign draft <changeId> --force." (`sign` says the same).
+  - **Owner:** `--owner <login>`, else `git config github.user` in the repo root, else exit 1 "Pass --owner <github-login>, or set one with git config github.user <github-login>.".
   - **Output:** the draft goes to `<repo root>/.scratch/receipts/<id>.json`. An existing draft is overwritten only with `--force`, else exit 1 "Draft exists: <path> (use --force)".
 - **Exit codes:**
   - 0 ok.
@@ -671,12 +671,12 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 - **verify:**
   - Finds the newest receipt for the change id among all notes in `refs/notes/countersign` (`git notes --ref=countersign list`).
   - Checks the signature first: exit 3 on failure or an unparseable note.
-  - Then `receipt.commit === ChangeInput.headSha` and the three identity values recomputed for `baseSha..headSha`. Any mismatch is exit 1, "Stale: the diff changed since signing".
+  - Then `receipt.commit === ChangeInput.headSha` and the three identity values recomputed for `baseSha..headSha`. Any mismatch is exit 1, "Stale: the diff changed since signing. Run pnpm review run <changeId>, then pnpm countersign draft <changeId> --force and sign it again.".
   - Test for stale: sign on commit A, then point the change input's `headSha` at a new commit B.
   - The printed "Good …" line is ssh-keygen's stdout.
 - **Testability:**
   - Functions take `{ repoDir, dataDir, allowedSignersPath, sshKeygenPath }`. The CLI fills them from the env and defaults; `COUNTERSIGN_DATA_DIR` and `COUNTERSIGN_ALLOWED_SIGNERS` override them for tests.
-  - Modules: `src/receipt/{cli,draft,sign,verify,exportRecord,canonicalJson,sshKeygen,notes}.ts`. Args are parsed with `node:util` `parseArgs`.
+  - Modules: `src/receipt/{cli,draft,sign,verify,exportReceipt,canonicalJson,sshKeygen,notes}.ts`. Args are parsed with `node:util` `parseArgs`.
   - Temp repos in tests set `user.name` and `user.email` with `-c`. Tests build a minimal `Review` in a temp data folder.
 - **export:** writes only after verify exits 0; otherwise it exits with verify's code and writes nothing.
   - `verify.command` is "pnpm countersign verify <id>" and `verify.output` is the lines verify printed.

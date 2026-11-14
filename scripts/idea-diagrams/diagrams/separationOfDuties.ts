@@ -32,35 +32,25 @@ const ROLES = [
 export function separationOfDuties(): Diagram {
   const roleX = ROLES.map((_, i) => MARGIN + i * (ROLE_WIDTH + ROLE_GAP));
   const lastRole = ROLES.length - 1;
-  const body: string[] = [
-    text(MARGIN, 34, "Three different roles on every change", "h"),
-  ];
+  const body: string[] = [text(MARGIN, 34, "Three different roles on every change", "heading")];
 
   ROLES.forEach(({ title, lines, rule, cssClass }, i) => {
     const x = roleX[i];
     body.push(
-      node(
-        x,
-        ROLE_TOP,
-        ROLE_WIDTH,
-        ROLE_HEIGHT,
-        title,
-        lines.map(secondaryLine),
-        cssClass,
-      ),
+      node(x, ROLE_TOP, ROLE_WIDTH, ROLE_HEIGHT, title, lines.map(secondaryLine), cssClass),
     );
     if (i < lastRole)
       body.push(
         path(
           `M${x + ROLE_WIDTH + 2},${ROLE_TOP + ROLE_HEIGHT / 2} L${roleX[i + 1] - 3},${ROLE_TOP + ROLE_HEIGHT / 2}`,
           "la",
-          "a",
+          "accent",
         ),
       );
     body.push(
-      text(x, RULE_TOP, "The rule", "s"),
-      text(x, RULE_TOP + 20, rule[0], "t"),
-      text(x, RULE_TOP + 38, rule[1], "t"),
+      text(x, RULE_TOP, "The rule", "secondary"),
+      text(x, RULE_TOP + 20, rule[0], "title"),
+      text(x, RULE_TOP + 38, rule[1], "title"),
     );
   });
 
@@ -69,7 +59,7 @@ export function separationOfDuties(): Diagram {
       MARGIN,
       270,
       "Whoever plants the bugs that measure the reviewer never sees its prompts.",
-      "s",
+      "secondary",
     ),
   );
   return {

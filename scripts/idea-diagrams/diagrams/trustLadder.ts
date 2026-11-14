@@ -72,35 +72,29 @@ export function trustLadder(): Diagram {
       MARGIN,
       34,
       "One ladder per review area: generator, analyzer, security, performance",
-      "s",
+      "secondary",
     ),
   ];
   for (const { x, top, title, lines, tint } of STEPS) {
-    body.push(
-      rect(x, top, STEP_WIDTH, STEP_BOTTOM - top, tint ? "node-acc" : "node"),
-    );
+    body.push(rect(x, top, STEP_WIDTH, STEP_BOTTOM - top, tint ? "node-acc" : "node"));
     if (tint) body.push(rect(x, top, STEP_WIDTH, STEP_BOTTOM - top, tint));
-    body.push(text(x + 16, top + 28, title, "t"));
+    body.push(text(x + 16, top + 28, title, "title"));
     lines.forEach(([content, cssClass], index) =>
       body.push(text(x + 16, top + 52 + 18 * index, content, cssClass)),
     );
   }
   for (const { x, lowerTop } of GAPS) {
-    body.push(
-      path(`M${x + 4},${lowerTop + 30} L${x + 58},${lowerTop - 20}`, "la", "a"),
-    );
-    body.push(label(x + 31, lowerTop - 30, "evidence", "ta"));
-    body.push(
-      path(`M${x + 58},${lowerTop + 60} L${x + 6},${lowerTop + 60}`, "lr", "r"),
-    );
-    body.push(label(x + 32, lowerTop + 80, "escape", "tr"));
+    body.push(path(`M${x + 4},${lowerTop + 30} L${x + 58},${lowerTop - 20}`, "la", "accent"));
+    body.push(label(x + 31, lowerTop - 30, "evidence", "accent-text"));
+    body.push(path(`M${x + 58},${lowerTop + 60} L${x + 6},${lowerTop + 60}`, "lr", "rose"));
+    body.push(label(x + 32, lowerTop + 80, "escape", "rose-text"));
   }
   body.push(
     text(
       MARGIN,
       360,
       "An area climbs on evidence and drops one level after each escape. People set the thresholds in src/policy/ladder.ts.",
-      "s",
+      "secondary",
     ),
   );
   return {

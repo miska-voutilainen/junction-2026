@@ -150,12 +150,13 @@ function metaLine(row: InboxRow): ReactNode {
 function receiptOrFlags(row: ReviewedRow): string {
   if (row.isReceiptUnreadable) return "Receipt couldn't be read";
   if (row.receipt === "stale") return "Stale";
+  if (row.receipt === "reopened") return "Reopened by an escape";
   if (row.receipt === "unverified") return "Signature failed verification";
   return flagsText(row);
 }
 
 function metaFlagClass(row: ReviewedRow): string {
-  if (row.isReceiptUnreadable || row.receipt === "stale") return "text-amber-light";
+  if (row.isReceiptUnreadable || row.receipt === "stale" || row.receipt === "reopened") return "text-amber-light";
   if (row.receipt === "unverified") return "text-rose-light";
   return row.contradictions > 0 ? "text-rose-light" : "";
 }

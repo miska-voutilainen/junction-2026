@@ -1,3 +1,10 @@
+/**
+ * Signed receipt in git, step 1: the AI drafts, a person signs. The draft turns a
+ * recorded review into a receipt the owner can edit; nothing in it is signed, and
+ * the review's own claims never become a signature without a named engineer
+ * running `sign`. Spec section 5, Receipt CLI.
+ */
+
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { ReceiptSchema, type Receipt } from "@/contracts/receipt";
@@ -12,13 +19,6 @@ import {
   readValidatedJson,
   type ReceiptOptions,
 } from "./context";
-
-/**
- * Signed receipt in git, step 1: the AI drafts, a person signs. The draft turns a
- * recorded review into a receipt the owner can edit; nothing in it is signed, and
- * the review's own claims never become a signature without a named engineer
- * running `sign`. Spec section 5, Receipt CLI.
- */
 
 /** The draft file: a receipt before `signedAt` exists. */
 export const DraftSchema = ReceiptSchema.omit({ signedAt: true });
@@ -41,7 +41,7 @@ export async function draftReceipt(
   const review = await readReview(options.dataDir, changeId);
   const change = await readChangeInput(options, changeId);
   const identity = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
-  requireReviewMatchesDiff(review, identity);
+  requireReviewMatchesDiff(review, identity, changeId);
   const owner = ownerOption ?? (await githubUserFromGitConfig());
 
   const draft: Draft = DraftSchema.parse({
@@ -73,14 +73,17 @@ function readReview(dataDir: string, changeId: string): Promise<Review> {
 }
 
 /** A review recorded for another diff would put claims the owner never saw into a receipt for this one. */
-function requireReviewMatchesDiff(review: Review, identity: DiffIdentity): void {
+function requireReviewMatchesDiff(review: Review, identity: DiffIdentity, changeId: string): void {
   const { baseTree, headTree, diffSha256 } = review.diff;
   if (
     baseTree !== identity.baseTree ||
     headTree !== identity.headTree ||
     diffSha256 !== identity.diffSha256
   ) {
-    throw new CommandError(1, "Review is stale: re-run the pipeline");
+    throw new CommandError(
+      1,
+      `Review is stale: re-run the pipeline. Run pnpm review run ${changeId}, then pnpm countersign draft ${changeId} --force.`,
+    );
   }
 }
 
@@ -88,7 +91,11 @@ async function githubUserFromGitConfig(): Promise<string> {
   const login = await runGit(process.cwd(), ["config", "github.user"])
     .then((output) => output.toString("utf8").trim())
     .catch(() => "");
-  if (login === "") throw new CommandError(1, "Pass --owner <github-login>");
+  if (login === "")
+    throw new CommandError(
+      1,
+      "Pass --owner <github-login>, or set one with git config github.user <github-login>.",
+    );
   return login;
 }
 
