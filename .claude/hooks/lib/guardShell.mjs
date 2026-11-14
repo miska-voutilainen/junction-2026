@@ -2,7 +2,7 @@
 // or PowerShell line against the table. A seatbelt, not a shell parser; tokenising is in guardTokens.
 import { resolve } from "node:path";
 import { ghRows } from "./guardGh.mjs";
-import { optValues, splitCommand, substitutions, words } from "./guardTokens.mjs";
+import { SUBSTITUTION_PLACEHOLDER, optValues, splitCommand, substitutions, words } from "./guardTokens.mjs";
 import { isOutside, normalisePath } from "./lanes.mjs";
 
 const EMOJI = /\p{Extended_Pictographic}|️|(?<![\w:]):[a-z0-9_+-]+:(?![\w:])/u;
@@ -16,7 +16,7 @@ const HARNESS_VERBS = new Set([
   "add-content", "ac", "copy-item", "cpi", "copy", "new-item", "ni", "sc", "del", "ri", "erase", "move", "mi",
 ]);
 const DELETE_CMDS = new Set(["rm", "remove-item", "ri", "del", "erase", "rd", "rmdir"]);
-const CD_CMDS = new Set(["cd", "chdir", "pushd", "set-location", "sl"]);
+const CD_CMDS = new Set(["cd", "chdir", "pushd", "popd", "set-location", "sl"]);
 const NPM_SUBS = { install: "install", i: "install", ci: "install --frozen-lockfile", add: "add", uninstall: "remove", remove: "remove", update: "update" };
 
 const MAX_NESTING = 5;
@@ -105,12 +105,14 @@ function pushRows(rest, ctx, add) {
   if (rest.includes("--all")) add("deny", "pushing all branches is not allowed: push the one branch", true);
   const toMain = refspecs.some((r) => ["main", "refs/heads/main"].includes(r.replace(/^\+/, "").split(":").pop()));
   if (toMain) return add("deny", "open a PR (ship-pr)", true);
+  if (refspecs.some((r) => r.includes(SUBSTITUTION_PLACEHOLDER)))
+    add("ask", "the branch to push is computed: check it is not main");
 
   const headRef = refspecs.some((r) => ["HEAD", "@"].includes(r.replace(/^\+/, "")));
   if (positional.length > 1 && !headRef) return;
-  const branch = ctx.io.currentBranch(ctx.cwd);
+  const branch = ctx.cwd === null ? null : ctx.io.currentBranch(ctx.cwd);
   // An unreadable branch (cwd is not a repo) must not read as "not main".
-  if (branch == null) add("ask", `could not read the branch in ${ctx.cwd}; check it is not main before pushing`);
+  if (branch == null) add("ask", "could not read the current branch; check it is not main before pushing");
   else if (branch === "main") add("deny", "open a PR (ship-pr)", true);
 }
 
@@ -171,10 +173,17 @@ function checkCommandLine(line, env, depth) {
     return;
   }
   const { parts, nested } = splitCommand(line, env.esc);
-  for (const inner of [...substitutions(line, env.esc), ...nested]) checkCommandLine(inner, env, depth + 1);
+  for (const inner of [...substitutions(line, env.esc), ...nested]) checkNested(inner, env, depth);
   for (const part of parts) {
-    for (const inner of checkPart(part, env)) checkCommandLine(inner, env, depth + 1);
+    for (const inner of checkPart(part, env)) checkNested(inner, env, depth);
   }
+}
+
+/** Checks a command line that runs inside another; a `cd` in it doesn't move the outer line. */
+function checkNested(line, env, depth) {
+  const outerDir = env.cwd;
+  checkCommandLine(line, env, depth + 1);
+  env.cwd = outerDir;
 }
 
 /**
@@ -210,16 +219,16 @@ function unwrap(ws) {
 /** Applies every shell row to one command; returns the command lines it wraps, for the caller to check. */
 function checkPart(part, env) {
   const { ctx, add, io, lane, esc, readBody, emojiTexts, trailerTexts, fullCommand } = env;
-  const unwrapped = unwrap(cleanWords(words(part, esc)));
+  const unwrapped = unwrap(cleanWords(words(part.text, esc)));
   const ws = unwrapped.ws;
   if (unwrapped.encoded) add("ask", "encoded shell command can't be checked: run it by hand");
   if (!ws.length) return unwrapped.nested;
-  const raw = unwrap(cleanWords(words(part, null))).ws;
+  const raw = unwrap(cleanWords(words(part.text, null))).ws;
   const cmd = cmdName(ws[0]);
   const args = ws.slice(1);
 
   if ([...ws, ...raw].some(envHit)) add("deny", ".env holds secrets; use .env.example", true);
-  harnessRow(part, cmd, args, add);
+  harnessRow(part.source, cmd, args, add);
 
   if (cmd === "echo" && args[0] === "guard-check") add("deny", "guard is active (canary)", true);
   const gi = ws.findIndex((w) => cmdName(w) === "graphify");
@@ -229,11 +238,11 @@ function checkPart(part, env) {
   if (["npm", "yarn", "bun"].includes(cmd)) packageManagerRow(cmd, args, add);
 
   if (CD_CMDS.has(cmd)) {
-    const target = args.find((w) => !w.startsWith("-"));
-    if (target) env.cwd = resolve(env.cwd, target);
+    if (!part.grouped) env.cwd = directoryAfterCd(cmd, args, env.cwd);
   } else if (cmd === "git") {
     const { sub, rest, dirs } = gitCmd(args);
-    gitRows(sub, rest, { ...ctx, cwd: dirs.reduce((dir, d) => resolve(dir, d), env.cwd) }, add);
+    const cwd = env.cwd === null ? null : dirs.reduce(inDirectory, env.cwd);
+    gitRows(sub, rest, { ...ctx, cwd }, add);
     if (sub === "commit") {
       emojiTexts.push(fullCommand);
       trailerTexts.push(fullCommand);
@@ -246,9 +255,27 @@ function checkPart(part, env) {
       }
     }
   } else if (cmd === "gh") {
-    ghRows(args, { lane, io, readBody, emojiTexts, trailerTexts, cwd: env.cwd }, add);
+    ghRows(args, { lane, io, readBody, emojiTexts, trailerTexts, cwd: env.cwd ?? ctx.root }, add);
   }
   return unwrapped.nested;
+}
+
+/** `dir` relative to `base`; a Git Bash path (`/c/x`) becomes a Windows one (`C:/x`) first. */
+function inDirectory(base, dir) {
+  const native = process.platform === "win32" ? dir.replace(/^\/([a-zA-Z])(?=\/|$)/, "$1:") : dir;
+  return resolve(base, native);
+}
+
+/**
+ * The directory after a `cd`, or null when it can't be known (`pushd`, `popd`, `cd -`, `~`, a
+ * computed target): a later push then asks instead of reading the wrong checkout's branch.
+ */
+function directoryAfterCd(cmd, args, current) {
+  const target = args.find((w) => !w.startsWith("-"));
+  if (cmd === "pushd" || cmd === "popd") return null;
+  if (!target) return current;
+  if (target === "-" || target.startsWith("~") || target.includes(SUBSTITUTION_PLACEHOLDER)) return null;
+  return current === null ? null : inDirectory(current, target);
 }
 
 /** Asks when a command writes, copies over or deletes a harness file (hooks, settings.json). */

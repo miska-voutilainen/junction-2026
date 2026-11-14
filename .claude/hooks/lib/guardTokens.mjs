@@ -50,59 +50,79 @@ function nestedOpenAt(cmd, i, esc, atCommandStart) {
  *
  * `esc` is the tool's escape character (backslash for Bash, backtick for PowerShell);
  * outside single quotes it makes the next character literal, so it can't open or close a quote.
- * @returns {{parts: string[], nested: string[]}}
+ *
+ * Each part keeps its `source`: the original text, nested commands included, for rows that look
+ * for a path anywhere in the command (a harness file inside `$(echo .claude/hooks/x)`). A part
+ * inside a `( ... )` or PowerShell `{ ... }` group is marked `grouped`: a `cd` there stays there.
+ * @returns {{parts: {text: string, source: string, grouped: boolean}[], nested: string[]}}
  */
 export function splitCommand(cmd, esc = "\\") {
   const parts = [];
   const nested = [];
   let cur = "";
+  let source = "";
   let q = null;
+  let groupDepth = 0;
   const endPart = () => {
-    parts.push(cur);
+    parts.push({ text: cur.trim(), source: source.trim(), grouped: groupDepth > 0 });
     cur = "";
+    source = "";
+  };
+  const keep = (text, original = text) => {
+    cur += text;
+    source += original;
   };
   for (let i = 0; i < cmd.length; i++) {
     const c = cmd[i];
-    const atCommandStart = cur.trim() === "";
+    // In PowerShell `& {` calls a script block, so the call operator doesn't end the command start.
+    const atCommandStart = cur.trim() === "" || (esc === "`" && cur.trim() === "&");
     const span = q ? null : nestedOpenAt(cmd, i, esc, atCommandStart);
     if (esc && c === esc && q !== "'") {
-      cur += c + (cmd[i + 1] ?? "");
+      keep(c + (cmd[i + 1] ?? ""));
       i++;
     } else if (q) {
-      cur += c;
+      keep(c);
       if (c === q) q = null;
     } else if (c === '"' || c === "'") {
       q = c;
-      cur += c;
+      keep(c);
     } else if (span) {
       const end = closingIndex(cmd, span.at + 1, span.open, esc);
       nested.push(cmd.slice(span.at + 1, end));
-      cur += SUBSTITUTION_PLACEHOLDER;
+      keep(SUBSTITUTION_PLACEHOLDER, cmd.slice(i, end + 1));
       i = end;
     } else if ((c === "&" || c === "|") && cmd[i + 1] === c) {
       endPart();
       i++;
     } else if (c === "&" && (cmd[i - 1] === ">" || cmd[i - 1] === "<" || cmd[i + 1] === ">")) {
-      cur += c;
-    } else if (";|&\n()".includes(c) || (esc === "`" && c === "}")) endPart();
-    else if (c === "{" && atCommandStart && /\s/.test(cmd[i + 1] ?? " ")) endPart();
-    else cur += c;
+      keep(c);
+    } else if (c === "(" || (c === "{" && atCommandStart && (esc === "`" || /\s/.test(cmd[i + 1] ?? " ")))) {
+      endPart();
+      groupDepth++;
+    } else if (c === ")" || (esc === "`" && c === "}")) {
+      endPart();
+      groupDepth = Math.max(0, groupDepth - 1);
+    } else if (";|&\n".includes(c)) endPart();
+    else keep(c);
   }
   endPart();
-  return { parts: parts.map((s) => s.trim()).filter(Boolean), nested };
+  return { parts: parts.filter((p) => p.text), nested };
 }
 
 /**
  * The text inside each `$( ... )` and, in Bash, each pair of backticks, including inside double
- * quotes where the shell still runs them. Single-quoted text is literal and skipped.
+ * quotes where the shell still runs them. Single-quoted text is literal and skipped; a quote of
+ * the other kind inside a quoted string doesn't change the mode (`"it's"` stays double-quoted).
  */
 export function substitutions(line, esc) {
   const found = [];
   let inSingle = false;
+  let inDouble = false;
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
     if (esc && c === esc && !inSingle) i++;
-    else if (c === "'") inSingle = !inSingle;
+    else if (c === "'" && !inDouble) inSingle = !inSingle;
+    else if (c === '"' && !inSingle) inDouble = !inDouble;
     else if (inSingle) continue;
     else if (c === "$" && line[i + 1] === "(") {
       const end = closingIndex(line, i + 2, "(", esc);

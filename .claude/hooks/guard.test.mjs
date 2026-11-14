@@ -520,3 +520,44 @@ test("git -C directories combine, each relative to the one before", () => {
   decide({ tool_name: "Bash", tool_input: { command: "git -C a -C b push" }, cwd: root }, ctx({ io: spy }));
   assert.equal(seen[0], resolve(root, "a", "b"));
 });
+
+test("a harness path inside a nested command still asks", () => {
+  asks("cp evil.mjs $(echo .claude/hooks/guard.mjs)");
+  asks('Copy-Item x -Destination (Join-Path $root ".claude/hooks/guard.mjs")', "PowerShell");
+  asks('Copy-Item evil.mjs (".claude/hooks/guard.mjs")', "PowerShell");
+  allows("cp a.txt $(echo b.txt)");
+});
+
+test("a cd inside a group, a nested command or pushd does not move the rest of the line", () => {
+  const spy = { ...io, currentBranch: (cwd) => (cwd.endsWith("main-checkout") ? "main" : "feat/x") };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: spy })));
+  assert.equal(run("(cd main-checkout) && git push"), null);
+  assert.equal(run("(cd other); git push"), null);
+  assert.equal(run("echo $(cd other) && cd main-checkout && git push"), "deny");
+  assert.equal(run('bash -c "cd other" && cd main-checkout && git push'), "deny");
+  assert.equal(run("pushd other && git push"), "ask");
+  assert.equal(run("cd $(echo x) && git push"), "ask");
+  assert.equal(run("cd other && cd .. && cd main-checkout && git push"), "deny");
+});
+
+test("Git Bash paths map to Windows paths for cd", { skip: process.platform !== "win32" }, () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), "feat/x") };
+  decide({ tool_name: "Bash", tool_input: { command: "cd /c/some/dir && git push" }, cwd: root }, ctx({ io: spy }));
+  assert.equal(seen[0].toLowerCase(), resolve("C:/some/dir").toLowerCase());
+});
+
+test("quoting and computed refspecs", () => {
+  denies(`echo "it's" "$(git push -f origin x)"`);
+  allows(`echo 'it' "x" '$(git push -f origin x)'`);
+  denies("& {git push -f origin x}", "PowerShell");
+  denies("{git push -f origin x}", "PowerShell");
+  asks("git push origin $(echo main)");
+});
+
+test("a cd in a group leaves a push from a main checkout denied", () => {
+  const onMain = { ...io, currentBranch: () => "main" };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: onMain })));
+  assert.equal(run("(cd ../cs-t24-guard) && git push"), "deny");
+  assert.equal(run("echo $(cd /tmp) && git push"), "deny");
+});
