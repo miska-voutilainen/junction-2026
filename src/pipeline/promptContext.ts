@@ -2,8 +2,10 @@
  * What the model reads about a change: the hunks with their ids, and the head-side
  * text of the touched files, each line prefixed with its number so the model can
  * cite lines and the quote check can find them again. Untrusted text (code, diff)
- * sits in delimited blocks, and every line starts with a number or a marker, so a
- * line of code that reads "</file>" cannot close a block early. Spec 9.1, T12.
+ * sits in delimited blocks. Every line of it starts with a line number or a +/-
+ * marker, so no line can equal a closing tag and end a block early. That is all
+ * the layout guarantees: text that reads like an instruction still reaches the
+ * model, which the system text tells to treat the blocks as data. Spec 9.1, T12.
  */
 import type { FileKind, Review } from "../contracts";
 

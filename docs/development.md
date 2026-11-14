@@ -28,19 +28,20 @@
 
 ## Commands
 
-| Command                                           | What it does                                                                                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                                        | Run locally                                                                                                                                                   |
-| `pnpm build`, `pnpm start`                        | Production build and server                                                                                                                                   |
-| `pnpm lint`, `pnpm lint:fix`                      | ESLint, with autofix                                                                                                                                          |
-| `pnpm format`                                     | Prettier write                                                                                                                                                |
-| `pnpm typecheck`                                  | `next typegen`, then `tsc --noEmit`                                                                                                                           |
-| `pnpm test`                                       | Unit tests, Vitest                                                                                                                                            |
-| `pnpm test:hooks`                                 | Harness hook tests, `node --test`                                                                                                                             |
-| `pnpm e2e`                                        | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                         |
-| `pnpm screenshots`                                | Runs Playwright with `--project=screenshots`, meant to save PNGs into `.review/`; `playwright.config.ts` defines no such project yet                          |
-| `pnpm seed`                                       | Clone the fork and fetch notes                                                                                                                                |
-| `pnpm pipeline`, `pnpm evals`, `pnpm countersign` | Defined in `package.json` for the review pipeline, the planted-bug eval and the receipt CLI; `src/pipeline/` and `src/receipt/` are not in the repository yet |
+| Command                                                   | What it does                                                                                                                                                                                       |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                | Run locally                                                                                                                                                                                        |
+| `pnpm build`, `pnpm start`                                | Production build and server                                                                                                                                                                        |
+| `pnpm lint`, `pnpm lint:fix`                              | ESLint, with autofix                                                                                                                                                                               |
+| `pnpm format`                                             | Prettier write                                                                                                                                                                                     |
+| `pnpm typecheck`                                          | `next typegen`, then `tsc --noEmit`                                                                                                                                                                |
+| `pnpm test`                                               | Unit tests, Vitest                                                                                                                                                                                 |
+| `pnpm test:hooks`                                         | Harness hook tests, `node --test`                                                                                                                                                                  |
+| `pnpm e2e`                                                | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                                                              |
+| `pnpm screenshots`                                        | Runs Playwright with `--project=screenshots`, meant to save PNGs into `.review/`; `playwright.config.ts` defines no such project yet                                                               |
+| `pnpm seed`                                               | Clone the fork and fetch notes                                                                                                                                                                     |
+| `pnpm review`, `pnpm evals` | `pnpm review run <changeId> --no-tests` records a blind-first review (A1, A2, quote check) into `data/runs/` and `data/recordings/`; `pnpm review check <changeId>` runs its eval cases. `pnpm pipeline` is a built-in pnpm 12 command, so the script is named `review`. `evals` is not built yet |
+| `pnpm countersign draft\|sign\|verify\|export <changeId>` | The receipt CLI (`src/receipt/`); needs `SAMPLE_REPO_DIR` and an unencrypted ed25519 key (default `~/.ssh/countersign_ed25519`, or `--key`). Commands and exit codes: [api.md](api.md#receipt-cli) |
 
 ## Testing
 

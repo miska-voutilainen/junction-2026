@@ -186,6 +186,27 @@ describe("model client", () => {
     });
   });
 
+  it("replays a call that needed a retry as the same number of requests", async () => {
+    const { transport } = answering('{"verdict":"maybe"}', '{"verdict":"ok"}');
+    await createModelClient({
+      mode: "record",
+      transport,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
+    entries.length = 0;
+
+    await createModelClient({
+      mode: "replay",
+      transport: vi.fn<Transport>(),
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ source: "replay", requests: 2 });
+  });
+
   it("saves nothing in live mode", async () => {
     const { transport } = answering('{"verdict":"ok"}');
     await createModelClient({

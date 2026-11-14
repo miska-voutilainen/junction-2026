@@ -81,6 +81,10 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   // Ids follow output order and are fixed before the check, so a failure names the claim the model wrote.
   const drafts = answer.claims.map((claim, index) => ({ ...claim, id: `c${index + 1}` }));
   const checkedClaims = await checkClaims(drafts, loadedDiff.hunks, readSide);
+  // The Review contract has no field for this count, so it goes to the log only.
+  console.error(
+    `quote check removed ${checkedClaims.hunkIdsRemoved} hunk ids that no passing citation lay in`,
+  );
   const { claims, quoteCheck } = checkedClaims;
 
   // A3 needs A1's expectation, so the anchored comparison runs skip it.
@@ -175,12 +179,7 @@ function cachedReader(repoDir: string, change: ChangeInput): SideReader {
     const key = `${side}:${file}`;
     let text = cache.get(key);
     if (text === undefined) {
-      // A cited path that is a folder makes git say so; a citation can't be checked against it, so it fails as "not present".
-      text = readFileAtCommit(
-        repoDir,
-        side === "new" ? change.headSha : change.baseSha,
-        file,
-      ).catch(() => null);
+      text = readFileAtCommit(repoDir, side === "new" ? change.headSha : change.baseSha, file);
       cache.set(key, text);
     }
     return text;

@@ -9,7 +9,8 @@
 import type { Coverage, ReceiptRecord, Review } from "@/contracts";
 import { tierLabel } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
-import { receiptStatus } from "@/lib/data/receiptStatus";
+import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
+import type { SignerState } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
 import { verifyLine } from "@/lib/receiptCopy";
 
@@ -49,10 +50,10 @@ export interface AcceptedRefusal {
   runId: string;
 }
 
-/** One hunk of the signed diff and what covered it. */
+/** One hunk of the signed diff and what covered it, as the receipt's signed `hunks` list records it. */
 export interface LedgerRow {
   hunkId: string;
-  location: string;
+  file: string;
   coverage: Coverage;
   /** The signer's login when a person had to read this hunk, else null. */
   readBy: string | null;
@@ -77,8 +78,13 @@ export interface ReceiptDocumentView {
   checked: CheckedItem[];
   notChecked: NotCheckedItem[];
   residualRisk: { text: string; accepted: AcceptedRefusal[] };
-  /** Only for a signed receipt: for a stale one the review describes a different diff. */
-  ledger: LedgerRow[] | null;
+  /**
+   * Read from the receipt's signed payload, not the review, so it is what was
+   * signed even when the receipt is stale. Empty when the receipt lists no hunks.
+   */
+  ledger: LedgerRow[];
+  /** The roles line's three parties; `reviewerVersion` is the one the receipt names. */
+  roles: { authorAgent: string; reviewerVersion: string; signer: SignerState };
   owner: string;
   signedAt: string;
   verifyCommand: string;
@@ -129,11 +135,12 @@ export function buildReceiptView(
     title: change.title,
     requirementId: receipt.requirementId,
     summary: status === "signed" && review !== null ? readingSummary(review) : null,
-    identity: identityRows(record, change.authorAgent),
+    identity: identityRows(record),
     checked: receipt.checked.map(({ item, by }) => ({ item, by: BY_LABEL[by] })),
     notChecked: receipt.notChecked,
     residualRisk: { text: receipt.residualRisk.text, accepted: acceptedRefusals(record, review) },
-    ledger: status === "signed" && review !== null ? hunkLedger(review, receipt.owner) : null,
+    ledger: hunkLedger(receipt.hunks),
+    roles: { authorAgent: change.authorAgent, reviewerVersion: receipt.reviewerVersion, signer: signerOf(record) },
     owner: receipt.owner,
     signedAt: formatUtc(receipt.signedAt),
     verifyCommand: verify.command,
@@ -158,17 +165,14 @@ function readingSummary({ routing }: Review): string {
   return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.`;
 }
 
-function identityRows({ receipt }: ReceiptRecord, authorAgent: string): IdentityRow[] {
-  const rows: IdentityRow[] = [
+function identityRows({ receipt }: ReceiptRecord): IdentityRow[] {
+  return [
     { label: "commit", value: receipt.commit },
     { label: "base", value: receipt.baseCommit },
     { label: "diffSha256", value: receipt.diffSha256 },
     { label: "repo", value: receipt.repo },
     { label: "reviewer", value: `${receipt.reviewerVersion} · ${receipt.reviewRunId}` },
   ];
-  rows.push({ label: "author", value: authorAgent });
-  rows.push({ label: "signer", value: receipt.owner });
-  return rows;
 }
 
 /**
@@ -193,24 +197,9 @@ function shortHash(hash: string): string {
 
 const COVERAGE_ORDER: Coverage[] = ["read", "supported", "verified"];
 
-/** One row per hunk, the ones a person read first, in diff order within each group. */
-function hunkLedger(review: Review, owner: string): LedgerRow[] {
-  const rows = review.hunks.map((hunk) => {
-    // A hunk the routing did not classify has no evidence behind it, so a person has to read it.
-    const coverage = review.routing.coverage[hunk.id] ?? "read";
-    return {
-      hunkId: hunk.id,
-      location: hunkLocation(hunk),
-      coverage,
-      readBy: coverage === "read" ? owner : null,
-    };
-  });
-  return COVERAGE_ORDER.flatMap((coverage) => rows.filter((row) => row.coverage === coverage));
-}
-
-/** "file:12–19" for a range; "file:12" for a one-line hunk or a deletion, which has no new lines. */
-function hunkLocation({ file, newStart, newLines }: Review["hunks"][number]): string {
-  return newLines <= 1 ? `${file}:${newStart}` : `${file}:${newStart}–${newStart + newLines - 1}`;
+/** One row per signed hunk, the ones a person read first, in the signed order within each group. */
+function hunkLedger(signedHunks: ReceiptRecord["receipt"]["hunks"]): LedgerRow[] {
+  return COVERAGE_ORDER.flatMap((coverage) => signedHunks.filter((hunk) => hunk.coverage === coverage));
 }
 
 /** "2026-11-14 09:40 UTC", formatted without locale so the server and the browser agree. */

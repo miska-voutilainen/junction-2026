@@ -85,6 +85,7 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
           promptVersion: request.promptVersion,
           runIndex,
           rawAnswer: accepted.rawAnswer,
+          attempts: accepted.attempts,
           usage: accepted.usage,
         });
       }
@@ -154,6 +155,7 @@ async function replay<T>(
     milliseconds: 0,
     outcome: "ok",
     source: "replay",
+    requests: recording.attempts ?? 1,
   });
   return checked.value;
 }
@@ -164,6 +166,8 @@ interface AcceptedAnswer<T> {
   model: string;
   /** Tokens and cost of every ask this call made, so a recording shows what the answer cost. */
   usage: Usage;
+  /** Requests made, so a replay can report the same call count. */
+  attempts: number;
 }
 
 /**
@@ -217,6 +221,7 @@ async function askUntilValid<T>(
         rawAnswer: response.text,
         model: response.model,
         usage: total,
+        attempts: attempt + 1,
       };
     }
 

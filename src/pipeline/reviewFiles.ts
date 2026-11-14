@@ -41,7 +41,7 @@ export async function loadReportCard(): Promise<ReportCard | null> {
 export async function loadRecordedReview(changeId: string): Promise<Review> {
   const file = reviewPath(changeId);
   if (!existsSync(file))
-    throw new Error(`No recorded review for ${changeId}. Run pnpm pipeline run ${changeId} first.`);
+    throw new Error(`No recorded review for ${changeId}. Run pnpm review run ${changeId} first.`);
   return readJson(file, ReviewSchema);
 }
 
@@ -78,7 +78,15 @@ async function readJson<T>(file: string, schema: ZodType<T>): Promise<T> {
   } catch {
     throw new Error(`Cannot read ${file}. Check the change id; sample data lives in data/sample/.`);
   }
-  const parsed = schema.safeParse(JSON.parse(text));
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(
+      `${file} is not valid JSON. Re-create it (pnpm review run <changeId>) or restore it from git.`,
+    );
+  }
+  const parsed = schema.safeParse(json);
   if (!parsed.success)
     throw new Error(`${file} does not match its contract: ${parsed.error.message}`);
   return parsed.data;

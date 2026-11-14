@@ -12,7 +12,7 @@ import { classifyFile } from "../policy/areas";
 import { fixedRefusals, refusalRules } from "../policy/refusals";
 import type { FindingDraft, RefusalDraft } from "../prompts/a3";
 import type { Statement } from "../prompts/a4";
-import { hunksMatchingGlob } from "./hunksMatchingGlob";
+import { hunksMatchingGlob } from "../lib/git/hunksMatchingGlob";
 import { checkCitation, type SideReader } from "./quoteCheck";
 
 type Hunk = Review["hunks"][number];

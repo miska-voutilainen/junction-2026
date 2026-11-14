@@ -8,6 +8,8 @@
 import { z } from "zod";
 import { CitationSchema } from "../contracts";
 import { normalizeWhitespace } from "../pipeline/quoteCheck";
+import { MAX_CITATION_LINES } from "./a2";
+import { citationRangeProblem } from "./citationRange";
 
 /** Prompt version; bumping it also bumps the reviewer version (spec section 6). */
 export const version = "a4.v1";
@@ -16,11 +18,11 @@ export const version = "a4.v1";
 export const system = `You check an author's description of a code change against what the change does. You receive the description and a story and a list of claims about the change, each claim with an id, an evidence level and the code it quotes. The claims were written from the code, in some runs without reading the description.
 
 Split the description into its factual statements about the change: what it does, what it fixes, what it keeps unchanged, what it tests. Skip greetings, headings and statements of intent. For each statement give:
-- statement: one sentence copied exactly from the description, character for character.
+- statement: one sentence copied exactly from the description, character for character, without the leading "| " that marks each line of the description.
 - verdict: supported when the claims show it is true; contradicted when the claims show it is false or the code does the opposite; unsupported when nothing in the claims shows whether it is true.
 - claimIds: the claims you relied on, possibly none.
 - explanation: one or two sentences saying what the code does instead, or what is missing. For a supported statement, say which claim shows it.
-- citations: for a contradicted statement, 1 to 3 quotes of the code that shows it is false, taken from the citations of the claims. file and side as in the claim, startLine and endLine inclusive, quote copied exactly. A pipeline step compares each quote with the file mechanically. For other verdicts, citations may be empty.
+- citations: for a contradicted statement, 1 to 3 quotes of the code that shows it is false, taken from the citations of the claims. file and side as in the claim, startLine and endLine inclusive and at most ${MAX_CITATION_LINES} lines apart, quote copied exactly. A pipeline step compares each quote with the file mechanically. For other verdicts, citations may be empty.
 
 Rules:
 - A claim at level unverified has no quote that matched the code: do not rely on it to contradict a statement.
@@ -42,11 +44,22 @@ export interface A4Input {
 /** Renders the user text. */
 export function render({ authorDescription, story, claims }: A4Input): string {
   return [
-    `<author-description>\n${authorDescription}\n</author-description>`,
+    `<author-description>\n${prefixLines(authorDescription)}\n</author-description>`,
     `<story>\n${story}\n</story>`,
     `<claims>\n${claims}\n</claims>`,
     "Check every factual statement of the description.",
   ].join("\n\n");
+}
+
+/**
+ * Marks every line of the description with "| ", so a line in it that reads
+ * "</author-description>" cannot close the block: no line of the text starts a tag.
+ */
+function prefixLines(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((line) => `| ${line}`)
+    .join("\n");
 }
 
 const nonEmptyText = z.string().min(1);
@@ -89,6 +102,15 @@ export function outputSchema({ authorDescription, claimIds }: A4Reference): z.Zo
         problem("statement", "statement is not a sentence of the author description; copy it exactly");
       for (const id of statement.claimIds)
         if (!knownClaims.has(id)) problem("claimIds", `unknown claim id "${id}"`);
+      statement.citations.forEach((citation, citationIndex) => {
+        const message = citationRangeProblem(citation);
+        if (message !== null)
+          context.addIssue({
+            code: "custom",
+            path: ["statements", index, "citations", citationIndex],
+            message,
+          });
+      });
       if (statement.verdict === "contradicted" && statement.citations.length === 0)
         problem("citations", "a contradicted statement needs at least one citation");
     });

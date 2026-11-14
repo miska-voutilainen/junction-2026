@@ -11,6 +11,8 @@ import { CitationSchema } from "../contracts";
 import type { PromptContext } from "../pipeline/promptContext";
 import { areaChecklists, checklistSource } from "../policy/areaChecklists";
 import { refusalRules, type RefusalRule } from "../policy/refusals";
+import { MAX_CITATION_LINES } from "./a2";
+import { citationRangeProblem } from "./citationRange";
 
 type Hunk = Review["hunks"][number];
 
@@ -29,7 +31,7 @@ Each finding has:
 - severity: high when it can break users, corrupt data or open a security hole; medium when it is wrong in some cases; low for the rest.
 - title: under 12 words. detail: what is wrong, where, and what would happen.
 - hunkIds: every hunk the finding is about.
-- citations: the code that shows the problem. For a missing item, cite the closest code that should have handled it. file and side: "new" for the head file, "old" for the base file. startLine and endLine are inclusive and are the numbers printed in the text. quote is 1 to 3 lines copied exactly from those lines, without the line-number prefix. A pipeline step compares each quote with the file mechanically (whitespace ignored, case matters); a finding with no matching quote is thrown away, so quote only what you can see.
+- citations: the code that shows the problem. For a missing item, cite the closest code that should have handled it. file and side: "new" for the head file, "old" for the base file. startLine and endLine are inclusive and are the numbers printed in the text; the range is at most ${MAX_CITATION_LINES} lines. quote is 1 to 3 lines copied exactly from those lines, without the line numbers and the +/- marker. A pipeline step compares each quote with the file mechanically (whitespace ignored, case matters); a finding with no matching quote is thrown away, so quote only what you can see.
 - Do not choose an area. The pipeline takes it from the file you cite first.
 
 Report only findings you can point at. A review with no findings is a valid answer. Go through the expectation item by item before you answer. Do not restate claims that are already correct, and do not report style preferences.
@@ -111,12 +113,23 @@ export interface A3Output {
   refusals: RefusalDraft[];
 }
 
-/** Fails on a hunk id that is not in the input, so the client retries once with the message. */
+/** Fails on a hunk id that is not in the input and on a citation range wider than the cap, so the client retries once with the message. */
 export function outputSchema(hunks: readonly Hunk[]): z.ZodType<A3Output> {
   const hunkIds = new Set(hunks.map((hunk) => hunk.id));
   return z
     .object({ findings: z.array(FindingDraftSchema), refusals: z.array(RefusalDraftSchema) })
     .superRefine((output, context) => {
+      output.findings.forEach((finding, index) =>
+        finding.citations.forEach((citation, citationIndex) => {
+          const message = citationRangeProblem(citation);
+          if (message !== null)
+            context.addIssue({
+              code: "custom",
+              path: ["findings", index, "citations", citationIndex],
+              message,
+            });
+        }),
+      );
       const check = (list: "findings" | "refusals", items: { hunkIds: string[] }[]) =>
         items.forEach((item, index) => {
           for (const id of item.hunkIds) {

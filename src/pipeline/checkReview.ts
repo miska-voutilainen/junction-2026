@@ -4,7 +4,7 @@ import path from "node:path";
 import { AnswerKeySchema, type AnswerKey, type Review } from "../contracts";
 import { findContradictionMatch } from "./eval/matchContradiction";
 
-/** One eval case of `pnpm pipeline check`: a name, whether the recorded review meets it, and why. */
+/** One eval case of `pnpm review check`: a name, whether the recorded review meets it, and why. */
 export interface CheckResult {
   name: string;
   passed: boolean;
@@ -93,15 +93,18 @@ function checkMp2283Expectation(review: Review): CheckResult[] {
 }
 
 function checkEveryCodeHunkIsClaimed(review: Review): CheckResult {
-  const name = "A2 lists every hunk of a non-docs file in a claim";
+  const name = "A2 lists every hunk of a non-docs, non-generated file in a claim";
   const claimed = new Set(review.claims.flatMap((claim) => claim.hunkIds));
-  const docsFiles = new Set(
-    review.files.filter((file) => file.kind === "docs").map((file) => file.path),
+  // Docs hunks are not required by the eval case, and generated hunks reach the model as paths only.
+  const exemptFiles = new Set(
+    review.files
+      .filter((file) => file.kind === "docs" || file.kind === "generated")
+      .map((file) => file.path),
   );
   const unclaimed = review.hunks.filter(
-    (hunk) => !docsFiles.has(hunk.file) && !claimed.has(hunk.id),
+    (hunk) => !exemptFiles.has(hunk.file) && !claimed.has(hunk.id),
   );
-  const total = review.hunks.filter((hunk) => !docsFiles.has(hunk.file)).length;
+  const total = review.hunks.filter((hunk) => !exemptFiles.has(hunk.file)).length;
   return {
     name,
     passed: unclaimed.length === 0,

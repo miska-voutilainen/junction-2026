@@ -313,7 +313,7 @@ describe("runReview with a fake model", () => {
     // The README hunk h1 is docs, so one claim on the source hunk h2 covers every non-docs hunk.
     expect(checkReview(result).map((check) => [check.name, check.passed])).toEqual([
       ["A1 covers every requirement item exactly once", true],
-      ["A2 lists every hunk of a non-docs file in a claim", true],
+      ["A2 lists every hunk of a non-docs, non-generated file in a claim", true],
     ]);
   });
 });

@@ -8,7 +8,7 @@
  */
 import type { Citation, Review } from "../contracts";
 import type { ClaimDraft } from "../prompts/a2";
-import { hunksMatchingGlob } from "./hunksMatchingGlob";
+import { hunksMatchingGlob } from "../lib/git/hunksMatchingGlob";
 
 type Hunk = Review["hunks"][number];
 type Claim = Review["claims"][number];
@@ -24,6 +24,8 @@ export type IdentifiedClaimDraft = ClaimDraft & { id: string };
 export interface CheckedClaims {
   claims: Claim[];
   quoteCheck: QuoteCheck;
+  /** Hunk ids the model listed on a supported claim without a passing citation inside them. The Review contract has no field for it. */
+  hunkIdsRemoved: number;
 }
 
 /**
@@ -68,6 +70,9 @@ export async function checkCitation(
  * supported and keeps only the passing citations; any other claim becomes
  * unverified with no citations. Claims are never dropped: the reviewer sees what
  * the model said and that nothing backed it.
+ *
+ * A supported claim also keeps only the hunks a passing citation lies in: a claim
+ * that lists three hunks but quotes code from one has shown evidence for one.
  */
 export async function checkClaims(
   drafts: readonly IdentifiedClaimDraft[],
@@ -76,10 +81,13 @@ export async function checkClaims(
 ): Promise<CheckedClaims> {
   const quoteCheck: QuoteCheck = { checked: 0, passed: 0, downgraded: 0, dropped: 0, failures: [] };
   const claims: Claim[] = [];
+  let hunkIdsRemoved = 0;
   for (const draft of drafts) {
-    claims.push(await checkClaim(draft, hunks, readSide, quoteCheck));
+    const checked = await checkClaim(draft, hunks, readSide, quoteCheck);
+    hunkIdsRemoved += checked.hunkIdsRemoved;
+    claims.push(checked.claim);
   }
-  return { claims, quoteCheck };
+  return { claims, quoteCheck, hunkIdsRemoved };
 }
 
 async function checkClaim(
@@ -87,19 +95,19 @@ async function checkClaim(
   hunks: readonly Hunk[],
   readSide: SideReader,
   quoteCheck: QuoteCheck,
-): Promise<Claim> {
+): Promise<{ claim: Claim; hunkIdsRemoved: number }> {
   // A pathGlob claim covers every matching hunk and ignores the hunkIds the model wrote.
   const expanded = draft.pathGlob === null ? null : hunksMatchingGlob(draft.pathGlob, hunks);
-  const hunkIds = expanded === null ? draft.hunkIds : expanded.map((hunk) => hunk.id);
 
   const passing: Citation[] = [];
-  let globQuoteIsEverywhere = true;
+  let isFirstCitationPassing = false;
   for (const [index, citation] of draft.citations.entries()) {
     let result = await checkCitation(citation, readSide);
+    // The first quote stands for every globbed hunk, so it must be in the added lines
+    // of each, whatever the other citations show.
     if (result.passed && index === 0 && expanded !== null) {
       const missingFrom = expanded.filter((hunk) => !isInAddedLines(citation.quote, hunk));
       if (missingFrom.length > 0) {
-        globQuoteIsEverywhere = false;
         result = {
           passed: false,
           reason: `quote not in the added lines of ${missingFrom.map((hunk) => hunk.id).join(", ")}`,
@@ -110,31 +118,72 @@ async function checkClaim(
     if (result.passed) {
       quoteCheck.passed++;
       passing.push(citation);
+      if (index === 0) isFirstCitationPassing = true;
     } else {
       quoteCheck.failures.push({ itemId: draft.id, citation, reason: result.reason });
     }
   }
 
-  const isSupported = passing.length > 0 && globQuoteIsEverywhere;
+  const isSupported = passing.length > 0 && (expanded === null || isFirstCitationPassing);
   if (!isSupported) quoteCheck.downgraded++;
+
+  const listed = expanded === null ? draft.hunkIds : expanded.map((hunk) => hunk.id);
+  const hunkIds =
+    isSupported && expanded === null
+      ? listed.filter((id) =>
+          isHunkCited(
+            hunks.find((hunk) => hunk.id === id),
+            passing,
+          ),
+        )
+      : listed;
   return {
-    id: draft.id,
-    requirementItemId: draft.requirementItemId,
-    text: draft.text,
-    kind: draft.kind,
-    level: isSupported ? "supported" : "unverified",
-    hunkIds,
-    citations: isSupported ? passing : [],
-    evidence: isSupported ? [quoteCheckEvidence(passing[0])] : [],
+    claim: {
+      id: draft.id,
+      requirementItemId: draft.requirementItemId,
+      text: draft.text,
+      kind: draft.kind,
+      level: isSupported ? "supported" : "unverified",
+      hunkIds,
+      citations: isSupported ? passing : [],
+      evidence: isSupported ? [quoteCheckEvidence(passing[0])] : [],
+    },
+    hunkIdsRemoved: isSupported ? listed.length - hunkIds.length : 0,
   };
 }
 
+/** True when a passing citation names the hunk's file and its lines overlap the hunk's lines on the cited side. */
+function isHunkCited(hunk: Hunk | undefined, passing: readonly Citation[]): boolean {
+  if (hunk === undefined) return false;
+  const start = (side: Citation["side"]) => (side === "new" ? hunk.newStart : hunk.oldStart);
+  const length = (side: Citation["side"]) => (side === "new" ? hunk.newLines : hunk.oldLines);
+  return passing.some(
+    (citation) =>
+      citation.file === hunk.file &&
+      citation.startLine <= start(citation.side) + length(citation.side) - 1 &&
+      citation.endLine >= start(citation.side),
+  );
+}
+
+/**
+ * True when the quote sits inside one contiguous run of added lines. Runs are
+ * joined separately: a quote that jumps over an unchanged or removed line was
+ * never added as written.
+ */
 function isInAddedLines(quote: string, hunk: Hunk): boolean {
-  const added = hunk.lines
-    .filter((line) => line.kind === "add")
-    .map((line) => line.text)
-    .join("\n");
-  return normalizeWhitespace(added).includes(normalizeWhitespace(quote));
+  const wanted = normalizeWhitespace(quote);
+  const runs: string[][] = [];
+  let previousWasAdded = false;
+  for (const line of hunk.lines) {
+    if (line.kind !== "add") {
+      previousWasAdded = false;
+      continue;
+    }
+    if (previousWasAdded) runs[runs.length - 1].push(line.text);
+    else runs.push([line.text]);
+    previousWasAdded = true;
+  }
+  return runs.some((run) => normalizeWhitespace(run.join("\n")).includes(wanted));
 }
 
 function quoteCheckEvidence(citation: Citation): Claim["evidence"][number] {
