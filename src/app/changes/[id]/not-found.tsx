@@ -1,4 +1,4 @@
-import { ReviewNotFound } from "@/features/review/ReviewNotFound";
+import { ReviewNotFound } from "@/features/review";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 
 /** S2 for an unknown change id: "No change with id <id>." inside the shell, with a way back. */

@@ -4,11 +4,12 @@ import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
-import { useShellChanges } from "@/features/review/useShellChanges";
+import type { InboxSource } from "@/features/inbox";
+import { useShellChanges } from "@/components/useShellChanges";
 import { ReceiptDocument } from "./ReceiptDocument";
 import { InvalidReceipt, NoReceipt } from "./ReceiptStates";
 import { buildReceiptView } from "./receiptModel";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /**
  * The receipt page inside its shell. The shell gets the same live routing as

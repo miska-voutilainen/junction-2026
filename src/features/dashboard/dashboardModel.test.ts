@@ -3,9 +3,10 @@ import { cp, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import type { InboxSource } from "@/features/inbox";
 import { attentionSummary, buildDashboardModel, reasonLabel } from "./dashboardModel";
 import { loadDashboardSources } from "./loadDashboardSources";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 // Pinned to the committed fixtures, so recorded data landing under data/ cannot change these counts.
 // They stand in for recorded data: four Tieto changes, mp-2283 signed, mp-2129 amended after signing.

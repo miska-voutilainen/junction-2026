@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { ReceiptRecord, Review } from "@/contracts";
-import type { ReportCardInput } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { buildBlindCheck } from "./blindCheckModel";

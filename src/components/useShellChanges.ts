@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { buildInboxModel, toShellChanges } from "@/features/inbox/inboxModel";
-import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
+import { toShellChanges } from "@/components/shellChange";
 import type { ShellChange } from "@/components/shellChange";
+import { buildInboxModel } from "@/features/inbox";
+import type { InboxSource } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { useEscapes } from "@/lib/simulation/escapes";
 
 /**

@@ -4,7 +4,7 @@
  * Idea 2, blind-first review. Spec section 3, S2 sidebar.
  */
 import type { Review } from "@/contracts";
-import type { ReportCardInput } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { findingViews } from "./storyModel";
 import type { FindingView } from "./storyModel";
 import { plural } from "./stepsModel";

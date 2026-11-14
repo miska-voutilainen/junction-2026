@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ErrorState } from "@/components/ErrorState";
-import { ReviewScreen } from "@/features/review";
-import { highlightHunks } from "@/features/review/highlightHunks";
+import { ReviewScreen, highlightHunks } from "@/features/review";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 import { loadChange, loadChanges } from "@/lib/data/loaders";
 

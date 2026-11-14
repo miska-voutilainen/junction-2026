@@ -10,8 +10,9 @@ import { LevelLadder } from "@/components/LevelLadder";
 import { MockDataBanner } from "@/components/MockDataBanner";
 import { areaLabel } from "@/contracts";
 import type { Area } from "@/contracts";
-import { buildInboxModel, describeReroute, toShellChanges } from "@/features/inbox";
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import { toShellChanges } from "@/components/shellChange";
+import { buildInboxModel, describeReroute } from "@/features/inbox";
+import type { InboxSource } from "@/features/inbox";
 import { REPO_BLOB_URL } from "@/lib/ideaLinks";
 import { ESCAPE_TOAST_ID, markRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { BlindFirstSection } from "./BlindFirstSection";
@@ -22,6 +23,7 @@ import { RoutingSpread } from "./RoutingSpread";
 import { TrustLadderSection } from "./TrustLadderSection";
 import { areaCardModels, measuredLine } from "./reportCardModel";
 import type { ReviewOfChange } from "./reportCardModel";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 const LESSONS_LOG_URL = `${REPO_BLOB_URL}/docs/lessons.md`;
 
