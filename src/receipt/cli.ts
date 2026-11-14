@@ -63,11 +63,14 @@ function runCommand(
 
 /** The project root is the working directory: pnpm runs scripts from it. */
 function optionsFromEnv(): ReceiptOptions {
+  // Same source as pnpm seed: pnpm doesn't load .env, and a variable seed found
+  // there but this CLI didn't would fail with "not set" right after seeding.
+  if (existsSync(".env")) process.loadEnvFile();
   const repoDir = process.env.SAMPLE_REPO_DIR;
   if (!repoDir) {
     throw new CommandError(
       1,
-      "SAMPLE_REPO_DIR is not set. Run pnpm seed, then set it to the clone's absolute path.",
+      "SAMPLE_REPO_DIR is not set. Add it to .env as the absolute path of the fork's clone (see .env.example), then run pnpm seed.",
     );
   }
   if (!existsSync(repoDir)) {
