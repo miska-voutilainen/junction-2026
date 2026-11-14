@@ -5,7 +5,8 @@ import { Disclosure } from "@/components/Disclosure";
 import { DiffTable } from "./DiffTable";
 import type { HighlightedHunks } from "./highlightHunks";
 import { coveredSummary, fileName, hunkRawText } from "./reviewModel";
-import type { HighlightedLines, HunkEntry, HunkSections } from "./reviewModel";
+import type { HighlightedLines } from "./citationHighlights";
+import type { HunkEntry, HunkSections } from "./reviewModel";
 
 /**
  * The phone's view of the diff: reading code works best on a desktop, so the

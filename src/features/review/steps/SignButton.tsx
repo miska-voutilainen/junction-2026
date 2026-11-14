@@ -2,8 +2,8 @@
 
 import { Kbd } from "@/components/ui/kbd";
 import { useReviewStep } from "./ReviewStep";
-import { isSignable, signActionLabel } from "./stepsModel";
-import type { SignState } from "./stepsModel";
+import { isSignable, signActionLabel } from "./signModel";
+import type { SignState } from "./signModel";
 
 /**
  * The header's primary Sign button with its `4` key hint (a visual hint only: the button's name is its action label and `aria-keyshortcuts` announces the key). It opens step 4,

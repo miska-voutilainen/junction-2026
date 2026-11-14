@@ -64,13 +64,13 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                     {/* The area sits under the name, not beside it: in a 192 px column a chip on the
                         same line left only "Type…" of TypeCollector.cs. */}
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                      {/* The name truncates at its end and the line range stays whole, so two hunks of one file stay apart. */}
+                      {/* The name loses its start, not its end ("…Formatter.cs"): files of one family share a prefix and differ at the end. The full path is in the title. */}
                       <span title={item.label} className="flex w-full min-w-0 font-mono text-xs text-text-secondary">
                         {item.lineRange === null ? (
-                          <span className="truncate">{item.fileName}</span>
+                          <FileName name={item.fileName} />
                         ) : (
                           <>
-                            <span className="truncate">{item.fileName}</span>
+                            <FileName name={item.fileName} />
                             <span className="shrink-0">:{item.lineRange}</span>
                           </>
                         )}
@@ -91,6 +91,19 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
         ))}
       </div>
     </nav>
+  );
+}
+
+/**
+ * A file name that, when too long, drops its start and keeps the end. The
+ * right-to-left box puts the ellipsis on the left; `plaintext` keeps the
+ * name itself reading left to right so its dots stay in place.
+ */
+function FileName({ name }: Readonly<{ name: string }>) {
+  return (
+    <span className="min-w-0 truncate text-left [direction:rtl]">
+      <span className="[unicode-bidi:plaintext]">{name}</span>
+    </span>
   );
 }
 

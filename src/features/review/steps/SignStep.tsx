@@ -10,8 +10,8 @@ import { ReceiptSeal } from "@/components/ReceiptSeal";
 import type { Review } from "@/contracts";
 import { STALE_BODY, STALE_TITLE, verifyLine } from "@/lib/receiptCopy";
 import { ReceiptSections } from "./ReceiptSections";
-import { formatSignedAt } from "./stepsModel";
-import type { SignCommands, SignView } from "./stepsModel";
+import { formatSignedAt } from "./signModel";
+import type { SignCommands, SignView } from "./signModel";
 
 interface SignStepProps {
   view: SignView;

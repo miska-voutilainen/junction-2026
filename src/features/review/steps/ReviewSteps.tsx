@@ -12,8 +12,13 @@ import { ReadStep } from "./ReadStep";
 import { RefusedStep } from "./RefusedStep";
 import { SignStep } from "./SignStep";
 import { REVIEW_STEPS_ID } from "./ReviewStep";
-import { STEP_IDS, buildBlindCheck, buildRefusals, buildSignView, buildStepTabs, buildStory } from "./stepsModel";
-import type { SignState, StepId } from "./stepsModel";
+import { buildBlindCheck } from "./blindCheckModel";
+import { buildRefusals } from "./refusalsModel";
+import { buildSignView } from "./signModel";
+import type { SignState } from "./signModel";
+import { STEP_IDS, buildStepTabs } from "./stepsModel";
+import type { StepId } from "./stepsModel";
+import { buildStory } from "./storyModel";
 
 const tabId = (step: StepId) => `step-tab-${step}`;
 const panelId = (step: StepId) => `step-panel-${step}`;
@@ -79,13 +84,13 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
                 isActive ? "text-text-primary" : "text-text-muted hover:text-text-secondary",
               )}
             >
-              <span className="text-center font-medium compact:whitespace-nowrap">
+              <span className="text-center text-xs font-medium whitespace-nowrap compact:text-sm">
                 <span className="mr-1 text-xs text-text-muted tabular-nums">{tab.number}</span>
                 {tab.label}
               </span>
               <span
                 className={cn(
-                  "text-center text-xs compact:whitespace-nowrap",
+                  "text-center text-xs whitespace-nowrap",
                   tab.tone === "neutral" && "text-text-muted",
                   tab.tone === "amber" && "text-amber-light",
                   tab.tone === "rose" && "text-rose-light",

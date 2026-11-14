@@ -2,8 +2,8 @@
 
 import { useSelectedClaim } from "../SelectedClaim";
 import { LocationButton } from "./LocationButton";
-import { citationLabel } from "./stepsModel";
-import type { FindingView } from "./stepsModel";
+import { citationLabel } from "./storyModel";
+import type { FindingView } from "./storyModel";
 
 /**
  * The cited lines of one finding as buttons. Pressing one selects the finding
