@@ -6,7 +6,7 @@ import { isSignable, signActionLabel } from "./stepsModel";
 import type { SignState } from "./stepsModel";
 
 /**
- * The header's primary Sign button with its `4` key hint (a visual hint only: the button's name is "Sign" and `aria-keyshortcuts` announces the key). It opens step 4,
+ * The header's primary Sign button with its `4` key hint (a visual hint only: the button's name is its action label and `aria-keyshortcuts` announces the key). It opens step 4,
  * where the sign command is: the site cannot sign. Shown from 760 px, and
  * only when there is something to sign; a signed change has the "View full
  * receipt" link instead, and an unreadable receipt file has nothing to sign.

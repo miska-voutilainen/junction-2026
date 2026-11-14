@@ -60,7 +60,7 @@ export function AppShell({
         {/* Sticky at the height of what is left below the top bar, so the shortcuts at the foot stay on screen on a long page; a short window scrolls the nav itself. */}
         <aside className={cn(
             "sticky top-topbar hidden h-below-topbar shrink-0 self-start overflow-y-auto border-r border-border-subtle bg-surface-raised nav:block print:hidden",
-            isNavRail ? "w-14" : "w-nav",
+            isNavRail ? "w-nav-rail" : "w-nav",
           )}
         >
           <AppNav needsReviewCount={needsReviewCount} isRail={isNavRail} />

@@ -78,12 +78,12 @@ test("a navigator click focuses the hunk header, and j moves to the next hunk", 
   await expect(page.locator("[data-hunk-card]:visible").first().locator("[id^=hunk-header-]")).toBeFocused();
 
   // A covered hunk sits in a closed section; the jump opens it.
-  await navigator.getByRole("button", { name: /GenerationTests\.cs:118/ }).click();
+  await navigator.getByRole("button", { name: /GenerationTests\.cs\s*:118/ }).click();
   await expect(page.getByRole("button", { name: /^Covered by evidence/ })).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator("[data-hunk-id=h5] button[aria-expanded]")).toBeFocused();
 
   await page.keyboard.press("j");
-  await expect(navigator.getByRole("button", { name: /GenerationTests\.cs:331/ })).toHaveAttribute("aria-current", "true");
+  await expect(navigator.getByRole("button", { name: /GenerationTests\.cs\s*:331/ })).toHaveAttribute("aria-current", "true");
 });
 
 test("Wrap toggles, Copy announces Copied and Mark read moves the progress", async ({ page, context }, testInfo) => {

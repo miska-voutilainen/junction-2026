@@ -67,10 +67,10 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                       {/* The name truncates at its end and the line range stays whole, so two hunks of one file stay apart. */}
                       <span title={item.label} className="flex w-full min-w-0 font-mono text-xs text-text-secondary">
                         {item.lineRange === null ? (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate">{item.fileName}</span>
                         ) : (
                           <>
-                            <span className="truncate">{item.label.slice(0, -item.lineRange.length - 1)}</span>
+                            <span className="truncate">{item.fileName}</span>
                             <span className="shrink-0">:{item.lineRange}</span>
                           </>
                         )}
