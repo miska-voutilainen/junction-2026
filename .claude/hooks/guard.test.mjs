@@ -218,7 +218,7 @@ test("git push: bare push on main is denied, on a feature branch allowed", () =>
   state.branch = "feat/x";
   assert.equal(kind(shell("git push")), null);
   state.branch = null;
-  assert.equal(kind(shell("git push")), null);
+  assert.equal(kind(shell("git push")), "ask");
   state.branch = "feat/x";
 });
 
@@ -319,6 +319,7 @@ test("end to end: the canary, and silence on an allowed call", () => {
 // Review fixes: escapes, .env variants, push edge cases, false positives.
 const denies = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), "deny", cmd);
 const allows = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), null, cmd);
+const asks = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), "ask", cmd);
 
 test("escape characters cannot hide a command", () => {
   for (const c of ['echo \\"; cat .env', 'echo \\"; git push --force origin feat', "cat .e\\nv", "git push origin ma\\in", "git push -\\f origin x"])
@@ -375,4 +376,188 @@ test("normalisePath collapses dot segments before classification", () => {
   assert.equal(edit("src/../.claude/hooks/guard.mjs").decision, "ask");
   assert.match(edit("src/../.claude/hooks/guard.mjs").reason, /harness file/);
   assert.equal(kind(edit("src/../..", {})), null);
+});
+
+test("gh: flags before the subcommand are skipped", () => {
+  state.author = "someone-else";
+  denies("gh pr -R owner/repo merge 12");
+  denies("gh -R owner/repo pr merge 12");
+  denies("gh pr merge -R owner/repo 12");
+  state.author = "me";
+  allows("gh pr -R owner/repo merge 12");
+  denies("gh issue -R o/r close 1");
+  denies("gh issue --repo=o/r edit 1");
+  allows("gh issue -R o/r close 10");
+  denies("gh pr -R o/r review --approve");
+  denies("gh pr -R o/r create --title x");
+});
+
+test("chaining and wrappers are checked as commands", () => {
+  for (const cmd of [
+    "git status & git push -f origin x",
+    "(git push -f origin x)",
+    "echo $(git push -f origin x)",
+    'echo "$(git push -f origin x)"',
+    "echo `git push -f origin x`",
+    "env FOO=1 git push -f origin x",
+    "sudo -u bob git push -f origin x",
+    "time git push -f origin x",
+    "nohup git push -f origin x",
+    "command git push -f origin x",
+    "exec git push -f origin x",
+    "echo x | xargs -n 1 git push -f origin",
+    'bash -c "git push -f origin x"',
+    "sh -c 'git push -f origin x'",
+    'bash -c "echo $(git push -f origin x)"',
+  ])
+    denies(cmd);
+  for (const cmd of [
+    "if ($true) { git push -f origin x }",
+    'pwsh -Command "git push -f origin x"',
+    'powershell -c "git push -f origin x"',
+    'iex "git push -f origin x"',
+    "(git push -f origin x)",
+  ])
+    denies(cmd, "PowerShell");
+  // Redirects keep their `&`, and ordinary commands still pass.
+  allows("pnpm test 2>&1 | tail -5");
+  allows("pnpm test &> out.log");
+  allows("git status & git log");
+  allows('bash -c "git status"');
+  denies("git status && git push --force origin x");
+});
+
+test("git and gh lookups run in the session cwd or the -C directory", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), cwd.endsWith("wt") ? "main" : "feat/x") };
+  const run = (command, cwd) =>
+    kind(decide({ tool_name: "Bash", tool_input: { command }, cwd }, ctx({ io: spy })));
+  assert.equal(run("git push", resolve(root, "wt")), "deny");
+  assert.equal(run("git push", resolve(root, "other")), null);
+  assert.equal(run("git -C wt push", root), "deny");
+  assert.deepEqual(seen.map((s) => s.replaceAll("\\", "/").split("/").pop()), ["wt", "other", "wt"]);
+
+  const ghSeen = [];
+  const ghSpy = { ...io, ghUser: (cwd) => (ghSeen.push(cwd), "me"), prAuthor: (n, cwd) => (ghSeen.push(cwd), "me") };
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge 5" }, cwd: "/some/worktree" }, ctx({ io: ghSpy }));
+  assert.deepEqual(ghSeen, ["/some/worktree", "/some/worktree"]);
+});
+
+test("a leading .claude/worktrees/<name>/ is stripped before classifying a path", () => {
+  const inWorktree = (p) => edit(`.claude/worktrees/seat2/${p}`);
+  assert.equal(kind(inWorktree("src/ai/client.ts")), null);
+  assert.equal(inWorktree("src/app/page.tsx").decision, "ask");
+  assert.match(inWorktree("src/app/page.tsx").reason, /belongs to lane app/);
+  assert.match(inWorktree(".claude/hooks/guard.mjs").reason, /harness file/);
+  assert.equal(kind(edit(resolve(root, ".claude/worktrees/seat2/src/ai/client.ts"))), null);
+  // Without a worktree name nothing is stripped, and the old cases still hold.
+  assert.equal(edit(".claude/hooks/guard.mjs").decision, "ask");
+});
+
+test("PowerShell writes to harness files ask", () => {
+  for (const verb of ["Add-Content", "ac", "Copy-Item", "cpi", "copy", "New-Item", "ni", "sc", "del", "ri"])
+    assert.equal(kind(shell(`${verb} .claude\\hooks\\guard.mjs x`, "PowerShell")), "ask", verb);
+  assert.equal(kind(shell("ni .claude/settings.json", "PowerShell")), "ask");
+  assert.equal(kind(shell("Get-Content .claude/hooks/guard.mjs", "PowerShell")), null);
+  assert.equal(kind(shell("Set-Content .claude/hooks/guard.mjs x", "PowerShell")), "ask");
+  assert.equal(kind(shell("ni notes.txt", "PowerShell")), null);
+});
+
+test("a nested command in an argument does not cut the command it sits in", () => {
+  denies("git push origin $(git branch --show-current) --force");
+  state.branch = "feat/x";
+  denies("git push $(git remote) main");
+  denies("git -C $(git rev-parse --show-toplevel) push --force origin x");
+  asks("sed -i $(echo s/a/b/) .claude/hooks/guard.mjs");
+  asks("cp <(echo x) .claude/hooks/guard.mjs");
+  asks("Set-Content -Value (Get-Date) -Path .claude/settings.json", "PowerShell");
+  asks("Set-Content -Value {x} -Path .claude/settings.json", "PowerShell");
+  denies("Remove-Item -Recurse -Force -Path (Join-Path $HOME x)", "PowerShell");
+  // The nested text is still a command of its own, and quoted brackets stay literal.
+  denies("echo $(git push -f origin x)");
+  denies("echo <(git push -f origin x)");
+  allows('git commit -m "fix (parser) and {braces}"');
+  allows("echo $(echo ')') done");
+});
+
+test("an unreadable branch asks, and a leading cd picks the lookup directory", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), cwd.endsWith("main-checkout") ? "main" : null) };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: spy })));
+  assert.equal(run("git push"), "ask");
+  assert.equal(run("cd main-checkout && git push"), "deny");
+  assert.equal(run("git -C main-checkout push"), "deny");
+  assert.equal(run("git push origin feat/x"), null);
+});
+
+test("gh pr merge looks the PR up in the repo it names", () => {
+  const calls = [];
+  const spy = { ...io, prAuthor: (n, cwd, repo) => (calls.push([n, repo]), state.author) };
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge -R other/repo 12" }, cwd: root }, ctx({ io: spy }));
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr -R o/r merge 7" }, cwd: root }, ctx({ io: spy }));
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge 3" }, cwd: root }, ctx({ io: spy }));
+  assert.deepEqual(calls, [["12", "other/repo"], ["7", "o/r"], ["3", null]]);
+});
+
+test("wrappers: piped targets, timeout, nice, stdbuf, bash -ce, cmd /c, encoded PowerShell", () => {
+  assert.equal(kind(shell("ls | xargs rm -rf")), "ask");
+  for (const cmd of [
+    "timeout 5 git push -f origin x",
+    "nice -n 5 git push -f origin x",
+    "stdbuf -oL git push -f origin x",
+    'bash -ce "git push -f origin x"',
+    "cmd /c git push -f origin x",
+    "cmd //c git push -f origin x",
+  ])
+    denies(cmd);
+  for (const flag of ["-EncodedCommand", "-enc", "-e"]) asks(`pwsh ${flag} Z2l0`, "PowerShell");
+  allows("timeout 5 git status");
+});
+
+test("git -C directories combine, each relative to the one before", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), "feat/x") };
+  decide({ tool_name: "Bash", tool_input: { command: "git -C a -C b push" }, cwd: root }, ctx({ io: spy }));
+  assert.equal(seen[0], resolve(root, "a", "b"));
+});
+
+test("a harness path inside a nested command still asks", () => {
+  asks("cp evil.mjs $(echo .claude/hooks/guard.mjs)");
+  asks('Copy-Item x -Destination (Join-Path $root ".claude/hooks/guard.mjs")', "PowerShell");
+  asks('Copy-Item evil.mjs (".claude/hooks/guard.mjs")', "PowerShell");
+  allows("cp a.txt $(echo b.txt)");
+});
+
+test("a cd inside a group, a nested command or pushd does not move the rest of the line", () => {
+  const spy = { ...io, currentBranch: (cwd) => (cwd.endsWith("main-checkout") ? "main" : "feat/x") };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: spy })));
+  assert.equal(run("(cd main-checkout) && git push"), null);
+  assert.equal(run("(cd other); git push"), null);
+  assert.equal(run("echo $(cd other) && cd main-checkout && git push"), "deny");
+  assert.equal(run('bash -c "cd other" && cd main-checkout && git push'), "deny");
+  assert.equal(run("pushd other && git push"), "ask");
+  assert.equal(run("cd $(echo x) && git push"), "ask");
+  assert.equal(run("cd other && cd .. && cd main-checkout && git push"), "deny");
+});
+
+test("Git Bash paths map to Windows paths for cd", { skip: process.platform !== "win32" }, () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), "feat/x") };
+  decide({ tool_name: "Bash", tool_input: { command: "cd /c/some/dir && git push" }, cwd: root }, ctx({ io: spy }));
+  assert.equal(seen[0].toLowerCase(), resolve("C:/some/dir").toLowerCase());
+});
+
+test("quoting and computed refspecs", () => {
+  denies(`echo "it's" "$(git push -f origin x)"`);
+  allows(`echo 'it' "x" '$(git push -f origin x)'`);
+  denies("& {git push -f origin x}", "PowerShell");
+  denies("{git push -f origin x}", "PowerShell");
+  asks("git push origin $(echo main)");
+});
+
+test("a cd in a group leaves a push from a main checkout denied", () => {
+  const onMain = { ...io, currentBranch: () => "main" };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: onMain })));
+  assert.equal(run("(cd ../cs-t24-guard) && git push"), "deny");
+  assert.equal(run("echo $(cd /tmp) && git push"), "deny");
 });
