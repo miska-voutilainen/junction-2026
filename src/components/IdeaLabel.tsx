@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * "Idea 3 · Hunk coverage map ↗": marks the part of a screen that shows one of
- * the eight ideas and links to its page in a new tab. The name and page come
+ * the nine ideas and links to its page in a new tab. The name and page come
  * from `IDEAS`, so a label cannot disagree with the list. Spec section 3.
  */
 export function IdeaLabel({ n, className }: Readonly<{ n: IdeaNumber; className?: string }>) {

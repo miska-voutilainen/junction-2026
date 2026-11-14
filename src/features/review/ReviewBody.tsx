@@ -12,12 +12,14 @@ import type { ReceiptUnderEscapes } from "@/lib/receiptUnderEscapes";
 import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
+import { LegacyTouchPoints } from "./LegacyTouchPoints";
 import { MobileHunks } from "./MobileHunks";
 import { EmptyDiff, EvidenceUnavailable, evidenceAlert } from "./ReviewStates";
 import { useSelection } from "./SelectionProvider";
 import type { HighlightedHunks } from "./highlightHunks";
 import { highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./citationHighlights";
 import type { HighlightedLines } from "./citationHighlights";
+import { buildLegacyTouchRows } from "./legacyTouchModel";
 import { buildNavigator, buildSections } from "./reviewModel";
 import type { HunkSections, NavigatorGroup } from "./reviewModel";
 import { useDiffReveal } from "./useDiffReveal";
@@ -73,6 +75,7 @@ export function ReviewBody({
     () => buildSections(review, decision, levels),
     [review, decision, levels],
   );
+  const legacyTouchRows = useMemo(() => buildLegacyTouchRows(review), [review]);
   const groups = useMemo(() => buildNavigator(sections), [sections]);
   const reveal = useDiffReveal(sections);
   const { readIds, toggle } = useReadHunks(change.id);
@@ -90,6 +93,7 @@ export function ReviewBody({
   return (
     <>
       <CoverageLine decision={decision} />
+      <LegacyTouchPoints rows={legacyTouchRows} />
       {reopened?.status === "reopened" && (
         <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />
       )}

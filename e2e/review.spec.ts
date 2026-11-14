@@ -136,6 +136,15 @@ test("mp-2297 lists its generated hunks apart from the reading count", async ({ 
   await expect(page.getByRole("heading", { name: /^Generated\s*2$/ })).toBeVisible();
 });
 
+test("mp-2297 shows its unguarded legacy touch point; mp-2283 has none", async ({ page }) => {
+  await page.goto("/changes/mp-2297");
+  await expect(page.getByRole("heading", { name: /Legacy touch points/ })).toBeVisible();
+  await expect(page.getByText("Unguarded").first()).toBeVisible();
+  expect(await hasHorizontalScroll(page)).toBe(false);
+  await page.goto(CHANGE_PATH);
+  await expect(page.getByRole("heading", { name: /Legacy touch points/ })).toHaveCount(0);
+});
+
 test("an unknown id says so, keeps the four changes in the shell and links back to the inbox", async ({ page }, testInfo) => {
   await page.goto("/changes/zz-9999");
   await expect(page.getByText("No change with id zz-9999.")).toBeVisible();
