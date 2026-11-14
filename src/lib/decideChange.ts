@@ -6,7 +6,7 @@
  */
 import type { Area, LadderLevel, Review, ReportCard, TierDecision } from "@/contracts";
 import { routingPolicy } from "@/policy/routing";
-import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
+import { applyEscapes, levelsForReviewer, levelsFromReportCard } from "@/rules/ladder";
 import { route } from "@/rules/route";
 
 /**
@@ -63,7 +63,9 @@ const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread", "R-generated"]
 /**
  * The one routing decision every screen uses (inbox, shell, dashboard, reviewer, S2).
  *
- * - Readable report card: `route()` with its levels minus simulated escapes.
+ * - Readable report card: `route()` with its levels minus simulated escapes. The levels
+ *   count only for the model the card measured (`levelsForReviewer`); another model's
+ *   review routes with every area at Shadow.
  * - Missing or unreadable: without a track record nothing counts as covered, so
  *   the change is Full and every hunk is "Read this". Reasons come from `route()`
  *   with every area at Shadow, minus those that quote a read count, plus
@@ -77,7 +79,8 @@ export function decideChange(
   escapes: Partial<Record<Area, number>>,
 ): ChangeDecision {
   if (reportCard.state !== "ok") return decisionWithoutReportCard(review);
-  const levels = inboxLevels(reportCard, escapes);
+  // Per review, not the inbox's levels: a review by a model the card did not measure earned no trust.
+  const levels = applyEscapes(levelsForReviewer(reportCard.data, review.reviewer.model), escapes);
   return {
     decision: route(review, levels, routingPolicy, escapes),
     levels,

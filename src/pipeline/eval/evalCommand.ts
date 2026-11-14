@@ -8,7 +8,7 @@ import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../../ai/client";
 import type { Area, AnswerKey, LadderLevel, ReportCard, Review } from "../../contracts";
-import { levelsFromReportCard } from "../../rules/ladder";
+import { levelsForReviewer, levelsFromReportCard } from "../../rules/ladder";
 import {
   hasChangeInput,
   loadAnswerKeys,
@@ -158,9 +158,9 @@ async function measuredRunsPerMode(keys: readonly AnswerKey[]): Promise<number> 
 /** The most blind runs any planted bug has on disk (run 1 is review.json), so a score-only card says "of 3" after three runs. */
 async function measuredPlantRuns(keys: readonly AnswerKey[]): Promise<number> {
   const plantKeys = keys.filter((key) => key.kind === "planted-bug");
-  const hasFirstRun = (await Promise.all(plantKeys.map((key) => loadRecordedRun(key.plantId)))).some(
-    (run) => run !== null,
-  );
+  const hasFirstRun = (
+    await Promise.all(plantKeys.map((key) => loadRecordedRun(key.plantId)))
+  ).some((run) => run !== null);
   let highest = hasFirstRun ? 1 : 0;
   for (let k = 2; k <= MAX_RUNS_SCANNED; k++) {
     const runs = await Promise.all(
@@ -207,8 +207,9 @@ async function scoreAndReroute(
     otherReviews: tietoReviews,
     now: new Date(),
   });
+  // The new levels count only for the model the eval measured; a review by another model stays Shadow.
   const rerouted = tietoReviews.map((review) =>
-    rerouteReview(review, levelsFromReportCard(measured)),
+    rerouteReview(review, levelsForReviewer(measured, review.reviewer.model)),
   );
   const card = { ...measured, routingSpread: routingSpreadOf(rerouted) };
 

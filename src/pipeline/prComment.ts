@@ -9,7 +9,11 @@
  */
 import type { Review } from "../contracts";
 
-/** Hidden marker that lets CI find and update its own comment instead of adding a new one each push. */
+/**
+ * Hidden first line of the comment. The `review` job in `.github/workflows/countersign.yml` looks
+ * for the bot's comment that starts with it and updates that one, so each push edits one comment
+ * instead of adding another, and no other workflow's comment is overwritten.
+ */
 export const COMMENT_MARKER = "<!-- countersign -->";
 
 /**
@@ -59,7 +63,9 @@ export function renderReviewComment(
     `**Findings:** ${review.findings.length} · **Refused:** ${review.refusals.length}`,
     `**Receipt:** ${receipt}`,
     "",
-    `Reviewer ${review.reviewer.version} (${review.reviewer.model}), ${review.run.usage.calls} model calls, $${review.run.usage.costUsd.toFixed(2)}.`,
+    // "recorded with": a replayed review reports the calls and cost of its recording, and CI adds
+    // "no model was called" under it; plain "6 model calls" would contradict that line.
+    `Reviewer ${review.reviewer.version} (${review.reviewer.model}), recorded with ${review.run.usage.calls} model calls, $${review.run.usage.costUsd.toFixed(2)}.`,
   ].join("\n");
 }
 
