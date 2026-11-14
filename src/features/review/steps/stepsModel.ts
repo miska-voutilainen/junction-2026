@@ -27,7 +27,7 @@ export interface StepTab {
   id: StepId;
   number: 1 | 2 | 3 | 4;
   label: string;
-  /** What is waiting in this step, e.g. "2 contradictions" or "Draft ready". */
+  /** What is waiting in this step, e.g. "2 found" or "Draft ready". */
   count: string;
   /** Counts that ask for attention (a contradiction, a stale receipt) read in colour as well as words. */
   tone: "neutral" | "amber" | "rose";
@@ -56,7 +56,7 @@ export function buildStepTabs(review: Review, record: ReceiptRecord | null, sign
   const counts: Record<StepId, Pick<StepTab, "count" | "tone">> = {
     read: { count: plural(review.claims.length, "claim"), tone: "neutral" },
     blind: {
-      count: contradictionCount === 0 ? "None found" : plural(contradictionCount, "contradiction"),
+      count: contradictionCount === 0 ? "None found" : `${contradictionCount} found`,
       tone: contradictionCount === 0 ? "neutral" : "rose",
     },
     refused: {

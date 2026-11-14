@@ -77,9 +77,11 @@
   --spacing-below-topbar: calc(100dvh - var(--layout-topbar));
   --spacing-scroll-clear: calc(var(--layout-topbar) + 1rem);
   --container-nav: var(--layout-nav);
+  --container-nav-rail: var(--layout-nav-rail);
   --container-navigator: var(--layout-navigator);
   --container-steps-panel: var(--layout-steps-panel);
   --container-content: var(--layout-content-max);
+  --container-review: var(--layout-review-max);
   --container-prose: var(--layout-prose-max);
   --container-gate: var(--layout-gate-max);
   --ease-in-out: var(--ease-in-out);

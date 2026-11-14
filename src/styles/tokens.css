@@ -87,9 +87,12 @@
   /* Layout */
   --layout-topbar: 56px;
   --layout-nav: 248px;
+  --layout-nav-rail: 56px;
   --layout-navigator: 264px;
   --layout-steps-panel: 392px;
   --layout-content-max: 1280px;
+  /* The review screen holds a diff, a navigator and a steps panel side by side, so it runs wider than the other pages; the cap keeps a 4K window readable. */
+  --layout-review-max: 1680px;
   /* The receipt reads as a document: about 70 characters a line. */
   --layout-prose-max: 820px;
   --layout-gate-max: 380px;

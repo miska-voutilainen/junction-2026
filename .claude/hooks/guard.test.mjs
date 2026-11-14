@@ -561,3 +561,20 @@ test("a cd in a group leaves a push from a main checkout denied", () => {
   assert.equal(run("(cd ../cs-t24-guard) && git push"), "deny");
   assert.equal(run("echo $(cd /tmp) && git push"), "deny");
 });
+
+test("a body file resolves against the directory the command runs in, not the main repo", () => {
+  const sibling = resolve(root, "../cs-sibling-worktree");
+  state.files.set(resolve(sibling, ".scratch/pr.md"), "[agent:engine] body");
+  const run = (command, cwd = root) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd }, ctx()));
+  const create = "gh pr create --title t --body-file .scratch/pr.md";
+  assert.equal(run(create, sibling), null);
+  assert.equal(run(`cd ${sibling.replaceAll("\\", "/")} && ${create}`), null);
+  assert.equal(run(create), "deny");
+  state.files.delete(resolve(sibling, ".scratch/pr.md"));
+});
+
+test("a computed --body-file path says the guard can't read it, not 'not found'", () => {
+  const reason = shell('gh pr create --title t --body-file "$file"').reason;
+  assert.match(reason, /computed, so the guard can't read it/);
+  assert.doesNotMatch(reason, /not found/);
+});

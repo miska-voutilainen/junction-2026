@@ -189,7 +189,7 @@ describe("tabs", () => {
     const record = await loadFixtureReceipt("mp-2283");
     const tabs = buildStepTabs(review, record, "signed");
     expect(tabs.map((tab) => tab.label)).toEqual(["Read", "Blind check", "Refused", "Sign"]);
-    expect(tabs.map((tab) => tab.count)).toEqual(["8 claims", "1 contradiction", "1 open", "Signed"]);
+    expect(tabs.map((tab) => tab.count)).toEqual(["8 claims", "1 found", "1 open", "Signed"]);
     expect(tabs[1].tone).toBe("rose");
 
     const staleReview = await loadFixtureReview("mp-2129");
