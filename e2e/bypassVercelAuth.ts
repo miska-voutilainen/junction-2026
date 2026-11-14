@@ -1,20 +1,12 @@
 import type { Page } from "@playwright/test";
 
 /**
- * Gets a page past what stands in front of a deployed site: Vercel Authentication (when
- * `VERCEL_AUTOMATION_BYPASS_SECRET` is set) and the temporary access gate (when `ACCESS_CODE`
- * is set). Does nothing for a local server. Every spec calls it first.
+ * Gets a page past Vercel Authentication, which covers every *.vercel.app preview, when
+ * `VERCEL_AUTOMATION_BYPASS_SECRET` is set. Does nothing for a local server or the public
+ * production domain. Every spec calls it first.
  */
-export async function unlock(page: Page): Promise<void> {
+export async function bypassVercelAuth(page: Page): Promise<void> {
   await sendBypassHeaders(page);
-
-  const code = process.env.ACCESS_CODE;
-  if (!code) return;
-
-  await page.goto("/unlock");
-  // The form submits itself on the last character.
-  await page.getByLabel(/4-digit code|Access code/).pressSequentially(code);
-  await page.waitForURL((url) => url.pathname !== "/unlock");
 }
 
 /**

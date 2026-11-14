@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The dashboard shows the committed fixtures until recorded files exist: mp-2283 signed, mp-2129 amended after signing.
 
@@ -16,7 +16,7 @@ function watchConsole(page: Page): string[] {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
   // Reduced motion shows every bar and fold at rest, so screenshots never catch a half-drawn bar.
   await page.emulateMedia({ reducedMotion: "reduce" });
 });

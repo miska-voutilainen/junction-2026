@@ -40,7 +40,7 @@
   --logo-strong: #f3f4f6;
   --logo-muted: #6b7280;
 
-  /* Semantic colours: only for things that need a person. Green only for "Signature verified" and "Unlocked". */
+  /* Semantic colours: only for things that need a person. Green only for "Signature verified". */
   --amber: #e2b04a;
   --amber-light: #edc56e;
   --rose: #ef7a85;
@@ -74,9 +74,6 @@
   --text-xl-leading: 1.75rem;
   --text-2xl: 1.5rem;
   --text-2xl-leading: 2rem;
-  /* The access gate's digits. */
-  --text-display: 2.5rem;
-  --text-display-leading: 1;
 
   /* Radius. A nested radius is the outer one minus the padding between them. */
   --radius-page: 12px;
@@ -97,7 +94,6 @@
   --layout-review-max: 1680px;
   /* The receipt reads as a document: about 70 characters a line. */
   --layout-prose-max: 820px;
-  --layout-gate-max: 380px;
 
   /* Motion. Exits run at 0.8x of the entrance. */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);

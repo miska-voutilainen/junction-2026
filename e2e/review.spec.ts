@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The review page shows the committed fixtures until recorded reviews exist.
 const CHANGE_PATH = "/changes/mp-2283";
@@ -27,7 +27,7 @@ async function hasHorizontalScroll(page: Page): Promise<boolean> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("shows the tier line the routing computes, with no console errors and no page scroll", async ({ page }, testInfo) => {

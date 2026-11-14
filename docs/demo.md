@@ -27,7 +27,7 @@ Every number said aloud or shown on screen comes from a committed file. "Shown o
 
 ## Video (2:00, strictly)
 
-Target 1:55: the form rejects anything over 2:00, so the last 5 seconds are margin. Record at 1440 × 900 or larger, browser at 100 %, the access gate turned off (submission checklist), no other tabs, notifications off. Narration is about 2.5 words a second; each line below fits its time.
+Target 1:55: the form rejects anything over 2:00, so the last 5 seconds are margin. Record at 1440 × 900 or larger, browser at 100 %, no other tabs, notifications off. Narration is about 2.5 words a second; each line below fits its time.
 
 | Time                                             | On screen                                                                                                                                                  | Say                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -68,7 +68,6 @@ Same three moments, live from production, one person driving and one speaking. T
 | Step           | What fails                                                | Do this                                                                                                                                                                                           |
 | -------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Any page       | Production is slow or down on venue Wi-Fi                 | Switch to `pnpm dev` on the laptop (same data, it's all committed). For the video, the recording is already made.                                                                                 |
-| Any page       | The access gate asks for the code                         | The gate is still on: remove `ACCESS_CODE` from Vercel production and redeploy (#73). Until then, enter the code (Miska has it; it's never in the repo).                                          |
 | Moment 1       | No claim is Verified (A5 was cut, see the go/no-go below) | Show a Supported claim and its "Quote checked against the code" line; say "Supported: the quote matches the code mechanically, but no independent test proves it."                                |
 | Moment 3, live | `verify` fails on the laptop                              | Show S4 (`/changes/mp-2283/receipt`): the recorded verify output from the export. Then check `SAMPLE_REPO_DIR` and `git fetch origin refs/notes/countersign:refs/notes/countersign` in the clone. |
 | Moment 3       | "Record escape" leaves the badges unchanged               | Press "Reset" in the top bar and record it again. Escapes are saved in the browser's localStorage and survive a reload, so press "Reset" before every take and every table visit.                 |
@@ -95,10 +94,9 @@ Due Sun 15.11 10:00, hard (the form closes); our target is 07:00, then update. S
 - [ ] Challenge: Tieto, "Earned Trust in AI Code"
 - [ ] Technologies: Next.js, TypeScript, Anthropic Claude, .NET 8, git notes with SSH signatures, Vercel
 - [ ] Video: 2:00 or shorter, public on YouTube or Vimeo, link opened in a private window
-- [ ] Gate off before recording: remove `ACCESS_CODE` from Vercel's production environment and redeploy (#73); `/` opens without `/unlock`
 - [ ] Demo link: https://countersign-junction.com, opened in a private window with no cookie
 - [ ] Source link: the repository accessible to the organisers, `LICENSE` is MIT
 - [ ] Pitch deck as PDF
 - [ ] Phone numbers and Discord usernames for Miska, Elias and Veijo
 - [ ] Status set to **FINAL**, not Draft
-- [ ] After judging: revoke or restrict the API keys used for recording, then remove the gate's code (#73)
+- [ ] After judging: revoke or restrict the API keys used for recording

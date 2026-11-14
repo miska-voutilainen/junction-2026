@@ -124,7 +124,7 @@ At the peer-review table the app runs locally (`pnpm dev`) against the laptop's 
 
 The app is a **Graphite-style review interface**: an inbox of changes, a review page with the diff at the centre, and the reviewer's report card. It is a static site over recorded files, not connected to GitHub. **Visual direction:** the final design canvas (link on T01, #3), translated into this product in [docs/design/ui-plan.md](design/ui-plan.md). The plan sets layout, routes, components, motion and the consoles; where it and this section differ on those, the plan wins. Data rules and the exact copy in this section still hold. Every screen uses only tokens and `src/components/`.
 
-**Routes:** `/` Inbox (S1), `/changes/[id]` Review (S2), `/changes/[id]/receipt` full receipt (S4), `/reviewer` report card (S3), `/dashboard` (S5), and the temporary `/unlock` gate until the submission.
+**Routes:** `/` Inbox (S1), `/changes/[id]` Review (S2), `/changes/[id]/receipt` full receipt (S4), `/reviewer` report card (S3), `/dashboard` (S5).
 
 **App shell (all screens):** a top bar (wordmark linking to `/`, the repository as a label, breadcrumb, "Search or jump to… ⌘K"), a grouped left nav (Review: Inbox · Insights: Dashboard, Reviewer report card) with the active item marked `aria-current="page"`, and a ⌘K command menu (quick actions, pages, the four changes); details in the UI plan, section 3. When simulated escapes exist, the top bar shows "Simulated escapes: <n>" and a button "Reset". Below ~900 px the nav opens from a menu button; below ~760 px pages use the mobile header. A "Showing mock data" banner (role `status`) appears under the top bar whenever any data on the page came from `data/fixtures/` instead of recorded files.
 

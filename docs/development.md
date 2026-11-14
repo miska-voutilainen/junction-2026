@@ -12,7 +12,7 @@
 
 1. Clone the repository.
 2. Install dependencies: `pnpm install --frozen-lockfile`
-3. Copy `.env.example` to `.env` and fill in the values (never commit `.env`). The names are `AI_BACKEND`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, `SAMPLE_REPO_DIR`, `AI_MODE` and `ACCESS_CODE`; the table below says what each is for. The app alone (`pnpm dev`) needs none of them: it reads the committed files under `data/`.
+3. Copy `.env.example` to `.env` and fill in the values (never commit `.env`). The names are `AI_BACKEND`, `ANTHROPIC_API_KEY`, `KIMI_API_KEY`, `SAMPLE_REPO_DIR`, and `AI_MODE`; the table below says what each is for. The app alone (`pnpm dev`) needs none of them: it reads the committed files under `data/`.
 4. Clone the fork: set `SAMPLE_REPO_DIR` in `.env` to an absolute path, then run `pnpm seed`. It clones `miska-voutilainen/junction26-messagepack-csharp` (our fork of Tieto's repository) into that folder, fetches every branch and the receipt notes, and checks that the head commit of each sample change is there. Only the pipeline and the receipt CLI read the clone.
 5. Start: `pnpm dev`, then open <http://localhost:3000> (`PORT` overrides).
 
@@ -25,7 +25,6 @@
 | `ANTHROPIC_API_KEY` | Only for `AI_BACKEND=api`                                                                                                                                                                           | Your Anthropic Console, with a spending limit      |
 | `SAMPLE_REPO_DIR`   | Absolute path of your clone of the fork; `pnpm seed` creates it                                                                                                                                     | Choose a folder                                    |
 | `AI_MODE`           | `record` (default), `replay` (recordings only) or `live`                                                                                                                                            | Set it yourself                                    |
-| `ACCESS_CODE`       | Temporary access gate until the submission on Sun 15.11; empty turns it off                                                                                                                         | Ask the team; set in Vercel's env settings only    |
 
 ## Commands
 
@@ -47,7 +46,7 @@
 ## Testing
 
 - **Unit:** `pnpm test` runs Vitest in jsdom over `src/**/*.test.ts(x)` and `scripts/**/*.test.ts`. Tests sit next to the code (`route.ts` and `route.test.ts`).
-- **End to end:** `pnpm e2e` runs the specs in `e2e/` with Playwright at 1440x900 (`desktop`) and 375x812 (`mobile`). Unless `E2E_BASE_URL` is set, it runs `pnpm build && pnpm start` on `PORT` (default 3000) first. The `desktop` and `mobile` projects run on fixture data: the server is built with `COUNTERSIGN_DATA_ROOT` pointing at a copy of `data/fixtures` (made in `.review/e2e-data-root`), so they stay the same while recordings land. The `real-data` project (`e2e/real-data.spec.ts`) runs against `data/` as committed on a second server at `PORT` + 1, built into `node_modules/.cache/next-real-data`; it reads its expectations from `data/` and checks that the inbox lists only the Tieto changes. Pages are generated at build time, so a server already running on either port is reused with whatever data it was built with: stop it before changing data or env. To test a preview or production, set `E2E_BASE_URL=<url>`. If `ACCESS_CODE` is set, the specs unlock the gate with it (`e2e/unlock.ts`).
+- **End to end:** `pnpm e2e` runs the specs in `e2e/` with Playwright at 1440x900 (`desktop`) and 375x812 (`mobile`). Unless `E2E_BASE_URL` is set, it runs `pnpm build && pnpm start` on `PORT` (default 3000) first. The `desktop` and `mobile` projects run on fixture data: the server is built with `COUNTERSIGN_DATA_ROOT` pointing at a copy of `data/fixtures` (made in `.review/e2e-data-root`), so they stay the same while recordings land. The `real-data` project (`e2e/real-data.spec.ts`) runs against `data/` as committed on a second server at `PORT` + 1, built into `node_modules/.cache/next-real-data`; it reads its expectations from `data/` and checks that the inbox lists only the Tieto changes. Pages are generated at build time, so a server already running on either port is reused with whatever data it was built with: stop it before changing data or env. To test a preview or production, set `E2E_BASE_URL=<url>`. Against a `*.vercel.app` preview, the specs pass Vercel Authentication with `VERCEL_AUTOMATION_BYPASS_SECRET` (`e2e/bypassVercelAuth.ts`).
 - **Legacy guard:** the security promise Tieto cares most about (idea 9) has two kinds of unit test, all with no model call and no git.
   - **Detector examples** check that each kind of touch is found or skipped on hand-written hunks, against a fake base commit that stands in for git:
     - [`legacyTouchPoints.test.ts`](../src/pipeline/legacyTouchPoints.test.ts): zones, reach-ins, old-platform `#if`, consumer contracts, build files and their guards.
@@ -62,7 +61,7 @@
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every pull request and every push to `main`, as one job in this order: message check (no emoji or AI trailer in the title, body or commits), lane check (the PR touches only its author's lanes, or carries `cross-lane`), tree check, hook and CI-script tests, lint, typecheck, unit tests, build, gitleaks. The scripts are in `.github/scripts/`; run one locally with its env vars, for example `PR_AUTHOR=Kasanen PR_LABELS='[]' node .github/scripts/checkLanes.mjs`. A PR that changes only Markdown skips lint to build. `.github/workflows/e2e-preview.yml` runs the Playwright demo path against each finished Vercel deployment; it runs only the `real-data` project against the deployed URL, and only for a commit that is the head of a branch in this repository. It needs the repository secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (every deployment URL sits behind Vercel Authentication) and `ACCESS_CODE` (production only; it must mirror the value in Vercel's production env), and skips with a notice when one is missing. It is informational.
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`, as one job in this order: message check (no emoji or AI trailer in the title, body or commits), lane check (the PR touches only its author's lanes, or carries `cross-lane`), tree check, hook and CI-script tests, lint, typecheck, unit tests, build, gitleaks. The scripts are in `.github/scripts/`; run one locally with its env vars, for example `PR_AUTHOR=Kasanen PR_LABELS='[]' node .github/scripts/checkLanes.mjs`. A PR that changes only Markdown skips lint to build. `.github/workflows/e2e-preview.yml` runs the Playwright demo path against each finished Vercel deployment; it runs only the `real-data` project against the deployed URL, and only for a commit that is the head of a branch in this repository. It needs the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET` (every deployment URL sits behind Vercel Authentication), and skips with a notice when it is missing. It is informational.
 
 Two more workflows run Countersign's own ideas in CI. They are opt-in and cost nothing on a PR that does not ask for them (spec section 5, CI workflows):
 
@@ -79,5 +78,3 @@ The `*.vercel.app` preview URLs are behind Vercel Authentication; only custom do
 
 ## Troubleshooting
 
-- **A changed `ACCESS_CODE` has no effect on the deployed site.** Vercel applies an env change only to new deployments. Redeploy (Deployments, then Redeploy). Source: [access gate README](../src/features/access-gate/README.md).
-- **`pnpm e2e` ignores a changed `ACCESS_CODE`.** Playwright reuses a server already running on the port. Stop it, then run again. Source: `playwright.config.ts`.

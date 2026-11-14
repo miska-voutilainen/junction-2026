@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The inbox shows the committed fixtures until recorded reviews exist: four Tieto changes, one signed.
 const SIGNED_CHANGE_HREF = "/changes/mp-2283";
@@ -17,7 +17,7 @@ function watchConsole(page: Page): string[] {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("lists the four changes with their tiers and links each to its review", async ({ page }, testInfo) => {
