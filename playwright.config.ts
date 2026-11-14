@@ -9,11 +9,19 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
+      testIgnore: "screenshots.spec.ts",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
     {
       name: "mobile",
+      testIgnore: "screenshots.spec.ts",
       use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true },
+    },
+    // Sets its own viewports per test; only `pnpm screenshots` runs it.
+    {
+      name: "screenshots",
+      testMatch: "screenshots.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
   // Builds and serves the production app; the server inherits ACCESS_CODE from this process.
