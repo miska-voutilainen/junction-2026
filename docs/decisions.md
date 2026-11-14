@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · T13 choices: area by path, AI refusals only, nullable failure citation
+
+- **Context:** A3 and A4 needed rules the spec left open or split between section 6 and 9.1.
+- **Decision:** A finding's area is the area of its first passing citation's file, by `classifyFile()`, not the model's choice. Only AI refusals count for the A3 check; the fixed rule refusals are merged in after, only for matched hunks no AI refusal with that rule id lists. A3's `ruleId` is checked after the call (section 6), not in the schema (9.1), so one invented rule id strikes one refusal and does not fail the run. `quoteCheck.failures[].citation` is nullable (Miska decided): an unknown rule id is recorded with `citation: null` and the reason `unknown rule id "R8"`, counted in `quoteFailures` and not in `checked`. Contradiction findings are never dropped by the quote check; their failing citations are removed.
+- **Why:** The path rule is the one the trust ladder uses, so a caught bug counts toward the right area. A placeholder citation would claim lines of the sample repo that do not exist. A schema that rejects a contradiction without a quote would fail a whole run over one answer.
+- **Rejected:** Letting the model pick the area (inconsistent across checklists); a separate list of struck refusals (a second place for S3 to read); a placeholder citation to `src/policy/refusals.ts`.
+- **PR:** T13 (#94)
+
 ## 2026-11-14 · A hunk counts as covered only where a claim quotes code in it
 
 - **Context:** A2 listed hunks on claims whose citations lay in only one of them, so a Supported claim could cover hunks it showed nothing about, and `route()` would then skip reading them.

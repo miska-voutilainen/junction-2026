@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Review } from "../contracts";
+import type { AnswerKey, Review } from "../contracts";
 import { checkReview } from "./checkReview";
 
 const requirement = {
@@ -39,6 +39,8 @@ function reviewWith(overrides: Partial<Review>): Review {
     ],
     hunks: [hunk("h1", "src/A.cs"), hunk("h2", "README.md")],
     claims: [{ id: "c1", hunkIds: ["h1"] }],
+    refusals: [],
+    findings: [],
     ...overrides,
   } as unknown as Review;
 }
@@ -48,8 +50,9 @@ const outcome = (review: Review) =>
 
 describe("checkReview", () => {
   it("passes a review that covers items, mentions the crash and resolver, and claims every code hunk", () => {
-    expect(Object.values(outcome(reviewWith({}))).every(Boolean)).toBe(true);
-    expect(checkReview(reviewWith({}))).toHaveLength(4);
+    const refused = reviewWith({ refusals: [{ ruleId: "R7", source: "ai" }] as Review["refusals"] });
+    expect(Object.values(outcome(refused)).every(Boolean)).toBe(true);
+    expect(checkReview(refused)).toHaveLength(5);
   });
 
   it("misses when an item is absent or repeated", () => {
@@ -73,5 +76,37 @@ describe("checkReview", () => {
     const results = checkReview(reviewWith({ claims: [] }));
     const claimed = results.find((result) => result.name.startsWith("A2"));
     expect(claimed).toMatchObject({ passed: false, detail: "not claimed: h1 (src/A.cs)" });
+  });
+});
+
+describe("checkReview: A3 and A4 cases for mp-2283", () => {
+  const key = { kind: "contradiction", defect: "The change touches only the generator." } as AnswerKey;
+  const refusal = (ruleId: string, source: "ai" | "rule") => ({ id: "r1", ruleId, source });
+  const finding = (statement: string) => ({ id: "f1", kind: "contradiction", statement });
+  const names = (review: Review) => checkReview(review, key);
+
+  it("passes when a model refusal cites R7 or R1 and A4 marks the planted sentence", () => {
+    const review = reviewWith({
+      refusals: [refusal("R1", "ai")] as Review["refusals"],
+      findings: [finding("the change touches only the generator")] as Review["findings"],
+    });
+    expect(names(review).filter((result) => !result.passed)).toEqual([]);
+    expect(names(review)).toHaveLength(6);
+  });
+
+  it("misses when the only R7 is a fixed rule refusal, or no finding matches the sentence", () => {
+    const review = reviewWith({
+      refusals: [refusal("R7", "rule")] as Review["refusals"],
+      findings: [finding("Something else entirely.")] as Review["findings"],
+    });
+    const missed = names(review).filter((result) => !result.passed).map((result) => result.name);
+    expect(missed).toEqual([
+      "mp-2283: A3 refuses with R7 or R1",
+      "mp-2283: A4 catches the planted false statement",
+    ]);
+  });
+
+  it("adds no A4 case without the answer key", () => {
+    expect(checkReview(reviewWith({}))).toHaveLength(5);
   });
 });

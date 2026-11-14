@@ -12,18 +12,12 @@ function runCli(...args: string[]) {
 }
 
 describe("pipeline CLI", () => {
-  it("rejects --anchored and --run until T13", () => {
-    for (const flag of [["--anchored"], ["--run", "1"]]) {
-      const result = runCli("run", "mp-2283", "--no-tests", ...flag);
+  it("rejects a --run that is not a whole number from 1", () => {
+    for (const value of ["0", "x", "1.5"]) {
+      const result = runCli("run", "mp-2283", "--run", value);
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain("available after T13");
+      expect(result.stderr).toContain("--run takes a whole number from 1");
     }
-  });
-
-  it("asks for --no-tests while A3 to A5 do not exist", () => {
-    const result = runCli("run", "mp-2283");
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("--no-tests");
   });
 
   it("prints usage for an unknown command", () => {

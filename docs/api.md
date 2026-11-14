@@ -14,7 +14,7 @@ What the parts exchange instead: data files, two pure functions and two command-
 | [`ReportCard`](#reportcard)                              | `data/eval/report-card.json`                                             | Schema built; fixture only                                             |
 | [`ReceiptRecord`](#receiptrecord)                        | `data/receipts/<changeId>.json`                                          | Schema built; fixtures only                                            |
 | [Simulated escapes](#simulated-escapes)                  | `useEscapes()` in `src/lib/simulation/escapes.ts`                        | Built                                                                  |
-| [Pipeline CLI](#pipeline-cli)                            | `pnpm review`, `pnpm evals`                                            | `review run --no-tests` and `review check` built (T12); the rest specified                                               |
+| [Pipeline CLI](#pipeline-cli)                            | `pnpm review`, `pnpm evals`                                            | `review run`, `review check` built (T12, T13); `evals` specified                                               |
 | [Receipt CLI](#receipt-cli)                              | `pnpm countersign`                                                       | Built, with unit tests                                                 |
 
 All objects are strict: an unknown key fails validation. Lines are 1-based and inclusive. SHAs are 40 lowercase hex characters; timestamps are ISO 8601.
@@ -210,7 +210,7 @@ Screens that show a tier call `route(review, applyEscapes(levels, escapes), rout
 
 ## Pipeline CLI
 
-`package.json` defines `pnpm review` (the script is not called `pipeline`: that is a built-in pnpm 12 command) and `pnpm evals`, both running `src/pipeline/cli.ts`. Built so far (T12): `run <changeId> --no-tests` and `check <changeId>`. `--anchored`, `--run <k>`, A3 to A5 and `evals` are specified and arrive with T13 and T16.
+`package.json` defines `pnpm review` (the script is not called `pipeline`: that is a built-in pnpm 12 command) and `pnpm evals`, both running `src/pipeline/cli.ts`. Built so far (T12, T13): `run <changeId> [--anchored] [--run <k>]` and `check <changeId>`. `--no-tests` is accepted but has no effect until A5 (T14) exists. `--anchored` runs A2 and A4 with the description shown first; `--run <k>` is a blind comparison run of A1, A2 and A4 (no A3). A5 and `evals` are specified and arrive with T14 and T16.
 
 | Command                                                              | What it does                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

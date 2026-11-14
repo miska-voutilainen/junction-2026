@@ -274,7 +274,7 @@ There is no HTTP API: the contracts are data files, one shared function and two 
   refusals: { id: string /* "r1" */, ruleId: string /* "R1".."R7" */, source: "ai" | "rule" /* rule: a fixed trigger in policy, no model involved */,
               reason: string, hunkIds: string[] }[],
   quoteCheck: { checked: number, passed: number, downgraded: number, dropped: number,
-                failures: { itemId: string, citation: Citation, reason: string }[] },
+                failures: { itemId: string, citation: Citation | null /* null: no code to check, e.g. an unknown rule id */, reason: string }[] },
   retractions: { claimId: string, reason: string, output: string }[],
   receiptDraft: { checked: { item: string, by: "tool" | "ai-supported" | "human" }[],
                   notChecked: { item: string, reason: string }[],
@@ -401,7 +401,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 ### A3 · Area review and refusals (`a3.v1`)
 
 - **Input:** the hunks, the touched files (as A2), the four area checklists and the refusal policy (rule ids, titles, deciders), A1's expectation and A2's claims.
-- **Output:** `{ findings: { kind: "defect" | "missing" | "scope-creep", area, severity, title, detail, hunkIds, citations }[], refusals: { ruleId, reason, hunkIds }[] }`. Every finding needs at least one citation that passes the quote check, or it is dropped and counted (`hallucinations.findingsDropped`). The check also tests fit to the record: a refusal whose `ruleId` isn't in the refusal policy is dropped and recorded in `quoteCheck.failures` with reason "unknown rule id". Struck items stay visible there and on S3; nothing the model said is silently lost.
+- **Output:** `{ findings: { kind: "defect" | "missing" | "scope-creep", area, severity, title, detail, hunkIds, citations }[], refusals: { ruleId, reason, hunkIds }[] }`. Every finding needs at least one citation that passes the quote check, or it is dropped and counted (`hallucinations.findingsDropped`). The check also tests fit to the record: a refusal whose `ruleId` isn't in the refusal policy is dropped and recorded in `quoteCheck.failures` with `citation: null` and the reason `unknown rule id "R8"`. Struck items stay visible there and on S3; nothing the model said is silently lost. A finding's `area` is the area of its cited file by path: the pipeline sets it from `classifyFile()` of the first citation that passes the quote check (null for test, docs and generated files), and the model does not choose it (decided Sat 14.11).
 - **Note:** one generalist call with per-area checklists; the planted bugs measure that breadth.
 - **Eval cases:** the 10 planted bugs (caught when a defect or missing finding has a citation in the answer key's file whose lines overlap the planted range ±3 lines, and its area equals the answer key's); on `mp-2283` at least one refusal cites `R7` or `R1` (the change silently drops diagnostics for types from referenced assemblies, a documented-behaviour decision).
 

@@ -9,8 +9,9 @@ import {
 } from "../contracts";
 import { route } from "../rules/route";
 import type { LoadedDiff } from "../lib/git";
-import * as a1 from "../prompts/a1";
-import * as a2 from "../prompts/a2";
+import type * as a1 from "../prompts/a1";
+import type * as a2 from "../prompts/a2";
+import { buildReceiptDraft } from "./buildReceiptDraft";
 import type { CheckedClaims } from "./quoteCheck";
 
 /** Reviewer version; bumps together with any prompt version (spec section 6). */
@@ -24,16 +25,23 @@ export interface ReviewParts {
   expectation: a1.A1Output | null;
   story: a2.A2Output["story"];
   checkedClaims: CheckedClaims;
+  mode: Review["mode"];
+  /** Numbered findings from A3 and A4; empty when neither ran. */
+  findings: Review["findings"];
+  refusals: Review["refusals"];
+  /** Versions of the steps that ran; the rest are "none". */
+  promptVersions: Review["reviewer"]["promptVersions"];
   run: Review["run"];
   /** Trust level per area from the report card at record time. */
   levels: Record<Area, LadderLevel>;
 }
 
 /**
- * Puts the parts together. Steps that have not run yet (A3 findings and refusals,
- * A4, A5, the receipt draft) are empty and their prompt versions are "none"; T13
- * fills them. The routing is computed on the finished review, so it never
- * disagrees with the claims next to it.
+ * Puts the parts together. A step that did not run leaves its part empty and its
+ * prompt version "none". The routing is computed on the finished review, so it
+ * never disagrees with the claims next to it, and the receipt draft is built
+ * last, from that routing: its "not checked" list is the hunks routing says a
+ * person reads.
  *
  * @throws if the assembled review breaks the Review contract, which is a bug here.
  */
@@ -46,11 +54,11 @@ export function assembleReview(parts: ReviewParts): Review {
     title: change.title,
     authorAgent: change.authorAgent,
     kind: change.kind,
-    mode: "blind-first",
+    mode: parts.mode,
     reviewer: {
       version: reviewerVersion,
       model: MODEL,
-      promptVersions: { a1: a1.version, a2: a2.version, a3: "none", a4: "none", a5: "none" },
+      promptVersions: parts.promptVersions,
     },
     run: parts.run,
     diff: loadedDiff.diff,
@@ -60,20 +68,25 @@ export function assembleReview(parts: ReviewParts): Review {
     expectation: parts.expectation,
     story: parts.story,
     claims: checkedClaims.claims,
-    findings: [],
-    refusals: [],
+    findings: parts.findings,
+    refusals: parts.refusals,
     quoteCheck: checkedClaims.quoteCheck,
     retractions: [],
-    receiptDraft: {
-      checked: [],
-      notChecked: [],
-      residualRisk: { text: "", acceptedRefusalIds: [] },
-    },
-  } satisfies Omit<Review, "routing">;
+  } satisfies Omit<Review, "routing" | "receiptDraft">;
 
-  const routing = route({ ...unrouted, routing: emptyRouting } as Review, parts.levels);
-  return ReviewSchema.parse({ ...unrouted, routing });
+  const routing = route(
+    { ...unrouted, receiptDraft: emptyReceiptDraft, routing: emptyRouting } as Review,
+    parts.levels,
+  );
+  const routed = { ...unrouted, routing };
+  return ReviewSchema.parse({ ...routed, receiptDraft: buildReceiptDraft(routed, parts.levels) });
 }
+
+const emptyReceiptDraft: Review["receiptDraft"] = {
+  checked: [],
+  notChecked: [],
+  residualRisk: { text: "", acceptedRefusalIds: [] },
+};
 
 // route() reads only the review's hunks, claims, findings and refusals; this
 // placeholder satisfies the type until the real decision replaces it.

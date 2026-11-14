@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Area, FileKind, LadderLevel, Review } from "../contracts";
-import { route } from "./route";
+import { coverageReason, route } from "./route";
 
 const trustedEverywhere: Record<Area, LadderLevel> = {
   generator: "trusted",
@@ -292,5 +292,30 @@ describe("tier and reading time", () => {
   it("is deterministic for the same input", () => {
     const review = makeReview({ hunks: [{ id: "h1" }, { id: "h2" }], claims: verifiedOn("h1") });
     expect(route(review, trustedEverywhere)).toEqual(route(review, trustedEverywhere));
+  });
+});
+
+describe("coverageReason", () => {
+  const trusted = trustedEverywhere;
+  const shadowGenerator: Record<Area, LadderLevel> = { ...trustedEverywhere, generator: "shadow" };
+
+  it("names the finding that makes a hunk read, before any claim", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }], claims: [claim("c1", "supported", ["h1"])], findings: [finding("defect", ["h1"])] });
+    expect(coverageReason(review, trusted, "h1")).toBe("Finding f1 (defect) names this hunk");
+  });
+
+  it("names the refusal when no finding does", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }], refusals: [refusal(["h1"])] });
+    expect(coverageReason(review, trusted, "h1")).toBe("Refusal r1 (R7) names this hunk: a person decides");
+  });
+
+  it("says the area is at Shadow when that is why a covered hunk is read", () => {
+    const review = makeReview({ hunks: [{ id: "h1", area: "generator" }], claims: [claim("c1", "supported", ["h1"])] });
+    expect(coverageReason(review, shadowGenerator, "h1")).toBe("Generator is at Shadow: the AI's evidence routes nothing here yet");
+  });
+
+  it("says no Verified or Supported claim covers it otherwise", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }], claims: [claim("c1", "unverified", ["h1"])] });
+    expect(coverageReason(review, trusted, "h1")).toBe("No Verified or Supported claim covers it");
   });
 });

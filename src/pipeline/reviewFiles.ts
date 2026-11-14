@@ -54,9 +54,23 @@ export async function loadRecordedReview(changeId: string): Promise<Review> {
   return readJson(file, ReviewSchema);
 }
 
-/** Writes data/runs/<changeId>/review.json (2-space JSON, trailing newline) and returns its path. */
-export async function writeRecordedReview(review: Review): Promise<string> {
-  const file = reviewPath(review.changeId);
+/** Which comparison run a review is: data/runs/<changeId>/<mode>/<k>.json. */
+export interface ComparisonRun {
+  mode: "anchored" | "blind";
+  k: number;
+}
+
+/**
+ * Writes data/runs/<changeId>/review.json, or the comparison run's file when
+ * `comparison` is given (2-space JSON, trailing newline), and returns its path.
+ */
+export async function writeRecordedReview(
+  review: Review,
+  comparison?: ComparisonRun,
+): Promise<string> {
+  const file = comparison
+    ? path.join(RUNS, review.changeId, comparison.mode, `${comparison.k}.json`)
+    : reviewPath(review.changeId);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(insideData(file), `${JSON.stringify(review, null, 2)}\n`);
   return file;

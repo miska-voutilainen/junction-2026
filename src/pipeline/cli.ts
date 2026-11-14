@@ -1,13 +1,14 @@
 /**
- * Pipeline CLI: `run <changeId> [--no-tests]` records one blind-first review,
- * `check <changeId>` runs the A1 and A2 eval cases on it. Spec section 5, Pipeline CLI.
+ * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
+ * review, `check <changeId>` runs the eval cases of A1 to A4 on it. Spec section 5,
+ * Pipeline CLI.
  */
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../ai/client";
-import type { Review } from "../contracts";
+import type { AnswerKey, Review } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
-import { checkReview } from "./checkReview";
+import { checkReview, loadContradictionKey } from "./checkReview";
 import {
   loadChangeAndRequirement,
   loadRecordedReview,
@@ -18,7 +19,7 @@ import { runReview } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
-  pnpm review run <changeId> [--no-tests]
+  pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
   pnpm review check <changeId>`;
 
 /** The optional local environment file, loaded the way the seed script does. */
@@ -29,6 +30,7 @@ async function main(argv: string[]): Promise<void> {
     args: argv,
     allowPositionals: true,
     options: {
+      // Accepted for the spec's command line; A5 (T14) is not built, so no run includes tests yet.
       "no-tests": { type: "boolean" },
       anchored: { type: "boolean" },
       run: { type: "string" },
@@ -37,15 +39,25 @@ async function main(argv: string[]): Promise<void> {
   const [command, changeId] = positionals;
   if (!changeId || (command !== "run" && command !== "check")) fail(usage);
 
-  if (command === "check") return printChecks(await loadRecordedReview(changeId));
+  if (command === "check") {
+    const review = await loadRecordedReview(changeId);
+    return printChecks(review, await loadContradictionKey(changeId));
+  }
 
-  if (values.anchored || values.run !== undefined)
-    fail("--anchored and --run are available after T13.");
-  if (!values["no-tests"]) fail("A3 to A5 are available after T13. Run with --no-tests for now.");
-  return recordReview(changeId);
+  if (values["no-tests"]) console.error("--no-tests has no effect until T14: no run includes tests yet.");
+  const k = values.run === undefined ? undefined : Number(values.run);
+  if (k !== undefined && (!Number.isInteger(k) || k < 1))
+    fail(`--run takes a whole number from 1, got "${values.run}".`);
+  return recordReview(changeId, { isAnchored: values.anchored === true, k });
 }
 
-async function recordReview(changeId: string): Promise<void> {
+/** How a run is recorded: the plain run is the change's review; --anchored or --run <k> is a comparison run. */
+interface RunOptions {
+  isAnchored: boolean;
+  k: number | undefined;
+}
+
+async function recordReview(changeId: string, options: RunOptions): Promise<void> {
   if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
   const repoDir = process.env.SAMPLE_REPO_DIR;
   if (!repoDir)
@@ -55,6 +67,9 @@ async function recordReview(changeId: string): Promise<void> {
 
   const { change, requirement } = await loadChangeAndRequirement(changeId);
   const tally = createUsageTally();
+  const isComparison = options.isAnchored || options.k !== undefined;
+  // Comparison runs number from 1; the recorded review is run index 0.
+  const k = options.k ?? 1;
   const review = await runReview({
     change,
     requirement,
@@ -62,8 +77,15 @@ async function recordReview(changeId: string): Promise<void> {
     client: createModelClientFromEnv(process.env, tally.sink),
     usage: tally,
     levels: levelsFromReportCard(await loadReportCard()),
+    mode: options.isAnchored ? "anchored" : "blind-first",
+    // Comparison runs are A1, A2 and A4: A3 is most of a run's cost and not what they compare.
+    steps: isComparison && !options.isAnchored ? ["a1", "a2", "a4"] : undefined,
+    runIndex: isComparison ? k : 0,
   });
-  await writeRecordedReview(review);
+  await writeRecordedReview(
+    review,
+    isComparison ? { mode: options.isAnchored ? "anchored" : "blind", k } : undefined,
+  );
   console.log(summaryLine(review));
 }
 
@@ -83,12 +105,15 @@ function summaryLine(review: Review): string {
 }
 
 /** A miss is a measurement, not a failure: the exit code stays 0. */
-function printChecks(review: Review): void {
-  for (const result of checkReview(review)) {
+function printChecks(review: Review, contradictionKey: AnswerKey | null): void {
+  for (const result of checkReview(review, contradictionKey)) {
     console.log(
       `${result.passed ? "PASS" : "MISS"}  ${result.name}${result.detail ? ` (${result.detail})` : ""}`,
     );
   }
+  // A missing key is not a miss: say the case did not run, so a pass count is not read as complete.
+  if (review.changeId === "mp-2283" && contradictionKey === null)
+    console.log("SKIP  mp-2283: the planted contradiction is caught (answer key not found in this checkout)");
 }
 
 function fail(message: string): never {

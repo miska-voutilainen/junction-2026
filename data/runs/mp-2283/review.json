@@ -12,21 +12,21 @@
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "none",
-      "a4": "none",
+      "a3": "a3.v1",
+      "a4": "a4.v1",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T031821Z",
-    "startedAt": "2026-11-14T03:18:21.767Z",
-    "finishedAt": "2026-11-14T03:19:47.458Z",
-    "durationMs": 85691,
+    "id": "20261114T042824Z",
+    "startedAt": "2026-11-14T04:28:24.490Z",
+    "finishedAt": "2026-11-14T04:28:25.040Z",
+    "durationMs": 550,
     "usage": {
-      "inputTokens": 117688,
-      "outputTokens": 10266,
-      "costUsd": 1.588292,
-      "calls": 3
+      "inputTokens": 191496,
+      "outputTokens": 21314,
+      "costUsd": 2.6564592,
+      "calls": 5
     }
   },
   "diff": {
@@ -1858,110 +1858,104 @@
       {
         "requirementItemId": "F1",
         "expectedBehaviours": [
-          "Compiling a project with a [MessagePackObject] type that has a member typed as a closed generic struct from a referenced assembly (for example Wrapper<int>) does not raise an IndexOutOfRangeException from the source generator.",
-          "The same holds when the referenced generic type is a record struct.",
-          "The build output has no generator failure warning (CS8785) for these member types."
+          "Compiling a project with a [MessagePackObject] type that has a member typed as a closed generic struct from a referenced assembly (for example ValueTuple-like or a library GenericStruct<int>) does not make the source generator throw an IndexOutOfRangeException.",
+          "The same holds when the referenced generic value type is a record struct.",
+          "No CS8785 generator-failed warning or error is reported for these member types."
         ],
         "likelyAreas": [
           "generator"
         ],
         "expectedTests": [
-          "A generator test that compiles against a separate referenced assembly holding a generic struct and checks that no generator exception or CS8785 diagnostic is reported.",
-          "A matching generator test that uses a generic record struct from a referenced assembly."
+          "A generator test compiles a referenced assembly that defines a generic struct, then a consuming project with a [MessagePackObject] member of a closed form of that struct, and asserts the generator produced no exceptions or failure diagnostics.",
+          "The same test with a generic record struct from the referenced assembly."
         ]
       },
       {
         "requirementItemId": "F2",
         "expectedBehaviours": [
-          "Running the MessagePack analyzers on a [MessagePackObject] type with a member typed as a closed generic struct or record struct from a referenced assembly does not throw.",
-          "No analyzer exception diagnostic (AD0001) appears for these members.",
-          "Valid code gets no false MsgPack diagnostics because of the referenced generic value type."
+          "Running the MessagePack analyzers on a [MessagePackObject] type whose member is a closed generic struct or record struct from a referenced assembly does not throw IndexOutOfRangeException.",
+          "No AD0001 analyzer-crashed diagnostic is reported for that code.",
+          "Analyzer diagnostics that apply to the type are still reported as normal, and no spurious ones appear."
         ],
         "likelyAreas": [
           "analyzer"
         ],
         "expectedTests": [
-          "An analyzer test that references an external assembly with a generic struct, uses it as a member type, and expects no diagnostics and no AD0001."
+          "An analyzer test with a closed generic struct member from a referenced metadata assembly checks that no AD0001 and no unexpected MsgPack diagnostics are produced."
         ]
       },
       {
         "requirementItemId": "F3",
         "expectedBehaviours": [
-          "The compiling assembly gets a generated resolver and a formatter for the [MessagePackObject] type, just as it would if the generic struct were declared in the same project.",
-          "At runtime, the type can be serialized and deserialized through the generated resolver, and the generic struct member's value survives the round trip."
+          "The consuming assembly gets a generated resolver and a formatter for the [MessagePackObject] type, as it does when the generic struct is declared in the same project.",
+          "At runtime, the generated resolver serializes and deserializes the object with the cross-assembly generic struct member without error."
         ],
         "likelyAreas": [
           "generator"
         ],
         "expectedTests": [
-          "A generator snapshot test whose expected output under Resources includes the generated resolver and formatter for a type with a member typed as a generic struct from a referenced assembly.",
-          "A runtime round-trip test that serializes such a type with the generated resolver."
+          "A snapshot test checks the generated resolver and formatter output for a type with a member of a closed generic struct from a referenced assembly.",
+          "A round-trip test serializes and deserializes an instance through the generated resolver and checks the member value survives."
         ]
       },
       {
         "requirementItemId": "N1",
         "expectedBehaviours": [
-          "If a generator or analyzer exception happens, it does not pass silently as a build warning that leaves the assembly without a resolver, so the build no longer succeeds quietly with no resolver.",
-          "Tests fail when any generator exception diagnostic is produced, so the regression cannot pass unnoticed."
+          "If the generator or analyzer hits an unexpected condition with these types, the build shows it clearly as a failure or an error-level diagnostic, not only as a CS8785 or AD0001 warning that leaves the assembly without a resolver.",
+          "A successful build is never missing the expected generated resolver."
         ],
         "likelyAreas": [
           "generator",
           "analyzer"
         ],
         "expectedTests": [
-          "A test-harness check that fails the test when the generator reports any exception or CS8785 diagnostic, rather than only comparing generated sources."
+          "Generator tests fail when the generator reports exceptions or generator-failure diagnostics, so a silent warning cannot pass."
         ]
       },
       {
         "requirementItemId": "N2",
         "expectedBehaviours": [
-          "Generated output for members typed as generic classes, non-generic structs and generic types declared in the same project matches the existing snapshots.",
-          "Analyzer diagnostics for these cases are the same as before."
+          "Generated output for members of generic classes, non-generic structs and generic types declared in the same project matches the existing snapshot files with no changes.",
+          "Existing analyzer diagnostics for those cases are unchanged."
         ],
         "likelyAreas": [
           "generator",
           "analyzer"
         ],
         "expectedTests": [
-          "Existing generator snapshot tests for generic classes, non-generic structs and same-project generic types still pass with unchanged Resources files.",
-          "Existing analyzer tests still pass unchanged."
+          "The existing generator snapshot tests and analyzer tests still pass without updates to their expected Resources files."
         ]
       }
     ]
   },
   "story": {
-    "what": "TypeCollector now sends every analyzer diagnostic through a filter, ReportIfLocatedInCompilation. The filter drops any diagnostic whose location is not in a syntax tree of the current compilation. Two places that read DeclaringSyntaxReferences[0] now read it in a null-safe way: the property BothStringAndIntKeyAreNull location, through a new helper GetPropertyIdentifierLocation, and the field MemberNeedsKey location. Those reads used to throw for members that come from metadata. New generator tests compile a defining assembly to an image, reference it as metadata only, and check that there are no diagnostics and that a resolver is generated. The docs now explain where diagnostics for types from referenced assemblies are reported.",
-    "why": "Issue 2283: a [MessagePackObject] type with a member whose type is a closed generic struct or record struct from a referenced assembly crashed the generator and analyzer with IndexOutOfRangeException. Metadata symbols have no DeclaringSyntaxReferences, so the [0] index threw. The crash showed up as AD0001/CS8785 warnings and the assembly was left without its generated resolver.",
+    "what": "The change makes TypeCollector stop indexing DeclaringSyntaxReferences[0] for property and field diagnostics, so members that come from metadata no longer cause an IndexOutOfRangeException. It also wraps the analyzer's report callback so that a diagnostic is only reported when its location is in a syntax tree of the compilation being analyzed. Three new generator tests compile a defining assembly to a metadata-only reference and check that a consuming project builds with no diagnostics and gets its resolver. README and the MsgPack004 doc explain that diagnostics for members of types from referenced assemblies belong to the defining project.",
+    "why": "Requirement MP-2283: a [MessagePackObject] type with a member whose type is a closed generic struct or record struct from a referenced assembly made the generator and analyzer crash (CS8785/AD0001), and the assembly was left without a generated resolver. Metadata-only symbols have no syntax references, so the code that indexed element 0 threw.",
     "touches": [
       {
-        "symbol": "TypeCollector..ctor",
+        "symbol": "TypeCollector constructor",
         "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "Wraps the analyzer report callback so that only diagnostics located in the compilation are reported."
-      },
-      {
-        "symbol": "TypeCollector.ReportIfLocatedInCompilation",
-        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "New filter. It reports a diagnostic only if its location is in source and in a syntax tree of this compilation."
-      },
-      {
-        "symbol": "TypeCollector.GetPropertyIdentifierLocation",
-        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "New helper. It returns the property identifier location, or null when the property has no source declaration."
+        "note": "reportDiagnostic now wraps the analyzer callback with ReportIfLocatedInCompilation."
       },
       {
         "symbol": "TypeCollector.GetObjectInfo",
         "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "The BothStringAndIntKeyAreNull location for properties and the MemberNeedsKey location for fields no longer index DeclaringSyntaxReferences[0]."
+        "note": "BothStringAndIntKeyAreNull and field MemberNeedsKey locations no longer index DeclaringSyntaxReferences[0]."
+      },
+      {
+        "symbol": "TypeCollector.GetPropertyIdentifierLocation",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "New helper that returns a property's identifier location, or null when the property has no source declaration."
+      },
+      {
+        "symbol": "TypeCollector.ReportIfLocatedInCompilation",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "New filter that forwards a diagnostic only when its location is in source and in this compilation."
       },
       {
         "symbol": "GenericsFormatterTests.RunWithMetadataReferenceAsync",
         "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-        "note": "New harness. It compiles the defining source to a metadata reference, then runs the verifier and a generator driver against it."
-      },
-      {
-        "symbol": "GenericsFormatterTests.ClosedGenericStruct_FromMetadataReference",
-        "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-        "note": "New tests for a generic struct, a generic record struct, and a generic struct with an unkeyed member, each from a referenced assembly."
+        "note": "New helper plus three tests for closed generic structs and record structs from a metadata reference."
       }
     ]
   },
@@ -1969,12 +1963,11 @@
     {
       "id": "c1",
       "requirementItemId": "F2",
-      "text": "The TypeCollector constructor replaces a non-null analyzer report callback with a wrapper that calls ReportIfLocatedInCompilation. That method passes a diagnostic on only when its Location is in source and the compilation contains its SourceTree. Diagnostics located in metadata or in another compilation are dropped. When the callback is null, which is the generator case, reportDiagnostic stays null.",
+      "text": "When an analyzer report callback is supplied, the TypeCollector constructor no longer stores it directly. It stores a wrapper that sends each diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (the generator path), reportDiagnostic stays null.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
-        "h3",
-        "h6"
+        "h3"
       ],
       "citations": [
         {
@@ -1983,13 +1976,6 @@
           "startLine": 239,
           "endLine": 239,
           "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1444,
-          "endLine": 1450,
-          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
         }
       ],
       "evidence": [
@@ -2004,8 +1990,36 @@
     },
     {
       "id": "c2",
+      "requirementItemId": "F2",
+      "text": "ReportIfLocatedInCompilation forwards a diagnostic only if its Location.IsInSource is true and the compilation contains the location's SourceTree. Diagnostics located in metadata, in another compilation, or with no location (for example a null location) are silently dropped.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1444–1450",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
       "requirementItemId": "F1",
-      "text": "For a keyed property whose key is neither an int nor a string, the BothStringAndIntKeyAreNull diagnostic now gets its location from the new GetPropertyIdentifierLocation helper. The helper uses FirstOrDefault and a safe cast to PropertyDeclarationSyntax, and returns null for properties that come from metadata. The old code cast DeclaringSyntaxReferences[0] directly, which throws when there are no syntax references.",
+      "text": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
@@ -2026,13 +2040,6 @@
           "startLine": 1434,
           "endLine": 1434,
           "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "old",
-          "startLine": 985,
-          "endLine": 985,
-          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, ((PropertyDeclarationSyntax)item.DeclaringSyntaxReferences[0].GetSyntax()).Identifier.GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
         }
       ],
       "evidence": [
@@ -2046,9 +2053,9 @@
       ]
     },
     {
-      "id": "c3",
+      "id": "c4",
       "requirementItemId": "F1",
-      "text": "For an unkeyed field declared on the formatted type, the MemberNeedsKey diagnostic now gets its location from DeclaringSyntaxReferences.FirstOrDefault()?, not from DeclaringSyntaxReferences[0]. A field from metadata therefore produces a null location instead of an IndexOutOfRangeException.",
+      "text": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
@@ -2061,13 +2068,6 @@
           "startLine": 1077,
           "endLine": 1077,
           "quote": ": Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "old",
-          "startLine": 1077,
-          "endLine": 1077,
-          "quote": ": Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, item.DeclaringSyntaxReferences[0].GetSyntax().GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
         }
       ],
       "evidence": [
@@ -2081,51 +2081,9 @@
       ]
     },
     {
-      "id": "c4",
-      "requirementItemId": "F1",
-      "text": "Three new tests use a member typed as a closed generic from a metadata-only referenced assembly: a [MessagePackObject] generic struct (MyGenericStruct<int>), a generic record struct (Item<int>) used inside a record, and a generic struct that has an unkeyed public property.",
-      "kind": "test",
-      "level": "supported",
-      "hunkIds": [
-        "h8"
-      ],
-      "citations": [
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 507,
-          "endLine": 518,
-          "quote": "public async Task ClosedGenericStruct_FromMetadataReference()"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 551,
-          "endLine": 559,
-          "quote": "public partial record struct Item<T>([property: Key(0)] string Key);"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 598,
-          "endLine": 603,
-          "quote": "public int Unkeyed { get; set; }"
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:507–518",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
       "id": "c5",
-      "requirementItemId": "F3",
-      "text": "The RunWithMetadataReferenceAsync helper emits the defining source to an in-memory image and adds it as a MetadataReference. It runs the analyzer/generator verifier with the generated-sources check skipped, so the verifier still fails on any unexpected diagnostic. It then runs CSharpGeneratorDriver directly, asserts that there are no diagnostics of warning severity or higher, and asserts that the expected resolver hint name is among the generated sources.",
+      "requirementItemId": "N1",
+      "text": "The new RunWithMetadataReferenceAsync helper compiles the defining source into an in-memory assembly image and adds it as a metadata-only reference. It then runs the VerifyCS analyzer/generator test with no expected diagnostics, skipping the generated-sources check. Next it runs the generator directly through CSharpGeneratorDriver and asserts there are no diagnostics at Warning severity or above and that the expected resolver hint name was generated.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2143,16 +2101,9 @@
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
           "side": "new",
-          "startLine": 637,
-          "endLine": 648,
-          "quote": "test.TestState.AdditionalReferences.Add(definingAssembly);"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 650,
+          "startLine": 647,
           "endLine": 658,
-          "quote": "Assert.Empty(runResult.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning));\n        var hintNames = runResult.Results.SelectMany(r => r.GeneratedSources).Select(s => s.HintName).ToList();\n        Assert.Contains(expectedResolverHintName, hintNames);"
+          "quote": "Assert.Empty(runResult.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning));"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
@@ -2174,13 +2125,54 @@
     },
     {
       "id": "c6",
+      "requirementItemId": "F3",
+      "text": "Three tests use the helper. ClosedGenericStruct_FromMetadataReference covers MyGenericStruct<int> and expects TempProject.MyResolver.g.cs. ClosedGenericRecordStruct_FromMetadataReference covers a record struct Item<int> under LanguageVersion.Latest and expects App.AppResolver.g.cs. ClosedGenericStruct_FromMetadataReference_UnkeyedMember covers a referenced struct with an unkeyed public property and expects no diagnostics in the consuming project.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 540,
+          "endLine": 540,
+          "quote": "await RunWithMetadataReferenceAsync(defineSource, usageSource, \"TempProject.MyResolver.g.cs\");"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 559,
+          "endLine": 559,
+          "quote": "public partial record struct Item<T>([property: Key(0)] string Key);"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 600,
+          "endLine": 603,
+          "quote": "public int Unkeyed { get; set; }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:540–540",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c7",
       "requirementItemId": null,
-      "text": "The README gains a section stating that closed generic types from referenced assemblies, including value types and record structs, can be used as members, and that diagnostics about their members are reported by the defining assembly. The MsgPack004 doc states that the analyzer reports only on members declared in the project being compiled.",
+      "text": "README gains a section, 'Generic types from referenced assemblies'. It says closed generic types from referenced assemblies, including value types and record structs, can be used as members, and that diagnostics about their members are reported by the defining assembly.",
       "kind": "docs",
       "level": "supported",
       "hunkIds": [
-        "h1",
-        "h2"
+        "h1"
       ],
       "citations": [
         {
@@ -2189,13 +2181,6 @@
           "startLine": 1639,
           "endLine": 1642,
           "quote": "### Generic types from referenced assemblies"
-        },
-        {
-          "file": "doc/analyzers/MsgPack004.md",
-          "side": "new",
-          "startLine": 49,
-          "endLine": 52,
-          "quote": "This analyzer only reports on members declared in the project being compiled."
         }
       ],
       "evidence": [
@@ -2207,29 +2192,276 @@
           "head": null
         }
       ]
+    },
+    {
+      "id": "c8",
+      "requirementItemId": null,
+      "text": "The MsgPack004 analyzer doc gains a note that the analyzer only reports on members declared in the project being compiled, and that unattributed members of types from referenced assemblies must be fixed in the defining project.",
+      "kind": "docs",
+      "level": "supported",
+      "hunkIds": [
+        "h2"
+      ],
+      "citations": [
+        {
+          "file": "doc/analyzers/MsgPack004.md",
+          "side": "new",
+          "startLine": 49,
+          "endLine": 52,
+          "quote": "This analyzer only reports on members declared in the project being compiled."
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at doc/analyzers/MsgPack004.md:49–52",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
     }
   ],
-  "findings": [],
-  "refusals": [],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Location-less diagnostics for source types are now silently dropped",
+      "detail": "The new wrapper (h3, h6) only forwards a diagnostic when Location.IsInSource is true, so any diagnostic created with a null location is discarded, including ones about types declared in the compiling project. GetPropertyIdentifierLocation (h4, h6) only recognises PropertyDeclarationSyntax. For a positional record property declared in source, the declaring syntax is a ParameterSyntax, so the helper returns null and BothStringAndIntKeyAreNull is dropped with no message. The MemberNeedsKey path at line 926 already handles ParameterSyntax. Before this change, that case threw an InvalidCastException; now it passes silently. This also changes analyzer behaviour for source types (N2): any other diagnostic whose location helper returns null used to be reported at Location.None and is now lost.",
+      "statement": null,
+      "hunkIds": [
+        "h3",
+        "h4",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1434,
+          "endLine": 1434,
+          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 925,
+          "endLine": 926,
+          "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Generator or analyzer crashes still surface only as warnings",
+      "detail": "N1 requires that a generator or analyzer failure does not pass silently as a build warning that leaves the assembly without a resolver. The change fixes the two known indexing sites, but nothing in the collection path catches unexpected exceptions and reports them as an error-level diagnostic. Any other crash would still show up only as a CS8785 or AD0001 warning, and the build would succeed without a resolver. The new tests guard only the specific cases they cover.",
+      "statement": null,
+      "hunkIds": [],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 263,
+          "endLine": 273,
+          "quote": "FullModel model = collector.Collect();"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "kind": "missing",
+      "area": null,
+      "severity": "medium",
+      "title": "No snapshot test of the generated resolver and formatter output",
+      "detail": "F3 expects a snapshot check showing that the consuming assembly gets the same resolver and formatter registration as when the generic struct is declared in the same project. The new helper sets SkipGeneratedSourcesCheck and only checks that a file with the resolver hint name exists. A resolver that is empty or missing the registration for MyGenericStruct<int> or Item<int> would still pass.",
+      "statement": null,
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 638,
+          "endLine": 648,
+          "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "kind": "missing",
+      "area": null,
+      "severity": "low",
+      "title": "No round-trip test through the generated resolver",
+      "detail": "The expectation for F3 includes a runtime test that serializes and deserializes an object with a closed generic struct member from another assembly through the generated resolver. The tests only check generator diagnostics and hint names. Nothing shows that the generated resolver can actually format the cross-assembly struct at runtime. This matters most when the defining assembly has no generated formatter of its own, as in these tests.",
+      "statement": null,
+      "hunkIds": [
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 650,
+          "endLine": 658,
+          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "kind": "contradiction",
+      "area": null,
+      "severity": "high",
+      "title": "The code contradicts the description",
+      "detail": "No claim shows a MsgPack023 descriptor being added. The new tests use member types from a referenced assembly, yet they run the analyzer test with no expected diagnostics and assert there are no warnings, which a warning like this would break.",
+      "statement": "The change also adds a new analyzer diagnostic, MsgPack023, that warns when a member's type comes from a referenced assembly.",
+      "hunkIds": [
+        "h7",
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 647,
+          "endLine": 658,
+          "quote": "Assert.Empty(runResult.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning));"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "source": "ai",
+      "reason": "The change decides, and documents in the README and the MsgPack004 help page, that the analyzer no longer reports diagnostics about members of types from referenced assemblies and leaves them to the defining assembly. That is a change to documented analyzer behaviour.",
+      "hunkIds": [
+        "h1",
+        "h2",
+        "h3"
+      ]
+    }
+  ],
   "quoteCheck": {
-    "checked": 16,
-    "passed": 16,
+    "checked": 20,
+    "passed": 20,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
   },
   "retractions": [],
   "receiptDraft": {
-    "checked": [],
-    "notChecked": [],
+    "checked": [
+      {
+        "item": "When an analyzer report callback is supplied, the TypeCollector constructor no longer stores it directly. It stores a wrapper that sends each diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (the generator path), reportDiagnostic stays null. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "ReportIfLocatedInCompilation forwards a diagnostic only if its Location.IsInSource is true and the compilation contains the location's SourceTree. Diagnostics located in metadata, in another compilation, or with no location (for example a null location) are silently dropped. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The new RunWithMetadataReferenceAsync helper compiles the defining source into an in-memory assembly image and adds it as a metadata-only reference. It then runs the VerifyCS analyzer/generator test with no expected diagnostics, skipping the generated-sources check. Next it runs the generator directly through CSharpGeneratorDriver and asserts there are no diagnostics at Warning severity or above and that the expected resolver hint name was generated. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "Three tests use the helper. ClosedGenericStruct_FromMetadataReference covers MyGenericStruct<int> and expects TempProject.MyResolver.g.cs. ClosedGenericRecordStruct_FromMetadataReference covers a record struct Item<int> under LanguageVersion.Latest and expects App.AppResolver.g.cs. ClosedGenericStruct_FromMetadataReference_UnkeyedMember covers a referenced struct with an unkeyed public property and expects no diagnostics in the consuming project. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "README gains a section, 'Generic types from referenced assemblies'. It says closed generic types from referenced assemblies, including value types and record structs, can be used as members, and that diagnostics about their members are reported by the defining assembly. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The MsgPack004 analyzer doc gains a note that the analyzer only reports on members declared in the project being compiled, and that unattributed members of types from referenced assemblies must be fixed in the defining project. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "README.md:1636 (h1)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
+        "reason": "Finding f1 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
+        "reason": "Finding f1 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
+        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
+        "reason": "Finding f1 (defect) names this hunk"
+      },
+      {
+        "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:1 (h7)",
+        "reason": "Finding f5 (contradiction) names this hunk"
+      },
+      {
+        "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h8)",
+        "reason": "Finding f3 (missing) names this hunk"
+      }
+    ],
     "residualRisk": {
-      "text": "",
+      "text": "r1 (R7): The change decides, and documents in the README and the MsgPack004 help page, that the analyzer no longer reports diagnostics about members of types from referenced assemblies and leaves them to the defining assembly. That is a change to documented analyzer behaviour.",
       "acceptedRefusalIds": []
     }
   },
   "routing": {
-    "tier": "focused",
+    "tier": "full",
     "reasons": [
+      {
+        "ruleId": "R-read-share",
+        "text": "Read 8 of 8 hunks: most of the change needs a human",
+        "tier": "full"
+      },
+      {
+        "ruleId": "R-refusal",
+        "text": "1 item refused: a human decides",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-contradiction",
+        "text": "The PR description contradicts the code in 1 place",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-defect",
+        "text": "1 defect found",
+        "tier": "focused"
+      },
       {
         "ruleId": "R-area-level",
         "text": "Analyzer: Shadow, the AI's output routes nothing here",
@@ -2242,20 +2474,20 @@
       }
     ],
     "coverage": {
-      "h1": "supported",
+      "h1": "read",
       "h2": "read",
       "h3": "read",
       "h4": "read",
       "h5": "read",
       "h6": "read",
-      "h7": "supported",
-      "h8": "supported"
+      "h7": "read",
+      "h8": "read"
     },
-    "readHunks": 5,
+    "readHunks": 8,
     "totalHunks": 8,
-    "readLines": 34,
+    "readLines": 228,
     "totalLines": 228,
-    "readMinutes": 2,
+    "readMinutes": 10,
     "fullMinutes": 10
   }
 }

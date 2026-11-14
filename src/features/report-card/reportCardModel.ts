@@ -7,7 +7,7 @@
  * and section 5, Ladder.
  */
 import { ladderLevelLabel } from "@/contracts";
-import type { Area, LadderLevel, ReportCard, Review } from "@/contracts";
+import type { Area, Citation, LadderLevel, ReportCard, Review } from "@/contracts";
 import { ladderPolicy } from "@/policy/ladder";
 import { applyEscapes } from "@/rules/ladder";
 import type { Escapes } from "@/lib/simulation/escapes";
@@ -162,25 +162,22 @@ export interface FailedQuote {
 /**
  * The quote check also strikes a refusal whose rule id is not in the written
  * policy. Those failures are about the id, not a quote, so the lists below
- * keep them apart. Matched on the phrase, case-insensitively, because the
- * reason text is written by the pipeline, not fixed by the schema.
+ * keep them apart. They have no citation (there was no code to check); the
+ * phrase is matched too, case-insensitively, for failures recorded before
+ * the citation became nullable.
  */
-function isUnknownRuleFailure(reason: string): boolean {
-  return /unknown rule id/i.test(reason);
+function isUnknownRuleFailure(failure: { citation: Citation | null; reason: string }): boolean {
+  return failure.citation === null || /unknown rule id/i.test(failure.reason);
 }
 
 /** Quotes that failed the check, across the recorded reviews. */
 export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures
-      .filter(({ reason }) => !isUnknownRuleFailure(reason))
-      .map(({ itemId, citation, reason }) => ({
-        changeId,
-        itemId,
-        location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
-        quote: citation.quote,
-        reason,
-      })),
+    review.quoteCheck.failures.flatMap(({ itemId, citation, reason }) => {
+      if (citation === null || isUnknownRuleFailure({ citation, reason })) return [];
+      const location = citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`;
+      return [{ changeId, itemId, location, quote: citation.quote, reason }];
+    }),
   );
 }
 
@@ -194,7 +191,7 @@ export interface UnknownRuleRefusal {
 /** Refusals struck for an unknown rule id, across the recorded reviews. */
 export function unknownRuleRefusals(reviews: ReviewOfChange[]): UnknownRuleRefusal[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures.filter(({ reason }) => isUnknownRuleFailure(reason)).map(({ itemId }) => ({ changeId, itemId })),
+    review.quoteCheck.failures.filter(isUnknownRuleFailure).map(({ itemId }) => ({ changeId, itemId })),
   );
 }
 

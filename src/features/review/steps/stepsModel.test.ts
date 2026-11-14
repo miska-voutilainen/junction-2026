@@ -166,6 +166,7 @@ describe("quote check", () => {
     const failure = review.quoteCheck.failures[0];
     const claim = review.claims.find((candidate) => candidate.id === failure.itemId);
     if (!claim) throw new Error("fixture claim missing");
+    if (!failure.citation) throw new Error("fixture failure has no citation");
     const other = { ...failure.citation, startLine: 10, endLine: 11 };
     claim.citations = [failure.citation, other];
 
