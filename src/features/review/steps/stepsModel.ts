@@ -9,7 +9,8 @@ import type { Citation, Receipt, ReceiptRecord, Review } from "@/contracts";
 import type { ReportCardInput } from "@/features/inbox";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { refusalPolicyVersion, refusalRules } from "@/policy/refusals";
-import { fileName, hunkRange } from "../reviewModel";
+import { fileName, hunkRange, splitCitations } from "../reviewModel";
+import type { CheckedCitation } from "../reviewModel";
 
 type Claim = Review["claims"][number];
 type Finding = Review["findings"][number];
@@ -17,6 +18,9 @@ type Retraction = Review["retractions"][number];
 
 /** The four steps, in the order the person works through them. */
 export type StepId = "read" | "blind" | "refused" | "sign";
+
+/** What the Sign step shows: the receipt's status, or "unreadable" when the receipt file exists but fails validation. */
+export type SignState = ReceiptStatusValue | "unreadable";
 
 /** One tab of the panel: "1 Read" with a short count under it. */
 export interface StepTab {
@@ -39,14 +43,15 @@ function plural(count: number, singular: string, pluralForm = `${singular}s`): s
 }
 
 /** The tabs with their counts, so a person sees which steps have something for them before opening one. */
-export function buildStepTabs(review: Review, record: ReceiptRecord | null, status: ReceiptStatusValue): StepTab[] {
-  const openRefusals = openRefusalCount(buildRefusals(review, record, status));
+export function buildStepTabs(review: Review, record: ReceiptRecord | null, signState: SignState): StepTab[] {
+  const openRefusals = openRefusalCount(buildRefusals(review, record, signState));
   const contradictionCount = review.findings.filter((finding) => finding.kind === "contradiction").length;
-  const signCount: Record<ReceiptStatusValue, Pick<StepTab, "count" | "tone">> = {
+  const signCount: Record<SignState, Pick<StepTab, "count" | "tone">> = {
     "needs-review": { count: "Draft ready", tone: "neutral" },
     signed: { count: "Signed", tone: "neutral" },
     stale: { count: "Stale", tone: "amber" },
     unverified: { count: "Failed", tone: "rose" },
+    unreadable: { count: "Unreadable", tone: "rose" },
   };
   const counts: Record<StepId, Pick<StepTab, "count" | "tone">> = {
     read: { count: plural(review.claims.length, "claim"), tone: "neutral" },
@@ -58,7 +63,7 @@ export function buildStepTabs(review: Review, record: ReceiptRecord | null, stat
       count: review.refusals.length === 0 ? "None" : openRefusals === 0 ? "All accepted" : `${openRefusals} open`,
       tone: openRefusals === 0 ? "neutral" : "amber",
     },
-    sign: signCount[status],
+    sign: signCount[signState],
   };
   return STEP_IDS.map((id, index) => ({ id, number: (index + 1) as StepTab["number"], label: STEP_LABELS[id], ...counts[id] }));
 }
@@ -67,6 +72,14 @@ export function buildStepTabs(review: Review, record: ReceiptRecord | null, stat
 export interface StoryClaim {
   claim: Claim;
   retraction: Retraction | null;
+  /** Each citation with the quote check's verdict; a quote not found in the code is never shown. */
+  citations: CheckedCitation[];
+}
+
+/** A finding with its citations checked the same way. */
+export interface FindingView {
+  finding: Finding;
+  citations: CheckedCitation[];
 }
 
 /** The claims that trace to one requirement item, or to none. */
@@ -82,9 +95,9 @@ export interface Story {
   why: string;
   touches: Review["story"]["touches"];
   groups: ClaimGroup[];
-  /** "Quote check: 9 of 10 quotes found in the code, 1 downgraded.", or null when no quote was checked. */
+  /** "Quote check: 9 of 10 quotes found in the code; 1 claim downgraded, 1 finding dropped.", or null when no quote was checked. */
   quoteCheckLine: string | null;
-  defects: Finding[];
+  defects: FindingView[];
 }
 
 const UNTRACED_HEADING = "Not traced to a requirement item";
@@ -101,7 +114,7 @@ export function buildStory(review: Review): Story {
     touches: review.story.touches,
     groups: groupClaims(review),
     quoteCheckLine: quoteCheckLine(review.quoteCheck),
-    defects: review.findings.filter((finding) => finding.kind === "defect"),
+    defects: findingViews(review, "defect"),
   };
 }
 
@@ -109,6 +122,7 @@ function groupClaims(review: Review): ClaimGroup[] {
   const storyClaims: StoryClaim[] = review.claims.map((claim) => ({
     claim,
     retraction: review.retractions.find((retraction) => retraction.claimId === claim.id) ?? null,
+    citations: splitCitations(review, claim.id, claim.citations),
   }));
   const items = [...review.requirement.functional, ...review.requirement.nonFunctional];
   const groups: ClaimGroup[] = items.map((item) => ({
@@ -121,11 +135,19 @@ function groupClaims(review: Review): ClaimGroup[] {
   return [...groups, { heading: UNTRACED_HEADING, claims: untraced }].filter((group) => group.claims.length > 0);
 }
 
-function quoteCheckLine(quoteCheck: Review["quoteCheck"]): string | null {
-  if (quoteCheck.checked === 0) return null;
-  const downgraded = quoteCheck.downgraded + quoteCheck.dropped;
-  const base = `Quote check: ${quoteCheck.passed} of ${quoteCheck.checked} quotes found in the code`;
-  return downgraded === 0 ? `${base}.` : `${base}; ${downgraded} downgraded or dropped.`;
+/** The findings of one kind, each with its citations checked. */
+function findingViews(review: Review, kind: Finding["kind"]): FindingView[] {
+  return review.findings
+    .filter((finding) => finding.kind === kind)
+    .map((finding) => ({ finding, citations: splitCitations(review, finding.id, finding.citations) }));
+}
+
+/** A failed quote downgrades its claim or drops its finding; the two are counted apart. */
+function quoteCheckLine({ checked, passed, downgraded, dropped }: Review["quoteCheck"]): string | null {
+  if (checked === 0) return null;
+  const base = `Quote check: ${passed} of ${checked} quotes found in the code`;
+  const outcomes = [downgraded > 0 && plural(downgraded, "claim") + " downgraded", dropped > 0 && plural(dropped, "finding") + " dropped"].filter(Boolean);
+  return outcomes.length === 0 ? `${base}.` : `${base}; ${outcomes.join(", ")}.`;
 }
 
 /** What the reviewer expected from one requirement item before it saw the diff. */
@@ -147,30 +169,29 @@ export interface BlindCheck {
   requirementId: string;
   /** Empty in anchored mode, where nothing was expected before the diff. */
   expected: ExpectedItem[];
-  contradictions: Finding[];
+  contradictions: FindingView[];
   /** One row for this change's planted contradiction; empty when the report card has none for it. */
   readingOrder: ReadingOrderRow[];
-  /** "Across 5 planted contradictions × 3 runs each: ...", or null without a readable report card. */
+  /** "Across 5 planted contradictions × 3 runs: ...", or null without a readable report card. */
   overallLine: string | null;
-  missing: Finding[];
-  scopeCreep: Finding[];
+  missing: FindingView[];
+  scopeCreep: FindingView[];
 }
 
 /** The blind-first results for one change: expectations, contradictions and the measured effect of reading blind. */
 export function buildBlindCheck(review: Review, reportCard: ReportCardInput): BlindCheck {
   const comparison = reportCard.state === "ok" ? reportCard.data.anchoredVsBlind : null;
-  const ofKind = (kind: Finding["kind"]) => review.findings.filter((finding) => finding.kind === kind);
   return {
     requirementId: review.requirement.id,
     expected: (review.expectation?.items ?? []).map((item) => ({ itemId: item.requirementItemId, behaviours: item.expectedBehaviours })),
-    contradictions: ofKind("contradiction"),
+    contradictions: findingViews(review, "contradiction"),
     readingOrder: comparison?.perPlant.filter((plant) => plant.changeId === review.changeId) ?? [],
     overallLine:
       comparison === null
         ? null
-        : `Across ${plural(comparison.plants, "planted contradiction")} × ${comparison.runsPerMode} runs each: given the description first caught ${comparison.anchored.caught} of ${comparison.anchored.total} · blind-first caught ${comparison.blind.caught} of ${comparison.blind.total}`,
-    missing: ofKind("missing"),
-    scopeCreep: ofKind("scope-creep"),
+        : `Across ${plural(comparison.plants, "planted contradiction")} × ${comparison.runsPerMode} runs: given the description first caught ${comparison.anchored.caught} of ${comparison.anchored.total} · blind-first caught ${comparison.blind.caught} of ${comparison.blind.total}`,
+    missing: findingViews(review, "missing"),
+    scopeCreep: findingViews(review, "scope-creep"),
   };
 }
 
@@ -212,11 +233,14 @@ export function locationsOf(review: Review, hunkIds: string[]): HunkLocation[] {
 
 /**
  * The refusals with their rule text from the policy. A refusal counts as
- * accepted only by a receipt that verifies and matches this diff: a stale or
- * failed receipt vouches for nothing, so the decision stays open.
+ * accepted only by a receipt that verifies, matches this diff and was signed
+ * against this very run: a stale or failed receipt vouches for nothing, and
+ * refusal ids ("r1") are numbered per run, so another run's "r2" may be a
+ * different refusal. In those cases the decision stays open.
  */
-export function buildRefusals(review: Review, record: ReceiptRecord | null, status: ReceiptStatusValue): Refusals {
-  const accepted = status === "signed" && record !== null ? record.receipt.residualRisk.acceptedRefusalIds : [];
+export function buildRefusals(review: Review, record: ReceiptRecord | null, signState: SignState): Refusals {
+  const isAcceptanceCurrent = signState === "signed" && record !== null && record.receipt.reviewRunId === review.run.id;
+  const accepted = isAcceptanceCurrent ? record.receipt.residualRisk.acceptedRefusalIds : [];
   return {
     policyVersion: refusalPolicyVersion,
     ruleCount: refusalRules.length,
@@ -249,21 +273,23 @@ export interface SignCommands {
 
 /** What the Sign step shows, by receipt status. The site never signs: it shows the drafted receipt and the command to run. */
 export type SignView =
+  | { status: "unreadable"; commands: SignCommands }
   | { status: "needs-review"; draft: Review["receiptDraft"]; commands: SignCommands }
   | { status: "signed"; receipt: Receipt; verify: ReceiptRecord["verify"]; commands: SignCommands }
   | { status: "stale"; receipt: Receipt; reviewDiffSha256: string; commands: SignCommands }
   | { status: "unverified"; receipt: Receipt; verify: ReceiptRecord["verify"]; commands: SignCommands };
 
-/** Picks the Sign state from `receiptStatus()`'s answer, so the panel and the badges always agree. */
-export function buildSignView(review: Review, record: ReceiptRecord | null, status: ReceiptStatusValue): SignView {
+/** Picks the Sign state from `receiptStatus()` (or "unreadable" for a receipt file that fails validation)'s answer, so the panel and the badges always agree. */
+export function buildSignView(review: Review, record: ReceiptRecord | null, signState: SignState): SignView {
   const commands: SignCommands = {
     draft: `pnpm countersign draft ${review.changeId}`,
     sign: `pnpm countersign sign ${review.changeId}`,
     verify: `pnpm countersign verify ${review.changeId}`,
   };
-  if (record === null || status === "needs-review") return { status: "needs-review", draft: review.receiptDraft, commands };
-  if (status === "stale") return { status, receipt: record.receipt, reviewDiffSha256: review.diff.diffSha256, commands };
-  return { status, receipt: record.receipt, verify: record.verify, commands };
+  if (signState === "unreadable") return { status: signState, commands };
+  if (record === null || signState === "needs-review") return { status: "needs-review", draft: review.receiptDraft, commands };
+  if (signState === "stale") return { status: signState, receipt: record.receipt, reviewDiffSha256: review.diff.diffSha256, commands };
+  return { status: signState, receipt: record.receipt, verify: record.verify, commands };
 }
 
 const SIGNED_AT = new Intl.DateTimeFormat("en-GB", {
@@ -287,4 +313,21 @@ export function formatSignedAt(isoTimestamp: string): string {
 export function citationLabel(citation: Citation): string {
   const lines = citation.startLine === citation.endLine ? String(citation.startLine) : `${citation.startLine}–${citation.endLine}`;
   return `${fileName(citation.file)}:${lines}`;
+}
+
+/** The label of a button that opens the Sign step; there is nothing to sign for a signed change or an unreadable file. */
+export function signActionLabel(signState: SignState): string {
+  const labels: Record<SignState, string> = {
+    "needs-review": "Sign",
+    stale: "Re-sign",
+    unverified: "Re-sign",
+    signed: "View receipt",
+    unreadable: "View receipt",
+  };
+  return labels[signState];
+}
+
+/** Whether a person can sign now: only a change with no receipt, or a stale or failed one, can be (re)signed. */
+export function isSignable(signState: SignState): boolean {
+  return signState === "needs-review" || signState === "stale" || signState === "unverified";
 }

@@ -11,20 +11,27 @@ const CHECKED_BY_LABEL = { tool: "tool", "ai-supported": "AI, supported", human:
  * person reads what they would sign exactly as it will be recorded.
  * Spec section 3, S2 Receipt.
  *
- * @param refusals The review's refusals, to name the accepted ones by rule id.
+ * @param review The review on screen, to name the accepted refusals by rule id.
+ * @param signedRunId The run a signed receipt was signed against; absent for the AI's draft, which is always this run's.
  */
-export function ReceiptSections({ body, refusals }: { body: ReceiptBody; refusals: Review["refusals"] }) {
-  const acceptedRules = refusals.filter((refusal) => body.residualRisk.acceptedRefusalIds.includes(refusal.id)).map((refusal) => refusal.ruleId);
+export function ReceiptSections({ body, review, signedRunId }: { body: ReceiptBody; review: Review; signedRunId?: string }) {
+  const isSigned = signedRunId !== undefined;
+  // Refusal ids are numbered per run: another run's "r2" may be another refusal, so those stay bare ids.
+  const isSameRun = signedRunId === undefined || signedRunId === review.run.id;
+  const acceptedIds = body.residualRisk.acceptedRefusalIds;
+  const acceptedLabels = isSameRun
+    ? review.refusals.filter((refusal) => acceptedIds.includes(refusal.id)).map((refusal) => refusal.ruleId)
+    : acceptedIds;
   return (
     <div className="flex flex-col gap-4">
-      <Section heading="Checked" emptyText="Nothing listed yet. You add what you checked when you draft the receipt.">
+      <Section heading="Checked" emptyText={isSigned ? "The signer listed nothing as checked." : "Nothing listed yet. You add what you checked when you draft the receipt."}>
         {body.checked.map((entry) => (
           <li key={entry.item} className="text-sm text-text-secondary">
             {entry.item} <span className="text-xs text-text-muted">· {CHECKED_BY_LABEL[entry.by]}</span>
           </li>
         ))}
       </Section>
-      <Section heading="Not checked" emptyText="Nothing listed as unchecked.">
+      <Section heading="Not checked" emptyText={isSigned ? "The signer listed nothing as unchecked." : "Nothing listed as unchecked."}>
         {body.notChecked.map((entry) => (
           <li key={entry.item} className="text-sm text-text-secondary">
             {entry.item} <span className="text-xs text-text-muted">· {entry.reason}</span>
@@ -34,8 +41,11 @@ export function ReceiptSections({ body, refusals }: { body: ReceiptBody; refusal
       <section aria-label="Residual risk" className="flex flex-col gap-1">
         <h4 className="text-xs font-medium text-text-muted">Residual risk</h4>
         <p className="text-sm text-text-secondary">{body.residualRisk.text}</p>
-        {acceptedRules.length > 0 && (
-          <p className="text-xs text-text-muted">Accepts the refused items {acceptedRules.join(", ")}.</p>
+        {acceptedLabels.length > 0 && (
+          <p className="text-xs text-text-muted">
+            Accepts the refused items {acceptedLabels.join(", ")}
+            {isSameRun ? "." : ` (recorded in run ${signedRunId}).`}
+          </p>
         )}
       </section>
     </div>

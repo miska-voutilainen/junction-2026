@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo } from "react";
 import type { ChangeInput, Citation, ReceiptRecord, Review } from "@/contracts";
 import { decideChange } from "@/features/inbox";
 import type { ReportCardInput } from "@/features/inbox";
@@ -14,14 +14,15 @@ import { MobileHunks } from "./MobileHunks";
 import { EmptyDiff, EvidenceUnavailable } from "./ReviewStates";
 import { useSelectedClaim } from "./SelectedClaim";
 import type { HighlightedHunks } from "./highlightHunks";
-import { buildNavigator, buildSections, evidenceAlert, highlightedLinesOf, hunkIdHolding } from "./reviewModel";
+import { buildNavigator, buildSections, evidenceAlert, highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./reviewModel";
 import type { HighlightedLines, HunkSections, NavigatorGroup } from "./reviewModel";
 import { useDiffReveal } from "./useDiffReveal";
 import { useMediaQuery } from "./useMediaQuery";
 import { useReadHunks } from "./useReadHunks";
-import { REVIEW_STEPS_ID, ReviewSteps } from "./steps/ReviewSteps";
-import { SignBar } from "./steps/SignBar";
-import type { StepId } from "./steps/stepsModel";
+import { useReviewStep } from "./steps/ReviewStep";
+import { ReviewSteps } from "./steps/ReviewSteps";
+import { SignBar, SignBarSpacer } from "./steps/SignBar";
+import type { SignState } from "./steps/stepsModel";
 import { useStepKeys } from "./steps/useStepKeys";
 
 /** From this width up (`compact` in `globals.css`) the page shows the full diff; below it, the read-only list. */
@@ -42,6 +43,7 @@ export function ReviewBody({
   review,
   reportCard,
   record,
+  isReceiptUnreadable,
   tokens,
 }: {
   change: ChangeInput;
@@ -49,6 +51,8 @@ export function ReviewBody({
   reportCard: ReportCardInput;
   /** The change's receipt, or null when it has none or the file is unreadable. */
   record: ReceiptRecord | null;
+  /** The receipt file exists but fails validation; the Sign step says so instead of offering to sign. */
+  isReceiptUnreadable: boolean;
   tokens: HighlightedHunks;
 }) {
   const { escapes } = useEscapes();
@@ -62,20 +66,9 @@ export function ReviewBody({
   const hasFullDiff = useMediaQuery(COMPACT_UP_QUERY, true);
   const highlightedLines = useHighlightedLines(review, sections, reveal.showHighlight);
   useHunkKeys(hasFullDiff ? groups : [], reveal.activeHunkId, reveal.jumpTo);
-  const [step, setStep] = useState<StepId>("read");
+  const { step, setStep, openStep } = useReviewStep();
   useStepKeys(setStep);
-  const status = receiptStatus(review, record);
-  const showCitation = useCallback(
-    (citation: Citation) => {
-      const hunkId = hunkIdHolding(sections, citation);
-      if (hunkId) reveal.showHighlight(hunkId);
-    },
-    [sections, reveal],
-  );
-  const openSign = useCallback(() => {
-    setStep("sign");
-    document.getElementById(REVIEW_STEPS_ID)?.scrollIntoView({ block: "start" });
-  }, []);
+  const signState: SignState = isReceiptUnreadable ? "unreadable" : receiptStatus(review, record);
 
   if (review.hunks.length === 0) return <EmptyDiff change={change} review={review} />;
 
@@ -101,50 +94,47 @@ export function ReviewBody({
           )}
           <MobileHunks sections={sections} tokens={tokens} highlightedLines={highlightedLines} />
         </div>
-        <div className="w-full wide:w-steps-panel wide:shrink-0 wide:self-stretch">
+        <div className="w-full wide:w-85 wide:shrink-0 wide:self-stretch xwide:w-steps-panel">
           <ReviewSteps
             review={review}
             reportCard={reportCard}
             record={record}
-            status={status}
+            signState={signState}
             step={step}
             onStepChange={setStep}
             onShowHunk={reveal.jumpTo}
-            onShowCitation={showCitation}
           />
         </div>
       </div>
-      {/* Room for the phone's fixed Sign bar, so it never covers the end of the page. */}
-      <div aria-hidden="true" className="h-14 compact:hidden" />
-      <SignBar status={status} onOpenSign={openSign} />
+      {/* The spacer keeps the phone's fixed Sign bar from covering the end of the page. */}
+      <SignBarSpacer />
+      <SignBar signState={signState} onOpenSign={() => openStep("sign")} />
     </>
   );
 }
 
 /**
- * The lines the selected claim or finding cites. When the selection changes the first
- * of them is scrolled into view, opening the covered hunk that holds it.
+ * The lines the selected claim or finding cites (those whose quote was found
+ * in the code). Each new selection scrolls to its focused citation, or to its
+ * first line, opening the covered hunk that holds it.
  */
 function useHighlightedLines(
   review: Review,
   sections: HunkSections,
   showHighlight: (hunkId: string) => void,
 ): HighlightedLines[] {
-  const { selectedClaimId, selectedFindingId } = useSelectedClaim();
-  const highlightedLines = useMemo(() => {
-    const selected =
-      review.claims.find((claim) => claim.id === selectedClaimId) ?? review.findings.find((finding) => finding.id === selectedFindingId);
-    return selected ? highlightedLinesOf(selected.citations) : [];
-  }, [review, selectedClaimId, selectedFindingId]);
+  const { selection } = useSelectedClaim();
+  const highlightedLines = useMemo(() => highlightedLinesOfSelection(review, selection), [review, selection]);
 
   // An effect event reads the latest sections without re-running when they change: only a new selection scrolls.
-  const showFirstHighlight = useEffectEvent((lines: HighlightedLines[]) => {
-    const hunkId = hunkIdHolding(sections, lines[0]);
+  const showTarget = useEffectEvent((lines: HighlightedLines[], focus: Citation | undefined) => {
+    const target = scrollTargetOf(lines, focus);
+    const hunkId = target && hunkIdHolding(sections, target);
     if (hunkId) showHighlight(hunkId);
   });
   useEffect(() => {
-    if (highlightedLines.length > 0) showFirstHighlight(highlightedLines);
-  }, [highlightedLines]);
+    if (selection && highlightedLines.length > 0) showTarget(highlightedLines, selection.focus);
+  }, [selection, highlightedLines]);
 
   return highlightedLines;
 }

@@ -9,6 +9,7 @@ import { ReviewBody } from "./ReviewBody";
 import { ReviewHeader } from "./ReviewHeader";
 import { ReviewMissing, ReviewUnreadable } from "./ReviewStates";
 import { SelectedClaimProvider } from "./SelectedClaim";
+import { ReviewStepProvider } from "./steps/ReviewStep";
 import type { HighlightedHunks } from "./highlightHunks";
 import { useShellChanges } from "./useShellChanges";
 
@@ -45,6 +46,7 @@ export function ReviewScreen({
   if (!current) throw new Error(`No change with id ${currentId} among the loaded sources.`);
   const { change, review, receipt } = current;
   const record = receipt === "unreadable" ? null : receipt;
+  const isReceiptUnreadable = receipt === "unreadable";
 
   return (
     <AppShell
@@ -57,6 +59,7 @@ export function ReviewScreen({
     >
       {usesFixture && <MockDataBanner />}
       <SelectedClaimProvider>
+        <ReviewStepProvider>
         <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7">
           <ReviewHeader
             change={change}
@@ -64,11 +67,13 @@ export function ReviewScreen({
             receiptStatus={review.state === "ok" ? receiptStatus(review.data, record) : undefined}
             signedBy={record?.receipt.owner}
             receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
+            isReceiptUnreadable={isReceiptUnreadable}
           />
           {review.state === "missing" && <ReviewMissing changeId={change.id} />}
           {review.state === "unreadable" && <ReviewUnreadable changeId={change.id} details={reviewError} />}
-          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} tokens={tokens} />}
+          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} isReceiptUnreadable={isReceiptUnreadable} tokens={tokens} />}
         </div>
+        </ReviewStepProvider>
       </SelectedClaimProvider>
     </AppShell>
   );

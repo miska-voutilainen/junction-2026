@@ -47,7 +47,7 @@ describe("story", () => {
     const review = await loadFixtureReview("mp-2283");
     const story = buildStory(review);
     expect(story.groups.flatMap((group) => group.claims).length).toBe(review.claims.length);
-    expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code; 1 downgraded or dropped.");
+    expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code; 1 claim downgraded.");
   });
 });
 
@@ -55,14 +55,14 @@ describe("blind check", () => {
   it("lists the contradictions with the sentence they contradict", async () => {
     const blindCheck = buildBlindCheck(await loadFixtureReview("mp-2283"), await readableCard());
     expect(blindCheck.contradictions).toHaveLength(1);
-    expect(blindCheck.contradictions[0].statement).toContain("diagnostics are unchanged");
+    expect(blindCheck.contradictions[0].finding.statement).toContain("diagnostics are unchanged");
   });
 
   it("shows this change's planted contradiction and the overall count from the report card", async () => {
     const blindCheck = buildBlindCheck(await loadFixtureReview("mp-2283"), await readableCard());
     expect(blindCheck.readingOrder.map((row) => [row.anchoredCaught, row.blindCaught, row.runs])).toEqual([[1, 3, 3]]);
     expect(blindCheck.overallLine).toBe(
-      "Across 5 planted contradictions × 3 runs each: given the description first caught 4 of 15 · blind-first caught 12 of 15",
+      "Across 5 planted contradictions × 3 runs: given the description first caught 4 of 15 · blind-first caught 12 of 15",
     );
   });
 
@@ -99,12 +99,27 @@ describe("refusals", () => {
     expect(stale).toEqual([null, null]);
   });
 
+  it("keeps a refusal open when the receipt was signed against another run", async () => {
+    const review = await loadFixtureReview("mp-2283");
+    const record = await loadFixtureReceipt("mp-2283");
+    if (record === null) throw new Error("fixture receipt missing");
+    const otherRun = { ...record, receipt: { ...record.receipt, reviewRunId: "run-from-another-day" } };
+    expect(buildRefusals(review, otherRun, "signed").items.map((item) => item.acceptedBy)).toEqual([null, null]);
+    expect(buildStepTabs(review, otherRun, "signed")[2].count).toBe("2 open");
+  });
+
   it("has no items when nothing was refused", async () => {
     expect(buildRefusals(await loadFixtureReview("mp-2234"), null, "needs-review").items).toEqual([]);
   });
 });
 
 describe("sign", () => {
+  it("says the receipt file is unreadable instead of offering a draft", async () => {
+    const review = await loadFixtureReview("mp-2234");
+    expect(buildSignView(review, null, "unreadable").status).toBe("unreadable");
+    expect(buildStepTabs(review, null, "unreadable")[3]).toMatchObject({ count: "Unreadable", tone: "rose" });
+  });
+
   it("shows the draft and the sign command for a change with no receipt", async () => {
     const review = await loadFixtureReview("mp-2234");
     const view = buildSignView(review, null, "needs-review");
@@ -134,6 +149,28 @@ describe("sign", () => {
     if (record === null) throw new Error("fixture receipt missing");
     const failed = { ...record, verify: { ...record.verify, ok: false } };
     expect(buildSignView(review, failed, receiptStatus(review, failed)).status).toBe("unverified");
+  });
+});
+
+describe("quote check", () => {
+  it("marks a citation the quote check failed, and leaves the rest found", async () => {
+    const review = structuredClone(await loadFixtureReview("mp-2283"));
+    const failure = review.quoteCheck.failures[0];
+    const claim = review.claims.find((candidate) => candidate.id === failure.itemId);
+    if (!claim) throw new Error("fixture claim missing");
+    const other = { ...failure.citation, startLine: 10, endLine: 11 };
+    claim.citations = [failure.citation, other];
+
+    const entry = buildStory(review)
+      .groups.flatMap((group) => group.claims)
+      .find((candidate) => candidate.claim.id === claim.id);
+    expect(entry?.citations.map((citation) => citation.isQuoteFound)).toEqual([false, true]);
+  });
+
+  it("counts downgraded claims and dropped findings apart", async () => {
+    const review = structuredClone(await loadFixtureReview("mp-2283"));
+    review.quoteCheck = { ...review.quoteCheck, downgraded: 1, dropped: 2 };
+    expect(buildStory(review).quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code; 1 claim downgraded, 2 findings dropped.");
   });
 });
 

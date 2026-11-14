@@ -4,11 +4,11 @@ import Link from "next/link";
 import { ShieldX, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Console } from "@/components/Console";
+import { CopyButton } from "@/components/CopyButton";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import { ReceiptSeal } from "@/components/ReceiptSeal";
 import type { Review } from "@/contracts";
 import { STALE_BODY, STALE_TITLE, verifyLine } from "@/lib/receiptCopy";
-import { CopySignButton } from "./CopySignButton";
 import { ReceiptSections } from "./ReceiptSections";
 import { formatSignedAt } from "./stepsModel";
 import type { SignCommands, SignView } from "./stepsModel";
@@ -32,6 +32,7 @@ export function SignStep({ view, review }: SignStepProps) {
         <h3 className="text-base font-semibold text-text-primary">Receipt for {review.requirement.id}</h3>
         <IdeaLabel n={7} />
       </header>
+      {view.status === "unreadable" && <Unreadable changeId={review.changeId} />}
       {view.status === "needs-review" && <Unsigned view={view} review={review} />}
       {view.status === "signed" && <Signed view={view} review={review} />}
       {view.status === "stale" && <Stale view={view} changeId={review.changeId} />}
@@ -44,7 +45,7 @@ function Unsigned({ view, review }: { view: Extract<SignView, { status: "needs-r
   return (
     <>
       <p className="text-sm text-text-secondary">Drafted by the AI. Only a named human can sign it.</p>
-      <ReceiptSections body={view.draft} refusals={review.refusals} />
+      <ReceiptSections body={view.draft} review={review} />
       <SignCommandsBlock commands={view.commands} heading="Sign on your own machine" />
     </>
   );
@@ -62,7 +63,13 @@ function SignCommandsBlock({ commands, heading }: { commands: SignCommands; head
       <Console label="Draft command" text={commands.draft} kind="log" heading={<CommandHeading note="writes the draft to edit" />} />
       <Console label="Sign command" text={commands.sign} kind="log" heading={<CommandHeading note="signs with your key" />} />
       <div>
-        <CopySignButton command={commands.sign} describedBy={hintId} />
+        <CopyButton
+          text={commands.sign}
+          label="Sign"
+          variant="text"
+          describedBy={hintId}
+          className="h-9 bg-brand px-4 font-semibold text-primary-foreground hover:bg-brand-hover focus-visible:outline-focus-ring-on-brand"
+        />
       </div>
     </section>
   );
@@ -70,6 +77,19 @@ function SignCommandsBlock({ commands, heading }: { commands: SignCommands; head
 
 function CommandHeading({ note }: { note: string }) {
   return <span className="truncate text-xs text-text-muted">{note}</span>;
+}
+
+/** The receipt file is there but fails validation: nothing to sign against, so no Sign button, only the way to re-export it. */
+function Unreadable({ changeId }: { changeId: string }) {
+  return (
+    <>
+      <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title="The receipt file couldn't be read.">
+        Re-export it with the command below, or open the receipt page for the details.
+      </Notice>
+      <Console label="Export command" text={`pnpm countersign export ${changeId}`} kind="log" heading={<CommandHeading note="writes the receipt file again" />} />
+      <ReceiptLink changeId={changeId} label="Open the receipt page" />
+    </>
+  );
 }
 
 function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }>; review: Review }) {
@@ -81,17 +101,12 @@ function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }
           Signed by {view.receipt.owner} · {formatSignedAt(view.receipt.signedAt)}
         </span>
       </div>
-      <ReceiptSections body={view.receipt} refusals={review.refusals} />
+      <ReceiptSections body={view.receipt} review={review} signedRunId={view.receipt.reviewRunId} />
       <section aria-label="Verify" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
         <h4 className="text-xs font-medium text-text-muted">Verify</h4>
         <VerifyConsole verify={view.verify} />
         <p className="text-sm text-text-secondary">{verifyLine("signed")}</p>
-        <Link
-                    href={`/changes/${review.changeId}/receipt`}
-          className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
-        >
-          View full receipt
-        </Link>
+        <ReceiptLink changeId={review.changeId} label="View full receipt" />
       </section>
     </>
   );
@@ -117,12 +132,7 @@ function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }
       </Notice>
       <Console label="Diff hashes" text={hashes} kind="log" heading={<span className="truncate text-xs text-text-muted">diffSha256</span>} />
       <SignCommandsBlock commands={view.commands} heading="Re-sign on your own machine" />
-      <Link
-                href={`/changes/${changeId}/receipt`}
-        className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
-      >
-        View the signed receipt
-      </Link>
+      <ReceiptLink changeId={changeId} label="View the signed receipt" />
     </>
   );
 }
@@ -135,13 +145,19 @@ function Unverified({ view, changeId }: { view: Extract<SignView, { status: "unv
       </Notice>
       <VerifyConsole verify={view.verify} />
       <Console label="Verify command" text={view.commands.verify} kind="log" heading={<CommandHeading note="run it to check again" />} />
-      <Link
-                href={`/changes/${changeId}/receipt`}
-        className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
-      >
-        View full receipt
-      </Link>
+      <ReceiptLink changeId={changeId} label="View full receipt" />
     </>
+  );
+}
+
+function ReceiptLink({ changeId, label }: { changeId: string; label: string }) {
+  return (
+    <Link
+      href={`/changes/${changeId}/receipt`}
+      className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+    >
+      {label}
+    </Link>
   );
 }
 

@@ -1,11 +1,12 @@
 "use client";
 
+import { Ban } from "lucide-react";
 import { AreaChip } from "@/components/AreaChip";
 import { Console } from "@/components/Console";
 import { Disclosure } from "@/components/Disclosure";
 import { EvidenceBadge } from "@/components/EvidenceMark";
 import { IdeaLabel } from "@/components/IdeaLabel";
-import type { Citation, Review } from "@/contracts";
+import type { Review } from "@/contracts";
 import { cn } from "@/lib/utils";
 import { useSelectedClaim } from "../SelectedClaim";
 import { FindingLocations } from "./FindingLocations";
@@ -17,7 +18,6 @@ type Claim = Review["claims"][number];
 
 interface ReadStepProps {
   story: Story;
-  onShowCitation: (citation: Citation) => void;
   /** Opens step 3, for a claim the policy refused to judge. */
   onOpenRefused: () => void;
 }
@@ -28,7 +28,7 @@ interface ReadStepProps {
  * each with its evidence level (idea 6). Opening a claim selects it, and the
  * diff highlights the lines it cites. Spec section 3, S2 Story.
  */
-export function ReadStep({ story, onShowCitation, onOpenRefused }: ReadStepProps) {
+export function ReadStep({ story, onOpenRefused }: ReadStepProps) {
   return (
     <div className="flex flex-col gap-5">
       <section aria-label="What and why" className="flex flex-col gap-3">
@@ -45,10 +45,10 @@ export function ReadStep({ story, onShowCitation, onOpenRefused }: ReadStepProps
         </div>
         {story.quoteCheckLine && <p className="text-xs text-text-muted">{story.quoteCheckLine}</p>}
         {story.groups.map((group) => (
-          <ClaimGroupList key={group.heading} group={group} onShowCitation={onShowCitation} onOpenRefused={onOpenRefused} />
+          <ClaimGroupList key={group.heading} group={group} onOpenRefused={onOpenRefused} />
         ))}
       </section>
-      <Defects defects={story.defects} onShowCitation={onShowCitation} />
+      <Defects defects={story.defects} />
     </div>
   );
 }
@@ -78,20 +78,20 @@ function Touches({ touches }: { touches: Story["touches"] }) {
   );
 }
 
-function ClaimGroupList({ group, onShowCitation, onOpenRefused }: { group: ClaimGroup } & Pick<ReadStepProps, "onShowCitation" | "onOpenRefused">) {
+function ClaimGroupList({ group, onOpenRefused }: { group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">) {
   return (
     <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
       <h4 className="text-xs font-medium text-text-muted">{group.heading}</h4>
       <ul className="flex flex-col gap-1">
         {group.claims.map((storyClaim) => (
-          <ClaimRow key={storyClaim.claim.id} storyClaim={storyClaim} onShowCitation={onShowCitation} onOpenRefused={onOpenRefused} />
+          <ClaimRow key={storyClaim.claim.id} storyClaim={storyClaim} onOpenRefused={onOpenRefused} />
         ))}
       </ul>
     </div>
   );
 }
 
-function ClaimRow({ storyClaim, onShowCitation, onOpenRefused }: { storyClaim: StoryClaim } & Pick<ReadStepProps, "onShowCitation" | "onOpenRefused">) {
+function ClaimRow({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">) {
   const { claim, retraction } = storyClaim;
   const { selectedClaimId, setSelectedClaimId } = useSelectedClaim();
   const isSelected = selectedClaimId === claim.id;
@@ -106,14 +106,24 @@ function ClaimRow({ storyClaim, onShowCitation, onOpenRefused }: { storyClaim: S
         onClick={() => setSelectedClaimId(isSelected ? null : claim.id)}
         className="flex w-full flex-col items-start gap-1.5 rounded-item px-2 py-2 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
-        <EvidenceBadge level={claim.level} />
+        {retraction ? <RetractedBadge /> : <EvidenceBadge level={claim.level} />}
         <span className={cn("font-mono text-sm text-text-primary", retraction && "text-text-muted line-through")}>{claim.text}</span>
       </button>
       {retraction && <Retraction retraction={retraction} />}
       <div id={detailsId} hidden={!isSelected} className="px-2 pb-2">
-        {isSelected && !retraction && <ClaimEvidence claim={claim} onShowCitation={onShowCitation} onOpenRefused={onOpenRefused} />}
+        {isSelected && !retraction && <ClaimEvidence storyClaim={storyClaim} onOpenRefused={onOpenRefused} />}
       </div>
     </li>
+  );
+}
+
+/** Shown in place of the evidence level: a retracted claim has none, the review withdrew it. */
+function RetractedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-amber-light">
+      <Ban aria-hidden="true" className="size-4 shrink-0" />
+      Retracted
+    </span>
   );
 }
 
@@ -132,10 +142,11 @@ function Retraction({ retraction }: { retraction: Review["retractions"][number] 
   );
 }
 
-function ClaimEvidence({ claim, onShowCitation, onOpenRefused }: { claim: Claim } & Pick<ReadStepProps, "onShowCitation" | "onOpenRefused">) {
+function ClaimEvidence({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">) {
+  const { claim } = storyClaim;
   return (
     <div className="flex flex-col gap-3 text-sm text-text-secondary">
-      <Citations claim={claim} onShowCitation={onShowCitation} />
+      <Citations storyClaim={storyClaim} />
       {claim.level === "verified" && <TestEvidence claim={claim} />}
       {claim.level === "supported" && <SupportedBy claim={claim} />}
       {claim.level === "unverified" && <p>No checkable evidence. Needs a human.</p>}
@@ -155,22 +166,25 @@ function ClaimEvidence({ claim, onShowCitation, onOpenRefused }: { claim: Claim 
   );
 }
 
-function Citations({ claim, onShowCitation }: { claim: Claim } & Pick<ReadStepProps, "onShowCitation">) {
+function Citations({ storyClaim }: { storyClaim: StoryClaim }) {
   const { setSelectedClaimId } = useSelectedClaim();
   return (
     <ul className="flex flex-col gap-2">
-      {claim.citations.map((citation) => (
+      {storyClaim.citations.map(({ citation, isQuoteFound }) => (
         <li key={`${citation.file}:${citation.startLine}:${citation.endLine}`} className="flex flex-col gap-1">
-          <LocationButton
-            label={citationLabel(citation)}
-            onShow={() => {
-              setSelectedClaimId(claim.id);
-              onShowCitation(citation);
-            }}
-          />
-          <pre className="rounded-item border border-border-subtle bg-surface-code p-2 font-mono text-xs break-words whitespace-pre-wrap text-text-secondary">
-            {citation.quote}
-          </pre>
+          {isQuoteFound ? (
+            <>
+              <LocationButton label={citationLabel(citation)} onShow={() => setSelectedClaimId(storyClaim.claim.id, citation)} />
+              <pre className="rounded-item border border-border-subtle bg-surface-code p-2 font-mono text-xs break-words whitespace-pre-wrap text-text-secondary">
+                {citation.quote}
+              </pre>
+            </>
+          ) : (
+            // The quote check did not find this quote in the cited lines: it is not evidence, so neither the quote nor a highlight is offered.
+            <p className="font-mono text-xs break-all text-text-muted">
+              {citationLabel(citation)} <span className="font-sans">· Quote not found in the code</span>
+            </p>
+          )}
         </li>
       ))}
     </ul>
@@ -220,7 +234,7 @@ function SupportedBy({ claim }: { claim: Claim }) {
   );
 }
 
-function Defects({ defects, onShowCitation }: { defects: Story["defects"] } & Pick<ReadStepProps, "onShowCitation">) {
+function Defects({ defects }: { defects: Story["defects"] }) {
   return (
     <section aria-labelledby="defects-heading" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
       <h3 id="defects-heading" className="text-base font-semibold text-text-primary">
@@ -228,15 +242,15 @@ function Defects({ defects, onShowCitation }: { defects: Story["defects"] } & Pi
       </h3>
       {defects.length === 0 && <p className="text-sm text-text-secondary">No defects found in the four area checklists.</p>}
       <ul className="flex flex-col gap-3">
-        {defects.map((defect) => (
-          <li key={defect.id} className="flex flex-col gap-1">
+        {defects.map((view) => (
+          <li key={view.finding.id} className="flex flex-col gap-1">
             <p className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-              <span className="font-medium text-text-secondary capitalize">{defect.severity}</span>
-              {defect.area && <AreaChip area={defect.area} />}
+              <span className="font-medium text-text-secondary capitalize">{view.finding.severity}</span>
+              {view.finding.area && <AreaChip area={view.finding.area} />}
             </p>
-            <p className="text-base font-medium text-text-primary">{defect.title}</p>
-            <p className="text-sm text-text-secondary">{defect.detail}</p>
-            <FindingLocations finding={defect} onShowCitation={onShowCitation} />
+            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p className="text-sm text-text-secondary">{view.finding.detail}</p>
+            <FindingLocations view={view} />
           </li>
         ))}
       </ul>

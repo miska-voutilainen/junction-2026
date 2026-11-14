@@ -3,6 +3,7 @@ import { ReceiptStatus } from "@/components/ReceiptStatus";
 import { SyntheticTag } from "@/components/SyntheticTag";
 import type { ChangeInput, Review } from "@/contracts";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import { SignButton } from "./steps/SignButton";
 
 const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
@@ -12,6 +13,7 @@ const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "sh
  * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
  *
  * @param receiptHref Where the full receipt page is; set whenever a receipt file exists, whatever its status.
+ * @param isReceiptUnreadable The receipt file exists but fails validation, so there is nothing to sign against.
  * @param review The recorded review; absent while it is missing or unreadable, so only the change's own facts show.
  */
 export function ReviewHeader({
@@ -20,16 +22,21 @@ export function ReviewHeader({
   receiptStatus,
   signedBy,
   receiptHref,
+  isReceiptUnreadable = false,
 }: {
   change: ChangeInput;
   review?: Review;
   receiptStatus?: ReceiptStatusValue;
   signedBy?: string;
   receiptHref?: string;
+  isReceiptUnreadable?: boolean;
 }) {
   return (
     <header className="flex flex-col gap-2">
-      <h1 className="text-xl font-semibold text-balance text-text-primary [overflow-wrap:anywhere]">{change.title}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-xl font-semibold text-balance text-text-primary [overflow-wrap:anywhere]">{change.title}</h1>
+        {receiptStatus && <SignButton signState={isReceiptUnreadable ? "unreadable" : receiptStatus} />}
+      </div>
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
         <span className="font-mono text-xs text-text-muted [overflow-wrap:anywhere]">{change.id}</span>
         <span className="rounded-chip border border-border-default px-1.5 py-0.5 font-mono text-xs text-text-secondary">

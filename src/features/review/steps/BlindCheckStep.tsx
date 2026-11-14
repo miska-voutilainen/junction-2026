@@ -2,16 +2,8 @@
 
 import { Disclosure } from "@/components/Disclosure";
 import { IdeaLabel } from "@/components/IdeaLabel";
-import type { Citation, Review } from "@/contracts";
 import { FindingLocations } from "./FindingLocations";
-import type { BlindCheck } from "./stepsModel";
-
-type Finding = Review["findings"][number];
-
-interface BlindCheckStepProps {
-  blindCheck: BlindCheck;
-  onShowCitation: (citation: Citation) => void;
-}
+import type { BlindCheck, FindingView } from "./stepsModel";
 
 /**
  * Step 2, blind-first review (idea 2): what the reviewer expected from the
@@ -19,7 +11,7 @@ interface BlindCheckStepProps {
  * description and the code disagree, and how much reading blind helped on
  * the planted contradictions. Spec section 3, S2 Blind check.
  */
-export function BlindCheckStep({ blindCheck, onShowCitation }: BlindCheckStepProps) {
+export function BlindCheckStep({ blindCheck }: { blindCheck: BlindCheck }) {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-1.5">
@@ -32,19 +24,17 @@ export function BlindCheckStep({ blindCheck, onShowCitation }: BlindCheckStepPro
         </p>
       </header>
       <Expected requirementId={blindCheck.requirementId} expected={blindCheck.expected} />
-      <Contradictions contradictions={blindCheck.contradictions} onShowCitation={onShowCitation} />
+      <Contradictions contradictions={blindCheck.contradictions} />
       <ReadingOrder blindCheck={blindCheck} />
       <FindingList
         heading="Missing"
         emptyText="Nothing missing."
         findings={blindCheck.missing}
-        onShowCitation={onShowCitation}
       />
       <FindingList
         heading="Scope creep"
         emptyText="No scope creep found."
         findings={blindCheck.scopeCreep}
-        onShowCitation={onShowCitation}
       />
     </div>
   );
@@ -73,7 +63,7 @@ function Expected({ requirementId, expected }: Pick<BlindCheck, "requirementId" 
   );
 }
 
-function Contradictions({ contradictions, onShowCitation }: { contradictions: Finding[] } & Pick<BlindCheckStepProps, "onShowCitation">) {
+function Contradictions({ contradictions }: { contradictions: FindingView[] }) {
   return (
     <section aria-labelledby="contradictions-heading" className="flex flex-col gap-3">
       <h4 id="contradictions-heading" className="text-sm font-semibold text-text-primary">
@@ -81,18 +71,18 @@ function Contradictions({ contradictions, onShowCitation }: { contradictions: Fi
       </h4>
       {contradictions.length === 0 && <p className="text-sm text-text-secondary">No contradictions between the PR description and the code.</p>}
       <ul className="flex flex-col gap-4">
-        {contradictions.map((finding) => (
-          <li key={finding.id} className="flex flex-col gap-2 rounded-item border border-border-default bg-surface-raised p-3">
-            <p className="text-base font-medium text-text-primary">{finding.title}</p>
+        {contradictions.map((view) => (
+          <li key={view.finding.id} className="flex flex-col gap-2 rounded-item border border-border-default bg-surface-raised p-3">
+            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-muted">The PR says: </span>
-              {finding.statement}
+              {view.finding.statement}
             </p>
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-muted">The code does: </span>
-              {finding.detail}
+              {view.finding.detail}
             </p>
-            <FindingLocations finding={finding} onShowCitation={onShowCitation} />
+            <FindingLocations view={view} />
           </li>
         ))}
       </ul>
@@ -131,12 +121,7 @@ function ReadingOrder({ blindCheck }: { blindCheck: BlindCheck }) {
   );
 }
 
-function FindingList({
-  heading,
-  emptyText,
-  findings,
-  onShowCitation,
-}: { heading: string; emptyText: string; findings: Finding[] } & Pick<BlindCheckStepProps, "onShowCitation">) {
+function FindingList({ heading, emptyText, findings }: { heading: string; emptyText: string; findings: FindingView[] }) {
   return (
     <section aria-label={heading} className="flex flex-col gap-2">
       <h4 className="text-sm font-semibold text-text-primary">
@@ -144,11 +129,11 @@ function FindingList({
       </h4>
       {findings.length === 0 && <p className="text-sm text-text-secondary">{emptyText}</p>}
       <ul className="flex flex-col gap-3">
-        {findings.map((finding) => (
-          <li key={finding.id} className="flex flex-col gap-1">
-            <p className="text-base font-medium text-text-primary">{finding.title}</p>
-            <p className="text-sm text-text-secondary">{finding.detail}</p>
-            <FindingLocations finding={finding} onShowCitation={onShowCitation} />
+        {findings.map((view) => (
+          <li key={view.finding.id} className="flex flex-col gap-1">
+            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p className="text-sm text-text-secondary">{view.finding.detail}</p>
+            <FindingLocations view={view} />
           </li>
         ))}
       </ul>

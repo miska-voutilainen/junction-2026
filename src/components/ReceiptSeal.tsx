@@ -2,7 +2,9 @@
  * The seal on a signed receipt: "Signature verified" with a ringed check. It
  * is the one place green appears in the product (tokens.css), so it only draws
  * for a receipt whose signature verified for this diff. It pulses once when
- * the page opens; `size` is the drawing's width and height in pixels; the global reduced-motion rule switches the pulse off.
+ * the page opens; the global reduced-motion rule switches the pulse off.
+ *
+ * @param size The drawing's width and height in pixels.
  */
 export function ReceiptSeal({ size = 64 }: { size?: number }) {
   return (

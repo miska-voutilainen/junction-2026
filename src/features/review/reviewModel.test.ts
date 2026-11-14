@@ -12,9 +12,12 @@ import {
   evidenceAlert,
   fileName,
   highlightedLinesOf,
+  highlightedLinesOfSelection,
   hunkRange,
   hunkRawText,
   isLineHighlighted,
+  scrollTargetOf,
+  splitCitations,
 } from "./reviewModel";
 
 const fixtureRoot = "data/fixtures";
@@ -230,5 +233,32 @@ describe("hunk text and highlights", () => {
     expect(isLineHighlighted(hunk, added, highlights)).toBe(true);
     expect(isLineHighlighted(hunk, removed, highlights)).toBe(false);
     expect(isLineHighlighted({ ...hunk, file: "other.cs" }, added, highlights)).toBe(false);
+  });
+});
+
+describe("selection highlights", () => {
+  it("highlights a claim's found citations and nothing for a retracted claim", async () => {
+    const review = await load("mp-2283");
+    const claim = review.claims[0];
+    expect(highlightedLinesOfSelection(review, { kind: "claim", id: claim.id })).toEqual(highlightedLinesOf(claim.citations));
+    expect(highlightedLinesOfSelection(review, { kind: "claim", id: "c8" })).toEqual([]);
+    expect(highlightedLinesOfSelection(review, null)).toEqual([]);
+  });
+
+  it("leaves out a citation whose quote the quote check did not find", async () => {
+    const review = structuredClone(await load("mp-2283"));
+    const finding = review.findings[0];
+    review.quoteCheck.failures = [{ itemId: finding.id, citation: finding.citations[0], reason: "Quote is not in the cited lines." }];
+    expect(splitCitations(review, finding.id, finding.citations)[0].isQuoteFound).toBe(false);
+    expect(highlightedLinesOfSelection(review, { kind: "finding", id: finding.id })).toEqual([]);
+  });
+
+  it("scrolls to the focused citation when it is highlighted, else to the first line", () => {
+    const first = { file: "a.cs", side: "new" as const, startLine: 1, endLine: 2 };
+    const second = { file: "a.cs", side: "new" as const, startLine: 9, endLine: 9 };
+    expect(scrollTargetOf([first, second], { ...second, quote: "" })).toEqual(second);
+    expect(scrollTargetOf([first, second], undefined)).toEqual(first);
+    expect(scrollTargetOf([first], { ...second, quote: "" })).toEqual(first);
+    expect(scrollTargetOf([], undefined)).toBeNull();
   });
 });

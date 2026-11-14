@@ -3,20 +3,17 @@
 import { useMemo } from "react";
 import type { KeyboardEvent } from "react";
 import { motion } from "motion/react";
-import type { Citation, ReceiptRecord, Review } from "@/contracts";
+import type { ReceiptRecord, Review } from "@/contracts";
 import type { ReportCardInput } from "@/features/inbox";
-import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { useEnterTransition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { BlindCheckStep } from "./BlindCheckStep";
 import { ReadStep } from "./ReadStep";
 import { RefusedStep } from "./RefusedStep";
 import { SignStep } from "./SignStep";
+import { REVIEW_STEPS_ID } from "./ReviewStep";
 import { STEP_IDS, buildBlindCheck, buildRefusals, buildSignView, buildStepTabs, buildStory } from "./stepsModel";
-import type { StepId } from "./stepsModel";
-
-/** The panel's DOM id: the mobile Sign bar and the step keys scroll it into view. */
-export const REVIEW_STEPS_ID = "review-steps";
+import type { SignState, StepId } from "./stepsModel";
 
 const tabId = (step: StepId) => `step-tab-${step}`;
 const panelId = (step: StepId) => `step-panel-${step}`;
@@ -25,13 +22,11 @@ interface ReviewStepsProps {
   review: Review;
   reportCard: ReportCardInput;
   record: ReceiptRecord | null;
-  status: ReceiptStatusValue;
+  signState: SignState;
   step: StepId;
   onStepChange: (step: StepId) => void;
   /** Brings a hunk into view in the diff. */
   onShowHunk: (hunkId: string) => void;
-  /** Brings a cited line into view in the diff. */
-  onShowCitation: (citation: Citation) => void;
 }
 
 /**
@@ -41,8 +36,8 @@ interface ReviewStepsProps {
  * keys 1 to 4 are bound by `useStepKeys`). The active underline slides
  * between tabs through one shared `layoutId`. UI plan section 5.2.
  */
-export function ReviewSteps({ review, reportCard, record, status, step, onStepChange, onShowHunk, onShowCitation }: ReviewStepsProps) {
-  const tabs = useMemo(() => buildStepTabs(review, record, status), [review, record, status]);
+export function ReviewSteps({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: ReviewStepsProps) {
+  const tabs = useMemo(() => buildStepTabs(review, record, signState), [review, record, signState]);
   const slide = useEnterTransition();
 
   function moveBetweenTabs(event: KeyboardEvent<HTMLDivElement>) {
@@ -83,7 +78,7 @@ export function ReviewSteps({ review, reportCard, record, status, step, onStepCh
               )}
             >
               <span className="text-center font-medium">
-                <span className="mr-1 font-mono text-xs text-text-muted">{tab.number}</span>
+                <span className="mr-1 text-xs text-text-muted tabular-nums">{tab.number}</span>
                 {tab.label}
               </span>
               <span
@@ -103,21 +98,32 @@ export function ReviewSteps({ review, reportCard, record, status, step, onStepCh
           );
         })}
       </div>
-      <div id={panelId(step)} role="tabpanel" aria-labelledby={tabId(step)} tabIndex={0} className="p-4 wide:min-h-0 wide:overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring">
-        <ActiveStep {...{ review, reportCard, record, status, step, onStepChange, onShowHunk, onShowCitation }} />
-      </div>
+      {STEP_IDS.map((id) => (
+        // All four panels exist so every tab's aria-controls resolves; only the open one has content.
+        <div
+          key={id}
+          id={panelId(id)}
+          role="tabpanel"
+          aria-labelledby={tabId(id)}
+          hidden={id !== step}
+          tabIndex={0}
+          className="p-4 wide:min-h-0 wide:overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+        >
+          {id === step && <ActiveStep {...{ review, reportCard, record, signState, step, onStepChange, onShowHunk }} />}
+        </div>
+      ))}
     </section>
   );
 }
 
-function ActiveStep({ review, reportCard, record, status, step, onStepChange, onShowHunk, onShowCitation }: ReviewStepsProps) {
+function ActiveStep({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: ReviewStepsProps) {
   const story = useMemo(() => buildStory(review), [review]);
   const blindCheck = useMemo(() => buildBlindCheck(review, reportCard), [review, reportCard]);
-  const refusals = useMemo(() => buildRefusals(review, record, status), [review, record, status]);
-  const signView = useMemo(() => buildSignView(review, record, status), [review, record, status]);
+  const refusals = useMemo(() => buildRefusals(review, record, signState), [review, record, signState]);
+  const signView = useMemo(() => buildSignView(review, record, signState), [review, record, signState]);
 
-  if (step === "read") return <ReadStep story={story} onShowCitation={onShowCitation} onOpenRefused={() => onStepChange("refused")} />;
-  if (step === "blind") return <BlindCheckStep blindCheck={blindCheck} onShowCitation={onShowCitation} />;
+  if (step === "read") return <ReadStep story={story} onOpenRefused={() => onStepChange("refused")} />;
+  if (step === "blind") return <BlindCheckStep blindCheck={blindCheck} />;
   if (step === "refused") return <RefusedStep refusals={refusals} onShowHunk={onShowHunk} />;
   return <SignStep view={signView} review={review} />;
 }

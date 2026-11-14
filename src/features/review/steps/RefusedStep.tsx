@@ -25,8 +25,9 @@ export function RefusedStep({ refusals, onShowHunk }: RefusedStepProps) {
           <IdeaLabel n={5} />
         </div>
         <p className="text-sm text-text-muted">
-          The AI never decides these. Refusal policy {refusals.policyVersion} has {refusals.ruleCount} rules. Each stays open on the receipt
-          until its owner decides.
+          {refusals.items.length === 0
+            ? "The AI never decides these."
+            : `The AI never decides these. Refusal policy ${refusals.policyVersion} has ${refusals.ruleCount} rules. Each stays open on the receipt until its owner decides.`}
         </p>
       </header>
       {refusals.items.length === 0 && (
@@ -63,7 +64,7 @@ function RefusalItem({ refusal, onShowHunk }: { refusal: RefusalView } & Pick<Re
         {refusal.decider}
       </p>
       {refusal.acceptedBy !== null ? (
-        <p className="flex items-center gap-1.5 text-sm text-green-light">
+        <p className="flex items-center gap-1.5 text-sm text-text-secondary">
           <Check aria-hidden="true" className="size-4 shrink-0" />
           Accepted in the receipt by {refusal.acceptedBy}
         </p>

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { isTypingTarget } from "@/lib/useShortcuts";
-import { REVIEW_STEPS_ID } from "./ReviewSteps";
+import { REVIEW_STEPS_ID } from "./ReviewStep";
 import { STEP_IDS } from "./stepsModel";
 import type { StepId } from "./stepsModel";
 

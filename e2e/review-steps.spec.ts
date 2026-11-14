@@ -181,11 +181,56 @@ test("the page never scrolls sideways from 320 to 1920 px", async ({ page }, tes
   expect(problems).toEqual([]);
 });
 
+test("the header's Sign button opens step 4 for an unsigned change and is absent for a signed one", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "The header button shows from 760 px.");
+  await page.goto(UNSIGNED);
+  await page.getByRole("banner").or(page.locator("header")).getByRole("button", { name: /^Sign/ }).first().click();
+  await expect(stepTab(page, /Sign/)).toHaveAttribute("aria-selected", "true");
+
+  await page.goto(SIGNED);
+  await expect(page.locator("header").getByRole("button", { name: /^Sign/ })).toHaveCount(0);
+});
+
+test("a second press on a contradiction's location clears the highlight, and changing step does too", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "A phone shows no covered hunks to highlight.");
+  await page.goto(SIGNED);
+  await openStep(page, /Blind check/);
+  const location = page.getByRole("tabpanel").getByRole("button", { name: /^Show .* in the diff$/ }).first();
+  await location.click();
+  await expect(page.locator("tr[data-highlighted]").first()).toBeAttached();
+  await location.click();
+  await expect(page.locator("tr[data-highlighted]")).toHaveCount(0);
+
+  await location.click();
+  await expect(page.locator("tr[data-highlighted]").first()).toBeAttached();
+  await openStep(page, /Refused/);
+  await expect(page.locator("tr[data-highlighted]")).toHaveCount(0);
+});
+
+test("every tab controls a tabpanel that exists, and only the open one has content", async ({ page }) => {
+  await page.goto(SIGNED);
+  await expect(stepTab(page, /Read/)).toBeVisible();
+  for (const id of ["read", "blind", "refused", "sign"]) {
+    await expect(page.locator(`#step-panel-${id}`)).toBeAttached();
+  }
+  await expect(page.locator("#step-panel-blind")).toBeHidden();
+});
+
 test("screenshots of the steps panel", async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(SIGNED);
   await openStep(page, /Read/);
-  await page.getByRole("tabpanel").getByRole("button").first().click();
-  const width = testInfo.project.name === "mobile" ? 375 : 1440;
+  const isDesktop = testInfo.project.name === "desktop";
+  const width = isDesktop ? 1440 : 375;
+
+  // A claim's lines in the diff next to the panel: the one view that shows the two halves working together.
+  if (isDesktop) {
+    await page.getByRole("tabpanel").getByRole("button", { name: /ClosedGenericStruct|no longer throws/i }).first().click();
+    await expect(page.locator("tr[data-highlighted]").first()).toBeInViewport();
+    await page.screenshot({ path: ".review/review-steps-claim-1440.png" });
+  } else {
+    await page.getByRole("tabpanel").getByRole("button").first().click();
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `.review/review-steps-${width}.png`, fullPage: true });
 });

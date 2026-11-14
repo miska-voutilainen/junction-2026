@@ -38,7 +38,7 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Navigat
     <nav
       aria-label="Hunks"
       onKeyDown={moveFocus}
-      className="hidden w-navigator shrink-0 wide:block"
+      className="hidden w-56 shrink-0 wide:block xwide:w-navigator"
     >
       <div className="sticky top-0 flex max-h-dvh flex-col gap-4 overflow-y-auto py-4 pr-1">
         {groups.map((group) => (
