@@ -68,12 +68,12 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 | Component | What it is |
 | --- | --- |
 | `AppShell`, `TopBar`, `AppNav`, `MobileHeader`, `CommandMenu`, `Wordmark` | Shell, above |
-| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All eight ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "The author never checks its own work" |
+| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All eight ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "Separation of duties" |
 | `EvidenceMark` + `EvidenceBadge` | Verified: filled dot. Supported: ring. Unverified: amber dashed ring. Refused: ring with slash. Always with the text label |
 | `CoverageMark` | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid) |
 | `TierBadge` | Signal bars (1–3) and "Light", "Focused" or "Full" |
 | `ReceiptStatus` | "Needs review", "Signed by <owner>", "Stale" or "Signature failed verification" (spec T06). The Inbox shows all four; the Review header shows only Stale and the failed state, because the roles line owns "Signed by" |
-| `RolesLine` | Idea 8: "Written by <author agent> · Reviewed by <reviewer version> · Signed by <owner>", "Not signed yet" (muted) while there is no receipt. The version is mono, names are sans. Each "role name" pair wraps as a unit at 375 px. Used in the Review header meta row and the Receipt identity fields |
+| `RolesLine` | Idea 8: "Written by <author agent> · Reviewed by <reviewer version> · Signed by <owner>", "Not signed yet" (muted) while there is no receipt. The version is mono, names are sans. Below 760 px the three roles stack one per line without separators; from 760 px they share a line with "·" separators, each pair kept whole. Used in the Review header meta row and the Receipt identity fields |
 | `LevelLadder` | Shadow, Calibrated and Trusted, three steps, current one marked |
 | `Console` | Code or output box with a Wrap/Copy toolbar (section 6) |
 | `CopyButton` | Copy-to-check icon crossfade for 1.5 s, fixed width, "Copied" announced politely |
@@ -107,9 +107,9 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
 2. **Review `/changes/[id]`** (Phase 4). Canvas Review, ReviewMobile, ReviewStates, Sidebar, SidebarTabs.
    - Header: title, id, receipt status only when it asks for action (Stale, Signature failed verification) with "View full receipt", "Sign" primary (`4`). The author agent chip is gone: the roles line states it.
    - Coverage line: "Focused: read 2 of 8 hunks · ~2 min (full read ~10 min)", then the spec's reasons, one line each with rule id, under a disclosure. Idea 3. A simulated escape adds "R-escape" (Full) for each touched area, e.g. "Analyzer: a bug escaped here, the next changes get a full read".
-   - Meta row: branch, +/− and files, the roles line with Idea 8 ("Written by … · Reviewed by rv1 · Signed by <owner>", or "Not signed yet"), then "<model> · <date>".
+   - Meta row: branch, +/− and files, then "<model> · <date>". The roles line (Idea 8) is its own row below ("Written by … · Reviewed by rv1 · Signed by <owner>", "Not signed yet", or "Receipt couldn't be read" for an unreadable receipt file).
    - Navigator: Read this (with "0/2 read" progress), Supported, Verified. Below ~1100 px it becomes a dropdown.
-   - Diff: Read-this hunks open with Wrap/Copy/Mark read; then "Covered by evidence: n hunks", with each hunk's evidence line built from its claims. A hunk whose only test evidence is the PR's own test (`pr-test`, no `differential-test`) reads "Supported · the PR's own test" with Idea 8 beside the row and the tooltip "The same agent wrote the code and this test, so it can't make the claim Verified." On a phone the covered hunks are one summary line, so this line is desktop only. "Mark read" is browser-only and says so.
+   - Diff: Read-this hunks open with Wrap/Copy/Mark read; then "Covered by evidence: n hunks", with each hunk's evidence line built from its claims. A hunk whose only test evidence is the PR's own test (`pr-test`, no `differential-test`) reads "Supported · the PR's own test" with Idea 8 on its own line under it and the tooltip "The same agent wrote the code and this test, so it can't make the claim Verified." On a phone the covered hunks are one summary line, so this line is desktop only. "Mark read" is browser-only and says so.
    - Review steps: tabs 1 Read · 2 Blind check · 3 Refused · 4 Sign, with a shared-layout underline.
      - 1 Read is the spec's Story: what, why, touches, claims by requirement item, defects. A claim backed only by the PR's own test shows "Supported · the PR's own test", Idea 8 and the same note when opened.
      - 2 Blind check: contradiction "The PR says / The code does" with "Show in diff", anchored-vs-blind counts, Missing, Scope creep.

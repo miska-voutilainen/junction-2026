@@ -37,21 +37,21 @@ export function CoveredRow({
 
   return (
     <div data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover">
+      <div className="flex flex-col items-start transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover">
         <button
           id={hunkHeaderId(hunk.id)}
           type="button"
           aria-expanded={isExpanded}
           aria-controls={bodyId}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2 text-left"
+          className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2 text-left"
         >
           <CoverageMark coverage={coverage} />
           <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
           <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
           <span className="ml-auto flex min-w-0 items-center gap-2 text-xs text-text-muted">
-            {/* The own-test label is the point of this line, so it wraps instead of being cut with an ellipsis. */}
-          <span className={isOwnTest ? undefined : "truncate"} title={isOwnTest ? OWN_TEST_NOTE : undefined}>
+            {/* The own-test label is the point of this line, so it is never cut with an ellipsis; the idea label sits on its own line below. */}
+            <span className={isOwnTest ? "whitespace-nowrap" : "truncate"} title={isOwnTest ? OWN_TEST_NOTE : undefined}>
               {evidence}
             </span>
             {isExpanded ? (
@@ -61,7 +61,7 @@ export function CoveredRow({
             )}
           </span>
         </button>
-        {isOwnTest && <IdeaLabel n={8} className="mx-3 mb-1 sm:mb-0 sm:ml-0" />}
+        {isOwnTest && <IdeaLabel n={8} className="mb-1.5 ml-10" />}
       </div>
       <div id={bodyId}>
         <AnimatePresence initial={false}>

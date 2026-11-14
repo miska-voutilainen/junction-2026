@@ -24,7 +24,7 @@ export const IDEAS: readonly Idea[] = [
   { n: 5, name: "Refusal policy", page: "refusal-policy.md" },
   { n: 6, name: "Evidence levels", page: "evidence-levels.md" },
   { n: 7, name: "Signed receipt", page: "signed-receipt.md" },
-  { n: 8, name: "The author never checks its own work", page: "separation-of-duties.md" },
+  { n: 8, name: "Separation of duties", page: "separation-of-duties.md" },
 ];
 
 /** Where files of this repository are shown on GitHub, for links to docs. */

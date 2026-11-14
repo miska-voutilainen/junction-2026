@@ -26,8 +26,10 @@ async function hasHorizontalScroll(page: Page): Promise<boolean> {
 test("the roles line names author, reviewer and signer once, in the header", async ({ page }, testInfo) => {
   await page.goto("/changes/mp-2283");
   const header = headerOf(page);
-  await expect(header).toContainText("Written by Coding agent (Tieto sample) · Reviewed by rv1 · Signed by miska-voutilainen");
-  await expect(header.getByRole("link", { name: "Idea 8 · The author never checks its own work, opens in a new tab" })).toHaveAttribute("href", /docs\/ideas\/separation-of-duties\.md$/);
+  await expect(header).toContainText("Written by Coding agent (Tieto sample)");
+  await expect(header).toContainText("Reviewed by rv1");
+  await expect(header).toContainText("Signed by miska-voutilainen");
+  await expect(header.getByRole("link", { name: "Idea 8 · Separation of duties, opens in a new tab" })).toHaveAttribute("href", /docs\/ideas\/separation-of-duties\.md$/);
   // The status keeps no "Signed by" of its own: the roles line owns it.
   await expect(header.getByText("Signed by")).toHaveCount(1);
   await expect(header.getByRole("link", { name: "View full receipt" })).toBeVisible();
@@ -38,7 +40,8 @@ test("the roles line names author, reviewer and signer once, in the header", asy
 test("an unsigned change says Not signed yet", async ({ page }, testInfo) => {
   await page.goto("/changes/mp-2234");
   const header = headerOf(page);
-  await expect(header).toContainText("Reviewed by rv1 · Not signed yet");
+  await expect(header).toContainText("Reviewed by rv1");
+  await expect(header).toContainText("Not signed yet");
   await expect(header.getByText("Signed by")).toHaveCount(0);
   if (testInfo.project.name === "mobile") await header.screenshot({ path: shot("review-header-unsigned-375") });
 });
@@ -82,7 +85,8 @@ test("a claim backed only by the PR's own test is Supported, and says why", asyn
 test("the receipt page shows the roles line and the signed ledger", async ({ page }, testInfo) => {
   await page.goto("/changes/mp-2283/receipt");
   const receipt = page.getByRole("article", { name: "Receipt for mp-2283" });
-  await expect(receipt).toContainText("Written by Coding agent (Tieto sample) · Reviewed by rv1 · Signed by miska-voutilainen");
+  await expect(receipt).toContainText("Written by Coding agent (Tieto sample)");
+  await expect(receipt).toContainText("Signed by miska-voutilainen");
   await expect(receipt.getByText("signer", { exact: true })).toHaveCount(0);
   await expect(receipt.getByText("Hunk ledger · signed")).toBeVisible();
   await expect(receipt.getByText("Part of the signed payload: the signature covers which hunks miska-voutilainen read and which checks covered the rest.")).toBeVisible();

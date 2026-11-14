@@ -54,12 +54,17 @@ export function ReviewHeader({
           </Link>
         )}
       </p>
-      {review && <MetaRow change={change} review={review} signedBy={signedBy} />}
+      {review && <MetaRow change={change} review={review} />}
+      {review && (
+        <div className="text-xs text-text-muted">
+          <RolesLine authorAgent={change.authorAgent} reviewerVersion={review.reviewer.version} owner={signedBy} isReceiptUnreadable={isReceiptUnreadable} />
+        </div>
+      )}
     </header>
   );
 }
 
-function MetaRow({ change, review, signedBy }: { change: ChangeInput; review: Review; signedBy?: string }) {
+function MetaRow({ change, review }: { change: ChangeInput; review: Review }) {
   const { diff, reviewer, run } = review;
   return (
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
@@ -70,7 +75,6 @@ function MetaRow({ change, review, signedBy }: { change: ChangeInput; review: Re
         </span>{" "}
         · {diff.filesChanged} {diff.filesChanged === 1 ? "file" : "files"}
       </span>
-      <RolesLine authorAgent={change.authorAgent} reviewerVersion={reviewer.version} owner={signedBy} />
       <span>
         <span className="font-mono [overflow-wrap:anywhere]">{reviewer.model}</span> · {reviewedOn.format(new Date(run.finishedAt))}
       </span>
