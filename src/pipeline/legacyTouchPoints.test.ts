@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
 import { legacyTouchRefusalsFor } from "./checkFindings";
-import {
-  addedCalls,
-  changedDeclarations,
-  findLegacyTouchPoints,
-  parseTargets,
-  type BaseTree,
-} from "./legacyTouchPoints";
+import type { BaseTree } from "../lib/git/baseTree";
+import { findLegacyTouchPoints, parseTargets } from "./legacyTouchPoints";
 
 type Hunk = Review["hunks"][number];
 
@@ -45,7 +40,11 @@ function fakeTree(
   return {
     filesMentioning: async (word, pathspecs) =>
       (pathspecs[0] === "tests" ? parts.mentions?.[word] : parts.zoneMentions?.[word]) ?? [],
-    declaredSymbolsIn: async () => new Map(Object.entries(parts.zoneSymbols ?? {})),
+    accessModifierLines: async () =>
+      Object.entries(parts.zoneSymbols ?? {}).map(([name, path]) => ({
+        path,
+        text: `public void ${name}(int a)`,
+      })),
     readFile: async (path) => files[path] ?? null,
     listFiles: async () => Object.keys(files),
   };
@@ -102,27 +101,6 @@ describe("legacy-code", () => {
   it("reports nothing for a hunk outside the zones that touches nothing zone-owned", async () => {
     const other = hunk("h5", "src/MessagePack/Other.cs", [["add", "Foo();"]]);
     expect(await find([other], fakeTree())).toEqual([]);
-  });
-});
-
-describe("hunk readers", () => {
-  it("names the type and method a declaration adds, not a field", () => {
-    const lines = hunk("h", "a.cs", [
-      ["add", "public static Foo<T, U>? Bar<T>(int a)"],
-      ["add", "internal sealed class Baz"],
-      ["add", "private int writer;"],
-      ["context", "public void Skipped()"],
-    ]);
-    expect(changedDeclarations(lines)).toEqual(["Bar", "Baz"]);
-  });
-
-  it("skips comments, declarations, object creation and this. calls", () => {
-    const lines = hunk("h", "a.cs", [
-      ["add", "// Old(1);"],
-      ["add", "public void Decl(int a)"],
-      ["add", "var x = new Thing(); this.Own(); Real(1);"],
-    ]);
-    expect(addedCalls(lines)).toEqual(["Real"]);
   });
 });
 
