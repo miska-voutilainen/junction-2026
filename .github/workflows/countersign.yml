@@ -9,8 +9,9 @@
 #   review   `pnpm review run` then one PR comment: tier, hunks to read, receipt status. With the
 #            repository secret ANTHROPIC_API_KEY (spending limit set) it calls the model; without it
 #            it replays the committed recordings, so no model is called and a registered change still
-#            gets its comment for free. A change with no recording fails the job and says so. Docker
-#            runs A5's tests either way. Fork PRs skip: they get no token to comment with.
+#            gets its comment for free; where the recordings stop short, the comment shows the
+#            committed review and says so. Docker runs A5's tests either way. Fork PRs skip: they get
+#            no token to comment with.
 name: countersign
 
 on:
@@ -136,26 +137,42 @@ jobs:
 
       # The recorded review in this checkout is replaced by a fresh one; nothing is committed back.
       - name: Review
+        id: review
         env:
           AI_MODE: ${{ steps.mode.outputs.mode }}
         # A5 mounts each git worktree into a container that runs as uid 1654, not the runner's user.
         # Docker Desktop's mounts are writable by anyone; a Linux runner's keep their 755 owner bits, so
         # dotnet restore could not write obj/. umask 0000 makes git create the worktrees writable; the
         # runner is thrown away after the job and the container's lockdown is unchanged.
+        #
+        # Replay can only reproduce steps that were recorded: the planted bugs were recorded by the eval
+        # (A1 to A3, no A4 or A5), so their replay stops at A4. Then the comment shows the committed
+        # review instead, and says so. With a key, a failed review fails the job.
         run: |
           umask 0000
-          pnpm review run "$CHANGE_ID"
+          if pnpm review run "$CHANGE_ID"; then
+            echo "source=$AI_MODE" >> "$GITHUB_OUTPUT"
+          elif [ "$AI_MODE" = "replay" ]; then
+            git checkout -- "data/runs/$CHANGE_ID"
+            echo "::warning::The recordings do not cover every step of $CHANGE_ID, so the comment shows the committed review."
+            echo "source=committed" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
 
       - name: Comment
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          MODE: ${{ steps.mode.outputs.mode }}
+          SOURCE: ${{ steps.review.outputs.source }}
         run: |
           pnpm --silent review comment "$CHANGE_ID" --receipt-exit "${RECEIPT_EXIT:-}" > "$RUNNER_TEMP/comment.md"
-          if [ "$MODE" = "replay" ]; then
-            printf '\nReplayed from the committed recordings: no model was called for this comment.\n' >> "$RUNNER_TEMP/comment.md"
-          fi
+          case "$SOURCE" in
+            replay) note="Replayed from the committed recordings: no model was called for this comment." ;;
+            committed) note="No API key, and the recordings do not cover every step of this change, so this is the committed review in data/runs/$CHANGE_ID/review.json. No model was called." ;;
+            *) note="" ;;
+          esac
+          if [ -n "$note" ]; then printf '\n%s\n' "$note" >> "$RUNNER_TEMP/comment.md"; fi
           cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
           # One comment per PR, updated on every push. A manual run has no PR: the summary is the output.
           if [ -n "$PR_NUMBER" ]; then
