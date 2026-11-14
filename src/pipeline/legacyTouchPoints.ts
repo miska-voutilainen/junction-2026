@@ -81,10 +81,24 @@ function hunklessZoneSightings(files: Review["files"], hunks: readonly Hunk[]): 
  * The sighting for a path in a zone, or none. A partial class file names its
  * type before the first dot: tests name `MessagePackReader`, never
  * `MessagePackReader.Integers`, so the whole file name would always read as unguarded.
+ *
+ * A file that is not C# source has no subject: a test cannot cover a licence, a
+ * package or a Unity `.meta` file, and its stem ("System", "LICENSE", "lib") is a
+ * word hundreds of test files contain, which read as guarded. A text change to
+ * such a file joins the touch point of its folder, so a restructure that moves a
+ * thousand package files is a few cards, not a thousand.
+ * @example "src/MessagePack.UnityClient/Assets/Packages/Foo.1.0/lib/Foo.dll.meta" gives detail "Unity client: non-source files under src/MessagePack.UnityClient/Assets/Packages"
  */
 function zoneSighting(path: string, hunkId: string | null, note = ""): Sighting[] {
   const zone = legacyZoneOf(path);
   if (!zone) return [];
+  if (!isCSharpSource(path)) {
+    const detail =
+      hunkId === null
+        ? `${zone.label}: ${path}${note}`
+        : `${zone.label}: non-source files under ${folderOf(path)}`;
+    return [{ detail, owner: zone.owner, hunkId, subject: nonSourceSubject }];
+  }
   const fileName = path.split("/").pop() ?? path;
   return [
     {
@@ -94,6 +108,29 @@ function zoneSighting(path: string, hunkId: string | null, note = ""): Sighting[
       subject: fileName.split(".")[0],
     },
   ];
+}
+
+/**
+ * The subject of a non-source file: nothing a test could name. It is the empty
+ * string so `groupSightings` still groups by detail; `guardByTests` reads it
+ * and returns "unguarded" without searching.
+ */
+const nonSourceSubject = "";
+
+/**
+ * How many folders deep a non-source touch point goes. Four reaches the Unity
+ * client's `Assets/Packages` folder, where thousands of package files change
+ * together, and still tells `Assets` and `UWP` apart.
+ */
+const nonSourceFolderDepth = 4;
+
+function isCSharpSource(path: string): boolean {
+  return /\.cs$/i.test(path);
+}
+
+/** The file's folder, cut to `nonSourceFolderDepth` segments. */
+function folderOf(path: string): string {
+  return path.split("/").slice(0, -1).slice(0, nonSourceFolderDepth).join("/");
 }
 
 /** The zones as git pathspecs, e.g. ":(glob)src/MessagePack/MessagePackWriter.cs". */
@@ -130,7 +167,16 @@ async function reachInSightings(hunks: readonly Hunk[], tree: BaseTree): Promise
     zoneSymbols ??= await zoneDeclarations(tree);
     for (const symbol of calls) {
       const zoneFile = zoneSymbols.get(symbol);
-      if (zoneFile) sightings.push(reachIn(hunk, symbol, "calls into", zoneFile));
+      if (!zoneFile) continue;
+      // A zone that copies the library (the Unity client) declares the same names
+      // as the library, so a call to `Serialize`, `Add` or `Create` can't be told
+      // from a call to the copy. Other zones keep every call: skipping `Write`
+      // because some formatter also declares it would hide a real wire-format call.
+      if (legacyZoneOf(zoneFile)?.copiesLibrary) {
+        declaredOutside ??= await outsideDeclarations(tree);
+        if (declaredOutside.has(symbol)) continue;
+      }
+      sightings.push(reachIn(hunk, symbol, "calls into", zoneFile));
     }
   }
   return sightings;
@@ -175,6 +221,13 @@ function reachIn(hunk: Hunk, symbol: string, direction: string, zoneFile: string
  * is the next step (not built).
  */
 async function guardByTests(symbol: string, tree: BaseTree): Promise<Guard> {
+  if (symbol === nonSourceSubject) {
+    return {
+      status: "unguarded",
+      evidence: "no test can cover a non-source file: its owner reads the change",
+      files: [],
+    };
+  }
   const testFiles = (await tree.filesMentioning(symbol, ["tests"])).filter((file) =>
     file.endsWith(".cs"),
   );
