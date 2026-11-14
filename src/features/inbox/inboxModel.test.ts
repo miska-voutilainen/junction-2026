@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { ReceiptRecord, Review } from "@/contracts";
 import { loadChanges, loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
-import { REPORT_CARD_MISSING_NOTICE, REPORT_CARD_NOTICE, buildInboxModel, filterCounts, filterRows, inboxLevels, isReviewed, mobileSections, reportCardNotice } from "./inboxModel";
+import { decideChange, REPORT_CARD_MISSING_NOTICE, REPORT_CARD_NOTICE, buildInboxModel, filterCounts, filterRows, inboxLevels, isReviewed, mobileSections, reportCardNotice } from "./inboxModel";
 import type { InboxSource, ReportCardInput, ReviewedRow } from "./inboxModel";
 
 // Pinned to the committed fixtures, so recorded data landing under data/ cannot change these counts.
@@ -33,6 +33,17 @@ function withReview(source: InboxSource, edit: (review: Review) => Review): Inbo
   if (source.review.state !== "ok") throw new Error("expected a review");
   return { ...source, review: { state: "ok", data: edit(source.review.data) } };
 }
+
+describe("decideChange", () => {
+  it("adds R-escape for a simulated escape in an area the change touches", async () => {
+    const review = await loadReview("mp-2283", fixtureRoot);
+    if (review.status !== "ok") throw new Error("fixture review is missing");
+    const ruleIds = (escapes: Parameters<typeof decideChange>[2]) => decideChange(review.data, card, escapes).decision.reasons.map((reason) => reason.ruleId);
+    expect(ruleIds({})).not.toContain("R-escape");
+    expect(ruleIds({ analyzer: 1 })).toContain("R-escape");
+    expect(decideChange(review.data, card, { analyzer: 1 }).decision.tier).toBe("full");
+  });
+});
 
 describe("buildInboxModel", () => {
   it("lists every change, sorted by tier (Full first) and then by id", () => {
