@@ -2,40 +2,10 @@
 
 Countersign has two halves that never meet at runtime. A **laptop half** (the review pipeline, the receipt CLI, git, .NET and the model) writes JSON files into `data/`. A **static site** on Vercel reads those committed files and shows them. There is no server and no database. What is built and what is only specified is marked in the tables below; the spec is [docs/spec.md](spec.md), section 1 ("Product in parts") and section 4 (data).
 
-```mermaid
-flowchart LR
-  subgraph laptop["Laptop (operator's machine)"]
-    fork[("P1 · Demo data<br/>our fork of Tieto's repo<br/>+ data/sample")]
-    pipeline["P2 · Review pipeline<br/>A1–A5, quote check, .NET tests"]
-    eval["P4 · Reviewer measurement<br/>planted-bug eval"]
-    receipt["P5 · Receipt CLI<br/>ssh-keygen + git notes"]
-    model[["Claude<br/>claude-opus-5-5, record / replay"]]
-    dotnet[[".NET SDK 8.0.4xx"]]
-  end
-
-  runs[("data/runs, data/eval,<br/>data/receipts, data/recordings")]
-  rules["P3 · Routing rules<br/>src/rules, no AI"]
-
-  subgraph site["Static site on Vercel (no server, no database)"]
-    app["P6 · Review app<br/>S1 inbox · S2 review · S3 report card<br/>S4 receipt · S5 dashboard"]
-    sim["Simulated escapes<br/>(browser storage)"]
-  end
-
-  fork --> pipeline
-  pipeline <--> model
-  pipeline <--> dotnet
-  pipeline --> rules
-  pipeline --> runs
-  fork --> eval
-  pipeline --> eval
-  eval --> runs
-  fork --> receipt
-  runs --> receipt
-  receipt --> runs
-  runs --> app
-  rules --> app
-  app <--> sim
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/architecture-dark.svg">
+  <img src="img/architecture-light.svg" width="880" alt="Countersign architecture: a laptop half (demo data, review pipeline, planted-bug eval, receipt CLI, the model and .NET) writes committed files into data/, and a static site on Vercel reads them; the routing rules are shared by both.">
+</picture>
 
 P7 (Tieto deliverables: idea pages, concept card, decision log, video, deck) is documentation and a recording, so it has no box. The idea pages are in [docs/ideas/](ideas/README.md).
 
