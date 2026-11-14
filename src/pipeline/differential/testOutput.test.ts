@@ -152,9 +152,50 @@ describe("trimOutput", () => {
     expect(trimOutput(`${noise.repeat(300)}${failure}`)).toBe(failure);
   });
 
-  it("keeps the last 2,000 characters", () => {
+  it("keeps the last 2,000 characters of output with no test lines", () => {
     const trimmed = trimOutput(`${"x".repeat(5000)}END`);
     expect(trimmed).toHaveLength(2000);
     expect(trimmed.endsWith("END")).toBe(true);
+  });
+
+  it("keeps each failed test's name, error message and first repository frames when the stack is long", () => {
+    const frame = (n: number) =>
+      `   at Lib.Deep.Method${n}() in <worktree>/src/Lib/Deep.cs:line ${n}`;
+    const output = [
+      "  Failed A5Tests.A5_F1_X",
+      "  Error Message:",
+      "   System.InvalidOperationException : Sequence contains no elements",
+      "   second line of the message",
+      "  Stack Trace:",
+      ...Array.from({ length: 200 }, (_, n) => frame(n)),
+      "     at A5Tests.A5_F1_X() in <worktree>/tests/Tests/A5.cs:line 9",
+      "  Failed A5Tests.A5_F1_Y",
+      "  Error Message:",
+      "   Assert.True() Failure",
+      "  Stack Trace:",
+      "     at A5Tests.A5_F1_Y() in <worktree>/tests/Tests/A5.cs:line 20",
+      "",
+      "Total tests: 2",
+      "     Failed: 2",
+    ].join("\n");
+    const excerpt = trimOutput(output);
+    expect(excerpt.length).toBeLessThanOrEqual(2000);
+    expect(excerpt).toContain("System.InvalidOperationException : Sequence contains no elements");
+    expect(excerpt).toContain("Method3()");
+    expect(excerpt).not.toContain("Method4()");
+    expect(excerpt.indexOf("A5_F1_X")).toBeLessThan(excerpt.indexOf("A5_F1_Y"));
+    expect(excerpt).toContain("Assert.True() Failure");
+    expect(excerpt.endsWith("Total tests: 2\n     Failed: 2")).toBe(true);
+  });
+
+  it("keeps the passed tests and the summary when nothing failed", () => {
+    const output = [
+      "  Passed A5Tests.A5_F1_X",
+      "  Passed A5Tests.A5_F1_Y",
+      "",
+      "Total tests: 2",
+      "     Passed: 2",
+    ].join("\n");
+    expect(trimOutput(output)).toBe(output.trim());
   });
 });

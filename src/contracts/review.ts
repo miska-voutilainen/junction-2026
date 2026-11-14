@@ -14,7 +14,7 @@ import { TierDecisionSchema } from "./tierDecision";
 const nonNegInt = z.number().int().nonnegative();
 const TestResultSchema = z.strictObject({
   result: z.enum(["fail", "pass", "error"]),
-  output: z.string(), // trimmed to the last 2,000 characters
+  output: z.string(), // a 2,000-character excerpt: failed tests, error messages, repository frames, summary
 });
 
 const HunkLineSchema = z.strictObject({

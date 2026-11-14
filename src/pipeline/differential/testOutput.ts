@@ -135,17 +135,68 @@ const outputNoise = new RegExp(
   ].join("|"),
 );
 
+/** Most "Error Message:" lines kept per failed test: the exception type and the start of its message. */
+const MAX_MESSAGE_LINES = 6;
+
+/** Most repository frames kept per failed test: where the test and the code it reached are. */
+const MAX_REPOSITORY_FRAMES = 4;
+
+/** Longest line kept in an excerpt, so one huge diagnostic cannot use the whole budget. */
+const MAX_EXCERPT_LINE_CHARS = 300;
+
 /**
- * The review's form of a run's output: without the noise above, and cut to the
- * last TEST_OUTPUT_MAX_CHARS characters. What stays is, per failed method, its
- * name, "Error Message:" with the exception and its message, and the repository's
- * own frames, then the summary line.
+ * The review's form of a run's output, within TEST_OUTPUT_MAX_CHARS: for each
+ * failed test its name, "Error Message:" (the exception and the start of its
+ * message) and the first repository frames, then the summary; for a run without
+ * failures the passed tests and the summary. Output with no test lines (a build
+ * error, a timeout) keeps its last characters instead, where the error is.
  */
 export function trimOutput(output: string): string {
-  const text = output
-    .split(/\r?\n/)
-    .filter((line) => !outputNoise.test(line))
-    .join("\n")
-    .trim();
-  return text.length <= TEST_OUTPUT_MAX_CHARS ? text : text.slice(-TEST_OUTPUT_MAX_CHARS);
+  const lines = output.split(/\r?\n/).filter((line) => !outputNoise.test(line));
+  const excerpt = testExcerpt(
+    lines.map((line) =>
+      line.length > MAX_EXCERPT_LINE_CHARS ? `${line.slice(0, MAX_EXCERPT_LINE_CHARS)}…` : line,
+    ),
+  );
+  const text = (excerpt ?? lines.join("\n")).trim();
+  if (text.length <= TEST_OUTPUT_MAX_CHARS) return text;
+  return excerpt === null
+    ? text.slice(-TEST_OUTPUT_MAX_CHARS)
+    : `${text.slice(0, TEST_OUTPUT_MAX_CHARS - 1)}…`;
+}
+
+/** The excerpt described above, or null when the output has no test result lines. */
+function testExcerpt(lines: readonly string[]): string | null {
+  const isResult = (line: string) => /^\s+(Passed|Failed) \S/.test(line);
+  const isSummary = (line: string) =>
+    /^Total tests: /.test(line) ||
+    /^\s+(Passed|Failed|Skipped): +\d+\s*$/.test(line) ||
+    /^(Passed|Failed)!\s+- Failed:/.test(line);
+  const failedStarts = lines.flatMap((line, index) => (/^\s+Failed \S/.test(line) ? [index] : []));
+  const passed = lines.filter((line) => /^\s+Passed \S/.test(line));
+  const summary = lines.filter(isSummary);
+  if (failedStarts.length === 0 && passed.length === 0) return null;
+  const failures = failedStarts.map((start) => {
+    const end = lines.findIndex(
+      (line, index) => index > start && (isResult(line) || isSummary(line)),
+    );
+    return failureExcerpt(lines.slice(start, end === -1 ? lines.length : end));
+  });
+  return [...(failedStarts.length > 0 ? failures : passed), "", ...summary].join("\n");
+}
+
+/** One failed test: its name, the start of its error message and its first repository frames. */
+function failureExcerpt(block: readonly string[]): string {
+  const messageStart = block.findIndex((line) => /^\s+Error Message:/.test(line));
+  const stackStart = block.findIndex((line) => /^\s+Stack Trace:/.test(line));
+  const message =
+    messageStart === -1
+      ? []
+      : block
+          .slice(messageStart, stackStart === -1 ? block.length : stackStart)
+          .filter((line) => line.trim() !== "" && !/^\s+at /.test(line)); // frames inside the message are counted below
+  const frames = block
+    .filter((line) => /^\s+at .*<worktree>[\\/](src|tests)[\\/]/.test(line))
+    .slice(0, MAX_REPOSITORY_FRAMES);
+  return [block[0], ...message.slice(0, 1 + MAX_MESSAGE_LINES), ...frames].join("\n");
 }
