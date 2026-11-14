@@ -8,7 +8,7 @@ import { bannedSegment, findTreeProblems, readRootNames } from "./checkTree.mjs"
 const config = {
   lanes: {
     engine: { owner: "miska-voutilainen", paths: ["src/ai/**"] },
-    app: { owner: "miska-voutilainen", paths: ["src/app/**"] },
+    app: { owner: "miska-voutilainen", coOwners: ["eliasnorta"], paths: ["src/app/**"] },
     evidence: { owner: "Kasanen", paths: ["scripts/**"] },
   },
   shared: ["package.json", ".github/**"],
@@ -39,6 +39,15 @@ test("lanes: an owner of two lanes may touch both", () => {
   assert.deepEqual(
     findLaneViolations({ files, author: "miska-voutilainen", labels: [], config }),
     [],
+  );
+});
+
+test("lanes: a co-owner owns that lane and only that lane", () => {
+  const files = ["src/app/page.tsx", "src/ai/client.ts"];
+  const violations = findLaneViolations({ files, author: "EliasNorta", labels: [], config });
+  assert.deepEqual(
+    violations.map((violation) => violation.path),
+    ["src/ai/client.ts"],
   );
 });
 

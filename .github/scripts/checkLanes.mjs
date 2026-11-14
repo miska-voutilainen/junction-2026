@@ -20,14 +20,18 @@ const CROSS_LANE_LABEL = "cross-lane";
 
 /**
  * Finds the files a PR may not touch without the `cross-lane` label.
- * An owner with several lanes (miska-voutilainen: engine and app) owns all of them.
+ * An owner with several lanes (miska-voutilainen: engine and app) owns all of them, and a
+ * lane's `coOwners` count as owners (eliasnorta took over UI changes in the app lane).
  * @returns {{path: string, reason: string}[]}
  */
 export function findLaneViolations({ files, author, labels, config }) {
   if (labels.includes(CROSS_LANE_LABEL)) return [];
+  const login = author.toLowerCase();
   const ownLanes = new Set(
     Object.entries(config.lanes)
-      .filter(([, lane]) => lane.owner.toLowerCase() === author.toLowerCase())
+      .filter(([, lane]) =>
+        [lane.owner, ...(lane.coOwners ?? [])].some((owner) => owner.toLowerCase() === login),
+      )
       .map(([name]) => name),
   );
   const violations = [];
