@@ -4,15 +4,15 @@
 
 ## Prerequisites
 
-- <runtime and version, package manager>
+- Node 24 or newer and pnpm 12.11.2 (set by `packageManager` in `package.json`).
 
 ## Setup
 
 1. Clone the repository.
-2. Install dependencies: `<install>`
+2. Install dependencies: `pnpm install --frozen-lockfile`
 3. Copy `.env.example` to `.env` and fill in the values (ask the team; never commit `.env`).
-4. Seed the demo data: `<seed>`
-5. Start: `<dev>`, then open <http://localhost:PORT>.
+4. Seed the demo data: `pnpm seed` (clones our fork of Tieto's repository into `SAMPLE_REPO_DIR`)
+5. Start: `pnpm dev`, then open <http://localhost:3000> (`PORT` overrides).
 
 ## Environment variables
 
@@ -26,9 +26,19 @@
 
 ## Commands
 
-| Command | What it does |
-| ------- | ------------ |
-| ---     | ---          |
+| Command                                           | What it does                                                                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                        | Run locally                                                                                                                                                   |
+| `pnpm build`, `pnpm start`                        | Production build and server                                                                                                                                   |
+| `pnpm lint`, `pnpm lint:fix`                      | ESLint, with autofix                                                                                                                                          |
+| `pnpm format`                                     | Prettier write                                                                                                                                                |
+| `pnpm typecheck`                                  | `next typegen`, then `tsc --noEmit`                                                                                                                           |
+| `pnpm test`                                       | Unit tests, Vitest                                                                                                                                            |
+| `pnpm test:hooks`                                 | Harness hook tests, `node --test`                                                                                                                             |
+| `pnpm e2e`                                        | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                         |
+| `pnpm screenshots`                                | Playwright `screenshots` project, into `.review/`                                                                                                             |
+| `pnpm seed`                                       | Clone the fork and fetch notes                                                                                                                                |
+| `pnpm pipeline`, `pnpm evals`, `pnpm countersign` | Defined in `package.json` for the review pipeline, the planted-bug eval and the receipt CLI; `src/pipeline/` and `src/receipt/` are not in the repository yet |
 
 ## Testing
 

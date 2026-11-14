@@ -8,7 +8,7 @@ The harness has three jobs: **keep agents safe** (guard), **keep quality up wher
 
 **By hand:** Claude Code, Git, the GitHub CLI and Node LTS, plus `gh auth login`. **Everything else on this list, the `join` skill does** when you clone the repo, open Claude Code and say "join" (`.claude/skills/join/SKILL.md`). The list below is what it sets up, for reference and for fixing a step by hand if it fails.
 
-Nothing is installed before the event: only this Markdown comes with you. Miska's machine is set up before kickoff (it needs Claude Code, Git, `gh`, Node, Python and Graphify). Everyone else runs this list in the background from the moment the repo exists, while kickoff runs (about 20 minutes, mostly downloads; skip anything already installed), so it's done before the skeleton PR merges. The night before, only read: this kit, the rulebook, the plan limits.
+Nothing is installed before the event: only this Markdown comes with you, plus two plain-text config files (`.gitignore` and `.gitattributes`, no code). Miska's machine is set up before kickoff (it needs Claude Code, Git, `gh`, Node, Python and Graphify). Everyone else runs this list in the background from the moment the repo exists, while kickoff runs (about 20 minutes, mostly downloads; skip anything already installed), so it's done before the skeleton PR merges. The night before, only read: this kit, the rulebook, the plan limits.
 
 
 - [ ] **Claude Code** installed and logged in (`claude` in a terminal, or the VS Code extension). Plans and usage: [.claude/rules/delegation.md](../.claude/rules/delegation.md).
