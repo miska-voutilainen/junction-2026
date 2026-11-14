@@ -1,5 +1,5 @@
 /**
- * Signed receipt in git, step one: the AI drafts, a person signs. The draft says
+ * The draft the review carries, which a person later signs into a receipt in git: the AI drafts, a person signs. The draft says
  * what a tool checked, what no tool checked (so a person must), and what risk is
  * left because the AI refused to decide it. It claims nothing the review doesn't
  * hold: `acceptedRefusalIds` stays empty until the owner accepts a refusal while
