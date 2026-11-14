@@ -36,6 +36,12 @@ The entry below, "Security caught 0 of 3 planted bugs: all three are real misses
 - **Result on rv2:** v06 is caught in 3 of 3 runs. v03 and v10 got no finding in any of 3 runs, so on rv2 they are detection misses. Security is 1 of 3 and stays at Shadow; the R2 and R6 refusals still send every security hunk to a person, which is the point of the ladder.
 - **Scorer:** not changed after seeing results.
 
+## 2026-11-15 · The legacy guard on 28 real commits: three misses, two fixed by rule and one by grouping
+
+- **What happened:** We ran the touch-point detectors over 28 commits from the fork's history (legacy zones, `#if` blocks, csproj files, public-API files, renames, restructures of 140 to 440 files) and read each result against the diff. The slowest, a 442-file restructure, took 5.6 s with no model call.
+- **What it means:** Three kinds of error. (1) A non-source file in a zone, such as a licence, a Unity `.meta` or a package DLL, read as "guarded" because a test file contains its stem ("System", "LICENSE", "lib"): the dangerous kind, a touch that skips its owner. (2) A call to `Add`, `Create` or `Serialize` read as "calls into Unity client", because the Unity client holds a copy of the library: a false touch that costs a read and trust. (3) One card per file: 1156 cards for one restructure.
+- **What we changed:** Non-source zone files are never guarded by a test, and their text changes share one card per folder (937 cards on that commit, the rest being real per-file and per-symbol touches of a restructure). A call to a name that a file outside the zones also declares is no longer a touch. Each has a test that failed before. The four `mp-*` reviews are unchanged by the fixes. Not changed: `#if NET6_0_OR_GREATER` becoming `#if NET` (commit fe644c73) is not a touch, since net5.0 is not an old platform; and a test that names a common type such as `Formatters` still guards, the limit the idea page already states.
+
 ## 2026-11-14 · Security caught 0 of 3 planted bugs: all three are real misses
 
 - **What happened:** The eval scored v03, v06 and v10, the three security plants, as missed (one run each). Miska, who can read the answer keys, compared each key with its run's findings using the eval's own matching rule. In all three runs no defect or missing finding cites the planted file at all. They are not near misses: no finding sits a few lines off or carries the wrong area.
