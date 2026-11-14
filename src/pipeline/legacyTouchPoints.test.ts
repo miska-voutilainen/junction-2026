@@ -26,7 +26,8 @@ function fileOf(path: string): Review["files"][number] {
 
 /**
  * A base commit as the detectors see it: `mentions` are test files per word,
- * `zoneMentions` zone files per word, `zoneSymbols` what the zones declare, and
+ * `zoneMentions` zone files per word, `zoneSymbols` what the zones declare,
+ * `outsideSymbols` the src files outside the zones declaring each name, and
  * `files` the files (csproj) at base. Nothing is read from git.
  */
 function fakeTree(
@@ -34,18 +35,25 @@ function fakeTree(
     mentions?: Record<string, string[]>;
     zoneMentions?: Record<string, string[]>;
     zoneSymbols?: Record<string, string>;
+    outsideSymbols?: Record<string, string[]>;
     files?: Record<string, string>;
   } = {},
 ): BaseTree {
   const files = parts.files ?? {};
+  const declaration = (name: string, path: string) => ({
+    path,
+    text: `public void ${name}(int a)`,
+  });
   return {
     filesMentioning: async (word, pathspecs) =>
       (pathspecs[0] === "tests" ? parts.mentions?.[word] : parts.zoneMentions?.[word]) ?? [],
-    accessModifierLines: async () =>
-      Object.entries(parts.zoneSymbols ?? {}).map(([name, path]) => ({
-        path,
-        text: `public void ${name}(int a)`,
-      })),
+    // The whole of src/ is asked for when looking for declarations outside the zones.
+    accessModifierLines: async (pathspecs) =>
+      pathspecs[0] === ":(glob)src/**/*.cs"
+        ? Object.entries(parts.outsideSymbols ?? {}).flatMap(([name, paths]) =>
+            paths.map((path) => declaration(name, path)),
+          )
+        : Object.entries(parts.zoneSymbols ?? {}).map(([name, path]) => declaration(name, path)),
     readFile: async (path) => files[path] ?? null,
     listFiles: async () => Object.keys(files),
   };
@@ -101,6 +109,48 @@ describe("legacy-code", () => {
     expect(points[0]).toMatchObject({ detail: "Helper: called from Wire format", hunkIds: ["h3"] });
   });
 
+  it("guards a partial class file by the type name before the first dot", async () => {
+    const integers = hunk("h6", "src/MessagePack/MessagePackReader.Integers.cs", [
+      ["add", "x = 1;"],
+    ]);
+    const tree = fakeTree({
+      mentions: { MessagePackReader: ["tests/MessagePack.Tests/ReaderTests.cs"] },
+    });
+    const [point] = await find([integers], tree);
+    expect(point.guard).toMatchObject({
+      status: "guarded",
+      files: ["tests/MessagePack.Tests/ReaderTests.cs"],
+    });
+  });
+
+  it("reads no reach-in from template output, strings or comments", async () => {
+    const template = hunk("h8", "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs", [
+      ["add", 'this.Write("            writer.WriteArrayHeader(");'],
+      ["add", 'throw new InvalidOperationException("call WriteArrayHeader() first");'],
+      ["add", "/* writer.WriteArrayHeader(2) used to go here */"],
+      ["add", " * then writer.WriteArrayHeader(count) is written"],
+      ["add", "// public static int Helper(int a)"],
+    ]);
+    const zoneFile = "src/MessagePack/MessagePackWriter.cs";
+    const tree = fakeTree({
+      zoneSymbols: { WriteArrayHeader: zoneFile },
+      zoneMentions: { Helper: [zoneFile] },
+    });
+    expect(await find([template], tree)).toEqual([]);
+  });
+
+  it("skips a declaration other files outside the zones also declare, like a formatter's Serialize", async () => {
+    const formatter = "src/MessagePack/Formatters/IntFormatter.cs";
+    const declares = hunk("h7", formatter, [["add", "public void Serialize(int a)"]]);
+    const tree = fakeTree({
+      zoneMentions: { Serialize: ["src/MessagePack/Resolvers/DynamicObjectResolver.cs"] },
+      outsideSymbols: { Serialize: [formatter, "src/MessagePack/Formatters/StringFormatter.cs"] },
+    });
+    // A new public method is still a consumer-contract touch; only the reach-in is skipped.
+    const points = await find([declares], tree);
+    expect(points.filter((point) => point.kind === "legacy-code")).toEqual([]);
+  });
+
   it("reports nothing for a hunk outside the zones that touches nothing zone-owned", async () => {
     const other = hunk("h5", "src/MessagePack/Other.cs", [["add", "Foo();"]]);
     expect(await find([other], fakeTree())).toEqual([]);
@@ -148,6 +198,17 @@ describe("old-platform", () => {
     const [point] = await find([core], generatorTests);
     expect(point.guard.status).toBe("unguarded");
     expect(point.guard.evidence).toContain("no test project under tests/ matches MessagePack");
+  });
+
+  it("finds code only old targets compile, written as a negated current target", async () => {
+    const oldOnly = hunk("h4", "src/MessagePack.SourceGenerator/Gen.cs", [
+      ["add", "#if !NET6_0_OR_GREATER"],
+    ]);
+    const current = hunk("h5", "src/MessagePack.SourceGenerator/Gen.cs", [
+      ["add", "#if NET8_0_OR_GREATER"],
+    ]);
+    const points = await find([oldOnly, current], fakeTree());
+    expect(points.map((point) => point.hunkIds)).toEqual([["h4"]]);
   });
 
   it("groups hunks with the same directive and ignores other #if lines", async () => {
@@ -257,14 +318,25 @@ describe("consumer-contract and build", () => {
     expect(point.guard.status).toBe("unguarded");
   });
 
-  it("marks src build files owner-read and leaves tests/** alone", async () => {
+  it("is guarded by the root README, the library's user guide", async () => {
+    const [point] = await find([analyzer], fakeTree(), ["README.md"]);
+    expect(point.guard).toMatchObject({ status: "guarded", files: ["README.md"] });
+  });
+
+  it("marks src and root build files owner-read and leaves tests, benchmark and sandbox alone", async () => {
     const srcBuild = hunk("h2", "src/MessagePack/MessagePack.csproj", [["add", "x"]]);
-    const testBuild = hunk("h3", "tests/Foo/Foo.csproj", [["add", "x"]]);
-    const points = await find([srcBuild, testBuild], fakeTree());
+    const rootBuild = hunk("h3", "Directory.Build.props", [["add", "x"]]);
+    const shipsNothing = [
+      "tests/Foo/Foo.csproj",
+      "tests/Directory.Build.props",
+      "benchmark/Directory.Build.props",
+      "sandbox/Directory.Build.targets",
+    ].map((path, index) => hunk(`hx${index}`, path, [["add", "x"]]));
+    const points = await find([srcBuild, rootBuild, ...shipsNothing], fakeTree());
     expect(points).toHaveLength(1);
     expect(points[0]).toMatchObject({
       kind: "build",
-      hunkIds: ["h2"],
+      hunkIds: ["h2", "h3"],
       guard: { status: "owner-read" },
     });
   });

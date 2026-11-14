@@ -9157,13 +9157,13 @@
       "owner": "API owner (the maintainers)",
       "guard": {
         "status": "guarded",
-        "evidence": "the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "evidence": "the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more",
         "files": [
+          "README.md",
           "doc/analyzers/MsgPack019.md",
           "doc/analyzers/MsgPack020.md",
           "doc/analyzers/MsgPack021.md",
-          "doc/analyzers/MsgPack022.md",
-          "doc/analyzers/index.md"
+          "doc/analyzers/MsgPack022.md"
         ]
       }
     }
@@ -9183,7 +9183,7 @@
       },
       {
         "ruleId": "R-legacy-guard",
-        "text": "Consumer contract: contract paths, public surface, diagnostic ids in 4 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "text": "Consumer contract: contract paths, public surface, diagnostic ids in 4 hunks, guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more",
         "tier": "light"
       },
       {

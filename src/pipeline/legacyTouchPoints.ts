@@ -50,15 +50,17 @@ async function legacyCodeTouchPoints(
 
 /**
  * One sighting per zone hunk; the subject is the file's type name, which tests
- * name when they cover it.
- * @example "src/MessagePack/MessagePackWriter.cs" gives subject "MessagePackWriter"
+ * name when they cover it. A partial class file names its type before the first
+ * dot: tests name `MessagePackReader`, never `MessagePackReader.Integers`, so
+ * the whole file name would always read as unguarded.
+ * @example "src/MessagePack/MessagePackReader.Integers.cs" gives subject "MessagePackReader"
  */
 function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
   return hunks.flatMap((hunk) => {
     const zone = legacyZoneOf(hunk.file);
     if (!zone) return [];
     const fileName = hunk.file.split("/").pop() ?? hunk.file;
-    const typeName = fileName.replace(/\.\w+$/, ""); // drop the extension: "MessagePackWriter.cs" gives "MessagePackWriter"
+    const typeName = fileName.split(".")[0];
     return [
       {
         detail: `${zone.label}: ${hunk.file}`,
@@ -78,17 +80,24 @@ const zonePathspecs = legacyZones.flatMap((zone) => zone.globs.map((glob) => `:(
  * ("called from"), or adds a call to a symbol zone files declare ("calls into").
  * Name matching, not type resolution: coarse, but a false touch costs one read
  * and never lets a hunk skip one. Only `.cs` under src/: a test calling legacy
- * code does not change it.
+ * code does not change it. A declaration whose name another file outside the
+ * zones also declares is skipped: name matching can't tell which one a zone
+ * file uses, and every formatter's `Serialize` would read as called from the
+ * reflection resolvers.
  */
 async function reachInSightings(hunks: readonly Hunk[], tree: BaseTree): Promise<Sighting[]> {
   const outside = hunks.filter(
     (hunk) => /^src\/.*\.cs$/.test(hunk.file) && legacyZoneOf(hunk.file) === null,
   );
   const sightings: Sighting[] = [];
-  // Read the zones' declarations only once, and only if some hunk adds a call.
+  // Read each set of declarations only once, and only when a hunk needs it.
   let zoneSymbols: Map<string, string> | null = null;
+  let declaredOutside: Map<string, Set<string>> | null = null;
   for (const hunk of outside) {
     for (const symbol of changedDeclarations(hunk)) {
+      declaredOutside ??= await outsideDeclarations(tree);
+      const declaringFiles = [...(declaredOutside.get(symbol) ?? [])];
+      if (declaringFiles.some((path) => path !== hunk.file)) continue;
       const [zoneFile] = await tree.filesMentioning(symbol, zonePathspecs);
       if (zoneFile) sightings.push(reachIn(hunk, symbol, "called from", zoneFile));
     }
@@ -111,6 +120,17 @@ async function zoneDeclarations(tree: BaseTree): Promise<Map<string, string>> {
     if (name && !symbols.has(name)) symbols.set(name, path);
   }
   return symbols;
+}
+
+/** For each type or method name, the source files outside the zones that declare it at the base commit. */
+async function outsideDeclarations(tree: BaseTree): Promise<Map<string, Set<string>>> {
+  const declaring = new Map<string, Set<string>>();
+  for (const { path, text } of await tree.accessModifierLines([":(glob)src/**/*.cs"])) {
+    const name = declaredName(text);
+    if (!name || legacyZoneOf(path) !== null) continue;
+    declaring.set(name, (declaring.get(name) ?? new Set<string>()).add(path));
+  }
+  return declaring;
 }
 
 /** A reach-in sighting, owned by the zone the symbol lives in. */

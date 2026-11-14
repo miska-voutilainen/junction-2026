@@ -38,9 +38,11 @@ export async function addLegacyGuard(
   // R8 is rule-made (the model may not raise it) and always appended after the
   // others, so dropping and re-adding R8 never renumbers another refusal.
   const kept = review.refusals.filter((refusal) => refusal.ruleId !== "R8");
+  // Numbered after the highest kept id, not the count: ids with a gap (r1, r3) would collide.
+  const lastId = Math.max(0, ...kept.map((refusal) => Number(refusal.id.slice(1)) || 0));
   const added = legacyTouchRefusalsFor(touchPoints, kept).map((refusal, index) => ({
     ...refusal,
-    id: `r${kept.length + index + 1}`,
+    id: `r${lastId + index + 1}`,
   }));
   const unrouted = { ...review, legacyTouchPoints: touchPoints, refusals: [...kept, ...added] };
   const routed = { ...unrouted, routing: route(unrouted, levels) };

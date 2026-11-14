@@ -6,7 +6,7 @@
  * Spec section 5, Policy.
  */
 import type { Review } from "../contracts";
-import { commentLine, ignoredSymbolNames } from "../policy/legacyTouch";
+import { ignoredSymbolNames } from "../policy/legacyTouch";
 
 type Hunk = Review["hunks"][number];
 
@@ -24,27 +24,50 @@ export function changedDeclarations(hunk: Hunk): string[] {
 }
 
 /**
- * Names the hunk's added lines call. Declaration lines and comments are skipped:
- * `public void Write(` declares Write, it doesn't call it.
+ * Names the hunk's added lines call. Declaration lines, comments and strings are
+ * skipped: `public void Write(` declares Write, it doesn't call it.
  * @example a hunk adding "writer.WriteNil();" gives ["WriteNil"]
  */
 export function addedCalls(hunk: Hunk): string[] {
   const names = hunk.lines
     .filter((line) => line.kind === "add")
-    .filter((line) => !declarationPattern.test(line.text) && !commentLine.test(line.text))
-    .flatMap((line) => [...line.text.matchAll(callPattern)].map((match) => match[1]))
+    .map((line) => codeOf(line.text))
+    .filter((code) => !declarationPattern.test(code))
+    .flatMap((code) => [...code.matchAll(callPattern)].map((match) => match[1]))
     .filter((name) => !ignoredSymbolNames.has(name));
   return [...new Set(names)];
 }
 
 /**
- * The type or method name a line of C# declares, or null.
+ * The type or method name a line of C# declares, or null. A declaration in a
+ * comment or a string is none: "// public void Serialize(" declares nothing.
  * @example declaredName("internal sealed class Baz") // "Baz"
  */
 export function declaredName(text: string): string | null {
-  const match = declarationPattern.exec(text);
+  const match = declarationPattern.exec(codeOf(text));
   return match ? (match[1] ?? match[2]) : null;
 }
+
+/**
+ * The code on one line with string literals and comments removed, so text
+ * about a call is not read as one. T4 templates write their output as strings
+ * (`this.Write("writer.WriteArrayHeader(")`), and comments name methods.
+ * A line that starts with `*` is taken as inside a block comment: one line
+ * can't see where a comment opened, and the only C# that starts with `*` is an
+ * unsafe pointer write (`*ptr = x;`), which calls nothing we look for.
+ * Interpolation holes (`$"{Foo()}"`) go with their string, a miss we accept.
+ * @example codeOf('Log("WriteNil() failed"); // calls Old()') // 'Log(""); '
+ */
+export function codeOf(text: string): string {
+  if (text.trimStart().startsWith("*")) return "";
+  return text
+    .replace(literalPattern, '""')
+    .replace(/\/\*.*?\*\//g, " ") // an inline block comment: "/* old */ Kept(1)" keeps "Kept(1)"
+    .replace(/\/[/*].*$/, ""); // a line comment, or a block comment that runs past the line
+}
+
+/** A string or char literal: verbatim (`@"a""b"`), regular with escapes (`"a\"b("`), or a char (`'('`). */
+const literalPattern = /@"(?:[^"]|"")*"|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)'/g;
 
 /**
  * A C# type or method declaration with an access modifier, capturing its name:
