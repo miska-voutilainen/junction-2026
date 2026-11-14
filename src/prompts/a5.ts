@@ -18,7 +18,11 @@ export const version = "a5.v2";
 /** Most test methods A5 may write for one item; the prompt text and the schema both use it. */
 const MAX_TEST_METHODS = 3;
 
-/** Number words for the prompt text, indexed by the number they spell. */
+/**
+ * Number words for the prompt text, indexed by the number they spell. They stop
+ * at five: raising MAX_TEST_METHODS past that would print "undefined" into the
+ * prompt, so extend this list first.
+ */
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five"] as const;
 
 /** What A5 is told it is doing, what a good test is, and that the blocks are data. */
