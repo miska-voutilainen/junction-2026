@@ -48,7 +48,12 @@ export const routingPolicy: RoutingPolicy = {
   ],
 };
 
-/** The ids of route()'s rules; a reason carries one of these in `ruleId`. */
+/**
+ * The routing rules S5 counts by name: route()'s rules plus `R-no-track-record`,
+ * which decideChange() adds when no report card is readable. `R-generated` is
+ * left out on purpose: its reason text carries the count of generated hunks,
+ * so S5 shows that text instead of a name.
+ */
 export type RoutingRuleId =
   | "R-size"
   | "R-read-share"
@@ -63,7 +68,9 @@ export type RoutingRuleId =
 
 // route() reasons carry sentences with the numbers in them ("3 items refused");
 // counting by rule id needs one stable name per rule. Typed by RoutingRuleId, so
-// a rule added to the union without a name here does not compile.
+// an id added to the union without a name here does not compile. The link back
+// to route() is not typed: a new rule there needs an entry here, or S5 falls
+// back to its reason text.
 const ROUTING_RULE_LABEL: Record<RoutingRuleId, string> = {
   "R-size": "Large change outside generated files",
   "R-read-share": "Most hunks need a human",
@@ -77,7 +84,7 @@ const ROUTING_RULE_LABEL: Record<RoutingRuleId, string> = {
   "R-no-track-record": "No readable report card",
 };
 
-/** The stable name of a routing rule, or undefined for an id route() does not define (a recorded reason from an older rule set). */
+/** The stable name of a routing rule, or undefined for an id without one (`R-generated`, or a recorded reason from an older rule set). */
 export function routingRuleLabel(ruleId: string): string | undefined {
   return ruleId in ROUTING_RULE_LABEL ? ROUTING_RULE_LABEL[ruleId as RoutingRuleId] : undefined;
 }

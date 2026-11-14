@@ -56,7 +56,8 @@ function MissedPlantsCard({ reportCard, hasRealVariants }: Readonly<{ reportCard
               <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-text-muted">
                 <span className="font-mono">{plant.plantId}</span>
                 <AreaChip area={plant.area} />
-                        {hasRealVariants && (
+                {/* A fixture's planted bugs are invented, so their commits don't exist in the fork. */}
+                {hasRealVariants && (
                   <a
                     href={plant.variantUrl}
                     target="_blank"
