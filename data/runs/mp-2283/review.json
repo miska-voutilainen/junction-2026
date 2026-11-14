@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T032551Z",
-    "startedAt": "2026-11-14T03:25:51.181Z",
-    "finishedAt": "2026-11-14T03:29:11.877Z",
-    "durationMs": 200696,
+    "id": "20261114T042824Z",
+    "startedAt": "2026-11-14T04:28:24.490Z",
+    "finishedAt": "2026-11-14T04:28:25.040Z",
+    "durationMs": 550,
     "usage": {
       "inputTokens": 191496,
       "outputTokens": 21314,
@@ -2369,69 +2369,69 @@
     "checked": [
       {
         "item": "When an analyzer report callback is supplied, the TypeCollector constructor no longer stores it directly. It stores a wrapper that sends each diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (the generator path), reportDiagnostic stays null. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "ReportIfLocatedInCompilation forwards a diagnostic only if its Location.IsInSource is true and the compilation contains the location's SourceTree. Diagnostics located in metadata, in another compilation, or with no location (for example a null location) are silently dropped. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "The new RunWithMetadataReferenceAsync helper compiles the defining source into an in-memory assembly image and adds it as a metadata-only reference. It then runs the VerifyCS analyzer/generator test with no expected diagnostics, skipping the generated-sources check. Next it runs the generator directly through CSharpGeneratorDriver and asserts there are no diagnostics at Warning severity or above and that the expected resolver hint name was generated. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "Three tests use the helper. ClosedGenericStruct_FromMetadataReference covers MyGenericStruct<int> and expects TempProject.MyResolver.g.cs. ClosedGenericRecordStruct_FromMetadataReference covers a record struct Item<int> under LanguageVersion.Latest and expects App.AppResolver.g.cs. ClosedGenericStruct_FromMetadataReference_UnkeyedMember covers a referenced struct with an unkeyed public property and expects no diagnostics in the consuming project. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "README gains a section, 'Generic types from referenced assemblies'. It says closed generic types from referenced assemblies, including value types and record structs, can be used as members, and that diagnostics about their members are reported by the defining assembly. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       },
       {
         "item": "The MsgPack004 analyzer doc gains a note that the analyzer only reports on members declared in the project being compiled, and that unattributed members of types from referenced assemblies must be fixed in the defining project. (the quoted code is where the claim says)",
-        "by": "tool"
+        "by": "ai-supported"
       }
     ],
     "notChecked": [
       {
         "item": "README.md:1636 (h1)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:1 (h7)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Finding f5 (contradiction) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h8)",
-        "reason": "No checked evidence covers this hunk, so a person reads it."
+        "reason": "Finding f3 (missing) names this hunk"
       }
     ],
     "residualRisk": {
