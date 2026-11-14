@@ -371,3 +371,54 @@ describe("coverageReason", () => {
     expect(coverageReason(review, trusted, "h1")).toBe("No Verified or Supported claim covers it");
   });
 });
+
+describe("legacy guard", () => {
+  const writer = "src/MessagePack/MessagePackWriter.cs";
+  const legacyRefusal = (hunkIds: string[]): Review["refusals"][number] => ({
+    id: "r1",
+    ruleId: "R8",
+    source: "rule",
+    reason: "Edits legacy code in Wire format: the runtime owner (the maintainers) decides",
+    hunkIds,
+  });
+
+  it("keeps a legacy hunk with a Verified claim and an R8 refusal on the reading list", () => {
+    const review = makeReview({ hunks: [{ id: "h1", file: writer }], claims: verifiedOn("h1"), refusals: [legacyRefusal(["h1"])] });
+    expect(route(review, trustedEverywhere).coverage.h1).toBe("read");
+  });
+
+  it("fires R-legacy at the Focused tier, naming the zone and its owner", () => {
+    const review = makeReview({ hunks: [{ id: "h1", file: writer }, { id: "h2", file: writer }], claims: verifiedOn("h1", "h2") });
+    const decision = route(review, trustedEverywhere);
+    expect(decision.reasons).toContainEqual({
+      ruleId: "R-legacy",
+      tier: "focused",
+      text: "Wire format: edits legacy code in 2 hunks, the runtime owner (the maintainers) decides",
+    });
+    expect(decision.tier).toBe("focused");
+  });
+
+  it("asks for Full at legacyTouchFull legacy hunks across zones", () => {
+    const hunks = [
+      ...Array.from({ length: 3 }, (_, index) => ({ id: `w${index}`, file: writer })),
+      ...Array.from({ length: 2 }, (_, index) => ({ id: `u${index}`, file: "src/MessagePack.UnityClient/Foo.cs" })),
+    ];
+    const review = makeReview({ hunks, claims: verifiedOn(...hunks.map((hunk) => hunk.id)) });
+    const decision = route(review, trustedEverywhere);
+    expect(decision.reasons.filter((reason) => reason.ruleId === "R-legacy").map((reason) => reason.tier)).toEqual(["full", "full"]);
+    expect(decision.tier).toBe("full");
+  });
+
+  it("adds no R-legacy to a change without legacy files", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") });
+    expect(ruleIds(review)).not.toContain("R-legacy");
+    expect(route(review, trustedEverywhere).tier).toBe("light");
+  });
+
+  it("explains an R8 refusal with its reason, naming zone and owner", () => {
+    const review = makeReview({ hunks: [{ id: "h1", file: writer }], refusals: [legacyRefusal(["h1"])] });
+    expect(coverageReason(review, trustedEverywhere, "h1")).toBe(
+      "Refusal r1 (R8): Edits legacy code in Wire format: the runtime owner (the maintainers) decides",
+    );
+  });
+});

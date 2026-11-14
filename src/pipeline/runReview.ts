@@ -22,6 +22,7 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  legacyRefusalsFor,
   mergeFixedRefusals,
   type UnnumberedFinding,
   type UnnumberedRefusal,
@@ -130,8 +131,11 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
         quoteCheck,
       )
     : { areaFindings: [], refusals: [] };
-  // The fixed rules need no model, so they apply on every run, whichever steps ran.
-  const refusals = mergeFixedRefusals(aiRefusals, fixedRefusalsFor(loadedDiff.hunks));
+  // The fixed and legacy rules need no model, so they apply on every run, whichever steps ran.
+  const refusals = mergeFixedRefusals(aiRefusals, [
+    ...fixedRefusalsFor(loadedDiff.hunks),
+    ...legacyRefusalsFor(loadedDiff.hunks),
+  ]);
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {

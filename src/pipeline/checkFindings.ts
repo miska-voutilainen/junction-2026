@@ -9,6 +9,7 @@
  */
 import type { Citation, Review } from "../contracts";
 import { classifyFile } from "../policy/areas";
+import { legacyZoneOf, legacyZones } from "../policy/legacy";
 import { fixedRefusals, refusalRules } from "../policy/refusals";
 import type { FindingDraft, RefusalDraft } from "../prompts/a3";
 import type { Statement } from "../prompts/a4";
@@ -146,7 +147,7 @@ function hunksOfStatement(
 /**
  * The model's refusals whose rule id exists in the policy. An unknown id is
  * dropped and recorded with a null citation (there is no code to check) and the
- * reason `unknown rule id "R8"`: a refusal must point at words a person can read
+ * reason `unknown rule id "R9"`: a refusal must point at words a person can read
  * in the policy.
  */
 export function checkRefusals(
@@ -175,6 +176,27 @@ export function fixedRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
     const matched = hunksMatchingGlob(fixed.glob, hunks);
     if (matched.length === 0) return [];
     return [{ ruleId: fixed.ruleId, source: "rule" as const, reason: fixed.reason, hunkIds: matched.map((hunk) => hunk.id) }];
+  });
+}
+
+/**
+ * One `source: "rule"` R8 refusal per legacy zone the hunks touch, listing that
+ * zone's hunks. The owner and the contract go in the reason, so the reading
+ * list says who decides and what old systems rely on.
+ */
+export function legacyRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
+  // Policy order, like fixedRefusalsFor, so the refusals read the same on every run.
+  return legacyZones.flatMap((zone) => {
+    const zoneHunks = hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone);
+    if (zoneHunks.length === 0) return [];
+    return [
+      {
+        ruleId: "R8",
+        source: "rule" as const,
+        reason: `Edits legacy code in ${zone.label} (${zone.contract}): the ${zone.owner} decides`,
+        hunkIds: zoneHunks.map((hunk) => hunk.id),
+      },
+    ];
   });
 }
 

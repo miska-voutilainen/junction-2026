@@ -4,7 +4,7 @@
  * Spec section 3, S2 sidebar.
  */
 import type { ReceiptRecord, Review } from "@/contracts";
-import { refusalPolicyVersion, refusalRules } from "@/policy/refusals";
+import { allRefusalRules, refusalPolicyVersion } from "@/policy/refusalPolicy";
 import { fileName, hunkRange } from "../reviewModel";
 import type { SignState } from "./signModel";
 
@@ -58,9 +58,9 @@ export function buildRefusals(review: Review, record: ReceiptRecord | null, sign
   const accepted = isAcceptanceCurrent ? record.receipt.residualRisk.acceptedRefusalIds : [];
   return {
     policyVersion: refusalPolicyVersion,
-    ruleCount: refusalRules.length,
+    ruleCount: allRefusalRules.length,
     items: review.refusals.map((refusal) => {
-      const rule = refusalRules.find((candidate) => candidate.id === refusal.ruleId);
+      const rule = allRefusalRules.find((candidate) => candidate.id === refusal.ruleId);
       return {
         id: refusal.id,
         ruleId: refusal.ruleId,

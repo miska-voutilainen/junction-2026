@@ -7,6 +7,7 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  legacyRefusalsFor,
   mergeFixedRefusals,
 } from "./checkFindings";
 import type { SideReader } from "./quoteCheck";
@@ -173,13 +174,13 @@ describe("refusals", () => {
     const refusals = checkRefusals(
       [
         { ruleId: "R7", reason: "a", hunkIds: ["h1"] },
-        { ruleId: "R8", reason: "b", hunkIds: [] },
+        { ruleId: "R9", reason: "b", hunkIds: [] },
       ],
       check,
     );
     expect(refusals.map((refusal) => refusal.ruleId)).toEqual(["R7"]);
     expect(refusals[0].source).toBe("ai");
-    expect(check.failures).toEqual([{ itemId: "a3-r2", citation: null, reason: 'unknown rule id "R8"' }]);
+    expect(check.failures).toEqual([{ itemId: "a3-r2", citation: null, reason: 'unknown rule id "R9"' }]);
   });
 
   it("adds a rule refusal for each fixed trigger a hunk matches", () => {
@@ -200,6 +201,29 @@ describe("refusals", () => {
     expect(
       fixedRefusalsFor([{ id: "h1", file: "src/MessagePack/Reader.cs" }] as Review["hunks"]),
     ).toEqual([]);
+  });
+});
+
+describe("legacyRefusalsFor", () => {
+  it("adds one R8 rule refusal per zone, naming the owner and the contract", () => {
+    const hunks = [
+      { id: "h1", file: "src/MessagePack/MessagePackWriter.cs" },
+      { id: "h2", file: "src/MessagePack/Resolvers/DynamicObjectResolver.cs" },
+      { id: "h3", file: "src/MessagePack/MessagePackCode.cs" },
+    ] as Review["hunks"];
+    const refusals = legacyRefusalsFor(hunks);
+    expect(refusals.map((refusal) => [refusal.ruleId, refusal.source, refusal.hunkIds])).toEqual([
+      ["R8", "rule", ["h2"]],
+      ["R8", "rule", ["h1", "h3"]],
+    ]);
+    expect(refusals[1].reason).toBe(
+      "Edits legacy code in Wire format (the bytes every deployed reader and writer agrees on): the runtime owner (the maintainers) decides",
+    );
+  });
+
+  it("ignores files outside every zone", () => {
+    const hunks = [{ id: "h1", file: "src/MessagePack/Resolvers/StandardResolver.cs" }] as Review["hunks"];
+    expect(legacyRefusalsFor(hunks)).toEqual([]);
   });
 });
 

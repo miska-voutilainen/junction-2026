@@ -13,7 +13,7 @@ import { decideChange, inboxLevels } from "@/lib/decideChange";
 import type { ReportCardInput } from "@/lib/decideChange";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
-import { refusalRules } from "@/policy/refusals";
+import { allRefusalRules } from "@/policy/refusalPolicy";
 import { routingRuleLabel } from "@/policy/routing";
 
 /** The counts in the facts strip. "Median time to sign" is not here: it is not measured. */
@@ -161,7 +161,7 @@ function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
 
 /** The policy rule behind a refusal id; undefined for an id the policy does not list. */
 function refusalRule(ruleId: string) {
-  return refusalRules.find((rule) => rule.id === ruleId);
+  return allRefusalRules.find((rule) => rule.id === ruleId);
 }
 
 /**

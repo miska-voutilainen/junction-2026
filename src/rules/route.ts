@@ -10,11 +10,14 @@
  * After a bug escapes in an area, R-escape sends the next changes there back to
  * a full read: the cluster arrest of continuous sampling plans, where a defect
  * that gets through returns inspection to 100% until trust is earned again.
+ * Hunks in a declared legacy zone (policy/legacy.ts) carry an R8 refusal, so
+ * no claim or ladder level takes them off the list, and R-legacy names the owner.
  * Spec section 5, route().
  */
 import { areaLabel, ladderLevelLabel } from "../contracts";
 import type { Area, Coverage, LadderLevel, Review, Tier, TierDecision } from "../contracts";
 import { globToRegExp } from "../policy/globMatch";
+import { legacyTouchFull, legacyZoneOf, legacyZones } from "../policy/legacy";
 import { routingPolicy, type RoutingPolicy } from "../policy/routing";
 
 type Hunk = Review["hunks"][number];
@@ -113,6 +116,7 @@ export function coverageReason(
   const finding = review.findings.find((candidate) => candidate.hunkIds.includes(hunkId));
   if (finding) return `Finding ${finding.id} (${finding.kind}) names this hunk`;
   const refusal = review.refusals.find((candidate) => candidate.hunkIds.includes(hunkId));
+  if (refusal?.ruleId === "R8") return `Refusal ${refusal.id} (R8): ${refusal.reason}`;
   if (refusal) return `Refusal ${refusal.id} (${refusal.ruleId}) names this hunk: a person decides`;
   const hunk = review.hunks.find((candidate) => candidate.id === hunkId);
   const area = review.files.find((file) => file.path === hunk?.file)?.area ?? null;
@@ -133,7 +137,7 @@ interface RuleInput {
   generatedHunks: number;
 }
 
-/** Rules 2 to 10 in the spec's order; each that fires adds one reason (R-escape and R-area-level add one per area). */
+/** Rules 2 to 11 in the spec's order; each that fires adds one reason (R-escape and R-area-level add one per area). */
 function collectReasons(input: RuleInput): Reason[] {
   const { review, policy, readHunks, totalHunks, generatedHunks } = input;
   // Generated hunks are never read, so the share is of the hunks a person could read.
@@ -149,6 +153,8 @@ function collectReasons(input: RuleInput): Reason[] {
   if (refusals > 0) {
     reasons.push({ ruleId: "R-refusal", tier: "focused", text: `${refusals} ${plural(refusals, "item", "items")} refused: a human decides` });
   }
+
+  reasons.push(...legacyReasons(review));
 
   const contradictions = review.findings.filter((finding) => finding.kind === "contradiction").length;
   if (contradictions > 0) {
@@ -182,6 +188,25 @@ function sizeReasons(review: RoutedReview, policy: RoutingPolicy): Reason[] {
   const sizedLines = review.files.filter((file) => file.kind !== "generated").reduce((sum, file) => sum + file.added + file.removed, 0);
   if (sizedLines <= policy.sizeLimit) return [];
   return [{ ruleId: "R-size", tier: "full", text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})` }];
+}
+
+/**
+ * Rule R-legacy: one reason per legacy zone the change's hunks touch, naming
+ * the owner who decides. Focused, or Full when the change touches the zones in
+ * `legacyTouchFull` hunks or more.
+ * @example "Wire format: edits legacy code in 3 hunks, the runtime owner (the maintainers) decides"
+ */
+function legacyReasons(review: RoutedReview): Reason[] {
+  const touched = legacyZones
+    .map((zone) => ({ zone, count: review.hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone).length }))
+    .filter(({ count }) => count > 0);
+  const totalTouches = touched.reduce((sum, { count }) => sum + count, 0);
+  const tier: Tier = totalTouches >= legacyTouchFull ? "full" : "focused";
+  return touched.map(({ zone, count }): Reason => ({
+    ruleId: "R-legacy",
+    tier,
+    text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}, the ${zone.owner} decides`,
+  }));
 }
 
 /** Rule 3: Full when checked evidence covers so little that the AI saved the reader no effort. */
