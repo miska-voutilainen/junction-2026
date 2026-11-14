@@ -783,321 +783,87 @@ i=30–100 consecutive defect-free runs under stationary i.i.d. assumptions, mak
 
 Confidence in this ranking is high (90%) because every critique and replacement is anchored in controlled software engineering experiments (ICSE 2025, ISSTA 2026, MSR 2026) and primary regulatory texts; this ranking would change only if the Tieto evaluation rubric explicitly mandates a longitudinal multi-sprint simulation (50+ synthetic pull requests), in which case Idea 1 should be retained using Wald's Sequential Probability Ratio Test (SPRT) thresholds rather than Dodge's CSP-1.
 
-awesomecodereviews.com
-Overview of Code Review Research
-Opens in a new window
-
-computer.org
-Deep Learning-based Code Reviews: A Paradigm Shift or a Double
-Opens in a new window
-
-researchgate.net
-Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code
-Opens in a new window
-
-arxiv.org
-Where Do AI Coding Agents Fail? An Empirical Study of ... - arXiv
-Opens in a new window
-
-criticalpropulsion.com
-Your Agents Can Write More Code. Can Your Organization Absorb It?
-Opens in a new window
-
-arxiv.org
-Deep Learning-based Code Reviews: A Paradigm Shift or a Double
-Opens in a new window
-
-dblp.org
-Rosalia Tufano - DBLP
-Opens in a new window
-
-arxiv.org
-Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code
-Opens in a new window
-
-arxiv.org
-Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code
-Opens in a new window
-
-arxiv.org
-Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code
-Opens in a new window
-
-chat.powerdrill.ai
-Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code
-Opens in a new window
-
-drops.dagstuhl.de
-AI-to-AI Code Reviews of GitHub Pull Requests - DROPS
-Opens in a new window
-
-arxiv.org
-[2601.15195] Where Do AI Coding Agents Fail? An Empirical Study
-Opens in a new window
-
-github.com
-MSR 2026 — Where Do AI Coding Agents Fail? - SOAR-Lab - GitHub
-Opens in a new window
-
-dev.to
-Do Coding Agents Really Fail at Business Logic? What the
-Opens in a new window
-
-paperguide.ai
-Latest Research On Large Language Model | Paperguide
-Opens in a new window
-
-amplifyit.io
-How to Earn Engineer Trust in AI Code Review Tools - Amplify IT
-Opens in a new window
-
-tldr.takara.ai
-Where Do AI Coding Agents Fail? An Empirical Study of Failed
-Opens in a new window
-
-mdpi.com
-Short-Run Contexts and Imperfect Testing for Continuous Sampling
-Opens in a new window
-
-researchgate.net
-Evaluation of Continuous Sampling Plan (CSP-5) Parameters Using
-Opens in a new window
-
-stat.cmu.edu
-Probability Limits on Outgoing Quality for Continuous Sampling Plans
-Opens in a new window
-
-raw.githubusercontent.com
-Towards Practical Defect-Focused Automated Code Review - GitHub
-Opens in a new window
-
-semanticscholar.org
-gert analysis of dodge's csp-1 continuous sampling plan
-Opens in a new window
-
-scribd.com
-AOQ and AFI Values for CSP-3 Plan | PDF - Scribd
-Opens in a new window
-
-srcpublishers.com
-Journal of Physical Mathematics & its Applications
-Opens in a new window
-
-slideshare.net
-An SPRT Procedure for an Ungrouped Data using MMLE Approach
-Opens in a new window
-
-maximilianocontieri.com
-AI Coding Tip 041 - Turn Every Review Finding Into a Rule
-Opens in a new window
-
-arxiv.org
-Rethinking Training Data for Generating Code Review Comments
-Opens in a new window
-
-vynoxsecurity.com
-Security Code Review Checklist — Complete Guide
-Opens in a new window
-
-safeguard.sh
-Manual code review or SAST: what does each one catch? - Safeguard
-Opens in a new window
-
-heygrc.com
-PCI DSS 6.2.3 in code - heygrc
-Opens in a new window
-
-researchgate.net
-False Positive Rates (%) - ResearchGate
-Opens in a new window
-
-arxiv.org
-Towards Practical Defect-Focused Automated Code Review - arXiv
-Opens in a new window
-
-researchgate.net
-Code Review Automation: Strengths and Weaknesses of the State of
-Opens in a new window
-
-medium.com
-How to Do Code Review for an Unfamiliar Codebase - Medium
-Opens in a new window
-
-collinwilkins.com
-AI Code Review: Approaches, Tools, and Best Practices (2026)
-Opens in a new window
-
-2026.msrconf.org
-Where Do AI Coding Agents Fail? An Empirical Study of ... - MSR 2026
-Opens in a new window
-
-arxiv.org
-Beyond Bug Fixes: An Empirical Investigation of Post-Merge Code
-Opens in a new window
-
-verdent.ai
-Qodo AI Code Review for Pull Request Workflows - Verdent Guides
-Opens in a new window
-
-hidekazu-konishi.com
-Code Review Checklist and Anti-Pattern Catalog - Hidekazu Konishi
-Opens in a new window
-
-tandfonline.com
-The Misinformation Effect of Explanations in Human–AI Collaboration
-Opens in a new window
-
-prompt-architects.com
-36 Code Review Prompts for AI: Debug & Refactor (2026)
-Opens in a new window
-
-pcidssguide.com
-PCI DSS Manual Code Review Requirements (v4.0.1)
-Opens in a new window
-
-coderabbit.ai
-AI-Written Code Needs Independent Review - CodeRabbit
-Opens in a new window
-
-opencre.org
-Standard : PCI DSS - OpenCRE
-Opens in a new window
-
-safeguard.sh
-Does PCI DSS 6.2.3 require manual code review or can tools
-Opens in a new window
-
-veridical.dev
-Audit Ready PCI DSS Code Review: 3 Approvals Required by 6.2.3.1
-Opens in a new window
-
-arxiv.org
-Toward Conversational AI Review Assistants - arXiv
-Opens in a new window
-
-researchgate.net
-Rosalia Tufano's research works | Università della Svizzera italiana
-Opens in a new window
-
-docs.coderabbit.ai
-Learnings - CodeRabbit Docs
-Opens in a new window
-
-cursor.com
-AI code review: more context, fewer bugs - Cursor
-Opens in a new window
-
-amplifilabs.com
-Graphite: The Open-Source AI Reviewer Changing Code Review
-Opens in a new window
-
-codegen.com
-Qodo - Codegen
-Opens in a new window
-
-coderabbit.ai
-AI Code Reviews in CLI - CodeRabbit
-Opens in a new window
-
-arxiv.org
-Is Agentic Code Review Helpful? Mining Developers' Feedback to
-Opens in a new window
-
-coderabbit.ai
-Inside Clerk's 40% faster merge workflow with CodeRabbit
-Opens in a new window
-
-app.devin.ai
-Review #6630 — fix(repair): bind terminal receipt verdict to its verify
-Opens in a new window
-
-coderabbit.ai
-How to evaluate AI code review tools: A practical framework
-Opens in a new window
-
-reddit.com
-my manager asked why we still need code review if the ai writes it
-Opens in a new window
-
-eur-lex.europa.eu
-Regulation (EU) 2022/2554 of the European Parliament and
-Opens in a new window
-
-springlex.eu
-Article 38 ICT project and change management - DORA - Springlex
-Opens in a new window
-
-digital-operational-resilience-act.com
-Digital Operational Resilience Act (DORA), Article 9
-Opens in a new window
-
-eur-lex.europa.eu
-Regulation - 2022/2554 - EN - DORA - EUR-Lex
-Opens in a new window
-
-eur-lex.europa.eu
-Official Journal L 333/2022 - EUR-Lex - European Union
-Opens in a new window
-
-springlex.eu
-Article 17 ICT change management - DORA - Springlex
-Opens in a new window
-
-advisera.com
-Article 17: ICT change management [CDR 2024-1774] - Advisera
-Opens in a new window
-
-eur-lex.europa.eu
-Consolidated TEXT: 32024R1774 — EN — 25.06.2024 - EUR-Lex
-Opens in a new window
-
-eur-lex.europa.eu
-L_202401774EN.000101.fmx.xml - EUR-Lex
-Opens in a new window
-
-manageengine.com
-PCI DSS Requirement 6: Explained - ManageEngine
-Opens in a new window
-
-listings.pcisecuritystandards.org
-Data Security Standard
-Opens in a new window
-
-learn.microsoft.com
-Microsoft Entra ID and PCI-DSS Requirement 6
-Opens in a new window
-
-datadoghq.com
-Manage PCI DSS v4.0.1 requirements with Datadog
-Opens in a new window
-
-opencre.org
-Manual code review - Open CRE
-Opens in a new window
-
-blog.basistheory.com
-PCI DSS Requirement 6: Develop and Maintain Secure Systems
-Opens in a new window
-
-skyqon.com
-NIS2 Article 21(2)(e) vulnerability handling: what you can check from
-Opens in a new window
-
-eur-lex.europa.eu
-Directive (EU) 2022/2555 - Publications Office - European Union
-Opens in a new window
-
-eur-lex.europa.eu
-Consolidated TEXT: 32022L2555 — EN — 27.12.2022 - EUR-Lex
-Opens in a new window
-
-eur-lex.europa.eu
-L_202402690EN.000101.fmx.xml - EUR-Lex
-Opens in a new window
-
-cyb3r.help
-Zero Trust Architecture - cyb3r.help
-Opens in a new window
-
-eur-lex.europa.eu
-laying down rules for the application of Directive (EU) 2
+## Sources
+
+Gemini's list of the pages it consulted, in its order. The paste had titles and domains but no full addresses, so each entry links to the paper when the text above names its arXiv number and to the site's front page otherwise. Search the title on the site to find the page. The last title was cut off in the paste. We haven't opened any of these.
+
+- [Overview of Code Review Research](https://awesomecodereviews.com) (awesomecodereviews.com, site only)
+- [Deep Learning-based Code Reviews: A Paradigm Shift or a Double](https://computer.org) (computer.org, site only)
+- [Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code](https://researchgate.net) (researchgate.net, site only)
+- [Where Do AI Coding Agents Fail? An Empirical Study of ... - arXiv](https://arxiv.org/abs/2601.15195) (arXiv:2601.15195)
+- [Your Agents Can Write More Code. Can Your Organization Absorb It?](https://criticalpropulsion.com) (criticalpropulsion.com, site only)
+- [Deep Learning-based Code Reviews: A Paradigm Shift or a Double](https://arxiv.org/abs/2411.11401) (arXiv:2411.11401)
+- [Rosalia Tufano - DBLP](https://dblp.org) (dblp.org, site only)
+- [Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code](https://arxiv.org/abs/2607.24601) (arXiv:2607.24601)
+- [Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code](https://arxiv.org/abs/2607.24601) (arXiv:2607.24601)
+- [Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code](https://arxiv.org/abs/2607.24601) (arXiv:2607.24601)
+- [Evaluating the Impact of Explainable AI on Trust in AI-Assisted Code](https://chat.powerdrill.ai) (chat.powerdrill.ai, site only)
+- [AI-to-AI Code Reviews of GitHub Pull Requests - DROPS](https://drops.dagstuhl.de) (drops.dagstuhl.de, site only)
+- [[2601.15195] Where Do AI Coding Agents Fail? An Empirical Study](https://arxiv.org/abs/2601.15195) (arXiv:2601.15195)
+- [MSR 2026 — Where Do AI Coding Agents Fail? - SOAR-Lab - GitHub](https://github.com) (github.com, site only)
+- [Do Coding Agents Really Fail at Business Logic? What the](https://dev.to) (dev.to, site only)
+- [Latest Research On Large Language Model | Paperguide](https://paperguide.ai) (paperguide.ai, site only)
+- [How to Earn Engineer Trust in AI Code Review Tools - Amplify IT](https://amplifyit.io) (amplifyit.io, site only)
+- [Where Do AI Coding Agents Fail? An Empirical Study of Failed](https://tldr.takara.ai) (tldr.takara.ai, site only)
+- [Short-Run Contexts and Imperfect Testing for Continuous Sampling](https://mdpi.com) (mdpi.com, site only)
+- [Evaluation of Continuous Sampling Plan (CSP-5) Parameters Using](https://researchgate.net) (researchgate.net, site only)
+- [Probability Limits on Outgoing Quality for Continuous Sampling Plans](https://stat.cmu.edu) (stat.cmu.edu, site only)
+- [Towards Practical Defect-Focused Automated Code Review - GitHub](https://raw.githubusercontent.com) (raw.githubusercontent.com, site only)
+- [gert analysis of dodge's csp-1 continuous sampling plan](https://semanticscholar.org) (semanticscholar.org, site only)
+- [AOQ and AFI Values for CSP-3 Plan | PDF - Scribd](https://scribd.com) (scribd.com, site only)
+- [Journal of Physical Mathematics & its Applications](https://srcpublishers.com) (srcpublishers.com, site only)
+- [An SPRT Procedure for an Ungrouped Data using MMLE Approach](https://slideshare.net) (slideshare.net, site only)
+- [AI Coding Tip 041 - Turn Every Review Finding Into a Rule](https://maximilianocontieri.com) (maximilianocontieri.com, site only)
+- [Rethinking Training Data for Generating Code Review Comments](https://arxiv.org) (arxiv.org, site only)
+- [Security Code Review Checklist — Complete Guide](https://vynoxsecurity.com) (vynoxsecurity.com, site only)
+- [Manual code review or SAST: what does each one catch? - Safeguard](https://safeguard.sh) (safeguard.sh, site only)
+- [PCI DSS 6.2.3 in code - heygrc](https://heygrc.com) (heygrc.com, site only)
+- [False Positive Rates (%) - ResearchGate](https://researchgate.net) (researchgate.net, site only)
+- [Towards Practical Defect-Focused Automated Code Review - arXiv](https://arxiv.org/abs/2505.17928) (arXiv:2505.17928)
+- [Code Review Automation: Strengths and Weaknesses of the State of](https://researchgate.net) (researchgate.net, site only)
+- [How to Do Code Review for an Unfamiliar Codebase - Medium](https://medium.com) (medium.com, site only)
+- [AI Code Review: Approaches, Tools, and Best Practices (2026)](https://collinwilkins.com) (collinwilkins.com, site only)
+- [Where Do AI Coding Agents Fail? An Empirical Study of ... - MSR 2026](https://2026.msrconf.org) (2026.msrconf.org, site only)
+- [Beyond Bug Fixes: An Empirical Investigation of Post-Merge Code](https://arxiv.org/abs/2601.20109) (arXiv:2601.20109)
+- [Qodo AI Code Review for Pull Request Workflows - Verdent Guides](https://verdent.ai) (verdent.ai, site only)
+- [Code Review Checklist and Anti-Pattern Catalog - Hidekazu Konishi](https://hidekazu-konishi.com) (hidekazu-konishi.com, site only)
+- [The Misinformation Effect of Explanations in Human–AI Collaboration](https://tandfonline.com) (tandfonline.com, site only)
+- [36 Code Review Prompts for AI: Debug & Refactor (2026)](https://prompt-architects.com) (prompt-architects.com, site only)
+- [PCI DSS Manual Code Review Requirements (v4.0.1)](https://pcidssguide.com) (pcidssguide.com, site only)
+- [AI-Written Code Needs Independent Review - CodeRabbit](https://coderabbit.ai) (coderabbit.ai, site only)
+- [Standard : PCI DSS - OpenCRE](https://opencre.org) (opencre.org, site only)
+- [Does PCI DSS 6.2.3 require manual code review or can tools](https://safeguard.sh) (safeguard.sh, site only)
+- [Audit Ready PCI DSS Code Review: 3 Approvals Required by 6.2.3.1](https://veridical.dev) (veridical.dev, site only)
+- [Toward Conversational AI Review Assistants - arXiv](https://arxiv.org/abs/2607.22095) (arXiv:2607.22095)
+- [Rosalia Tufano's research works | Università della Svizzera italiana](https://researchgate.net) (researchgate.net, site only)
+- [Learnings - CodeRabbit Docs](https://docs.coderabbit.ai) (docs.coderabbit.ai, site only)
+- [AI code review: more context, fewer bugs - Cursor](https://cursor.com) (cursor.com, site only)
+- [Graphite: The Open-Source AI Reviewer Changing Code Review](https://amplifilabs.com) (amplifilabs.com, site only)
+- [Qodo - Codegen](https://codegen.com) (codegen.com, site only)
+- [AI Code Reviews in CLI - CodeRabbit](https://coderabbit.ai) (coderabbit.ai, site only)
+- [Is Agentic Code Review Helpful? Mining Developers' Feedback to](https://arxiv.org) (arxiv.org, site only)
+- [Inside Clerk's 40% faster merge workflow with CodeRabbit](https://coderabbit.ai) (coderabbit.ai, site only)
+- [Review #6630 — fix(repair): bind terminal receipt verdict to its verify](https://app.devin.ai) (app.devin.ai, site only)
+- [How to evaluate AI code review tools: A practical framework](https://coderabbit.ai) (coderabbit.ai, site only)
+- [my manager asked why we still need code review if the ai writes it](https://reddit.com) (reddit.com, site only)
+- [Regulation (EU) 2022/2554 of the European Parliament and](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [Article 38 ICT project and change management - DORA - Springlex](https://springlex.eu) (springlex.eu, site only)
+- [Digital Operational Resilience Act (DORA), Article 9](https://digital-operational-resilience-act.com) (digital-operational-resilience-act.com, site only)
+- [Regulation - 2022/2554 - EN - DORA - EUR-Lex](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [Official Journal L 333/2022 - EUR-Lex - European Union](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [Article 17 ICT change management - DORA - Springlex](https://springlex.eu) (springlex.eu, site only)
+- [Article 17: ICT change management [CDR 2024-1774] - Advisera](https://advisera.com) (advisera.com, site only)
+- [Consolidated TEXT: 32024R1774 — EN — 25.06.2024 - EUR-Lex](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [L_202401774EN.000101.fmx.xml - EUR-Lex](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [PCI DSS Requirement 6: Explained - ManageEngine](https://manageengine.com) (manageengine.com, site only)
+- [Data Security Standard](https://listings.pcisecuritystandards.org) (listings.pcisecuritystandards.org, site only)
+- [Microsoft Entra ID and PCI-DSS Requirement 6](https://learn.microsoft.com) (learn.microsoft.com, site only)
+- [Manage PCI DSS v4.0.1 requirements with Datadog](https://datadoghq.com) (datadoghq.com, site only)
+- [Manual code review - Open CRE](https://opencre.org) (opencre.org, site only)
+- [PCI DSS Requirement 6: Develop and Maintain Secure Systems](https://blog.basistheory.com) (blog.basistheory.com, site only)
+- [NIS2 Article 21(2)(e) vulnerability handling: what you can check from](https://skyqon.com) (skyqon.com, site only)
+- [Directive (EU) 2022/2555 - Publications Office - European Union](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [Consolidated TEXT: 32022L2555 — EN — 27.12.2022 - EUR-Lex](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [L_202402690EN.000101.fmx.xml - EUR-Lex](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
+- [Zero Trust Architecture - cyb3r.help](https://cyb3r.help) (cyb3r.help, site only)
+- [laying down rules for the application of Directive (EU) 2](https://eur-lex.europa.eu) (eur-lex.europa.eu, site only)
