@@ -20,18 +20,22 @@ export type SshKeygenResult = { code: number; stdout: string; stderr: string };
 /**
  * Runs ssh-keygen without a shell. Stdin is closed unless `stdin` is given, so a
  * key that wants a passphrase fails at once instead of waiting on a prompt.
+ * `useTerminal` hands ssh-keygen this process's terminal (stdin and stderr) so it
+ * can prompt for a passphrase; stderr is then not captured.
  *
  * @throws CommandError (exit 1) when ssh-keygen is not installed.
  */
 export function runSshKeygen(
   sshKeygenPath: string,
   args: string[],
-  options: { stdin?: Buffer; cwd?: string } = {},
+  options: { stdin?: Buffer; cwd?: string; useTerminal?: boolean } = {},
 ): Promise<SshKeygenResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(sshKeygenPath, args, {
       cwd: options.cwd,
-      stdio: [options.stdin ? "pipe" : "ignore", "pipe", "pipe"],
+      stdio: options.useTerminal
+        ? ["inherit", "pipe", "inherit"]
+        : [options.stdin ? "pipe" : "ignore", "pipe", "pipe"],
     });
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
