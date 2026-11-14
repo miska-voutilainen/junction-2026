@@ -7,7 +7,7 @@ import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { InboxView } from "./InboxView";
-import { buildInboxModel, inboxLevels, reportCardNotice, toShellChanges } from "./inboxModel";
+import { buildInboxModel, reportCardNotice, toShellChanges } from "./inboxModel";
 import type { InboxSource, ReportCardInput } from "./inboxModel";
 
 /**
@@ -28,7 +28,7 @@ export function InboxScreen({
   usesFixture: boolean;
 }) {
   const { escapes } = useEscapes();
-  const model = useMemo(() => buildInboxModel(sources, inboxLevels(reportCard, escapes)), [sources, reportCard, escapes]);
+  const model = useMemo(() => buildInboxModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
   const hasAnyReview = sources.some((source) => source.review.state === "ok");
 
   return (

@@ -39,8 +39,8 @@
   "notesRef": "refs/notes/countersign",
   "verify": {
     "command": "pnpm countersign verify mp-2129",
-    "output": "Good \"countersign-receipt\" signature for miska-voutilainen with ED25519 key SHA256:4fT0kq1mGv9eQ2sWl8cJxN3yRzA7uHbD5pLiKoE6aXs\nReceipt does not match the diff: the change was amended after signing.",
-    "ok": false,
+    "output": "Good \"countersign-receipt\" signature for miska-voutilainen with ED25519 key SHA256:4fT0kq1mGv9eQ2sWl8cJxN3yRzA7uHbD5pLiKoE6aXs",
+    "ok": true,
     "verifiedAt": "2026-11-14T09:00:01Z"
   }
 }

@@ -4,10 +4,7 @@
  * The coverage itself comes from `route()` (hunk coverage map, spec section
  * 5); this file only arranges it. Pure functions, no React.
  */
-import { tierLabel } from "@/contracts";
-import type { Area, Citation, Coverage, LadderLevel, ReportCard, Review, TierDecision } from "@/contracts";
-import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
-import { route } from "@/rules/route";
+import type { Area, Citation, Coverage, LadderLevel, Review, TierDecision } from "@/contracts";
 
 type Hunk = Review["hunks"][number];
 type File = Review["files"][number];
@@ -59,7 +56,7 @@ export function fileName(path: string): string {
   return path.slice(path.lastIndexOf("/") + 1);
 }
 
-/** New-side line range of a hunk: "737–745", or the start alone for a hunk that only deletes. */
+/** New-side line range of a hunk: "737–745"; the start alone when it covers at most one new line (including a hunk that only deletes). */
 export function hunkRange(hunk: Hunk): string {
   if (hunk.newLines <= 1) return String(hunk.newStart);
   return `${hunk.newStart}–${hunk.newStart + hunk.newLines - 1}`;
@@ -77,7 +74,7 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
   const sections: HunkSections = { read: [], covered: [], generated: [] };
   for (const hunk of review.hunks) {
     const file = fileOf.get(hunk.file);
-    if (!file) continue;
+    if (!file) throw new Error(`Review ${review.changeId} has hunk ${hunk.id} in ${hunk.file}, which is not in its file list. Re-record it with pnpm pipeline run ${review.changeId}.`);
     const coverage = decision.coverage[hunk.id];
     const entry: HunkEntry = {
       hunk,
@@ -102,17 +99,38 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
  *
  * @param areaLevel trust level of the hunk's area, null when the file has no area
  */
-export function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
+function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
   if (coverage === "read") return readReason(review, hunk, areaLevel);
   const claims = review.claims.filter((claim) => claim.hunkIds.includes(hunk.id) && claim.level === coverage);
-  if (coverage === "verified") {
-    const testName = claims.flatMap((claim) => claim.evidence).find((item) => item.testName !== null)?.testName;
-    return testName ? `Test passes on this change: ${testName}` : "Verified by a test on this change";
-  }
-  const citation = claims.flatMap((claim) => claim.citations)[0];
-  if (citation) return `Quote checked: ${fileName(citation.file)}:${citation.startLine}`;
-  const summary = claims.flatMap((claim) => claim.evidence)[0]?.summary;
-  return summary ?? "Supported by a checked quote";
+  if (coverage === "verified") return verifiedLine(claims);
+  return supportedLine(hunk, claims);
+}
+
+type Claim = Review["claims"][number];
+
+function verifiedLine(claims: Claim[]): string {
+  const testName = claims.flatMap((claim) => claim.evidence).find((item) => item.testName !== null)?.testName;
+  if (testName) return `Test passes on this change: ${testName}`;
+  return `Verified by claim ${claims[0]?.id ?? "unknown"}: ${claims[0]?.text ?? "no claim text recorded"}`;
+}
+
+/**
+ * A quote that sits inside this hunk reads "Quote checked: <file>:<line>". A
+ * claim can cover a hunk through a citation elsewhere, e.g. in the test file;
+ * then the line says so, instead of pointing at lines the hunk doesn't show.
+ */
+function supportedLine(hunk: Hunk, claims: Claim[]): string {
+  const inside = claims.flatMap((claim) => claim.citations).find((citation) => citationOverlapsHunk(citation, hunk));
+  if (inside) return `Quote checked: ${fileName(inside.file)}:${inside.startLine}`;
+  const claim = claims[0];
+  const outside = claim?.citations[0];
+  if (claim && outside) return `Supported by ${claim.id} · quote checked at ${fileName(outside.file)}:${outside.startLine}, outside this hunk`;
+  return `Supported by ${claim?.id ?? "unknown"}: ${claim?.evidence[0]?.summary ?? claim?.text ?? "no evidence summary recorded"}`;
+}
+
+/** Whether a citation names lines this hunk shows: same file, and its range meets a line of the hunk (same test as `isLineHighlighted`). */
+function citationOverlapsHunk(citation: Citation, hunk: Hunk): boolean {
+  return hunk.lines.some((line) => isLineHighlighted(hunk, line, [citation]));
 }
 
 function readReason(review: Review, hunk: Hunk, areaLevel: LadderLevel | null): string {
@@ -157,9 +175,13 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
   return groups;
 }
 
-/** The text after the tier badge: "read 2 of 8 hunks · ~1 min (full read ~3 min)". */
+/**
+ * The text after the tier badge: "read 2 of 8 hunks · ~1 min (full read ~3 min)".
+ * Like the inbox row, it leaves the reading estimate out when nothing needs reading.
+ */
 export function coverageLineText(decision: TierDecision): string {
-  return `read ${decision.readHunks} of ${decision.totalHunks} hunks · ~${decision.readMinutes} min (full read ~${decision.fullMinutes} min)`;
+  const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
+  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${reading} (full read ~${decision.fullMinutes} min)`;
 }
 
 /** The line under a collapsed covered section: "4 verified · 5 supported". */
@@ -200,52 +222,21 @@ export function isLineHighlighted(
   });
 }
 
-/** Trust levels with every area at Shadow, for when the report card can't be read. */
-export function shadowLevels(): Record<Area, LadderLevel> {
-  return levelsFromReportCard(null);
+/** What the report-card alert says; the second sentence is the same for a missing and an unreadable card. */
+export interface EvidenceAlert {
+  title: string;
+  /** "Run" or "Re-run", before the command. */
+  verb: string;
+  command: string;
+  consequence: string;
 }
 
-/**
- * The decision when the report card is unavailable. Without a track record
- * nothing counts as covered, so every hunk is "read" and the tier is Full.
- * The reasons are those of `route()` with every area at Shadow.
- */
-export function decisionWithoutEvidence(review: Review): TierDecision {
-  const shadow = route(review, shadowLevels());
-  const coverage = Object.fromEntries(review.hunks.map((hunk) => [hunk.id, "read" as const]));
+/** The alert for a report card that is not readable, from the decision that applies without it. */
+export function evidenceAlert(state: "missing" | "unreadable", decision: TierDecision): EvidenceAlert {
   return {
-    ...shadow,
-    tier: "full",
-    coverage,
-    readHunks: shadow.totalHunks,
-    readLines: shadow.totalLines,
-    readMinutes: shadow.fullMinutes,
+    title: state === "missing" ? "No report card yet" : "Couldn't read the report card",
+    verb: state === "missing" ? "Run" : "Re-run",
+    command: "pnpm evals",
+    consequence: `Until then nothing counts as covered, so this change is Full: read ${decision.readHunks} of ${decision.totalHunks} hunks.`,
   };
-}
-
-/** The alert text for the evidence-unavailable state, from the fallback decision. */
-export function evidenceUnavailableText(decision: TierDecision): string {
-  return `Without a track record nothing counts as covered, so this change is now ${tierLabel[decision.tier]}: read ${decision.readHunks} of ${decision.totalHunks} hunks.`;
-}
-
-/** How a review is routed right now: the decision, the trust levels behind it, and whether the report card was there. */
-export interface ReviewDecision {
-  decision: TierDecision;
-  levels: Record<Area, LadderLevel>;
-  isEvidenceAvailable: boolean;
-}
-
-/**
- * Routes the review with the report card's levels minus simulated escapes, so
- * a recorded escape changes the tier on this page without a reload. With no
- * readable report card the fallback applies (`decisionWithoutEvidence`).
- *
- * @param reportCard null when the file is missing or unreadable
- */
-export function decideReview(review: Review, reportCard: ReportCard | null, escapes: Partial<Record<Area, number>>): ReviewDecision {
-  if (reportCard === null) {
-    return { decision: decisionWithoutEvidence(review), levels: shadowLevels(), isEvidenceAvailable: false };
-  }
-  const levels = applyEscapes(levelsFromReportCard(reportCard), escapes);
-  return { decision: route(review, levels), levels, isEvidenceAvailable: true };
 }

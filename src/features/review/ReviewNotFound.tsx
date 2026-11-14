@@ -13,7 +13,7 @@ import { useShellChanges } from "./useShellChanges";
  * receives no params, so the id comes from the URL's last segment.
  */
 export function ReviewNotFound({ sources, reportCard, repo }: { sources: InboxSource[]; reportCard: ReportCardInput; repo: string }) {
-  const id = decodeURIComponent(usePathname().split("/").filter(Boolean).pop() ?? "");
+  const id = idFromPath(usePathname());
   const changes = useShellChanges(sources, reportCard);
 
   return (
@@ -38,4 +38,14 @@ export function ReviewNotFound({ sources, reportCard, repo }: { sources: InboxSo
       </div>
     </AppShell>
   );
+}
+
+/** The id in `/changes/<id>`; a malformed escape such as `%E0` is shown as typed instead of throwing. */
+function idFromPath(pathname: string): string {
+  const segment = pathname.split("/").filter(Boolean).pop() ?? "";
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
 }

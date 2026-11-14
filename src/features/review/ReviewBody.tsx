@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import type { Area, ChangeInput, LadderLevel, Review, TierDecision } from "@/contracts";
+import { useEffect, useEffectEvent, useMemo } from "react";
+import type { ChangeInput, Review } from "@/contracts";
+import { decideChange } from "@/features/inbox";
+import type { ReportCardInput } from "@/features/inbox";
+import { useEscapes } from "@/lib/simulation/escapes";
 import { isTypingTarget } from "@/lib/useShortcuts";
 import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
@@ -10,10 +13,14 @@ import { MobileHunks } from "./MobileHunks";
 import { EmptyDiff, EvidenceUnavailable } from "./ReviewStates";
 import { useSelectedClaim } from "./SelectedClaim";
 import type { HighlightedHunks } from "./highlightHunks";
-import { buildNavigator, buildSections, highlightedLinesOf, isLineHighlighted } from "./reviewModel";
+import { buildNavigator, buildSections, evidenceAlert, highlightedLinesOf, isLineHighlighted } from "./reviewModel";
 import type { HighlightedLines, HunkSections, NavigatorGroup } from "./reviewModel";
 import { useDiffReveal } from "./useDiffReveal";
+import { useMediaQuery } from "./useMediaQuery";
 import { useReadHunks } from "./useReadHunks";
+
+/** From this width up (`compact` in `globals.css`) the page shows the full diff; below it, the read-only list. */
+const COMPACT_UP_QUERY = "(min-width: 760px)";
 
 /**
  * Everything under the header once a review is readable: the tier and its
@@ -21,49 +28,55 @@ import { useReadHunks } from "./useReadHunks";
  * hunks are marked read, what is open, and which lines a selected claim
  * highlights. The Review steps panel will sit in a column to the right and
  * select claims through `useSelectedClaim`.
+ *
+ * Routing is decided here, once per review, report card and set of escapes,
+ * so nothing downstream re-runs (or re-scrolls) on an unrelated render.
  */
 export function ReviewBody({
   change,
   review,
-  decision,
-  levels,
-  isEvidenceAvailable,
+  reportCard,
   tokens,
 }: {
   change: ChangeInput;
   review: Review;
-  decision: TierDecision;
-  levels: Record<Area, LadderLevel>;
-  isEvidenceAvailable: boolean;
+  reportCard: ReportCardInput;
   tokens: HighlightedHunks;
 }) {
+  const { escapes } = useEscapes();
+  const { decision, levels, isEvidenceAvailable } = useMemo(() => decideChange(review, reportCard, escapes), [review, reportCard, escapes]);
   const sections = useMemo(() => buildSections(review, decision, levels), [review, decision, levels]);
   const groups = useMemo(() => buildNavigator(sections), [sections]);
   const reveal = useDiffReveal(sections);
   const { readIds, toggle } = useReadHunks(change.id);
+  // One tree per layout: the full diff from 760 px, the read-only list below. Both are
+  // CSS-hidden on the other side too, so the server's HTML shows the right one before hydration.
+  const hasFullDiff = useMediaQuery(COMPACT_UP_QUERY, true);
   const highlightedLines = useHighlightedLines(review, sections, reveal.showHighlight);
-  useHunkKeys(groups, reveal.activeHunkId, reveal.jumpTo);
+  useHunkKeys(hasFullDiff ? groups : [], reveal.activeHunkId, reveal.jumpTo);
 
   if (review.hunks.length === 0) return <EmptyDiff change={change} review={review} />;
 
   return (
     <>
       <CoverageLine decision={decision} />
-      {!isEvidenceAvailable && <EvidenceUnavailable decision={decision} />}
+      {reportCard.state !== "ok" && !isEvidenceAvailable && <EvidenceUnavailable alert={evidenceAlert(reportCard.state, decision)} />}
       <div className="flex items-start gap-6">
         <HunkNavigator groups={groups} activeHunkId={reveal.activeHunkId} readIds={readIds} onJump={reveal.jumpTo} />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <HunkDropdown groups={groups} activeHunkId={reveal.activeHunkId} onJump={reveal.jumpTo} />
-          <div className="hidden compact:block">
-            <DiffView
-              sections={sections}
-              tokens={tokens}
-              highlightedLines={highlightedLines}
-              reveal={reveal}
-              readIds={readIds}
-              onToggleRead={toggle}
-            />
-          </div>
+          {hasFullDiff && (
+            <div className="hidden compact:block">
+              <DiffView
+                sections={sections}
+                tokens={tokens}
+                highlightedLines={highlightedLines}
+                reveal={reveal}
+                readIds={readIds}
+                onToggleRead={toggle}
+              />
+            </div>
+          )}
           <MobileHunks sections={sections} tokens={tokens} highlightedLines={highlightedLines} />
         </div>
       </div>
@@ -86,13 +99,16 @@ function useHighlightedLines(
     return claim ? highlightedLinesOf(claim.citations) : [];
   }, [review, selectedClaimId]);
 
-  useEffect(() => {
-    if (highlightedLines.length === 0) return;
-    const first = [highlightedLines[0]];
+  // An effect event reads the latest sections without re-running when they change: only a new selection scrolls.
+  const showFirstHighlight = useEffectEvent((lines: HighlightedLines[]) => {
+    const first = [lines[0]];
     const entries = [...sections.read, ...sections.covered, ...sections.generated];
     const target = entries.find(({ hunk }) => hunk.lines.some((line) => isLineHighlighted(hunk, line, first)));
     if (target) showHighlight(target.hunk.id);
-  }, [highlightedLines, sections, showHighlight]);
+  });
+  useEffect(() => {
+    if (highlightedLines.length > 0) showFirstHighlight(highlightedLines);
+  }, [highlightedLines]);
 
   return highlightedLines;
 }

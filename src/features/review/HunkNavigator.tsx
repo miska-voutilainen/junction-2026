@@ -38,9 +38,9 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Navigat
     <nav
       aria-label="Hunks"
       onKeyDown={moveFocus}
-      className="hidden w-navigator shrink-0 review:block"
+      className="hidden w-navigator shrink-0 wide:block"
     >
-      <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto pr-1">
+      <div className="sticky top-0 flex max-h-dvh flex-col gap-4 overflow-y-auto py-4 pr-1">
         {groups.map((group) => (
           <section key={group.coverage} aria-labelledby={`navigator-${group.coverage}`}>
             <h2 id={`navigator-${group.coverage}`} className="flex items-baseline justify-between px-2 pb-1 text-xs font-medium text-text-muted">
@@ -91,7 +91,7 @@ function groupCount(group: NavigatorGroup, readIds: ReadonlySet<string>): string
  */
 export function HunkDropdown({ groups, activeHunkId, onJump }: Omit<NavigatorProps, "readIds">) {
   return (
-    <div className="hidden compact:block review:hidden">
+    <div className="hidden compact:block wide:hidden">
       <label htmlFor="hunk-dropdown" className="sr-only">
         Jump to a hunk
       </label>

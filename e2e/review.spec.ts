@@ -103,8 +103,10 @@ test("Wrap toggles, Copy announces Copied and Mark read moves the progress", asy
 
   const progress = page.getByRole("navigation", { name: "Hunks" }).getByText(/\d+\/\d+ read/);
   await expect(progress).toHaveText("0/2 read");
-  await card.getByRole("button", { name: "Mark read" }).click();
-  await expect(card.getByRole("button", { name: "Read" })).toHaveAttribute("aria-pressed", "true");
+  const markRead = card.getByRole("button", { name: "Mark read" });
+  await markRead.click();
+  // The name stays; the pressed state and the progress show the change.
+  await expect(markRead).toHaveAttribute("aria-pressed", "true");
   await expect(progress).toHaveText("1/2 read");
 });
 
@@ -119,9 +121,18 @@ test("the phone shows the hunks to read read-only, behind one button", async ({ 
   expect(await hasHorizontalScroll(page)).toBe(false);
 });
 
-test("an unknown id says so and links back to the inbox", async ({ page }) => {
+test("an unknown id says so, keeps the four changes in the shell and links back to the inbox", async ({ page }, testInfo) => {
   await page.goto("/changes/zz-9999");
   await expect(page.getByText("No change with id zz-9999.")).toBeVisible();
+  if (testInfo.project.name !== "mobile") {
+    // The shell's command menu still lists the four changes.
+    await expect(async () => {
+      await page.keyboard.press("Control+K");
+      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 500 });
+    }).toPass();
+    await expect(page.getByRole("dialog").getByRole("group", { name: "Changes" }).getByRole("option")).toHaveCount(4);
+    await page.keyboard.press("Escape");
+  }
   await page.getByRole("link", { name: "Back to the inbox" }).click();
   await expect(page).toHaveURL(/\/$/);
 });

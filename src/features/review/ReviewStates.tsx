@@ -1,8 +1,8 @@
 import { TriangleAlert } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
-import type { ChangeInput, Review, TierDecision } from "@/contracts";
-import { evidenceUnavailableText } from "./reviewModel";
+import type { ChangeInput, Review } from "@/contracts";
+import type { EvidenceAlert } from "./reviewModel";
 
 /** The change has no recorded review: say so and show the command that records one. */
 export function ReviewMissing({ changeId }: { changeId: string }) {
@@ -43,17 +43,18 @@ export function EmptyDiff({ change, review }: { change: ChangeInput; review: Rev
 }
 
 /**
- * The report card couldn't be read, so no area has a track record and the
- * reviewer's evidence can't lower the tier. The diff below stays: only the
- * coverage is gone.
+ * The report card is missing or unreadable, so no area has a track record and
+ * nothing counts as covered. The diff below stays: only the coverage is gone.
  */
-export function EvidenceUnavailable({ decision }: { decision: TierDecision }) {
+export function EvidenceUnavailable({ alert }: { alert: EvidenceAlert }) {
   return (
     <div role="alert" className="flex gap-3 rounded-control border border-amber/40 px-4 py-3">
       <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-amber-light" />
       <div className="flex flex-col gap-0.5 text-base">
-        <p className="font-medium text-amber-light">Couldn&apos;t read the report card</p>
-        <p className="text-text-secondary">{evidenceUnavailableText(decision)}</p>
+        <p className="font-medium text-amber-light">{alert.title}</p>
+        <p className="text-text-secondary">
+          {alert.verb} <code className="font-mono text-sm">{alert.command}</code> to measure the reviewer. {alert.consequence}
+        </p>
       </div>
     </div>
   );

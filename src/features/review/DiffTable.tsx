@@ -1,18 +1,12 @@
 import { coverageLabel } from "@/contracts";
 import type { Coverage, Review } from "@/contracts";
+import { COVERAGE_BAR } from "@/components/CoverageMark";
 import { cn } from "@/lib/utils";
 import type { CodeToken } from "./highlightHunks";
 import { isLineHighlighted } from "./reviewModel";
 import type { HighlightedLines } from "./reviewModel";
 
 type Hunk = Review["hunks"][number];
-
-// The coverage bar at the left edge of every row; the same look as CoverageMark's bar.
-const GUTTER: Record<Coverage, string> = {
-  read: "border-solid border-coverage-read",
-  supported: "border-dashed border-coverage-supported",
-  verified: "border-solid border-coverage-verified",
-};
 
 const LINE_TINT = {
   context: "",
@@ -55,7 +49,7 @@ export function DiffTable({
               data-highlighted={isHighlighted || undefined}
               className={cn(LINE_TINT[line.kind], isHighlighted && "bg-link/20 outline outline-1 -outline-offset-1 outline-link")}
             >
-              <td aria-hidden="true" className={cn("w-0 border-l-2 p-0", GUTTER[coverage])} />
+              <td aria-hidden="true" className={cn("w-0 border-l-2 p-0", COVERAGE_BAR[coverage])} />
               {!isCompact && <td className="w-10 px-2 text-right text-xs text-text-faint select-none">{line.oldLine}</td>}
               <td className="w-10 px-2 text-right text-xs text-text-faint select-none">{line.newLine}</td>
               <td className="w-4 text-center text-text-muted select-none">

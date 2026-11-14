@@ -1,5 +1,6 @@
 "use client";
 
+import { SyntheticTag } from "@/components/SyntheticTag";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Ban, ChevronRight, FileWarning } from "lucide-react";
@@ -59,7 +60,7 @@ function ChangeCell({ row }: { row: Row }) {
         <span aria-hidden="true">·</span>
         <span className="truncate">{row.authorAgent}</span>
         {row.hasSyntheticDescription && (
-          <span className="rounded-chip border border-border-default px-1.5 font-sans">synthetic PR description</span>
+          <SyntheticTag className="font-sans" />
         )}
       </p>
     </div>

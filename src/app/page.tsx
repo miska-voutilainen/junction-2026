@@ -1,9 +1,7 @@
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError, InboxScreen } from "@/features/inbox";
-import { loadInboxSources } from "@/features/inbox/loadInboxSources";
-
-const FALLBACK_REPO = "No repository";
+import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 
 /**
  * S1 · Inbox. Reads every change with its recorded review and receipt on the
@@ -11,21 +9,21 @@ const FALLBACK_REPO = "No repository";
  * A source of "fixture" anywhere turns on the mock-data banner.
  */
 export default async function InboxPage() {
-  const inbox = await loadInboxSources();
-  if (inbox.status === "invalid") {
+  const data = await loadInboxData();
+  if (data.status === "invalid") {
     return (
       <AppShell changes={[]} repo={FALLBACK_REPO} title="Inbox" breadcrumb={[{ label: "Inbox" }]} escapeSlot={<EscapeCounter />}>
-        <InboxError details={inbox.error} />
+        <InboxError details={data.error} />
       </AppShell>
     );
   }
 
   return (
     <InboxScreen
-      sources={inbox.sources}
-      reportCard={inbox.reportCard}
-      repo={inbox.sources[0]?.change.repo ?? FALLBACK_REPO}
-      usesFixture={inbox.usesFixture}
+      sources={data.sources}
+      reportCard={data.reportCard}
+      repo={data.repo ?? FALLBACK_REPO}
+      usesFixture={data.usesFixture}
     />
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { SyntheticTag } from "@/components/SyntheticTag";
 import Link from "next/link";
 import { Disclosure } from "@/components/Disclosure";
 import type { ReactNode } from "react";
@@ -29,7 +30,7 @@ export function InboxMobile({ sections }: { sections: MobileSections }) {
                 data-inbox-row-link
                 className="flex min-h-11 items-center justify-center rounded-control bg-brand text-base font-semibold text-primary-foreground hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand"
               >
-                {row.receipt === "stale" ? "Review and re-sign" : "Review and sign"}
+                {row.receipt === "stale" || row.receipt === "unverified" ? "Review and re-sign" : "Review and sign"}
               </Link>
             </li>
           ))}
@@ -98,7 +99,7 @@ function RowMeta({ row }: { row: InboxRow }) {
     <div className="flex flex-col gap-1 text-sm text-text-muted">
       <p>{metaLine(row)}</p>
       {row.hasSyntheticDescription && (
-        <span className="self-start rounded-chip border border-border-default px-1.5 text-xs">synthetic PR description</span>
+        <SyntheticTag className="self-start" />
       )}
     </div>
   );
@@ -125,10 +126,13 @@ function metaLine(row: InboxRow): ReactNode {
 
 function receiptOrFlags(row: ReviewedRow): string {
   if (row.isReceiptUnreadable) return "Receipt couldn't be read";
-  return row.receipt === "stale" ? "Stale" : flagsText(row);
+  if (row.receipt === "stale") return "Stale";
+  if (row.receipt === "unverified") return "Signature failed verification";
+  return flagsText(row);
 }
 
 function metaFlagClass(row: ReviewedRow): string {
   if (row.isReceiptUnreadable || row.receipt === "stale") return "text-amber-light";
+  if (row.receipt === "unverified") return "text-rose-light";
   return row.contradictions > 0 ? "text-rose-light" : "";
 }

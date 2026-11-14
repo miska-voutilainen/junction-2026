@@ -4,7 +4,7 @@ import { useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
-import { Inbox, Keyboard } from "lucide-react";
+import { Gauge, Inbox, Keyboard, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
 import { Kbd } from "@/components/ui/kbd";
@@ -15,7 +15,14 @@ import { cn } from "@/lib/utils";
 type NavItem = { label: string; href: string; icon: LucideIcon; hasBadge?: boolean };
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  { label: "Review", items: [{ label: "Inbox", href: "/", icon: Inbox, hasBadge: true }] }
+  { label: "Review", items: [{ label: "Inbox", href: "/", icon: Inbox, hasBadge: true }] },
+  {
+    label: "Insights",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Reviewer", href: "/reviewer", icon: Gauge },
+    ],
+  },
 ];
 
 /** Inbox is the home of `/` and of every `/changes/<id>`; the other items match their own path. */
@@ -25,7 +32,7 @@ function isCurrent(href: string, pathname: string): boolean {
 }
 
 /**
- * The side navigation: the Review group, and the keyboard shortcuts
+ * The side navigation: the Review and Insights groups, and the keyboard shortcuts
  * that exist. The selected background is one element that slides between items
  * (shared `layoutId`), so the eye follows where you went.
  *

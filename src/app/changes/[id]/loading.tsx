@@ -19,7 +19,7 @@ export default function Loading() {
             <p className="text-base text-text-muted">No hunk is marked covered until its evidence is in.</p>
           </div>
           <div className="flex items-start gap-6">
-            <div className="hidden w-navigator shrink-0 flex-col gap-2 review:flex">
+            <div className="hidden w-navigator shrink-0 flex-col gap-2 wide:flex">
               <SkeletonLine className="h-4 w-24" />
               <SkeletonBlock className="h-8" />
               <SkeletonBlock className="h-8" />

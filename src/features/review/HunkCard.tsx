@@ -1,9 +1,11 @@
 "use client";
 
+import { useId } from "react";
 import { Check } from "lucide-react";
 import { Console } from "@/components/Console";
 import { CoverageMark } from "@/components/CoverageMark";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DiffTable } from "./DiffTable";
 import type { CodeToken } from "./highlightHunks";
 import { hunkRawText } from "./reviewModel";
@@ -39,23 +41,46 @@ export function HunkCard({
         isFlush
         heading={<HunkHeading entry={entry} />}
         actions={
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-pressed={isRead}
-            onClick={onToggleRead}
-            className="text-text-muted hover:bg-surface-hover hover:text-text-primary aria-pressed:text-text-primary"
-          >
-            {isRead && <Check aria-hidden="true" className="size-3.5" />}
-            {isRead ? "Read" : "Mark read"}
-          </Button>
+          <MarkReadButton isRead={isRead} onToggle={onToggleRead} />
         }
         className="rounded-control"
       >
         <DiffTable hunk={hunk} coverage={coverage} tokens={tokens} highlightedLines={highlightedLines} />
       </Console>
     </article>
+  );
+}
+
+/**
+ * Mark read keeps its label and shows its state with `aria-pressed` and a
+ * check, so the name a screen reader or a test finds never changes. The
+ * tooltip says where the mark lives: only this browser tab, not the receipt.
+ */
+function MarkReadButton({ isRead, onToggle }: { isRead: boolean; onToggle: () => void }) {
+  const noteId = useId();
+  return (
+    <TooltipProvider>
+      <span id={noteId} className="sr-only">
+        Saved in this browser only
+      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={isRead}
+            aria-describedby={noteId}
+            onClick={onToggle}
+            className="text-text-muted hover:bg-surface-hover hover:text-text-primary aria-pressed:text-text-primary"
+          >
+            {isRead && <Check aria-hidden="true" className="size-3.5" />}
+            Mark read
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Saved in this browser only</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

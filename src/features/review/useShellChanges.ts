@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { buildInboxModel, inboxLevels, toShellChanges } from "@/features/inbox/inboxModel";
+import { buildInboxModel, toShellChanges } from "@/features/inbox/inboxModel";
 import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
 import type { ShellChange } from "@/components/ShellChange";
 import { useEscapes } from "@/lib/simulation/escapes";
@@ -14,7 +14,7 @@ import { useEscapes } from "@/lib/simulation/escapes";
 export function useShellChanges(sources: InboxSource[], reportCard: ReportCardInput): ShellChange[] {
   const { escapes } = useEscapes();
   return useMemo(
-    () => toShellChanges(buildInboxModel(sources, inboxLevels(reportCard, escapes)).rows),
+    () => toShellChanges(buildInboxModel(sources, reportCard, escapes).rows),
     [sources, reportCard, escapes],
   );
 }

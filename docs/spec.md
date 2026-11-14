@@ -137,7 +137,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
   - the tier badge: "Light", "Focused" or "Full";
   - the reading estimate: "read 2 of 8 · ~2 min" (the minutes are left out when nothing needs reading);
   - the counts, only when non-zero: "1 contradiction", "2 contradictions", "2 refused";
-  - the receipt status: "Needs review", "Signed by <owner login>" or "Stale";
+  - the receipt status: "Needs review", "Signed by <owner login>", "Stale" or "Signature failed verification" (the receipt's recorded check failed);
   - a "synthetic PR description" tag when the change's `authorDescription.synthetic` is true.
 - **375 px:** rows stack in three lines: title; chips (requirement ID, tier badge, reading estimate); counts, receipt status and tag. The summary bar wraps to two lines.
 - **States:** empty (no change has a review file): "No recorded reviews yet." and "Run `pnpm pipeline run mp-2283` to record one." · a change whose review file is missing: its row shows the title and "Not reviewed yet" in place of tier and estimate · a review file that fails validation: the row shows the title and "This review couldn't be read. Re-record it with `pnpm pipeline run <id>`." · success as above.
@@ -161,7 +161,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 ### S3 · Reviewer report card (`/reviewer`)
 
 - **Purpose:** how far the AI reviewer can be trusted, per area, and why.
-- **Header:** h1 "Can the reviewer be trusted?"; subline "Reviewer <version> · <model> · measured on <n> planted bugs written blind".
+- **Header:** h1 "Reviewer report card" with the line "How far the AI reviewer can be trusted, by area. Levels move only on evidence: planted bugs it had to find blind, and escapes you record."; meta line "Reviewer <version> · <model> · measured on <n> planted bugs written blind".
 - **Trust ladder** (one card per area, in the order generator, analyzer, security, performance): the area name; the three rungs "Shadow → Calibrated → Trusted" with the current one marked; the evidence line, always with the sample size, e.g. "Calibrated · 3 of 4 planted bugs caught · written blind" or "Shadow · no track record"; the next step, e.g. "Trusted needs 5 clean spot checks: 0 recorded" or "Calibrated needs 3 planted bugs: 0 so far"; a button "Record escape". Pressing it drops the area one level (simulated, stored in the browser), shows a toast "Escape recorded in <area> (simulated). Its changes re-routed.", and adds "(1 simulated escape)" to the card.
 - **Missed planted bugs:** a list: plant id, area, the defect from the answer key, and a link "View variant" to the variant branch's commit on GitHub. Empty: "The reviewer caught every planted bug."
 - **Given the description first vs blind-first:** the overall count as on S2, plus one row per contradiction plant with both modes' results.
@@ -180,8 +180,8 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 ### S5 · Dashboard (`/dashboard`)
 
 - **Purpose:** what signing covered across all changes, what it didn't, and who still has to decide.
-- **Content:** per the UI plan, section 5, from the recorded reviews, receipts and report card only: signed count, hunks read by a person, contradictions caught, simulated escapes, "Median time to sign: not measured yet"; accepted risk (residual-risk lines from signed receipts, "Holds" or "Stale"); open decisions (refusals by decider); attention by tier; why changes were escalated (`route()` reason counts); reviewer trust by area. No time ranges: there is no time series.
-- **States:** no signed receipt: "No signed changes yet." and a link to the inbox · invalid data: the error copy of the file that failed, with its validation error.
+- **Content:** per the UI plan, section 5, from the recorded reviews, receipts and report card only: signed count, hunks read by a person, contradictions caught, simulated escapes, "Median time to sign: not measured yet"; accepted risk (residual-risk lines from signed receipts, "Holds", "Stale" or "Signature failed verification"); open decisions (refusals by decider); attention by tier; why changes were escalated (`route()` reason counts); reviewer trust by area. No time ranges: there is no time series.
+- **States:** no readable receipt at all (stale or unverified receipts still list): "No signed changes yet." and a link to the inbox · invalid data: the error copy of the file that failed, with its validation error.
 
 ## 4. Data
 
@@ -336,7 +336,7 @@ ReceiptRecord = { schemaVersion: 1, changeId: string, receipt: Receipt, signatur
                   verify: { command: string, output: string, ok: boolean, verifiedAt: string } }
 ```
 
-The S2 receipt is stale when `receipt.diffSha256 !== review.diff.diffSha256`.
+The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt.diffSha256 !== review.diff.diffSha256`.
 
 ### Diff identity (`src/lib/git/diffIdentity.ts`)
 
@@ -358,7 +358,7 @@ The S2 receipt is stale when `receipt.diffSha256 !== review.diff.diffSha256`.
 
 ### Simulated escapes (`src/lib/simulation/escapes.ts`)
 
-A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes))`.
+A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, undo(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes))`.
 
 ### Policy (`src/policy/`)
 
@@ -480,7 +480,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 
 **T06 · loaders and shared pieces.**
 - `src/lib/data/` exports `loadChanges(): Promise<LoadResult<ChangeInput[]>>` (only `kind: "tieto"`, sorted by id), `loadChange(id)`, `loadReview(changeId)`, `loadReportCard()`, `loadReceipt(changeId)`, where `LoadResult<T> = { status: "ok"; data: T; source: "recorded" | "fixture" } | { status: "missing" } | { status: "invalid"; error: string }`. Each reads the recorded path first (`data/sample/…`, `data/runs/…`, `data/eval/…`, `data/receipts/…`) and falls back to the same path under `data/fixtures/`.
-- Also in T06: `receiptStatus(review, receiptRecord | null): "needs-review" | "signed" | "stale"` in `src/lib/data/receiptStatus.ts`, the `ReceiptStatus` component in `src/components/ReceiptStatus.tsx` ("Needs review" · "Signed by <owner>" · "Stale"), and a `MockDataBanner` in `src/components/MockDataBanner.tsx` that a page renders when any of its loader results has `source: "fixture"`.
+- Also in T06: `receiptStatus(review, receiptRecord | null): "needs-review" | "unverified" | "signed" | "stale"` in `src/lib/data/receiptStatus.ts`, the `ReceiptStatus` component in `src/components/ReceiptStatus.tsx` ("Needs review" · "Signed by <owner>" · "Stale" · "Signature failed verification"), and a `MockDataBanner` in `src/components/MockDataBanner.tsx` that a page renders when any of its loader results has `source: "fixture"`.
 - The `mp-2283` fixture must route to Focused with at least 2 `read` hunks under `levelsFromReportCard(fixture report card)` and no escapes.
 
 **T07 · sample data.**

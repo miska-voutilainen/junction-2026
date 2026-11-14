@@ -1,11 +1,13 @@
 /**
- * Syntax highlighting for the diff, done once on the server at build time so
- * the browser ships no highlighter. Each hunk is tokenised on its own, as the
- * spec says (section 3, S2 diff viewer): a hunk is a few dozen lines, and a
+ * Syntax highlighting for the diff, run in server components so the browser
+ * ships no highlighter. The page is statically generated, so for the committed
+ * changes that means once at build time. Each hunk is tokenised on its own, as
+ * the spec says (section 3, S2 diff viewer): a hunk is a few dozen lines, and a
  * wrong guess at the grammar state at its first line costs at most one
  * mis-coloured token. Colours are CSS variables defined in `globals.css`, so
  * they follow the design tokens instead of a stock theme.
  */
+import "server-only";
 import { codeToTokensBase, createCssVariablesTheme } from "shiki";
 import type { Review } from "@/contracts";
 

@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Kbd } from "@/components/ui/kbd";
+import { ReviewNextLink } from "@/components/ReviewNextLink";
 import type { ReviewedRow } from "./inboxModel";
+
 
 /**
  * Page title, one line of purpose and the primary action: "Review next" opens
@@ -19,15 +18,7 @@ export function InboxHeader({ reviewNext }: { reviewNext: ReviewedRow | null }) 
         <p className="hidden text-text-muted compact:block">Agent changes waiting for a named person to sign.</p>
       </div>
       {reviewNext && (
-        <Link
-          href={`/changes/${reviewNext.id}`}
-          className="hidden items-center gap-2 rounded-button bg-brand py-2.5 pr-3.5 pl-4 text-sm font-semibold text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand compact:inline-flex"
-        >
-          Review next
-          <span className="font-mono text-xs font-medium opacity-85">{reviewNext.id}</span>
-          <Kbd className="bg-primary-foreground/15 text-primary-foreground">N</Kbd>
-          <ArrowRight aria-hidden="true" className="size-4" />
-        </Link>
+        <ReviewNextLink changeId={reviewNext.id} className="hidden compact:inline-flex" />
       )}
     </div>
   );

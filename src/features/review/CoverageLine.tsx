@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Disclosure } from "@/components/Disclosure";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import { TierBadge } from "@/components/TierBadge";
@@ -10,12 +10,9 @@ import type { TierDecision } from "@/contracts";
 import { routingPolicy } from "@/policy/routing";
 import { coverageLineText } from "./reviewModel";
 
-/** Width from which the reasons start open: the tablet and desktop layouts, as `compact` in `globals.css`. */
-const WIDE_QUERY = "(min-width: 760px)";
-
 const HOW_IS_THIS_COMPUTED = `Tier = the highest tier any rule asks for. Reading time assumes ${routingPolicy.linesPerMinute} changed lines a minute, a stated assumption.`;
 
-/** Fewer reasons than this show as plain lines; more go behind a "Why <Tier>" disclosure. */
+/** Up to this many reasons show as plain lines on a phone; more go behind a "Why <Tier>" disclosure. */
 const MAX_PLAIN_REASONS = 2;
 
 /**
@@ -39,9 +36,12 @@ export function CoverageLine({ decision }: { decision: TierDecision }) {
   );
 }
 
+/**
+ * One line per rule that fired. From 760 px up they are a plain list, so
+ * nothing animates after hydration; below that, more than two go behind a
+ * "Why <Tier>" disclosure to keep the phone's first screen short.
+ */
 function Reasons({ decision }: { decision: TierDecision }) {
-  const isWide = useSyncExternalStore(subscribeToWidth, () => window.matchMedia(WIDE_QUERY).matches, () => false);
-  const [chosenIsOpen, setChosenIsOpen] = useState<boolean | null>(null);
   const list = (
     <ul className="flex flex-col gap-1">
       {decision.reasons.map((reason, index) => (
@@ -53,19 +53,16 @@ function Reasons({ decision }: { decision: TierDecision }) {
   );
   if (decision.reasons.length <= MAX_PLAIN_REASONS) return list;
   return (
-    <Disclosure title={`Why ${tierLabel[decision.tier]}`} isOpen={chosenIsOpen ?? isWide} onOpenChange={setChosenIsOpen}>
-      <div className="pl-7">{list}</div>
-    </Disclosure>
+    <>
+      <div className="hidden compact:block">{list}</div>
+      <Disclosure title={`Why ${tierLabel[decision.tier]}`} className="compact:hidden">
+        <div className="pl-7">{list}</div>
+      </Disclosure>
+    </>
   );
 }
 
-function subscribeToWidth(onChange: () => void): () => void {
-  const query = window.matchMedia(WIDE_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-/** The "How is this computed?" tooltip. Controlled, so a tap opens it on a touch screen where hover doesn't exist. */
+/** The "How is this computed?" tooltip. Controlled, so a tap opens it on a touch screen where hover doesn't exist; Esc or moving away closes it. */
 function HowIsThisComputed() {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -74,7 +71,7 @@ function HowIsThisComputed() {
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => setIsOpen(true)}
             className="rounded-chip text-xs text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
           >
             How is this computed?

@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
+import { AppShell } from "@/components/AppShell";
+import { ErrorState } from "@/components/ErrorState";
 import { ReviewScreen } from "@/features/review";
 import { highlightHunks } from "@/features/review/highlightHunks";
+import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 import { loadChanges } from "@/lib/data/loaders";
-import { loadInboxSources } from "@/features/inbox/loadInboxSources";
 
 type Params = Promise<{ id: string }>;
+
+// No `dynamicParams = false`: it would answer an unknown id with Next's unstyled 404 instead of this segment's not-found.tsx.
 
 /** One page per Tieto change; planted-bug and contradiction-plant inputs are not reviewed here. */
 export async function generateStaticParams(): Promise<{ id: string }[]> {
@@ -14,25 +18,35 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 
 /**
  * S2 · Review. Reads every change (the shell lists them all), finds this one
- * and highlights its hunks with shiki at build time, then hands plain data to
+ * and highlights its hunks with shiki, then hands plain data to
  * `ReviewScreen`, which routes it in the browser.
  */
 export default async function ReviewPage({ params }: { params: Params }) {
   const { id } = await params;
-  const inbox = await loadInboxSources();
-  if (inbox.status === "invalid") throw new Error(inbox.error);
-  const current = inbox.sources.find((source) => source.change.id === id);
+  const data = await loadInboxData();
+  if (data.status === "invalid") {
+    return (
+      <AppShell changes={[]} repo={FALLBACK_REPO} title="Review" backHref="/" breadcrumb={[{ label: "Inbox", href: "/" }, { label: id }]}>
+        <div className="mx-auto w-full max-w-content px-4 py-6 compact:px-8 compact:py-7">
+          <ErrorState title="The changes couldn't be read." body="Nothing was changed. Fix the file named below, then reload." details={data.error} />
+        </div>
+      </AppShell>
+    );
+  }
+  const current = data.sources.find((source) => source.change.id === id);
   if (!current) notFound();
 
   const tokens = current.review.state === "ok" ? await highlightHunks(current.review.data.hunks) : {};
+  // Validation errors name the file; this change's review file has its id in the path.
+  const reviewError = data.problems.find((problem) => problem.includes(id) && problem.includes("review.json")) ?? null;
   return (
     <ReviewScreen
-      sources={inbox.sources}
+      sources={data.sources}
       currentId={id}
-      reportCard={inbox.reportCard}
-      repo={current.change.repo}
-      usesFixture={inbox.usesFixture}
-      reviewError={inbox.reviewErrors[id] ?? null}
+      reportCard={data.reportCard}
+      repo={data.repo ?? FALLBACK_REPO}
+      usesFixture={data.usesFixture}
+      reviewError={reviewError}
       tokens={tokens}
     />
   );

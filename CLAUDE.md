@@ -1,6 +1,6 @@
 # Countersign
 
-A reference implementation of AI code review for agent-written pull requests: the AI explains each change as a requirement-traced story with checkable evidence, routes the human's attention by readable risk rules, and a named engineer signs a receipt in git. Built at Junction 2026 for the Tieto challenge "Earned Trust in AI Code"; judged by engineers and investors from leading AI and tech companies, so the product must feel finished. **What we build is in [docs/spec.md](docs/spec.md); it wins over anything else.**
+A reference implementation of AI code review for agent-written pull requests: the AI explains each change as a requirement-traced story with checkable evidence, routes the human's attention by readable risk rules, and a named engineer signs a receipt in git. Built at Junction 2026 for the Tieto challenge "Earned Trust in AI Code"; judged by engineers and investors from leading AI and tech companies, so it's built to production quality: every screen, the design and the docs finished and deployed. Tieto's "out of scope: a finished product" means no product features beyond what proves the ideas (accounts, integrations, arbitrary repositories), not less polish. **What we build is in [docs/spec.md](docs/spec.md); it wins over anything else.**
 
 ## Team
 

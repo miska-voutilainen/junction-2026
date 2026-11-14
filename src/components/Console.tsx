@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { WrapText } from "lucide-react";
 import { CopyButton } from "@/components/CopyButton";
@@ -64,11 +65,23 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
 }
 
 function WrapButton({ isWrapped, onToggle }: { isWrapped: boolean; onToggle: () => void }) {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Radix opens a tooltip on any focus, including the focus a dialog gives its first control
+  // when it opens; that tooltip then swallows the first Escape. Open it only for a pointer
+  // hover or keyboard focus, which `:hover` and `:focus-visible` tell apart from script focus.
+  function onTooltipOpenChange(next: boolean) {
+    const button = buttonRef.current;
+    setIsTooltipOpen(!next || (button !== null && (button.matches(":hover") || button.matches(":focus-visible"))));
+  }
+
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip open={isTooltipOpen} onOpenChange={onTooltipOpenChange}>
         <TooltipTrigger asChild>
           <Button
+            ref={buttonRef}
             type="button"
             variant="ghost"
             size="icon-sm"
