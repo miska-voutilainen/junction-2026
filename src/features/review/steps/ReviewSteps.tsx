@@ -78,16 +78,15 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
               aria-selected={isActive}
               aria-controls={panelId(tab.id)}
               tabIndex={isActive ? 0 : -1}
+              // The step's number is its keyboard shortcut; announced here and listed under Keyboard shortcuts, not printed in the label, where it read as part of the name.
+              aria-keyshortcuts={String(tab.number)}
               onClick={() => onStepChange(tab.id)}
               className={cn(
-                "relative flex min-w-0 flex-col items-center justify-between gap-0.5 px-1 py-2.5 text-sm transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring",
+                "relative flex min-w-0 flex-col items-center justify-between gap-1 px-1 py-3.5 text-sm transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring",
                 isActive ? "text-text-primary" : "text-text-muted hover:text-text-secondary",
               )}
             >
-              <span className="text-center text-xs font-medium whitespace-nowrap compact:text-sm">
-                <span className="mr-1 text-xs text-text-muted tabular-nums">{tab.number}</span>
-                {tab.label}
-              </span>
+              <span className="text-center text-sm font-medium whitespace-nowrap">{tab.label}</span>
               <span
                 className={cn(
                   "text-center text-xs whitespace-nowrap",
