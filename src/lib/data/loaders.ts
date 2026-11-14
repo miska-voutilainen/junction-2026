@@ -36,6 +36,8 @@ export type LoadResult<T> =
  */
 const defaultDataRoot = process.env.COUNTERSIGN_DATA_ROOT ?? path.join(process.cwd(), "data");
 const fixtureFolder = "fixtures";
+/** The recorded data sits directly under the data root, so its folder name is empty. */
+const RECORDED_FOLDER = "";
 
 // Ids reach these functions from URL params; this keeps them from walking out of data/.
 const safeId = /^[A-Za-z0-9-]+$/;
@@ -162,8 +164,8 @@ export function loadReportCard(root: string = defaultDataRoot): Promise<LoadResu
  */
 async function receiptFolders(changeId: string, root: string): Promise<string[]> {
   const review = await loadReview(changeId, root);
-  if (review.status !== "ok") return ["", fixtureFolder];
-  return [review.source === "recorded" ? "" : fixtureFolder];
+  if (review.status !== "ok") return [RECORDED_FOLDER, fixtureFolder];
+  return [review.source === "recorded" ? RECORDED_FOLDER : fixtureFolder];
 }
 
 /**
@@ -188,7 +190,7 @@ export async function loadReceipt(changeId: string, root: string = defaultDataRo
   try {
     for (const folder of await receiptFolders(changeId, root)) {
       const record = await readValidated(path.join(root, folder, "receipts", `${changeId}.json`), ReceiptRecordSchema);
-      if (record !== null) return { status: "ok", data: record, source: folder === "" ? "recorded" : "fixture" };
+      if (record !== null) return { status: "ok", data: record, source: folder === RECORDED_FOLDER ? "recorded" : "fixture" };
     }
     return { status: "missing" };
   } catch (error) {

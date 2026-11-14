@@ -13,6 +13,8 @@ export default async function UnlockPage({ searchParams }: Readonly<PageProps<"/
   const { next: nextParam } = await searchParams;
   const next = safeNextPath(typeof nextParam === "string" ? nextParam : null);
   const code = readAccessCode();
+  // The proxy already redirects when the gate is off; this keeps the page safe
+  // if it is rendered without the proxy, and narrows `code` for the form below.
   if (code === null) redirect(next);
 
   return (

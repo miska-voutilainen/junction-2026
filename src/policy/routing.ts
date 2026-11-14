@@ -47,3 +47,37 @@ export const routingPolicy: RoutingPolicy = {
     { glob: "src/MessagePack/**", label: "the runtime serializer" },
   ],
 };
+
+/** The ids of route()'s rules; a reason carries one of these in `ruleId`. */
+export type RoutingRuleId =
+  | "R-size"
+  | "R-read-share"
+  | "R-escape"
+  | "R-refusal"
+  | "R-contradiction"
+  | "R-defect"
+  | "R-sensitive-path"
+  | "R-area-level"
+  | "R-unread"
+  | "R-no-track-record";
+
+// route() reasons carry sentences with the numbers in them ("3 items refused");
+// counting by rule id needs one stable name per rule. Typed by RoutingRuleId, so
+// a rule added to the union without a name here does not compile.
+const ROUTING_RULE_LABEL: Record<RoutingRuleId, string> = {
+  "R-size": "Large change outside generated files",
+  "R-read-share": "Most hunks need a human",
+  "R-escape": "A bug escaped in this area",
+  "R-refusal": "Refused item: a human decides",
+  "R-contradiction": "Description contradicts the code",
+  "R-defect": "Defect found",
+  "R-sensitive-path": "Touches a sensitive path",
+  "R-area-level": "Area not yet Trusted",
+  "R-unread": "Hunks without checked evidence",
+  "R-no-track-record": "No readable report card",
+};
+
+/** The stable name of a routing rule, or undefined for an id route() does not define (a recorded reason from an older rule set). */
+export function routingRuleLabel(ruleId: string): string | undefined {
+  return ruleId in ROUTING_RULE_LABEL ? ROUTING_RULE_LABEL[ruleId as RoutingRuleId] : undefined;
+}

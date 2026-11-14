@@ -13,8 +13,11 @@ import { useSyncExternalStore } from "react";
 import { useReducedMotion } from "motion/react";
 import type { TargetAndTransition, Transition } from "motion/react";
 
+/** The curve of `--ease-out` in tokens.css, for motion that CSS cannot drive. */
 export const EASE_OUT = [0.2, 0.8, 0.2, 1] as const;
+/** `--duration-base` in tokens.css, in seconds. */
 export const ENTER_SECONDS = 0.2;
+/** An exit takes 80% of the enter time: leaving should feel quicker than arriving. */
 export const EXIT_SECONDS = 0.16;
 const POPOVER_ENTER_SECONDS = 0.18;
 const POPOVER_EXIT_SECONDS = 0.144;

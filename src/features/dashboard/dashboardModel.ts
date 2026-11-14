@@ -14,6 +14,7 @@ import type { ReportCardInput } from "@/lib/decideChange";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
+import { routingRuleLabel } from "@/policy/routing";
 
 /** The counts in the facts strip. "Median time to sign" is not here: it is not measured. */
 export interface DashboardFacts {
@@ -94,22 +95,6 @@ export interface DashboardModel {
   trust: AreaTrust[];
 }
 
-// route() reasons carry sentences with the numbers in them ("3 items refused");
-// counting by rule id needs one stable name per rule. A rule added to route()
-// without a label here shows the sentence route() gave, so it is never unnamed.
-const REASON_LABEL: Record<string, string> = {
-  "R-size": "Large change outside generated files",
-  "R-read-share": "Most hunks need a human",
-  "R-escape": "A bug escaped in this area",
-  "R-refusal": "Refused item: a human decides",
-  "R-contradiction": "Description contradicts the code",
-  "R-defect": "Defect found",
-  "R-sensitive-path": "Touches a sensitive path",
-  "R-area-level": "Area not yet Trusted",
-  "R-unread": "Hunks without checked evidence",
-  "R-no-track-record": "No readable report card",
-};
-
 const RISK_ORDER: Record<RiskStatus, number> = { unverified: 0, stale: 1, signed: 2 };
 
 const UNLISTED_DECIDER = "No decider in the refusal policy";
@@ -152,6 +137,12 @@ function collectFacts(inbox: InboxModel, escapes: Partial<Record<Area, number>>)
   };
 }
 
+/** Narrows a status to the ones a signed receipt can have; a receipt exists here, so "needs-review" cannot happen. */
+function riskStatusOf(status: ReceiptStatusValue): RiskStatus {
+  if (status === "needs-review") throw new Error("A receipt exists, so its status cannot be needs-review.");
+  return status;
+}
+
 /** Lines that no longer hold (failed verification, then stale) first: they ask for action; then by change id. */
 function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
   const risks: AcceptedRisk[] = [];
@@ -162,21 +153,21 @@ function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
       text: receipt.receipt.residualRisk.text,
       owner: receipt.receipt.owner,
       signedAt: receipt.receipt.signedAt,
-      status: receiptStatus(review.data, receipt) as RiskStatus,
+      status: riskStatusOf(receiptStatus(review.data, receipt)),
     });
   }
   return risks.sort((a, b) => RISK_ORDER[a.status] - RISK_ORDER[b.status] || a.changeId.localeCompare(b.changeId));
+}
+
+/** The policy rule behind a refusal id; undefined for an id the policy does not list. */
+function refusalRule(ruleId: string) {
+  return refusalRules.find((rule) => rule.id === ruleId);
 }
 
 /**
  * Refusals no signed receipt has accepted, grouped by the decider the refusal
  * policy names. A stale receipt accepts nothing: it vouches for older code.
  */
-/** The policy rule behind a refusal id; undefined for an id the policy does not list. */
-function refusalRule(ruleId: string) {
-  return refusalRules.find((rule) => rule.id === ruleId);
-}
-
 function collectDeciderQueues(sources: InboxSource[]): DeciderQueue[] {
   const decisionsByRule = new Map<string, OpenDecision>();
   for (const { change, review, receipt } of sources) {
@@ -246,7 +237,7 @@ function collectEscalationReasons(sources: InboxSource[], reportCard: ReportCard
 
 /** The stable name for a rule id, or the sentence `route()` gave when the id has no label here. */
 export function reasonLabel(ruleId: string, routedText: string): string {
-  return REASON_LABEL[ruleId] ?? routedText;
+  return routingRuleLabel(ruleId) ?? routedText;
 }
 
 /** Text for a tier's bar, e.g. "Focused: a person read 2 of 8 hunks, about 3 min". */

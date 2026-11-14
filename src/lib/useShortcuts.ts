@@ -46,7 +46,7 @@ export function isTypingTarget(target: EventTarget | null): boolean {
 
 /**
  * Global keyboard shortcuts: Cmd/Ctrl+K opens search, N opens the next change
- * that needs review, `g` then `i` jumps to Inbox, `g` then `r` to the report card. Letter shortcuts ignore modifier keys and any focused field, so
+ * that needs review, `g` then `i`, `d` or `r` jumps to Inbox, Dashboard or the report card. Letter shortcuts ignore modifier keys and any focused field, so
  * typing "n" in a search box never navigates. `j`/`k` and `1`-`4` belong to the
  * pages that have something to move through.
  *

@@ -12,7 +12,7 @@ import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
 import { MobileHunks } from "./MobileHunks";
 import { EmptyDiff, EvidenceUnavailable, evidenceAlert } from "./ReviewStates";
-import { useSelectedClaim } from "./SelectedClaim";
+import { useSelection } from "./SelectionProvider";
 import type { HighlightedHunks } from "./highlightHunks";
 import { highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./citationHighlights";
 import type { HighlightedLines } from "./citationHighlights";
@@ -36,7 +36,7 @@ const COMPACT_UP_QUERY = "(min-width: 760px)";
  * reasons, the navigator, and the diff. It owns what the pieces share: which
  * hunks are marked read, what is open, and which lines a selected claim
  * highlights. The Review steps panel sits in a column to the right (below the
- * diff on narrower screens) and selects claims through `useSelectedClaim`.
+ * diff on narrower screens) and selects claims through `useSelection`.
  *
  * Routing is decided here, once per review, report card and set of escapes,
  * so nothing downstream re-runs (or re-scrolls) on an unrelated render.
@@ -126,7 +126,7 @@ function useHighlightedLines(
   sections: HunkSections,
   showHighlight: (hunkId: string) => void,
 ): HighlightedLines[] {
-  const { selection } = useSelectedClaim();
+  const { selection } = useSelection();
   const highlightedLines = useMemo(() => highlightedLinesOfSelection(review, selection), [review, selection]);
 
   // An effect event reads the latest sections without re-running when they change: only a new selection scrolls.

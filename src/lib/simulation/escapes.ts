@@ -18,7 +18,7 @@ export type Escapes = Partial<Record<Area, number>>;
 export const ESCAPE_TOAST_ID = "simulated-escape";
 
 /** localStorage key; the version suffix lets a later shape change start clean. */
-export const escapesStorageKey = "countersign.escapes.v1";
+export const ESCAPES_STORAGE_KEY = "countersign.escapes.v1";
 
 const StoredEscapesSchema = z.partialRecord(AreaSchema, z.number().int().positive());
 
@@ -31,7 +31,7 @@ const listeners = new Set<() => void>();
 /** The stored value, or nothing when storage is unavailable, empty or corrupt. */
 function readStorage(): Escapes {
   try {
-    const text = window.localStorage.getItem(escapesStorageKey);
+    const text = window.localStorage.getItem(ESCAPES_STORAGE_KEY);
     if (text === null) return noEscapes;
     const parsed = StoredEscapesSchema.safeParse(JSON.parse(text));
     return parsed.success ? parsed.data : noEscapes;
@@ -42,7 +42,7 @@ function readStorage(): Escapes {
 
 function writeStorage(escapes: Escapes): void {
   try {
-    window.localStorage.setItem(escapesStorageKey, JSON.stringify(escapes));
+    window.localStorage.setItem(ESCAPES_STORAGE_KEY, JSON.stringify(escapes));
   } catch {
     // Private mode or a full quota: the escapes still work until the page closes.
   }
@@ -67,7 +67,7 @@ function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   // Another tab recorded or reset: reread so both tabs show the same tiers.
   const onStorage = (event: StorageEvent) => {
-    if (event.key !== escapesStorageKey) return;
+    if (event.key !== ESCAPES_STORAGE_KEY) return;
     current = readStorage();
     listener();
   };

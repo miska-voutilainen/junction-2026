@@ -16,6 +16,7 @@ export interface Idea {
   page: string;
 }
 
+/** The eight ideas by number; `page` is the file in `docs/ideas/` that explains each. */
 export const IDEAS: Record<IdeaNumber, Idea> = {
   1: { n: 1, name: "Trust ladder", page: "trust-ladder.md" },
   2: { n: 2, name: "Blind-first review", page: "blind-first.md" },
