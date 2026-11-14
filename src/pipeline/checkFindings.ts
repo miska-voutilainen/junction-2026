@@ -13,7 +13,7 @@ import { fixedRefusals, refusalRules } from "../policy/refusals";
 import type { FindingDraft, RefusalDraft } from "../prompts/a3";
 import type { Statement } from "../prompts/a4";
 import { hunksMatchingGlob } from "../lib/git/hunksMatchingGlob";
-import { checkCitation, type SideReader } from "./quoteCheck";
+import { checkCitation, isHunkCited, type SideReader } from "./quoteCheck";
 
 type Hunk = Review["hunks"][number];
 type Claim = Review["claims"][number];
@@ -30,7 +30,7 @@ export type UnnumberedRefusal = Omit<Refusal, "id">;
 /**
  * Keeps the citations that pass and records the rest in `quoteCheck`, which this
  * mutates the way `checkClaims` does. `itemId` names the model's item in the
- * failure list, e.g. "a3-f2" for the second finding A3 wrote.
+ * failure list, e.g. "a3-f2" for the second finding A3 wrote (see the contract).
  */
 async function passingCitations(
   itemId: string,
@@ -38,9 +38,12 @@ async function passingCitations(
   readSide: SideReader,
   quoteCheck: QuoteCheck,
 ): Promise<Citation[]> {
+  // The checks read files and do not depend on each other, so they run together;
+  // the counts and failures are recorded afterwards in citation order.
+  const results = await Promise.all(citations.map((citation) => checkCitation(citation, readSide)));
   const passing: Citation[] = [];
-  for (const citation of citations) {
-    const result = await checkCitation(citation, readSide);
+  for (const [index, citation] of citations.entries()) {
+    const result = results[index];
     quoteCheck.checked++;
     if (result.passed) {
       quoteCheck.passed++;
@@ -59,8 +62,9 @@ async function passingCitations(
  * A finding's area is the area of the first citation that passes, by path (a
  * binding decision, spec section 6): the model chose areas inconsistently from
  * the checklists, and the path rule is the same one the trust ladder uses, so a
- * caught bug counts toward the area whose files it is in. Test, docs and
- * generated files have no area, so a finding that cites only them has none.
+ * caught bug counts toward the area whose files it is in. Test and
+ * generated files, and Markdown outside doc/analyzers/, have no area, so a
+ * finding that cites only them has none.
  */
 export async function checkAreaFindings(
   drafts: readonly FindingDraft[],
@@ -68,6 +72,7 @@ export async function checkAreaFindings(
   quoteCheck: QuoteCheck,
 ): Promise<UnnumberedFinding[]> {
   const findings: UnnumberedFinding[] = [];
+  // One finding at a time: failures are listed in the order the model wrote the findings.
   for (const [index, draft] of drafts.entries()) {
     const citations = await passingCitations(`a3-f${index + 1}`, draft.citations, readSide, quoteCheck);
     if (citations.length === 0) {
@@ -103,6 +108,7 @@ export async function checkContradictions(
   quoteCheck: QuoteCheck,
 ): Promise<UnnumberedFinding[]> {
   const findings: UnnumberedFinding[] = [];
+  // One statement at a time: failures are listed in the order the model wrote the statements.
   for (const [index, statement] of statements.entries()) {
     if (statement.verdict === "supported") continue;
     const citations = await passingCitations(`a4-s${index + 1}`, statement.citations, readSide, quoteCheck);
@@ -121,8 +127,8 @@ export async function checkContradictions(
 }
 
 /**
- * The hunks of the claims A4 relied on plus the hunks its citations fall in on
- * the new side, so route() sends a contradiction's code to a reader.
+ * The hunks of the claims A4 relied on plus the hunks its citations fall in, on
+ * either side, so route() sends a contradiction's code to a reader.
  */
 function hunksOfStatement(
   statement: Statement,
@@ -133,16 +139,7 @@ function hunksOfStatement(
   const ids = new Set<string>(
     claims.filter((claim) => statement.claimIds.includes(claim.id)).flatMap((claim) => claim.hunkIds),
   );
-  for (const citation of citations) {
-    for (const hunk of hunks) {
-      const overlaps =
-        hunk.file === citation.file &&
-        citation.side === "new" &&
-        citation.startLine < hunk.newStart + hunk.newLines &&
-        citation.endLine >= hunk.newStart;
-      if (overlaps) ids.add(hunk.id);
-    }
-  }
+  for (const hunk of hunks) if (isHunkCited(hunk, citations)) ids.add(hunk.id);
   return [...ids];
 }
 
