@@ -13,12 +13,23 @@ const BARS: Record<Coverage, string> = {
   verified: "border-solid border-coverage-verified",
 };
 
-/** Gutter bar plus the label for a hunk's coverage state. */
-export function CoverageMark({ coverage, className }: { coverage: Coverage; className?: string }) {
+/**
+ * Gutter bar plus the label for a hunk's coverage state.
+ * `isLabelHidden` keeps the label for screen readers only, where the surrounding group already names the state.
+ */
+export function CoverageMark({
+  coverage,
+  isLabelHidden = false,
+  className,
+}: {
+  coverage: Coverage;
+  isLabelHidden?: boolean;
+  className?: string;
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2 text-xs text-text-secondary", className)}>
       <span aria-hidden="true" className={cn("h-4 border-l-2", BARS[coverage])} />
-      {coverageLabel[coverage]}
+      <span className={isLabelHidden ? "sr-only" : undefined}>{coverageLabel[coverage]}</span>
     </span>
   );
 }
