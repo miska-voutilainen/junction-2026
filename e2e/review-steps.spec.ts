@@ -129,7 +129,7 @@ test("stale change warns that the code changed after signing and shows both hash
   await page.goto(STALE);
   await openStep(page, /Sign/);
   const panel = page.getByRole("tabpanel");
-  await expect(panel).toContainText("The code changed after signing");
+  await expect(panel).toContainText("Stale: the code changed after signing.");
   await expect(panel).toContainText("signed");
   await expect(panel).toContainText("current");
   await expect(panel).toContainText("pnpm countersign sign mp-2129");
@@ -170,9 +170,7 @@ test("the page never scrolls sideways from 320 to 1920 px", async ({ page }, tes
   const problems = watchConsole(page);
   for (const width of [320, 375, 768, 1099, 1100, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const path of [SIGNED, STALE, UNSIGNED]) {
-      // The title of mp-2129 in the page header does not break and is wider than the screen below 400 px: the header is not part of the steps panel.
-      if (width <= 375 && path === STALE) continue;
+    for (const path of [SIGNED, STALE, UNSIGNED, "/changes/mp-2297"]) {
       await page.goto(path);
       for (const name of [/Read/, /Blind check/, /Refused/, /Sign/]) {
         await openStep(page, name);

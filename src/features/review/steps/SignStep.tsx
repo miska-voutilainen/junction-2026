@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import { ShieldCheck, ShieldX, TriangleAlert } from "lucide-react";
+import { ShieldX, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Console } from "@/components/Console";
 import { IdeaLabel } from "@/components/IdeaLabel";
+import { ReceiptSeal } from "@/components/ReceiptSeal";
 import type { Review } from "@/contracts";
+import { STALE_BODY, STALE_TITLE, verifyLine } from "@/lib/receiptCopy";
 import { CopySignButton } from "./CopySignButton";
 import { ReceiptSections } from "./ReceiptSections";
 import { formatSignedAt } from "./stepsModel";
@@ -71,49 +72,28 @@ function CommandHeading({ note }: { note: string }) {
   return <span className="truncate text-xs text-text-muted">{note}</span>;
 }
 
-// The receipt page is opened on demand: the full receipt is long and most visitors to this step never open it.
 function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }>; review: Review }) {
   return (
     <>
-      <div className="flex items-center gap-3">
-        <Seal />
-        <div className="flex flex-col">
-          <span className="text-base font-medium text-green-light">Signature verified</span>
-          <span className="text-sm text-text-secondary">
-            Signed by {view.receipt.owner} · {formatSignedAt(view.receipt.signedAt)}
-          </span>
-        </div>
+      <div className="flex items-center gap-4">
+        <ReceiptSeal size={40} />
+        <span className="text-sm text-text-secondary">
+          Signed by {view.receipt.owner} · {formatSignedAt(view.receipt.signedAt)}
+        </span>
       </div>
       <ReceiptSections body={view.receipt} refusals={review.refusals} />
       <section aria-label="Verify" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
         <h4 className="text-xs font-medium text-text-muted">Verify</h4>
         <VerifyConsole verify={view.verify} />
-        <p className="text-sm text-text-secondary">Signature valid · diff unchanged</p>
+        <p className="text-sm text-text-secondary">{verifyLine("signed")}</p>
         <Link
-          prefetch={false}
-          href={`/changes/${review.changeId}/receipt`}
+                    href={`/changes/${review.changeId}/receipt`}
           className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
         >
           View full receipt
         </Link>
       </section>
     </>
-  );
-}
-
-/** The verified seal: a green shield that pulses once, and holds still under reduced motion. */
-function Seal() {
-  const isReduced = useReducedMotion();
-  return (
-    <motion.span
-      aria-hidden="true"
-      className="grid size-9 shrink-0 place-items-center rounded-full border border-green/40 bg-surface-raised text-green"
-      initial={isReduced ? false : { boxShadow: "0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent)" }}
-      animate={isReduced ? undefined : { boxShadow: "0 0 0 14px color-mix(in srgb, var(--green) 0%, transparent)" }}
-      transition={{ duration: 0.9, ease: "easeOut" }}
-    >
-      <ShieldCheck className="size-5" />
-    </motion.span>
   );
 }
 
@@ -132,15 +112,13 @@ function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }
   const hashes = `signed   ${view.receipt.diffSha256}\ncurrent  ${view.reviewDiffSha256}`;
   return (
     <>
-      <Notice tone="amber" icon={<TriangleAlert aria-hidden="true" className="size-4 shrink-0" />} title="The code changed after signing">
-        Stale: the code changed after signing. {view.receipt.owner} signed {formatSignedAt(view.receipt.signedAt)}; the receipt no longer
-        vouches for this diff.
+      <Notice tone="amber" icon={<TriangleAlert aria-hidden="true" className="size-4 shrink-0" />} title={STALE_TITLE}>
+        {view.receipt.owner} signed {formatSignedAt(view.receipt.signedAt)}. {STALE_BODY}
       </Notice>
       <Console label="Diff hashes" text={hashes} kind="log" heading={<span className="truncate text-xs text-text-muted">diffSha256</span>} />
       <SignCommandsBlock commands={view.commands} heading="Re-sign on your own machine" />
       <Link
-        prefetch={false}
-        href={`/changes/${changeId}/receipt`}
+                href={`/changes/${changeId}/receipt`}
         className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
         View the signed receipt
@@ -152,14 +130,13 @@ function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }
 function Unverified({ view, changeId }: { view: Extract<SignView, { status: "unverified" }>; changeId: string }) {
   return (
     <>
-      <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title="The signature failed verification">
+      <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title={verifyLine("unverified")}>
         The recorded check of {view.receipt.owner}&apos;s signature did not pass, so this receipt vouches for nothing.
       </Notice>
       <VerifyConsole verify={view.verify} />
       <Console label="Verify command" text={view.commands.verify} kind="log" heading={<CommandHeading note="run it to check again" />} />
       <Link
-        prefetch={false}
-        href={`/changes/${changeId}/receipt`}
+                href={`/changes/${changeId}/receipt`}
         className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
         View full receipt

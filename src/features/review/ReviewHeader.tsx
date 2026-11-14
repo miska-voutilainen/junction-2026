@@ -29,13 +29,13 @@ export function ReviewHeader({
 }) {
   return (
     <header className="flex flex-col gap-2">
-      <h1 className="text-xl font-semibold text-text-primary">{change.title}</h1>
+      <h1 className="text-xl font-semibold text-balance text-text-primary [overflow-wrap:anywhere]">{change.title}</h1>
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
-        <span className="font-mono text-xs text-text-muted">{change.id}</span>
+        <span className="font-mono text-xs text-text-muted [overflow-wrap:anywhere]">{change.id}</span>
         <span className="rounded-chip border border-border-default px-1.5 py-0.5 font-mono text-xs text-text-secondary">
           {change.requirementId}
         </span>
-        <span>{change.authorAgent}</span>
+        <span className="[overflow-wrap:anywhere]">{change.authorAgent}</span>
         {change.authorDescription.synthetic && <SyntheticTag />}
         {receiptStatus && <ReceiptStatus status={receiptStatus} owner={signedBy} />}
         {receiptHref && (
@@ -53,7 +53,7 @@ function MetaRow({ change, review }: { change: ChangeInput; review: Review }) {
   const { diff, reviewer, run } = review;
   return (
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
-      <span className="font-mono">{change.branch}</span>
+      <span className="font-mono [overflow-wrap:anywhere]">{change.branch}</span>
       <span>
         <span className="font-mono">
           +{diff.linesAdded} −{diff.linesRemoved}
@@ -61,7 +61,7 @@ function MetaRow({ change, review }: { change: ChangeInput; review: Review }) {
         · {diff.filesChanged} {diff.filesChanged === 1 ? "file" : "files"}
       </span>
       <span>
-        Reviewed by <span className="font-mono">{reviewer.version}</span> · <span className="font-mono">{reviewer.model}</span> ·{" "}
+        Reviewed by <span className="font-mono">{reviewer.version}</span> · <span className="font-mono [overflow-wrap:anywhere]">{reviewer.model}</span> ·{" "}
         {reviewedOn.format(new Date(run.finishedAt))}
       </span>
     </p>
