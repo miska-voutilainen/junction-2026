@@ -161,7 +161,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
 ### S3 · Reviewer report card (`/reviewer`)
 
 - **Purpose:** how far the AI reviewer can be trusted, per area, and why.
-- **Header:** h1 "Can the reviewer be trusted?"; subline "Reviewer <version> · <model> · measured on <n> planted bugs written blind".
+- **Header:** h1 "Reviewer report card" with the line "How far the AI reviewer can be trusted, by area. Levels move only on evidence: planted bugs it had to find blind, and escapes you record."; meta line "Reviewer <version> · <model> · measured on <n> planted bugs written blind".
 - **Trust ladder** (one card per area, in the order generator, analyzer, security, performance): the area name; the three rungs "Shadow → Calibrated → Trusted" with the current one marked; the evidence line, always with the sample size, e.g. "Calibrated · 3 of 4 planted bugs caught · written blind" or "Shadow · no track record"; the next step, e.g. "Trusted needs 5 clean spot checks: 0 recorded" or "Calibrated needs 3 planted bugs: 0 so far"; a button "Record escape". Pressing it drops the area one level (simulated, stored in the browser), shows a toast "Escape recorded in <area> (simulated). Its changes re-routed.", and adds "(1 simulated escape)" to the card.
 - **Missed planted bugs:** a list: plant id, area, the defect from the answer key, and a link "View variant" to the variant branch's commit on GitHub. Empty: "The reviewer caught every planted bug."
 - **Given the description first vs blind-first:** the overall count as on S2, plus one row per contradiction plant with both modes' results.
@@ -358,7 +358,7 @@ The S2 receipt is stale when `receipt.diffSha256 !== review.diff.diffSha256`.
 
 ### Simulated escapes (`src/lib/simulation/escapes.ts`)
 
-A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes))`.
+A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, undo(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes))`.
 
 ### Policy (`src/policy/`)
 

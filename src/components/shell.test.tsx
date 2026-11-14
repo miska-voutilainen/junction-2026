@@ -49,6 +49,13 @@ describe("AppNav", () => {
     expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
   });
 
+  it("marks Reviewer, not Inbox, on the report card", () => {
+    navigation.pathname = "/reviewer";
+    render(<AppNav needsReviewCount={2} />);
+    expect(screen.getByRole("link", { name: /Reviewer/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Inbox/ }).hasAttribute("aria-current")).toBe(false);
+  });
+
   it("shows the number of changes that need review on Inbox", () => {
     render(<AppNav needsReviewCount={3} />);
     expect(screen.getByLabelText("3 need review").textContent).toBe("3");
