@@ -18,6 +18,8 @@ Eight ideas for reviewing agent-written code so that a named person can accept a
 | 7   | [The signed receipt in git](signed-receipt.md)                  | The owner signs what was checked and what wasn't, bound to the exact diff.                                                      |
 | 8   | [The author never checks its own work](separation-of-duties.md) | An agent's own test is Supported at most, the AI drafts the receipt but a person signs, and the planter never sees the prompts. |
 
+[Why these eight ideas](why-these-ideas.md) sets out what each one is, what it adds over a typical AI reviewer and what the recorded results show.
+
 ## Next ideas (not built)
 
 No screen shows these; they are recommendations in the concept card.
