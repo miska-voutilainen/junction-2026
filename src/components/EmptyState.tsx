@@ -17,14 +17,14 @@ export function EmptyState({
   command,
   actions,
   className,
-}: {
+}: Readonly<{
   icon?: ReactNode;
   title: string;
   body: string;
   command?: string;
   actions?: ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <section className={cn("mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center", className)}>
       {icon && (

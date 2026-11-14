@@ -34,7 +34,7 @@ const CommandMenuContext = createContext<CommandMenuState | null>(null);
  * top bar, the mobile header and the keyboard shortcut all drive one menu.
  * Mount once in the root layout.
  */
-export function CommandMenuProvider({ children }: { children: ReactNode }) {
+export function CommandMenuProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [isOpen, setIsOpen] = useState(false);
   const [trigger, setTrigger] = useState<HTMLElement | null>(null);
   const open = useCallback((from?: HTMLElement | null) => {
@@ -72,7 +72,7 @@ type Row = {
  *
  * @param changes The inbox in order; the first that needs review is "next".
  */
-export function CommandMenu({ changes }: { changes: ShellChange[] }) {
+export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
   const { isOpen, open, close, trigger } = useCommandMenu();
   const router = useRouter();
   const pathname = usePathname();
@@ -234,7 +234,7 @@ function buildPages(needsReviewCount: number): Row[] {
   ];
 }
 
-function MenuRow({ row, index, onChoose }: { row: Row; index: number; onChoose: (row: Row) => void }) {
+function MenuRow({ row, index, onChoose }: Readonly<{ row: Row; index: number; onChoose: (row: Row) => void }>) {
   const Icon = row.icon;
   const entrance = useStaggeredPreset(fadeUpItem, index);
   return (

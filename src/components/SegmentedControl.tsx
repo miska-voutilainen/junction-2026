@@ -25,13 +25,13 @@ export function SegmentedControl<Value extends string>({
   value,
   onChange,
   className,
-}: {
+}: Readonly<{
   label: string;
   segments: readonly Segment<Value>[];
   value: Value;
   onChange: (value: Value) => void;
   className?: string;
-}) {
+}>) {
   // Two controls on one page must not share a layoutId, or their highlights would fly between them.
   const highlightId = useId();
   const slide = useEnterTransition();
