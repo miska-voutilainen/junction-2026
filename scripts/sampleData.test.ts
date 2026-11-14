@@ -100,7 +100,7 @@ function changeById(id: string): ChangeInput {
 /** The parent of a variant or plant; throws when the change input names none. */
 function parentIdOf(change: ChangeInput): string {
   if (change.parentChangeId === null) {
-    throw new Error(`Variant ${change.id} has no parentChangeId`);
+    throw new Error(`Change ${change.id} has no parentChangeId`);
   }
   return change.parentChangeId;
 }
