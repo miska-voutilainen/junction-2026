@@ -32,7 +32,7 @@ All data the site shows is committed under `data/` and validated by the zod sche
 | Path                                                                      | Written by                   | Read by                                                      |
 | ------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
 | `data/sample/changes/`, `requirements/`, `answer-key/`, `allowed_signers` | evidence lane                | pipeline, app (answer keys: scoring only, never in a prompt) |
-| `data/runs/<changeId>/review.json` and `anchored/`, `blind/` runs         | `pnpm pipeline`              | app, receipt CLI                                             |
+| `data/runs/<changeId>/review.json` and `anchored/`, `blind/` runs         | `pnpm review`              | app, receipt CLI                                             |
 | `data/eval/report-card.json`                                              | `pnpm evals`                 | app, pipeline (levels for routing)                           |
 | `data/recordings/<promptVersion>-<keyHash>.json`                          | the AI client in record mode | the AI client in replay mode                                 |
 | `data/receipts/<changeId>.json`                                           | `pnpm countersign export`    | app                                                          |

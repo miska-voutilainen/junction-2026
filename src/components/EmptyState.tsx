@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * and what to do next; when the next step is a command, it is shown in a
  * `Console` so it can be copied.
  *
- * @param command The command that produces the missing data, e.g. "pnpm pipeline run mp-2283".
+ * @param command The command that produces the missing data, e.g. "pnpm review run mp-2283".
  * @param actions Buttons or links, shown below the body.
  */
 export function EmptyState({

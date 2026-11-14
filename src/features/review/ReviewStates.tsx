@@ -10,7 +10,7 @@ export function ReviewMissing({ changeId }: { changeId: string }) {
     <EmptyState
       title="This change hasn't been reviewed yet."
       body="Run this command to record the review."
-      command={`pnpm pipeline run ${changeId}`}
+      command={`pnpm review run ${changeId}`}
     />
   );
 }
@@ -20,7 +20,7 @@ export function ReviewUnreadable({ changeId, details }: { changeId: string; deta
   return (
     <ErrorState
       title="This review couldn't be read."
-      body={`Re-record it with pnpm pipeline run ${changeId}.`}
+      body={`Re-record it with pnpm review run ${changeId}.`}
       details={details ?? undefined}
     />
   );
