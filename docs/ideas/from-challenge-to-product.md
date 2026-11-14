@@ -70,7 +70,7 @@ The pipeline in [`src/pipeline/runReview.ts`](../../src/pipeline/runReview.ts) r
 | `route()`                  | 3 with 1         | One coverage state per hunk and a tier, with a reason per rule                                       | S1, S2, the receipt draft's "not checked" list            |
 | Receipt draft, then `sign` | 7 with 8         | Checked, not checked and residual risk; a person signs with their own key                            | `verify`, S4                                              |
 
-On the recorded `mp-2283` review, `route()` gives "Full · Read 6 of 8 hunks" ([why-these-ideas.md](why-these-ideas.md)). The A5 recording has two claims Verified by two test methods that fail on the base and pass on the head; the PR's own three tests keep the other two at Supported ([lessons.md](../lessons.md)). The signed receipt lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked ([signed-receipt.md](signed-receipt.md)).
+On the recorded `mp-2283` review, `route()` gives "Full · Read 6 of 8 hunks" ([why-these-ideas.md](why-these-ideas.md)). The A5 recording has two claims Verified by two test methods that fail on the base and pass on the head; the PR's own three tests keep the other two at Supported ([lessons.md](../lessons.md)). The signed receipt lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 6 not checked ([signed-receipt.md](signed-receipt.md)).
 
 Where one idea depends on another:
 

@@ -12,10 +12,10 @@
     "baseTree": "b5d1e9794b7253350ede75f5c38cf8b5906d63b7",
     "headTree": "09d08ca6636efe8b23c7bb7bf35e6ba2978cd78d",
     "diffSha256": "7fd63cf5fdd0fc9e9f2341e7eceeb48ee0fad0dd830d3e8839edab94c601d63f",
-    "reviewerVersion": "rv1",
-    "reviewRunId": "20261114T074451Z",
+    "reviewerVersion": "rv2",
+    "reviewRunId": "20261114T122418Z",
     "owner": "miska-voutilainen",
-    "signedAt": "2026-11-14T09:14:33.609Z",
+    "signedAt": "2026-11-14T15:50:58.752Z",
     "checked": [
       {
         "item": "When an analyzer report callback is supplied, the TypeCollector constructor no longer stores it directly. It stores a wrapper that sends each diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (the generator path), reportDiagnostic stays null. (the quoted code is where the claim says)",
@@ -64,24 +64,20 @@
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Finding f1 (defect) names this hunk"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:1 (h7)",
-        "reason": "Finding f5 (contradiction) names this hunk"
+        "reason": "Finding f4 (contradiction) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h8)",
-        "reason": "Finding f4 (missing) names this hunk"
+        "reason": "Finding f2 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and MsgPack004 changes document new analyzer behaviour: diagnostics about members of types from referenced assemblies are reported only by the defining project. That changes the documented contract and is for the maintainers to decide.",
+      "text": "r1 (R7): The README and MsgPack004 doc edits add new documented behaviour: diagnostics about members of types from referenced assemblies are no longer reported by the consuming project and must be fixed in the defining project.",
       "acceptedRefusalIds": []
     },
     "hunks": [
@@ -106,8 +102,8 @@
       {
         "hunkId": "h4",
         "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "coverage": "read",
-        "readBy": "miska-voutilainen"
+        "coverage": "verified",
+        "readBy": null
       },
       {
         "hunkId": "h5",
@@ -135,12 +131,12 @@
       }
     ]
   },
-  "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgHsO1qUGzvylDIsbj2wfQKfWp9L\nXx1UiO2N7/9kNyUIIAAAATY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEyAAAA\nUwAAAAtzc2gtZWQyNTUxOQAAAEAfT4t9x2w2yjMYG7Fo+PXAjp1X318MquagGaJFDs410L\n+bB29DGGRNT0dmdI954ZRuQaDMGENxP+RhPvdrVzsB\n-----END SSH SIGNATURE-----\n",
+  "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgHsO1qUGzvylDIsbj2wfQKfWp9L\nXx1UiO2N7/9kNyUIIAAAATY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEyAAAA\nUwAAAAtzc2gtZWQyNTUxOQAAAEDAdOz6+tQ/Mdhm3EH1hp29d59X43/gXdFkFI17I+Y8oG\nnXslfb3NfELmeg2OnR/f/8icTrCoa1UWHJgb2IXKkE\n-----END SSH SIGNATURE-----\n",
   "notesRef": "refs/notes/countersign",
   "verify": {
     "command": "pnpm countersign verify mp-2283",
     "output": "Good \"countersign-receipt\" signature for miska-voutilainen with ED25519 key SHA256:2xv7NXsbyAnsglHT0+Uj/6ToOuQWoQ4jYoZwrHvgFkA\ndiff unchanged",
     "ok": true,
-    "verifiedAt": "2026-11-14T09:15:02.373Z"
+    "verifiedAt": "2026-11-14T15:51:13.558Z"
   }
 }

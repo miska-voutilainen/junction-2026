@@ -96,7 +96,25 @@ test("the reviewer report card and the dashboard load cleanly", async ({ page })
   await expect(page.getByRole("heading", { level: 1 })).toBeAttached();
 });
 
+/**
+ * Hunks the signer of mp-2283 left unread, from the exported receipt. All of
+ * them sit in Generator files, so a Generator escape that drops the area to
+ * Shadow sends every one of them back to a person.
+ */
+function unreadHunksOfSignedMp2283(): number {
+  const receiptFile = path.join(dataRoot, "receipts", "mp-2283.json");
+  const exported = JSON.parse(readFileSync(receiptFile, "utf8")) as {
+    receipt: { hunks: { readBy: string | null }[] };
+  };
+  return exported.receipt.hunks.filter((hunk) => hunk.readBy === null).length;
+}
+
 test("a Generator escape reopens the signed mp-2283", async ({ page }) => {
+  const unread = unreadHunksOfSignedMp2283();
+  const reopenedLine =
+    unread === 1
+      ? "1 hunk the signer didn't read now needs a person."
+      : `${unread} hunks the signer didn't read now need a person.`;
   await page.goto("/reviewer");
   await page
     .getByRole("article", { name: "Generator" })
@@ -108,7 +126,7 @@ test("a Generator escape reopens the signed mp-2283", async ({ page }) => {
   await expect(page.getByText("Reopened by an escape", { exact: true })).toBeVisible();
   await expect(
     page.getByText(
-      "An escape in Generator re-routed this change after it was signed: 1 hunk the signer didn't read now needs a person.",
+      `An escape in Generator re-routed this change after it was signed: ${reopenedLine}`,
     ),
   ).toBeVisible();
 });
