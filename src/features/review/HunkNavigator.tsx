@@ -23,7 +23,7 @@ const ITEM_SELECTOR = "button[data-navigator-item]";
  * this first. Pick one to scroll the diff to it and focus its header. Arrow
  * keys move between items; Enter or Space jumps. A column from 1100 px.
  */
-export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: NavigatorProps) {
+export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonly<NavigatorProps>) {
   function moveFocus(event: KeyboardEvent<HTMLElement>) {
     const step = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0;
     if (step === 0) return;
@@ -91,7 +91,7 @@ function groupCount(group: NavigatorGroup, readIds: ReadonlySet<string>): string
  * so it works with every keyboard and screen reader and opens the platform's
  * own picker on a phone.
  */
-export function HunkDropdown({ groups, activeHunkId, onJump }: Omit<NavigatorProps, "readIds">) {
+export function HunkDropdown({ groups, activeHunkId, onJump }: Readonly<Omit<NavigatorProps, "readIds">>) {
   return (
     <div className="hidden compact:block wide:hidden">
       <label htmlFor="hunk-dropdown" className="sr-only">

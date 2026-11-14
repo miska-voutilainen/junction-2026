@@ -12,7 +12,7 @@ import type { FindingView } from "./stepsModel";
  * highlight. A citation whose quote the quote check did not find in the code is
  * named but not offered: there is nothing in the diff to show.
  */
-export function FindingLocations({ view }: { view: FindingView }) {
+export function FindingLocations({ view }: Readonly<{ view: FindingView }>) {
   const { selection, setSelectedFindingId } = useSelectedClaim();
   if (view.citations.length === 0) return null;
   const isFocusedOn = (citation: (typeof view.citations)[number]["citation"]) =>

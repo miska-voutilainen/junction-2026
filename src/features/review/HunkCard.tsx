@@ -24,13 +24,13 @@ export function HunkCard({
   highlightedLines,
   isRead,
   onToggleRead,
-}: {
+}: Readonly<{
   entry: HunkEntry;
   tokens?: CodeToken[][];
   highlightedLines: HighlightedLines[];
   isRead: boolean;
   onToggleRead: () => void;
-}) {
+}>) {
   const { hunk, coverage } = entry;
   return (
     <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
@@ -56,7 +56,7 @@ export function HunkCard({
  * check, so the name a screen reader or a test finds never changes. The
  * tooltip says where the mark lives: only this browser tab, not the receipt.
  */
-function MarkReadButton({ isRead, onToggle }: { isRead: boolean; onToggle: () => void }) {
+function MarkReadButton({ isRead, onToggle }: Readonly<{ isRead: boolean; onToggle: () => void }>) {
   const noteId = useId();
   return (
     <TooltipProvider>
@@ -85,7 +85,7 @@ function MarkReadButton({ isRead, onToggle }: { isRead: boolean; onToggle: () =>
 }
 
 /** The strip's left side: coverage, file and `@@` header, then why the hunk is here. It takes focus (not Tab) when the navigator jumps here. */
-function HunkHeading({ entry }: { entry: HunkEntry }) {
+function HunkHeading({ entry }: Readonly<{ entry: HunkEntry }>) {
   const { hunk, evidence, coverage } = entry;
   return (
     <div

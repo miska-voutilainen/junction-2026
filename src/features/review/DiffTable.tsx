@@ -31,13 +31,13 @@ export function DiffTable({
   tokens,
   highlightedLines,
   isCompact = false,
-}: {
+}: Readonly<{
   hunk: Hunk;
   coverage: Coverage;
   tokens?: CodeToken[][];
   highlightedLines: HighlightedLines[];
   isCompact?: boolean;
-}) {
+}>) {
   return (
     <table className="w-full border-collapse text-sm" aria-label={`${coverageLabel[coverage]} hunk in ${hunk.file}`}>
       <tbody>
@@ -67,7 +67,7 @@ export function DiffTable({
   );
 }
 
-function Code({ text, tokens }: { text: string; tokens?: CodeToken[] }) {
+function Code({ text, tokens }: Readonly<{ text: string; tokens?: CodeToken[] }>) {
   if (!tokens || tokens.length === 0) return <>{text}</>;
   return (
     <>

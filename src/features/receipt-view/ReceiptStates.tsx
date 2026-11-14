@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { Button } from "@/components/ui/button";
 
 /** The change has no receipt: says who can sign, shows the command and links back to the review. */
-export function NoReceipt({ changeId, signCommand }: { changeId: string; signCommand: string }) {
+export function NoReceipt({ changeId, signCommand }: Readonly<{ changeId: string; signCommand: string }>) {
   return (
     <EmptyState
       icon={<FileSignature />}
@@ -22,7 +22,7 @@ export function NoReceipt({ changeId, signCommand }: { changeId: string; signCom
 }
 
 /** The receipt file exists but fails its schema: names the file and prints the validation error. */
-export function InvalidReceipt({ changeId, error }: { changeId: string; error: string }) {
+export function InvalidReceipt({ changeId, error }: Readonly<{ changeId: string; error: string }>) {
   return (
     <ErrorState
       title="This receipt couldn't be read"

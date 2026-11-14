@@ -26,13 +26,13 @@ export function CoveredRow({
   highlightedLines,
   isExpanded,
   onToggle,
-}: {
+}: Readonly<{
   entry: HunkEntry;
   tokens?: CodeToken[][];
   highlightedLines: HighlightedLines[];
   isExpanded: boolean;
   onToggle: () => void;
-}) {
+}>) {
   const { hunk, coverage, evidence, isOwnTest } = entry;
   const contentReveal = useMotionPreset(reveal);
   const bodyId = `hunk-body-${hunk.id}`;
@@ -91,7 +91,7 @@ export function CoveredRow({
  * the same tooltip the Refused chip uses. The button is the trigger, so the
  * note opens on hover and on keyboard focus too. Other rows pass through.
  */
-function OwnTestTooltip({ isActive, children }: { isActive: boolean; children: ReactNode }) {
+function OwnTestTooltip({ isActive, children }: Readonly<{ isActive: boolean; children: ReactNode }>) {
   if (!isActive) return children;
   return (
     <TooltipProvider>

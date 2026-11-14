@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
  * buttons for the verify command and this page's link (for whoever should
  * check the receipt), and Print. The row is left out of the printout.
  */
-export function ReceiptToolbar({ verifyCommand }: { verifyCommand: string }) {
+export function ReceiptToolbar({ verifyCommand }: Readonly<{ verifyCommand: string }>) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 print:hidden">
       <span className="text-sm font-medium text-text-muted">Receipt</span>

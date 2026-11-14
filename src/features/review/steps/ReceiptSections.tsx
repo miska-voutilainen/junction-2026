@@ -14,7 +14,7 @@ const CHECKED_BY_LABEL = { tool: "tool", "ai-supported": "AI, supported", human:
  * @param review The review on screen, to name the accepted refusals by rule id.
  * @param signedRunId The run a signed receipt was signed against; absent for the AI's draft, which is always this run's.
  */
-export function ReceiptSections({ body, review, signedRunId }: { body: ReceiptBody; review: Review; signedRunId?: string }) {
+export function ReceiptSections({ body, review, signedRunId }: Readonly<{ body: ReceiptBody; review: Review; signedRunId?: string }>) {
   const isSigned = signedRunId !== undefined;
   // Refusal ids are numbered per run: another run's "r2" may be another refusal, so those stay bare ids.
   const isSameRun = signedRunId === undefined || signedRunId === review.run.id;
@@ -52,7 +52,7 @@ export function ReceiptSections({ body, review, signedRunId }: { body: ReceiptBo
   );
 }
 
-function Section({ heading, emptyText, children }: { heading: string; emptyText: string; children: React.ReactNode[] }) {
+function Section({ heading, emptyText, children }: Readonly<{ heading: string; emptyText: string; children: React.ReactNode[] }>) {
   return (
     <section aria-label={heading} className="flex flex-col gap-1">
       <h4 className="text-xs font-medium text-text-muted">{heading}</h4>
