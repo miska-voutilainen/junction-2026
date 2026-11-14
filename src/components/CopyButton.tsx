@@ -49,16 +49,19 @@ function useCopy(text: string | (() => string)) {
  * @param text The raw string to copy, never rendered HTML; a function is called only when the button is pressed (e.g. to read `window.location`).
  * @param label The accessible name, e.g. "Copy diff"; the visible text of the text variant.
  * @param variant "icon" (default) for a toolbar, "text" for a labelled button.
+ * @param describedBy The id of text that explains the button, e.g. why it copies instead of acting; text variant only.
  */
 export function CopyButton({
   text,
   label,
   variant = "icon",
+  describedBy,
   className,
 }: {
   text: string | (() => string);
   label: string;
   variant?: "icon" | "text";
+  describedBy?: string;
   className?: string;
 }) {
   const { status, copy } = useCopy(text);
@@ -78,7 +81,7 @@ export function CopyButton({
   return (
     <TooltipProvider>
       {variant === "text" ? (
-        <Button type="button" variant="secondary" onClick={copy} className={cn("min-h-8", className)}>
+        <Button type="button" variant="secondary" onClick={copy} aria-describedby={describedBy} className={cn("min-h-8", className)}>
           <span className="relative size-4 shrink-0">{icon}</span>
           {label}
         </Button>

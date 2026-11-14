@@ -11,6 +11,7 @@ import { tierLabel } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
+import { verifyLine } from "@/lib/receiptCopy";
 
 /**
  * Whether the receipt vouches for this diff. Only "signed" does. "unchecked":
@@ -92,12 +93,6 @@ export interface ReceiptDocumentView {
 
 const BY_LABEL = { tool: "Tool", "ai-supported": "AI, supported", human: "Human" } as const;
 
-/** Verify line copy from spec section 3 (S2, Receipt tab). */
-const VERIFY_LINE_OK = "Signature valid · diff unchanged";
-const VERIFY_LINE_UNCHECKED = "Signature valid";
-const VERIFY_LINE_STALE = "The signature is valid, but it covers an older diff.";
-const VERIFY_LINE_FAILED = "The signature check failed when this receipt was exported.";
-
 /** The command that signs a fresh receipt for a change. */
 function signCommand(changeId: string): string {
   return `pnpm countersign sign ${changeId}`;
@@ -155,12 +150,6 @@ function statusOf(review: Review | null, record: ReceiptRecord): ReceiptDocument
   const status = receiptStatus(review, record);
   // "needs-review" means no record, which cannot happen here; unverified is the safe reading.
   return status === "needs-review" ? "unverified" : status;
-}
-
-function verifyLine(status: ReceiptDocumentStatus): string {
-  if (status === "unverified") return VERIFY_LINE_FAILED;
-  if (status === "stale") return VERIFY_LINE_STALE;
-  return status === "unchecked" ? VERIFY_LINE_UNCHECKED : VERIFY_LINE_OK;
 }
 
 /** "Focused review. A person read 2 of 8 hunks; tests or checked quotes covered the other 6." */

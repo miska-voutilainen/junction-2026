@@ -1,5 +1,6 @@
 import { ShieldX, TriangleAlert } from "lucide-react";
 import { Console } from "@/components/Console";
+import { STALE_BODY, STALE_TITLE, verifyLine } from "@/lib/receiptCopy";
 import type { ReceiptDocumentView } from "./receiptModel";
 
 /**
@@ -23,9 +24,9 @@ function StaleNotice({ view, hashes }: { view: ReceiptDocumentView; hashes: { si
     <section aria-labelledby="stale-title" className="flex flex-col gap-3 rounded-page border border-amber/50 bg-surface-panel p-4 compact:p-5">
       <h2 id="stale-title" className="flex items-start gap-2 text-md font-semibold text-amber-light">
         <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-        Stale: the code changed after signing.
+        {STALE_TITLE}
       </h2>
-      <p className="text-text-secondary">This receipt no longer covers the diff. Review the new diff, then sign a fresh receipt.</p>
+      <p className="text-text-secondary">{STALE_BODY}</p>
       <Console label="Diff hashes" kind="diff" text={hashLines} />
       <Console label="Sign command" kind="output" text={view.signCommand} />
     </section>
@@ -37,7 +38,7 @@ function UnverifiedNotice({ view }: { view: ReceiptDocumentView }) {
     <section aria-labelledby="unverified-title" className="flex flex-col gap-3 rounded-page border border-rose/50 bg-surface-panel p-4 compact:p-5">
       <h2 id="unverified-title" className="flex items-start gap-2 text-md font-semibold text-rose-light">
         <ShieldX aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-        The signature check failed when this receipt was exported.
+        {verifyLine("unverified")}
       </h2>
       <Console label="countersign verify" kind="output" text={view.verifyText} defaultWrap />
     </section>

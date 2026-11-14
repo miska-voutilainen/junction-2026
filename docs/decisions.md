@@ -2,6 +2,13 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Review page: three columns from 1100 px, narrower until 1600 px
+
+- **Context:** With the Review steps panel added, the diff column at 1440 px was about 415 px wide (app nav 248, navigator 264, panel 392), so most C# lines scrolled sideways.
+- **Decision:** From 1100 px the page keeps three columns, with the navigator at 224 px and the panel at 340 px; from 1600 px (`--breakpoint-xwide`) they widen to 264 and 392 px. The diff gets about 530 px at 1440.
+- **Why:** The build brief fixes the navigator's switch to a dropdown at about 1100 px, so the space has to come from the columns' widths.
+- **Rejected:** Collapsing the navigator into its dropdown below 1600 px (contradicts the brief); leaving 415 px (the diff, the thing being reviewed, becomes the hardest part to read).
+- **PR:** the Review steps panel PR
 ## 2026-11-14 · Seven ideas kept and sharpened after four research runs; recordings run on the Max plan
 
 - **Context:** Four Gemini Deep Research runs challenged the seven ideas: two looked for better ones, one gathered evidence on how agent PRs fail, one red-teamed the concept. Separately, paying for API credits for the recordings was more than the team wanted to spend.

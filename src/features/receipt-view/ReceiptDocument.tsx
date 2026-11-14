@@ -1,9 +1,9 @@
+import { ReceiptSeal } from "@/components/ReceiptSeal";
 import { Console } from "@/components/Console";
 import { Disclosure } from "@/components/Disclosure";
 import { HunkLedger } from "./HunkLedger";
 import { IdentityList } from "./IdentityList";
 import { ReceiptNotice } from "./ReceiptNotice";
-import { ReceiptSeal } from "./ReceiptSeal";
 import { ReceiptToolbar } from "./ReceiptToolbar";
 import { SignedSections } from "./SignedSections";
 import { VerifySection } from "./VerifySection";
