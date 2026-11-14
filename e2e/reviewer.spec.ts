@@ -37,7 +37,7 @@ test("shows the four areas in order with their sample sizes and no horizontal sc
   await expect(page.getByRole("heading", { level: 3 }).filter({ hasText: /^(Generator|Analyzer|Security|Performance)$/ })).toHaveText(
     AREA_ORDER,
   );
-  await expect(generatorCard(page).getByText("3 of 4 planted bugs caught · written blind")).toBeVisible();
+  await expect(generatorCard(page).getByText("3 of 4 planted bugs caught · planted before the prompts")).toBeVisible();
   await expect(generatorCard(page).getByText("Trusted needs 5 clean spot checks: 0 recorded")).toBeVisible();
   await expect(page.getByRole("article", { name: "Performance" }).getByText("No track record")).toBeVisible();
   await expect(page.getByRole("article", { name: "Performance" }).getByRole("button", { name: "Record escape" })).toBeDisabled();

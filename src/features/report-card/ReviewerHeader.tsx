@@ -4,7 +4,7 @@ import { PlantBugDialog } from "./PlantBugDialog";
  * Title, what the page is for, and what the levels rest on. The measured line
  * comes from the report card, so it is absent when none was recorded.
  *
- * @param measured "Reviewer rv1 · model · measured on 10 planted bugs written blind", or null.
+ * @param measured "Reviewer rv1 · model · measured on 10 planted bugs, planted before the prompts were written", or null.
  */
 export function ReviewerHeader({ measured }: { measured: string | null }) {
   return (

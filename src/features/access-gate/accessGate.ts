@@ -29,6 +29,7 @@ export async function accessCookieValue(code: string): Promise<string> {
  *
  * @example safeNextPath("/reviewer?x=1") // "/reviewer?x=1"
  * @example safeNextPath("//evil.com") // "/"
+ * @example safeNextPath("/.//evil.com") // "/"
  */
 export function safeNextPath(next: string | null | undefined): string {
   if (!next || !next.startsWith("/")) return "/";
@@ -37,6 +38,10 @@ export function safeNextPath(next: string | null | undefined): string {
   const url = new URL(next, SAME_SITE_BASE);
   if (url.origin !== SAME_SITE_BASE) return "/";
   if (url.pathname === "/unlock" || url.pathname.startsWith("/unlock/")) return "/";
+  // Dot segments can collapse into a protocol-relative path after the origin
+  // check: "/.//evil.com" parses on this origin but its pathname is
+  // "//evil.com", which a redirect would send to evil.com.
+  if (url.pathname.startsWith("//")) return "/";
   return url.pathname + url.search + url.hash;
 }
 
@@ -78,5 +83,9 @@ function redirectToUnlock(request: NextRequest): NextResponse {
 
 function redirectPastUnlock(request: NextRequest): NextResponse {
   const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-  return NextResponse.redirect(new URL(next, request.url));
+  const target = new URL(next, request.url);
+  // A second guard at the redirect itself: whatever safeNextPath returns, this
+  // response never leaves the site.
+  if (target.origin !== request.nextUrl.origin) return NextResponse.redirect(new URL("/", request.url));
+  return NextResponse.redirect(target);
 }

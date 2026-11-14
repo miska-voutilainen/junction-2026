@@ -43,6 +43,18 @@ Junction 2026 started on Fri 13.11.2026 at 19:30 EET. The rules let teams bring 
 
 The Markdown is project-agnostic. It never names Countersign, Tieto or the challenge, and `docs/spec.md` in that commit is an empty template. We picked the challenge, the idea, the name and the spec at the event. Every line of code, including the hooks, settings and CI that the Markdown describes, was written during the event by the team and its agents. Nothing from other projects is in this repository; tools such as Lightfoot and Graphify run on our laptops and are not committed.
 
+## How to run
+
+```bash
+git clone https://github.com/miska-voutilainen/junction-2026.git
+cd junction-2026
+pnpm install --frozen-lockfile
+cp .env.example .env   # the app runs without values; see development.md
+pnpm dev               # http://localhost:3000
+```
+
+Needs Node 24 and pnpm. The site reads the committed files under `data/`. The receipt CLI is built; the review pipeline is specified but not built yet; the fork clone (`pnpm seed`), the .NET SDK, every command and the env vars are in [docs/development.md](docs/development.md).
+
 ## Agent environment
 
 A project-agnostic AI-agent environment for a 48-hour hackathon team that ships a **polished, well-documented product from a clean repository**, with several people each running their own agent in parallel. Built for Claude Code; other assistants follow it through `AGENTS.md`.

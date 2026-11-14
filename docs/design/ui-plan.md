@@ -129,9 +129,9 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
    - Per-hunk hashes are cut: the receipt signs one `diffSha256`, and we show that.
    - Not signed: "No receipt for mp-2283 yet." and the sign command. Stale: banner.
 4. **Reviewer `/reviewer`** (Phase 4). Canvas Reviewer, ReviewerMobile, ReviewerStates.
-   - h1 "Reviewer Report Card"; "Measured on n planted bugs and p planted contradictions, written blind".
+   - h1 "Reviewer Report Card"; "Measured on n planted bugs and p planted contradictions, planted before the prompts were written".
    - "How levels work" disclosure.
-   - Four area cards: level, ladder, "3 of 4 planted bugs caught · written blind", blind-first vs described-first counts, "Effect now", next step, "Record escape" with Undo (simulated, toast, re-routes).
+   - Four area cards: level, ladder, "3 of 4 planted bugs caught · planted before the prompts", blind-first vs described-first counts, "Effect now", next step, "Record escape" with Undo (simulated, toast, re-routes).
    - Lists: Missed planted bugs, Hallucinations caught, Retracted claims, all from the report card and reviews. Hallucinations caught has two scoped sub-lists: quotes that failed the check, and refusals struck for an unknown rule id ("Refusal r3 · unknown rule id" with the change id, or "None in the 4 recorded reviews.").
    - Spec's routing spread line.
    - "Plant a synthetic bug" (the one primary) opens a dialog with the real steps (variant branch, answer key, `pnpm evals`) in a console.

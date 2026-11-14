@@ -47,6 +47,8 @@ function comparable(p) {
 
 /**
  * Turns an absolute or relative path into a repo-relative one with forward slashes.
+ * A leading `.claude/worktrees/<name>/` is dropped too, so a second seat or a worktree subagent is
+ * classified by the file it edits, not by where its worktree sits.
  * Strips the root prefix case-insensitively (Windows sends `C:\…`, sometimes lower-cased,
  * Git Bash sends `/c/…`) and a leading `./`. Paths outside the root stay absolute.
  */
@@ -62,7 +64,12 @@ export function normalisePath(path, root) {
   p = p.replace(/^(\.\/)+/, "");
   if (p === "") return p;
   const n = posix.normalize(p);
-  return n === "." ? "" : n.replace(/\/$/, "");
+  return n === "." ? "" : stripWorktree(n.replace(/\/$/, ""));
+}
+
+/** `.claude/worktrees/x/src/a.ts` -> `src/a.ts`; the worktree folder alone is left as it is. */
+function stripWorktree(path) {
+  return path.replace(/^\.claude\/worktrees\/[^/]+\/(?=.)/i, "");
 }
 
 /** True when a normalised path points outside the repo (absolute or climbing with `..`). */

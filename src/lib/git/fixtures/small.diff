@@ -1,0 +1,48 @@
+diff --git a/src/MessagePack/Reader.cs b/src/MessagePack/Reader.cs
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644
+--- a/src/MessagePack/Reader.cs
++++ b/src/MessagePack/Reader.cs
+@@ -10,6 +10,7 @@ public class Reader
+ {
+     int a;
+     int b;
++    int c;
+     int d;
+     int e;
+     int f;
+@@ -40,7 +41,6 @@ public class Reader
+     void M()
+     {
+         x();
+-        y();
+         z();
+     }
+ }
+diff --git a/src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md b/src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md
+index 3333333333333333333333333333333333333333..4444444444444444444444444444444444444444 100644
+--- a/src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md
++++ b/src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md
+@@ -1,2 +1,3 @@
+ MsgPack001 | Usage | Error
+ MsgPack002 | Usage | Error
++MsgPack023 | Usage | Warning
+diff --git a/doc/analyzers/MsgPack004.md b/doc/analyzers/MsgPack004.md
+deleted file mode 100644
+index 5555555555555555555555555555555555555555..0000000000000000000000000000000000000000
+--- a/doc/analyzers/MsgPack004.md
++++ /dev/null
+@@ -1,2 +0,0 @@
+-# MsgPack004
+-Old text
+diff --git a/tests/Foo.Tests/FooTests.cs b/tests/Foo.Tests/FooTests.cs
+new file mode 100644
+index 0000000000000000000000000000000000000000..6666666666666666666666666666666666666666
+--- /dev/null
++++ b/tests/Foo.Tests/FooTests.cs
+@@ -0,0 +1,2 @@
++class FooTests { }
++// end
+\ No newline at end of file
+diff --git a/tests/Foo.Tests/Resources/blob.bin b/tests/Foo.Tests/Resources/blob.bin
+index 7777777777777777777777777777777777777777..8888888888888888888888888888888888888888 100644
+Binary files a/tests/Foo.Tests/Resources/blob.bin and b/tests/Foo.Tests/Resources/blob.bin differ
