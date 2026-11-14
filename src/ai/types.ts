@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
-/** Which backend answers: Claude Code on the operator's subscription, or the Anthropic API. */
-export type AiBackend = "claude-code" | "api";
+/** Which backend answers: Claude Code on the operator's subscription, the Anthropic API, or Kimi on Verda. */
+export type AiBackend = "claude-code" | "api" | "kimi";
 
 /** record: call and save; replay: read recordings only; live: call without saving. */
 export type AiMode = "record" | "replay" | "live";
