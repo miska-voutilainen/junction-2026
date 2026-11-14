@@ -5,19 +5,25 @@ import { unlock } from "./unlock";
 const REOPENED = "Reopened by an escape";
 const REOPENED_LINE =
   "An escape in Generator re-routed this change after it was signed: 2 hunks the signer didn't read now need a person.";
-const shot = (name: string, projectName: string) => `.review/reopened-${name}-${projectName === "mobile" ? 375 : 1440}.png`;
+const shot = (name: string, projectName: string) =>
+  `.review/reopened-${name}-${projectName === "mobile" ? 375 : 1440}.png`;
 
 test.beforeEach(async ({ page }) => {
   await unlock(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("an escape reopens the signed change on S1, S2 and S4, and Reset clears it", async ({ page }, testInfo) => {
+test("an escape reopens the signed change on S1, S2 and S4, and Reset clears it", async ({
+  page,
+}, testInfo) => {
   await page.goto("/changes/mp-2283");
   await expect(page.getByText(REOPENED)).toHaveCount(0);
 
   await page.goto("/reviewer");
-  await page.getByRole("article", { name: "Generator" }).getByRole("button", { name: "Record escape" }).click();
+  await page
+    .getByRole("article", { name: "Generator" })
+    .getByRole("button", { name: "Record escape" })
+    .click();
   await expect(page.getByText("Escape recorded (simulated)")).toBeVisible();
 
   await page.goto("/");
