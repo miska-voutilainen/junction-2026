@@ -46,7 +46,7 @@
 ## Testing
 
 - **Unit:** `pnpm test` runs Vitest in jsdom over `src/**/*.test.ts(x)` and `scripts/**/*.test.ts`. Tests sit next to the code (`route.ts` and `route.test.ts`).
-- **End to end:** `pnpm e2e` runs the specs in `e2e/` with Playwright at 1440x900 (`desktop`) and 375x812 (`mobile`). Unless `E2E_BASE_URL` is set, it runs `pnpm build && pnpm start` on `PORT` (default 3000) first. To test a preview or production, set `E2E_BASE_URL=<url>`. If `ACCESS_CODE` is set, the specs unlock the gate with it (`e2e/unlock.ts`).
+- **End to end:** `pnpm e2e` runs the specs in `e2e/` with Playwright at 1440x900 (`desktop`) and 375x812 (`mobile`). Unless `E2E_BASE_URL` is set, it runs `pnpm build && pnpm start` on `PORT` (default 3000) first. The `desktop` and `mobile` projects run on fixture data: the server is built with `COUNTERSIGN_DATA_ROOT` pointing at a copy of `data/fixtures` (made in `.review/e2e-data-root`), so they stay the same while recordings land. The `real-data` project (`e2e/real-data.spec.ts`) runs against `data/` as committed on a second server at `PORT` + 1, built into `node_modules/.cache/next-real-data`; it reads its expectations from `data/` and checks that the inbox lists only the Tieto changes. Pages are generated at build time, so a server already running on either port is reused with whatever data it was built with: stop it before changing data or env. To test a preview or production, set `E2E_BASE_URL=<url>`. If `ACCESS_CODE` is set, the specs unlock the gate with it (`e2e/unlock.ts`).
 - **Harness hooks:** `pnpm test:hooks` runs the `node --test` suites in `.claude/hooks/`.
 - **Evals:** `pnpm evals` is the planted-bug eval. It calls the model and costs credits. Specified, not built yet.
 
