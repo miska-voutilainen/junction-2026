@@ -1,6 +1,9 @@
 # Runs the Playwright demo path against a finished Vercel deployment, preview or production
-# (docs/setup.md section 6). Informational: nothing requires it yet. A deployment_status
-# workflow always runs from the default branch's copy of this file.
+# (docs/setup.md section 6). Informational: nothing requires it yet. A deployment_status run
+# uses the workflow file of the deployed commit, so the job below holds secrets while running
+# that commit's code. The gate step therefore only accepts a commit that is the head of a branch
+# in this repository. This is not a boundary against people with write access: anyone who can
+# push a branch can read secrets, as with any pull_request run in the same repository.
 name: e2e-preview
 
 on:
@@ -19,24 +22,31 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
-      # Without its secret the run cannot reach the site, so it says so and ends green:
+      # Without its secrets the run cannot reach the site, so it says so and ends green:
       # an informational check that fails for a missing setting is noise.
       - name: Check the secrets this deployment needs
         id: gate
         env:
           ENVIRONMENT: ${{ github.event.deployment_status.environment }}
           URL: ${{ github.event.deployment_status.environment_url }}
+          SHA: ${{ github.event.deployment.sha }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
         run: |
           if [ -z "$URL" ]; then
             echo "::notice::The deployment reports no URL; nothing to test."
             echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ "$(gh api "repos/$REPO/commits/$SHA/branches-where-head" --jq length)" = "0" ]; then
+            echo "::notice::Skipped: $SHA is not the head of a branch in this repository, so secrets are not given to it."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$BYPASS_SECRET" ]; then
+            # Every environment_url is a *.vercel.app address, which Vercel Authentication covers.
+            echo "::notice::Skipped: add the VERCEL_AUTOMATION_BYPASS_SECRET repository secret."
+            echo "run=false" >> "$GITHUB_OUTPUT"
           elif [ "$ENVIRONMENT" = "Production" ] && [ -z "$ACCESS_CODE" ]; then
             echo "::notice::Skipped: add the ACCESS_CODE repository secret (the production access gate is on)."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          elif [ "$ENVIRONMENT" != "Production" ] && [ -z "$BYPASS_SECRET" ]; then
-            echo "::notice::Skipped: add the VERCEL_AUTOMATION_BYPASS_SECRET repository secret (previews sit behind Vercel Authentication)."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
@@ -79,12 +89,14 @@ jobs:
             pnpm exec playwright install --with-deps chromium
           fi
 
-      # The desktop (1440 px) and mobile (375 px) projects. real-data reads the committed
-      # data/ and would compare it with a deployment that may be built from other data.
+      # Only real-data: the desktop and mobile projects assume fixture data, which exists only on
+      # a local server. real-data reads the data/ checked out above, the commit the deployment
+      # was built from, and also loads the inbox, review, report-card, receipt and dashboard screens.
       - name: Playwright
         if: steps.gate.outputs.run == 'true'
         env:
           E2E_BASE_URL: ${{ github.event.deployment_status.environment_url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
-        run: pnpm e2e --project=desktop --project=mobile
+          # The gate is on in production only; an empty code makes the specs skip unlocking.
+          ACCESS_CODE: ${{ github.event.deployment_status.environment == 'Production' && secrets.ACCESS_CODE || '' }}
+        run: pnpm e2e --project=real-data

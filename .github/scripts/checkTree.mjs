@@ -44,7 +44,7 @@ export function readRootNames(claudeMd) {
   const folders = new Set();
   const files = new Set();
   for (const line of block.split("\n")) {
-    const entry = line.match(/^[├└]── (.*)$/)?.[1] ?? line.match(/^│ {3}([^├└\s].*)$/)?.[1];
+    const entry = line.match(/^[├└]── (.*)$/)?.[1] ?? line.match(/^│ {3}([^├└│\s].*)$/)?.[1];
     if (entry === undefined) continue;
     for (const raw of entry.split(/ {2,}/)[0].split(",")) {
       const name = raw.trim();

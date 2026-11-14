@@ -1,11 +1,11 @@
-// Lane check: every change names its lane. A PR may touch only its author's lanes; another
+// Lane check: every change names its lane. A PR touches only its author's lanes; another
 // lane's files or a shared path need the `cross-lane` label, which the affected owner adds
 // after agreeing. Also fails when .claude/lanes.json and the Lanes table in CLAUDE.md drift apart.
 // Reuses the hooks' path classifier, so CI and the local guard cannot disagree.
 // docs/setup.md section 6, step 1; .claude/rules/lanes.md.
 //
-// Env: PR_AUTHOR (login), PR_LABELS (JSON array of label names). Files come from
-// `git diff origin/main...HEAD`.
+// Env: PR_AUTHOR (login), PR_LABELS (JSON array of label names), BASE_SHA (the PR's base commit;
+// origin/main when unset, for local runs). Files come from `git diff BASE_SHA...HEAD`.
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -35,7 +35,7 @@ export function findLaneViolations({ files, author, labels, config }) {
     const where = classifyPath(path, config);
     if (where.kind === "shared") violations.push({ path, reason: "shared path" });
     else if (where.kind === "lane" && !ownLanes.has(where.lane))
-      violations.push({ path, reason: `${where.lane} lane (owner ${where.owner})` });
+      violations.push({ path, reason: `path in the ${where.lane} lane (owner ${where.owner})` });
   }
   return violations;
 }
@@ -44,14 +44,22 @@ export function findLaneViolations({ files, author, labels, config }) {
 export function summarise({ files, config, author }) {
   const touched = lanesTouched(files, config);
   const lanes = touched.length > 0 ? touched.join(", ") : "none (docs and open paths only)";
-  return `### Lane check\n\nAuthor: ${author}\n\nLanes touched: ${lanes}\n\nFiles changed: ${files.length}\n`;
+  // Files no lane, shared or open glob matches: not a failure, but someone should assign them.
+  const unmatched = files.filter((path) => classifyPath(path, config).kind === "unmatched");
+  const unmatchedLine =
+    unmatched.length > 0 ? `\nNot in any lane (add to lanes.json): ${unmatched.join(", ")}\n` : "";
+  return `### Lane check\n\nAuthor: ${author}\n\nLanes touched: ${lanes}\n\nFiles changed: ${files.length}\n${unmatchedLine}`;
 }
 
 function changedFiles() {
   // Three dots: only what the PR adds on top of main, not what main gained meanwhile.
-  const out = execFileSync("git", ["diff", "--name-only", "origin/main...HEAD"], {
-    encoding: "utf8",
-  });
+  const out = execFileSync(
+    "git",
+    ["diff", "--name-only", `${process.env.BASE_SHA || "origin/main"}...HEAD`],
+    {
+      encoding: "utf8",
+    },
+  );
   return out.split("\n").filter((line) => line !== "");
 }
 
@@ -76,7 +84,7 @@ function main() {
   const violations = findLaneViolations({ files, author, labels, config });
   for (const { path, reason } of violations)
     console.error(
-      `::error file=${path}::${author} may not change this ${reason} without the "${CROSS_LANE_LABEL}" label. Ask the owner, then add the label.`,
+      `::error file=${path}::${path} is a ${reason}: ${author} may not change it without the "${CROSS_LANE_LABEL}" label. Ask the owner, then add the label.`,
     );
   for (const problem of tableProblems)
     console.error(

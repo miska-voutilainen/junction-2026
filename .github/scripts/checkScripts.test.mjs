@@ -112,3 +112,11 @@ test("tree: banned names match whole segments, not substrings", () => {
   assert.equal(bannedSegment("src/temperature.ts"), undefined);
   assert.equal(bannedSegment("src/finalize.ts"), undefined);
 });
+
+test("lanes: the summary lists paths no lane claims", () => {
+  assert.match(
+    summarise({ files: ["mystery/a.ts"], config, author: "x" }),
+    /Not in any lane.*mystery\/a\.ts/,
+  );
+  assert.doesNotMatch(summarise({ files: ["docs/a.md"], config, author: "x" }), /Not in any lane/);
+});

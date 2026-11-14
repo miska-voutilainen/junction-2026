@@ -1,17 +1,21 @@
 # One job, fail-fast order, target under 4 minutes (docs/setup.md section 6).
-# The cheap checks that need no install-heavy work come first; the slow ones (lint to build)
-# are skipped when a PR changes only Markdown, but the job still runs so the required
+# After the install, the quick checks (messages, lanes, tree, hook tests) run before the slow ones
+# (lint to build), which are skipped when a PR changes only Markdown, but the job still runs so the required
 # `ci` check always reports. No `paths-ignore`: a required check that never runs blocks the PR.
 name: ci
 
 on:
   pull_request:
+    # edited re-runs the message check after a title or body fix; labeled and unlabeled too: the lane check reads the `cross-lane` label, and
+    # `gh pr create --label` adds labels only after the opened event has fired.
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   push:
     branches: [main]
 
 concurrency:
   group: ci-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  # Never cancel a push to main: its run is the record that main is green.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -22,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # Full history: the message and lane checks diff against origin/main.
+      # Full history: the message and lane checks diff against the PR's base commit.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -43,6 +47,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node .github/scripts/checkMessages.mjs
 
       - name: 1. Lane check
@@ -50,6 +55,7 @@ jobs:
         env:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node .github/scripts/checkLanes.mjs
 
       - name: 2. Tree check
@@ -63,8 +69,11 @@ jobs:
       # Pushes to main always run the slow steps; a PR skips them when every changed file is Markdown.
       - name: Decide whether the slow steps run
         id: scope
+        shell: bash
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ] && ! git diff --name-only origin/main...HEAD | grep -qv '\.md$'; then
+          # Capture first: a failing git diff must fail the step, not read as "no files changed".
+          changed=$(git diff --name-only "$BASE_SHA...HEAD")
+          if [ "$EVENT_NAME" = "pull_request" ] && ! grep -qv '\.md$' <<< "$changed"; then
             echo "slow=false" >> "$GITHUB_OUTPUT"
             echo "Only Markdown changed: lint, typecheck, tests and build are skipped." >> "$GITHUB_STEP_SUMMARY"
           else
@@ -72,6 +81,7 @@ jobs:
           fi
         env:
           EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - name: 4. Lint
         if: steps.scope.outputs.slow == 'true'
@@ -93,3 +103,4 @@ jobs:
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"

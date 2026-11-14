@@ -4,7 +4,7 @@
 // message that passes on a laptop passes here. docs/setup.md section 6, step 0.
 //
 // Env: PR_TITLE, PR_BODY (passed through `env:` so quoting can't be abused). Commits come from
-// `git log origin/main..HEAD`, which is why the checkout needs full history.
+// `git log BASE_SHA..HEAD` (origin/main when unset, for local runs), which is why the checkout needs full history.
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { EMOJI, TRAILER } from "../../.claude/hooks/lib/guardShell.mjs";
@@ -38,9 +38,13 @@ function firstLine(text) {
 /** Commit messages of the PR, one string each. */
 function readCommitMessages() {
   // %x00 separates messages, because a message body can contain blank lines.
-  const log = execFileSync("git", ["log", "--format=%B%x00", "origin/main..HEAD"], {
-    encoding: "utf8",
-  });
+  const log = execFileSync(
+    "git",
+    ["log", "--format=%B%x00", `${process.env.BASE_SHA || "origin/main"}..HEAD`],
+    {
+      encoding: "utf8",
+    },
+  );
   return log.split("\0").filter((message) => message.trim() !== "");
 }
 
