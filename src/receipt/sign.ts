@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { ReceiptSchema } from "@/contracts/receipt";
 import { computeDiffIdentity } from "@/lib/git";
 import { canonicalJson } from "./canonicalJson";
@@ -100,7 +100,15 @@ function requireLedgerMatchesOwner(draft: Draft, changeId: string): void {
 
 /** `~` resolves to the home folder, as a shell would; ssh-keygen itself does not expand it. */
 function resolveKeyPath(keyPath: string): string {
-  return resolve(keyPath.startsWith("~") ? join(homedir(), keyPath.slice(1)) : keyPath);
+  const resolved = resolve(keyPath.startsWith("~") ? join(homedir(), keyPath.slice(1)) : keyPath);
+  // The path goes to ssh-keygen as an argument. Absolute, so it can't read as an
+  // option, and free of control characters (e.g. "key\n-Y"), which no key file needs.
+  if (!isAbsolute(resolved) || /[\0-\x1f]/.test(resolved))
+    throw new CommandError(
+      1,
+      `${keyPath} is not a usable key path. Pass --key <path to the key file>.`,
+    );
+  return resolved;
 }
 
 /** The owner must be a principal in allowed_signers, or verify could never succeed. Comment lines are skipped. */
