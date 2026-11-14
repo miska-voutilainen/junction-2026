@@ -1,5 +1,5 @@
 import { expect, test } from "./fixtures";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // S1 to S5. mp-2283 is a signed fixture change, so its receipt page exists.
 const pages = ["/", "/changes/mp-2283", "/changes/mp-2283/receipt", "/reviewer", "/dashboard"];
@@ -14,7 +14,7 @@ const expectedHeaders: Record<string, RegExp> = {
 };
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 // The `consoleProblems` fixture fails the test on any console error, which is
