@@ -44,8 +44,7 @@ Tieto's customers are banks, insurers, healthcare and the public sector, so we a
 | Control | What it asks | Status |
 | --- | --- | --- |
 | PCI DSS v4.0.1, requirement 6.2.3.1 | Manual code review by someone other than the author who knows review techniques, approved before release | Known, correct |
-| DORA RTS, Delegated Regulation (EU) 2024/1774, art. 17 | ICT change management, including independence between those who approve changes and those who request and implement them | From knowledge; the EUR-Lex text couldn't be fetched, so check the wording before quoting an article point |
-| DORA RTS 2024/1774, art. 16 | Source code review with static and dynamic testing in ICT development | From knowledge; same check needed |
+| DORA's rules on ICT change management and development (the ICT risk RTS, Delegated Regulation (EU) 2024/1774) | Controlled change management with approval separate from implementation, and source code review | Not checked: the EUR-Lex text couldn't be retrieved. Quote only as "DORA's rules on ICT change management", without article numbers |
 | NIS2, Directive (EU) 2022/2555, art. 21(2)(e) | Security in the acquisition, development and maintenance of systems | Known, correct |
 | Cyber Resilience Act, Regulation (EU) 2024/2847 | Reporting duties from 11 September 2026, full application from 11 December 2027 | Known, correct |
 | EU AI Act, Regulation (EU) 2024/1689, art. 14 | Human oversight of high-risk AI systems; applies only where the software itself is high-risk AI | Known, correct |
