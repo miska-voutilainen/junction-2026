@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { AnswerKeySchema, type AnswerKey, type Review } from "../contracts";
 import { findContradictionMatch } from "./eval/matchContradiction";
+import { requirementItems } from "./promptContext";
 
 /** One eval case of `pnpm review check`: a name, whether the recorded review meets it, and why. */
 export interface CheckResult {
@@ -10,6 +11,9 @@ export interface CheckResult {
   passed: boolean;
   detail: string;
 }
+
+/** The Tieto change with the planted false sentence in its description, and the one with change-specific checks. */
+export const MP2283_CHANGE_ID = "mp-2283";
 
 /** Where the evidence lane keeps the planted contradiction of mp-2283's own description. */
 const mp2283PlantKey = path.join("data", "sample", "answer-key", "cp0.json");
@@ -20,7 +24,7 @@ const mp2283PlantKey = path.join("data", "sample", "answer-key", "cp0.json");
  * pipeline's prompts never see it.
  */
 export async function loadContradictionKey(changeId: string): Promise<AnswerKey | null> {
-  if (changeId !== "mp-2283" || !existsSync(mp2283PlantKey)) return null;
+  if (changeId !== MP2283_CHANGE_ID || !existsSync(mp2283PlantKey)) return null;
   return AnswerKeySchema.parse(JSON.parse(await readFile(mp2283PlantKey, "utf8")));
 }
 
@@ -33,14 +37,17 @@ export function checkReview(
   review: Review,
   contradictionKey: AnswerKey | null = null,
 ): CheckResult[] {
-  const results = [checkExpectationCoversItems(review), checkEveryCodeHunkIsClaimed(review)];
-  if (review.changeId === "mp-2283") {
-    results.splice(1, 0, ...checkMp2283Expectation(review));
-    results.push(checkMp2283Refusal(review), checkMp2283VerifiedClaim(review));
-    if (contradictionKey !== null)
-      results.push(checkPlantedContradiction(review, contradictionKey));
-  }
-  return results;
+  const coversItems = checkExpectationCoversItems(review);
+  const everyHunkClaimed = checkEveryCodeHunkIsClaimed(review);
+  if (review.changeId !== MP2283_CHANGE_ID) return [coversItems, everyHunkClaimed];
+  return [
+    coversItems,
+    ...checkMp2283Expectation(review),
+    everyHunkClaimed,
+    checkMp2283Refusal(review),
+    checkMp2283VerifiedClaim(review),
+    ...(contradictionKey === null ? [] : [checkPlantedContradiction(review, contradictionKey)]),
+  ];
 }
 
 /** The change silently drops diagnostics for referenced-assembly types: a documented-behaviour decision (R7) or a product call (R1). */
@@ -94,9 +101,7 @@ function checkExpectationCoversItems(review: Review): CheckResult {
   const name = "A1 covers every requirement item exactly once";
   if (review.expectation === null)
     return { name, passed: false, detail: "the review has no expectation (anchored mode)" };
-  const expected = [...review.requirement.functional, ...review.requirement.nonFunctional].map(
-    (item) => item.id,
-  );
+  const expected = requirementItems(review.requirement).map((item) => item.id);
   const got = review.expectation.items.map((item) => item.requirementItemId);
   const missing = expected.filter((id) => !got.includes(id));
   const repeated = got.filter((id, index) => got.indexOf(id) !== index);

@@ -235,11 +235,14 @@ function isResultLine(line: string): boolean {
   return afterResultWord(line, "Passed") !== null || afterResultWord(line, "Failed") !== null;
 }
 
+/** "Passed!" and "Failed!" are the same length, so one constant skips either word. */
+const TERMINAL_WORD_LENGTH = "Passed!".length;
+
 function isSummaryLine(line: string): boolean {
   if (line.startsWith("Total tests: ")) return true;
   if (["Passed", "Failed", "Skipped"].some((label) => countOf(line, label) !== null)) return true;
   const terminal = line.startsWith("Passed!") || line.startsWith("Failed!");
-  return terminal && line.slice(7).trimStart().startsWith("- Failed:");
+  return terminal && line.slice(TERMINAL_WORD_LENGTH).trimStart().startsWith("- Failed:");
 }
 
 /** The excerpt described above, or null when the output has no test result lines. */

@@ -5,6 +5,7 @@
  * code before the description buys. Spec section 6 (A4) and 9.1 (T16).
  */
 import type { AnswerKey, Review } from "@/contracts";
+import { normalizeWhitespace } from "../quoteCheck";
 import { tokenOverlap } from "./tokenOverlap";
 
 type Finding = Review["findings"][number];
@@ -20,7 +21,7 @@ export const STATEMENT_TOKEN_OVERLAP_MIN = 0.8;
 export function statementMatches(statement: string, plantSentence: string): boolean {
   // Spec 9.1 names both rules. Equal text always has overlap 1, so equality
   // only decides the result for a sentence with no words, where overlap is 0.
-  if (normalise(statement) === normalise(plantSentence)) return true;
+  if (sameIgnoringCase(statement, plantSentence)) return true;
   return tokenOverlap(plantSentence, statement) >= STATEMENT_TOKEN_OVERLAP_MIN;
 }
 
@@ -39,6 +40,7 @@ export function findContradictionMatch(
   return match ?? null;
 }
 
-function normalise(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, " ");
+/** Whitespace as the quote check reads it, plus case ignored: the model re-cases a sentence as readily as it re-wraps one. */
+function sameIgnoringCase(a: string, b: string): boolean {
+  return normalizeWhitespace(a).toLowerCase() === normalizeWhitespace(b).toLowerCase();
 }

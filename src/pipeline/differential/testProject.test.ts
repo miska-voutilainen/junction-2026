@@ -3,6 +3,7 @@ import type { Review } from "../../contracts";
 import {
   changedTestMethods,
   chooseStyleExample,
+  declaresTestMethod,
   limitTestNames,
   testProjectDir,
 } from "./testProject";
@@ -97,5 +98,19 @@ describe("limitTestNames", () => {
   it("drops repeats and caps the list", () => {
     expect(limitTestNames(["A", "A", "B"])).toEqual(["A", "B"]);
     expect(limitTestNames(Array.from({ length: 100 }, (_, i) => `T${i}`))).toHaveLength(40);
+  });
+});
+
+describe("declaresTestMethod", () => {
+  const code = "public async Task Test_F1_Works() {}\npublic void Test_F2_Other () {}";
+
+  it("finds void, Task and ValueTask methods by name", () => {
+    expect(declaresTestMethod(code, "Test_F1_Works")).toBe(true);
+    expect(declaresTestMethod(code, "Test_F2_Other")).toBe(true);
+  });
+
+  it("does not match a name that is only a prefix or a call", () => {
+    expect(declaresTestMethod(code, "Test_F1")).toBe(false);
+    expect(declaresTestMethod("Test_F1_Works();", "Test_F1_Works")).toBe(false);
   });
 });

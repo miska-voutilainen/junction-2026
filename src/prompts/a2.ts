@@ -10,7 +10,12 @@ import { z } from "zod";
 import type { Requirement, Review } from "../contracts";
 import { CitationSchema } from "../contracts";
 import { hunksMatchingGlob } from "../lib/git/hunksMatchingGlob";
-import type { PromptContext } from "../pipeline/promptContext";
+import {
+  HUNK_LINE_LEGEND,
+  requirementBlock,
+  requirementItems,
+  type PromptContext,
+} from "../pipeline/promptContext";
 import { citationRangeProblem, MAX_CITATION_LINES } from "./citationRange";
 import { prefixLines } from "./prefixLines";
 
@@ -56,16 +61,13 @@ export interface A2Input {
 
 /** Renders the user text. Anchored mode puts the description first, which is the anchoring the comparison measures. */
 export function render({ requirement, context, expectation, authorDescription }: A2Input): string {
-  const items = [...requirement.functional, ...requirement.nonFunctional]
-    .map((item) => `${item.id}: ${item.text}`)
-    .join("\n");
   const sections = [
     authorDescription === null
       ? null
       : `<author-description>\n${prefixLines(authorDescription)}\n</author-description>`,
-    `<requirement id="${requirement.id}">\nTitle: ${requirement.title}\nIntent: ${requirement.intent}\nItems:\n${items}\n</requirement>`,
+    requirementBlock(requirement),
     expectation === null ? null : `<expectation>\n${expectation}\n</expectation>`,
-    "Hunk lines read: old line number, new line number, then + added, - removed or a space for unchanged, then the text. A dot means the line has no number on that side.",
+    HUNK_LINE_LEGEND,
     `<hunks>\n${context.hunksBlock}\n</hunks>`,
     `<files>\n${context.filesBlock}\n</files>`,
     "Write the story and the claims.",
@@ -112,9 +114,7 @@ export interface A2Reference {
  * with the message.
  */
 export function outputSchema({ requirement, hunks }: A2Reference): z.ZodType<A2Output> {
-  const itemIds = new Set(
-    [...requirement.functional, ...requirement.nonFunctional].map((item) => item.id),
-  );
+  const itemIds = new Set(requirementItems(requirement).map((item) => item.id));
   const hunkIds = new Set(hunks.map((hunk) => hunk.id));
   return z
     .object({ story: StorySchema, claims: z.array(ClaimDraftSchema) })

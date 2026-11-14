@@ -7,7 +7,7 @@
  * the layout guarantees: text that reads like an instruction still reaches the
  * model, which the system text tells to treat the blocks as data. Spec 9.1, T12.
  */
-import type { FileKind, Review } from "../contracts";
+import type { FileKind, Requirement, Review } from "../contracts";
 
 type Hunk = Review["hunks"][number];
 type ReviewFile = Review["files"][number];
@@ -23,6 +23,28 @@ export const LINES_AROUND_HUNK = 80;
 
 /** Kinds whose full text is sent; docs send only hunks, generated only the path (spec 9.1, T12). */
 const KINDS_WITH_FILE_TEXT: ReadonlySet<FileKind> = new Set(["source", "test"]);
+
+/** One line explaining the hunk line layout; A2 and A3 print it above the hunks block. */
+export const HUNK_LINE_LEGEND =
+  "Hunk lines read: old line number, new line number, then + added, - removed or a space for unchanged, then the text. A dot means the line has no number on that side.";
+
+/** Every item of a requirement, functional first: the list the prompts and the id checks walk. */
+export function requirementItems(requirement: Requirement): Requirement["functional"] {
+  return [...requirement.functional, ...requirement.nonFunctional];
+}
+
+/**
+ * The requirement as the delimited block every prompt embeds.
+ *
+ * @example a requirement MP-2283 with one item F1 renders as the lines
+ * `<requirement id="MP-2283">`, `Title: ...`, `Intent: ...`, `Items:`, `F1: ...`, `</requirement>`.
+ */
+export function requirementBlock(requirement: Requirement): string {
+  const items = requirementItems(requirement)
+    .map((item) => `${item.id}: ${item.text}`)
+    .join("\n");
+  return `<requirement id="${requirement.id}">\nTitle: ${requirement.title}\nIntent: ${requirement.intent}\nItems:\n${items}\n</requirement>`;
+}
 
 /** The blocks A2's prompt embeds. */
 export interface PromptContext {

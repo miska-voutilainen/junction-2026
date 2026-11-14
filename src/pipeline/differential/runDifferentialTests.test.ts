@@ -6,7 +6,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { ModelClient } from "../../ai/client";
 import type { Requirement, Review } from "../../contracts";
 import { loadDiff } from "../../lib/git";
-import type { DotnetRunner, TestRunRequest } from "./dotnetRunner";
+import type { TestRunRequest } from "./dockerArguments";
+import type { DotnetRunner } from "./dotnetRunner";
 import { runDifferentialTests, type DifferentialTestsInput } from "./runDifferentialTests";
 
 const requirement: Requirement = {

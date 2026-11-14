@@ -153,20 +153,29 @@ function insideData(file: string): string {
   return resolved;
 }
 
+/** What to do about a data file that cannot be read, by where it lives. */
+function unreadableHint(file: string): string {
+  if (file.startsWith(RUNS))
+    return "Record the review first (pnpm review run <changeId>), or check the file's permissions.";
+  if (file === REPORT_CARD) return "Create the report card first: pnpm evals.";
+  return "Check the change id; sample data lives in data/sample/.";
+}
+
 async function readJson<T>(file: string, schema: ZodType<T>): Promise<T> {
   const resolved = insideData(file);
   let text: string;
   try {
     text = await readFile(resolved, "utf8");
-  } catch {
-    throw new Error(`Cannot read ${file}. Check the change id; sample data lives in data/sample/.`);
+  } catch (cause) {
+    throw new Error(`Cannot read ${file}. ${unreadableHint(file)}`, { cause });
   }
   let json: unknown;
   try {
     json = JSON.parse(text);
-  } catch {
+  } catch (cause) {
     throw new Error(
       `${file} is not valid JSON. Re-create it (pnpm review run <changeId>) or restore it from git.`,
+      { cause },
     );
   }
   const parsed = schema.safeParse(json);

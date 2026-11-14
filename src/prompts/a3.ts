@@ -8,7 +8,7 @@
 import { z } from "zod";
 import type { Area, Requirement, Review } from "../contracts";
 import { CitationSchema } from "../contracts";
-import type { PromptContext } from "../pipeline/promptContext";
+import { HUNK_LINE_LEGEND, requirementBlock, type PromptContext } from "../pipeline/promptContext";
 import { areaChecklists, checklistSource } from "../policy/areaChecklists";
 import { refusalRules, type RefusalRule } from "../policy/refusals";
 import { MAX_CITATION_LINES, citationRangeProblem } from "./citationRange";
@@ -55,16 +55,13 @@ export interface A3Input {
 
 /** Renders the user text: requirement, expectation and claims, the policy blocks, then the code. */
 export function render({ requirement, context, expectation, claims }: A3Input): string {
-  const items = [...requirement.functional, ...requirement.nonFunctional]
-    .map((item) => `${item.id}: ${item.text}`)
-    .join("\n");
   return [
-    `<requirement id="${requirement.id}">\nTitle: ${requirement.title}\nIntent: ${requirement.intent}\nItems:\n${items}\n</requirement>`,
+    requirementBlock(requirement),
     `<expectation>\n${expectation}\n</expectation>`,
     `<claims>\n${claims}\n</claims>`,
     `<checklists source="${checklistSource}">\n${checklistsBlock()}\n</checklists>`,
     `<refusal-policy>\n${refusalPolicyBlock(refusalRules)}\n</refusal-policy>`,
-    "Hunk lines read: old line number, new line number, then + added, - removed or a space for unchanged, then the text. A dot means the line has no number on that side.",
+    HUNK_LINE_LEGEND,
     `<hunks>\n${context.hunksBlock}\n</hunks>`,
     `<files>\n${context.filesBlock}\n</files>`,
     "Write the findings and the refusals.",
