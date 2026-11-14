@@ -14,12 +14,14 @@ import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
 import { LegacyTouchPoints } from "./LegacyTouchPoints";
 import { MobileHunks } from "./MobileHunks";
+import { ReviewRoles } from "./ReviewRoles";
 import { EmptyDiff, EvidenceUnavailable, evidenceAlert } from "./ReviewStates";
 import { useSelection } from "./SelectionProvider";
 import type { HighlightedHunks } from "./highlightHunks";
 import { highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./citationHighlights";
 import type { HighlightedLines } from "./citationHighlights";
 import { buildLegacyTouchRows } from "./legacyTouchModel";
+import { buildReviewRoles } from "./reviewRolesModel";
 import { buildNavigator, buildSections } from "./reviewModel";
 import type { HunkSections, NavigatorGroup } from "./reviewModel";
 import { useDiffReveal } from "./useDiffReveal";
@@ -76,6 +78,7 @@ export function ReviewBody({
     [review, decision, levels],
   );
   const legacyTouchRows = useMemo(() => buildLegacyTouchRows(review), [review]);
+  const roles = useMemo(() => buildReviewRoles(review, decision.coverage), [review, decision]);
   const groups = useMemo(() => buildNavigator(sections), [sections]);
   const reveal = useDiffReveal(sections);
   const { readIds, toggle } = useReadHunks(change.id);
@@ -93,6 +96,7 @@ export function ReviewBody({
   return (
     <>
       <CoverageLine decision={decision} />
+      <ReviewRoles roles={roles} />
       <LegacyTouchPoints rows={legacyTouchRows} />
       {reopened?.status === "reopened" && (
         <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />

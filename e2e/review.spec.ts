@@ -145,6 +145,15 @@ test("mp-2297 shows its unguarded legacy touch point; mp-2283 has none", async (
   await expect(page.getByRole("heading", { name: /Legacy touch points/ })).toHaveCount(0);
 });
 
+test("Who reads what names the role that reads each refused hunk", async ({ page }) => {
+  await page.goto("/changes/mp-2297");
+  await expect(page.getByRole("heading", { name: /Who reads what/ })).toBeVisible();
+  const roles = page.getByRole("region", { name: /Who reads what/ });
+  await expect(roles.getByText("platform owner")).toBeVisible();
+  await page.goto("/changes/mp-2283");
+  await expect(roles.getByText("API owner")).toBeVisible();
+});
+
 test("an unknown id says so, keeps the four changes in the shell and links back to the inbox", async ({ page }, testInfo) => {
   await page.goto("/changes/zz-9999");
   await expect(page.getByText("No change with id zz-9999.")).toBeVisible();
