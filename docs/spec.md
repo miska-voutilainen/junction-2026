@@ -6,7 +6,7 @@ Write it so an agent can build any task below without asking a question: concret
 Every task in section 9 becomes a GitHub issue; "go" works through them.
 -->
 
-Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-13, ideas first (section 1, Emphasis) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
+Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-14, research additions (sections 1, 5, 6, 7; `docs/research.md`) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
 
 Event milestones: Fri 23:59 pre-submission ✅ done Fri 13.11 by Miska (draft "Countersign", Tieto challenge; name, punchline, description; status Draft) · Sat 12:00 submissions open · Sun 10:00 final (set to FINAL, not DRAFT) · Sun 10:30–13:00 live peer review at our table (all present, else no main prize) · Sun 14:15 top-5 pitches (3 min + 3 min Q&A).
 
@@ -19,7 +19,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
 - **Problem:** Agent PRs now outnumber human ones. Line-by-line review doesn't scale, and an AI "LGTM" is not something an engineer can put their name on. Today they either skim and rubber-stamp, so accountability is fiction, or read everything, so the agent's speed is wasted.
 - **Insight:** Trust has to come from evidence a person can check, and that includes evidence about the reviewer itself. Three things others miss:
   1. Calibrate the AI reviewer on planted bugs, and let its measured catch rate per area decide how much humans read.
-  2. Review blind-first, from the requirement, so the reviewer isn't anchored on the authoring agent's own story. Evidence is blind-first too: a test counts only if it fails before the change and passes after it.
+  2. Review blind-first, from the requirement, so the reviewer isn't anchored on the authoring agent's own story. Evidence is blind-first too: a test counts only if it fails before the change and passes after it, and only a test the authoring agent didn't write can make a claim Verified (an agent that writes both the code and its test can put the same mistake in both).
   3. Put the accountability record in git, where the code lives.
 - **Partner tech and data:** Tieto's code input: the repository `te-industry-tech-office/junction26-messagepack-csharp` (a copy of MessagePack-CSharp, a C# serializer with a Roslyn source generator and analyzer, .NET SDK 8.0.402), with four agent-written changes, one branch each, all on base commit `32258fd`:
 
@@ -30,7 +30,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   | `mp-2129` | `ju26-issue-2129` | #2129 Allow generation of Formatter for a type in a referenced assembly | 28 files, +1034 −9 |
   | `mp-2297` | `ju26-issue-2297` | #2297 Add ExcludeFromCodeCoverage attribute to generated code | 237 files (223 test snapshots), +1383 −9 |
 
-  Tieto's requirements set and standards document are still announced as "TBA". Until they arrive we derive one requirement record per issue (intent, functional, non-functional items, labelled "derived from upstream issue #n") and write our own per-area checklists, labelled as ours. The commits carry one-line messages only, so each change gets an author PR description written by the evidence lane and labelled "synthetic". Models: Anthropic Claude through the Junction partner credits (Q2 answered). Vendor selection is out of scope, so the model sits behind one client interface (`src/ai/`) and the concept holds with any capable model.
+  Tieto's requirements set and standards document are still announced as "TBA". Until they arrive we derive one requirement record per issue (intent, functional, non-functional items, labelled "derived from upstream issue #n") and write our own per-area checklists, labelled as ours. The commits carry one-line messages only, so each change gets an author PR description written by the evidence lane and labelled "synthetic". Models: Anthropic Claude, recorded through Claude Code's headless mode on Miska's Max plan; the API backend stays for anyone with a key (`docs/decisions.md`, 2026-11-14). Vendor selection is out of scope, so the model sits behind one client interface (`src/ai/`) and the concept holds with any capable model.
 - **Review areas for this repository:** `generator`, `analyzer`, `security`, `performance` (areas are per-repository configuration; a web repository would use frontend, backend, security, performance). Used the same everywhere: policy, prompts, planted bugs, report card.
 - **Event judging (peer review and finals):** Innovation (the canaries, the blind-first review and evidence, the receipt in git), Impact (every team merging agent PRs), Implementation (a working pipeline on Tieto's real repo, not slides).
 - **Tieto's judging criteria** (from the challenge page): **Clarity 30%** (a clear recommendation with stated principles, explicit trade-offs and limits) · **Practicality 25%** (could work in a real PR flow and scale, with a named human owning each decision) · **Measurement 25%** (how trust is measured: reverts and incidents don't rise as review time falls, AI findings are real and accepted, time to merge, share routed to humans) · **Evidence 20%** (evidence traceable to a requirement lets a named human accept a change without a full read, incl. what the AI found, what it refused to decide, and why). Tieto: "we put more weight for the concept than only the technical implementation." Tieto added two criteria for the code itself: **readable code** and **comments that give the reader something** (`.claude/rules/readability.md`).
@@ -59,13 +59,15 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   - "Who owns the decision?": moment 3, the signed receipt in git.
   - "How would this scale?": moment 3, the routing spread over all four Tieto changes, plus the trust ladder.
 - **Tieto deliverables (first-class, each has a task):**
-  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide. It is also the index of the seven ideas and holds "Beyond the reference".
+  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide. It is also the index of the seven ideas and holds "Beyond the reference": registered pull requests (the owner signs the tests before the agent writes code), audit sampling for large PRs, round-trip property tests for serializers, post-merge reverts as the production source of escapes, and organisation-managed signing (Sigstore or similar) in place of personal SSH keys.
+  - Research: `docs/research.md`, the checked figures we quote (sample size and source each) and the red-team questions with our answers. Pitch, concept card and idea pages quote only figures listed there.
   - Idea pages: `docs/ideas/*.md` (T25), one per idea, written for a product team that wants to adopt it.
   - Lessons log with the failure modes we actually saw: `docs/lessons.md`, started by T15 from the first pipeline run (caught hallucinations, missed planted bugs, wrong tier calls, model errors), each entry with the date and what we changed.
   - Decision log: `docs/decisions.md`.
   - Live walkthrough: the three demo moments.
   - Demo video (2 min) and presentation (PDF): made at the freeze by `demo-prep` and the pitch owner (interim: Miska).
 - **Theme line for the pitch:** "European Tech Renaissance: idealism and caution." AI does the work, an accountable human signs: human oversight in practice. No legal claims.
+- **Pitch spine:** the AI's claims are checked before you see them, your reading is narrowed to what nothing checked, and you sign for exactly what you read; planted bugs decide how far the reviewer is trusted. The video shows the mechanics working (a test failing on base and passing on head, a struck citation, the verify output), not a dashboard. Borrowed pedigrees (continuous sampling, rules of evidence) belong on the idea pages, not in the video.
 
 ### Principles (for the concept card)
 
@@ -76,7 +78,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
 5. **Explainable routing.** The tier (Light, Focused, Full) comes from rules a person can read, one line per reason.
 6. **Written refusals.** A versioned list of things the AI never decides, each with the owner who does.
 7. **Measured trust, on a ladder.** Each area climbs Shadow → Calibrated → Trusted on evidence (planted-bug catch rate, clean spot checks) and drops a level after an escape. New areas start in Shadow: the reviewer runs but routes nothing. Humans set the thresholds; the evidence moves the level.
-8. **Blind first.** Expectations come from the requirement before the reviewer reads the author's story, and a test is evidence only if it fails before the change and passes after it. We show blind-first works by counting: the same reviewer anchored (given the author's description first) and blind-first, on the same planted contradictions.
+8. **Blind first.** Expectations come from the requirement before the reviewer reads the author's story, and a test is evidence only if it fails before the change and passes after it; Verified needs a test the authoring agent didn't write. We show blind-first works by counting: the same reviewer anchored (given the author's description first) and blind-first, on the same planted contradictions.
 9. **We don't grade our own homework.** Whoever writes the planted bugs never sees the reviewer's prompts, and every rate shows its sample size.
 
 ### Product in parts
@@ -266,7 +268,8 @@ There is no HTTP API: the contracts are data files, one shared function and two 
   findings: { id: string /* "f1" */, kind: "defect" | "contradiction" | "missing" | "scope-creep", area: Area | null,
               severity: "high" | "medium" | "low", title: string, detail: string,
               statement: string | null /* contradiction: the PR's sentence */, hunkIds: string[], citations: Citation[] }[],
-  refusals: { id: string /* "r1" */, ruleId: string /* "R1".."R7" */, reason: string, hunkIds: string[] }[],
+  refusals: { id: string /* "r1" */, ruleId: string /* "R1".."R7" */, source: "ai" | "rule" /* rule: a fixed trigger in policy, no model involved */,
+              reason: string, hunkIds: string[] }[],
   quoteCheck: { checked: number, passed: number, downgraded: number, dropped: number,
                 failures: { itemId: string, citation: Citation, reason: string }[] },
   retractions: { claimId: string, reason: string, output: string }[],
@@ -281,7 +284,7 @@ Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, n
 
 ### `TierDecision` and `route()` (`src/rules/route.ts`)
 
-`route(review: Review, levels: Record<Area, LadderLevel>, policy = routingPolicy): TierDecision` where
+`route(review: Review, levels: Record<Area, LadderLevel>, policy = routingPolicy, escapes: Partial<Record<Area, number>> = {}): TierDecision` where
 
 `TierDecision = { tier: Tier; reasons: { ruleId: string; text: string; tier: Tier }[]; coverage: Record<string /* hunkId */, Coverage>; readHunks: number; totalHunks: number; readLines: number; totalLines: number; readMinutes: number; fullMinutes: number }`.
 
@@ -290,12 +293,13 @@ Deterministic, pure, no I/O; runs in Node and the browser. Rules, in this order 
 1. **Coverage per hunk**, first match wins: `read` if a finding or refusal lists the hunk, if the hunk's file area is at level `shadow`, or if no claim with level `verified` or `supported` lists it; `verified` if a `verified` claim lists it; otherwise `supported`. Generated-file hunks follow the same rule.
 2. `R-size` · changed lines in non-generated files > 400 → full · "<n> changed lines outside generated files (limit 400)".
 3. `R-read-share` · read hunks ≥ 75% of all hunks → full · "Read <r> of <n> hunks: most of the change needs a human".
-4. `R-refusal` · any refusal → focused · "<n> items refused: a human decides" (singular "1 item refused: a human decides").
-5. `R-contradiction` · any contradiction finding → focused · "The PR description contradicts the code in <n> place(s)".
-6. `R-defect` · any defect finding → focused · "<n> defect(s) found".
-7. `R-sensitive-path` · any hunk in `policy.sensitivePaths` → focused · "Touches <path glob label>".
-8. `R-area-level` · for each area of the change's hunks (file areas) whose level is not `trusted` → focused · "<Area>: <Level>, may route Focused at best" (shadow: "<Area>: Shadow, the AI's output routes nothing here").
-9. `R-unread` · any hunk with coverage `read` and no other rule fired → focused · "<n> hunks have no checked evidence".
+4. `R-escape` · for each area of the change's hunks with `escapes[area] > 0` → full · "<Area>: a bug escaped here, the next changes get a full read". This is the "cluster arrest" of continuous sampling plans: after a defect gets through, inspection goes back to 100% until trust is earned again.
+5. `R-refusal` · any refusal → focused · "<n> items refused: a human decides" (singular "1 item refused: a human decides").
+6. `R-contradiction` · any contradiction finding → focused · "The PR description contradicts the code in <n> place(s)".
+7. `R-defect` · any defect finding → focused · "<n> defect(s) found".
+8. `R-sensitive-path` · any hunk in `policy.sensitivePaths` → focused · "Touches <path glob label>".
+9. `R-area-level` · for each area of the change's hunks (file areas) whose level is not `trusted` → focused · "<Area>: <Level>, may route Focused at best" (shadow: "<Area>: Shadow, the AI's output routes nothing here").
+10. `R-unread` · any hunk with coverage `read` and no other rule fired → focused · "<n> hunks have no checked evidence".
 
 **Without a readable report card** (missing or invalid), the app applies one rule on top of `route()`, in `decideChange()` (`src/features/inbox/`), so every screen shows the same decision: route with every area at Shadow, then force tier Full and every hunk `read`, drop `R-read-share` and `R-unread` (their counts no longer match), and add `R-no-track-record` · → full · "No readable report card: nothing counts as covered, so a person reads every hunk."
 
@@ -332,13 +336,14 @@ Receipt = { kind: "countersign-receipt", version: 1, changeId, requirementId, re
             owner: string /* GitHub login, the allowed_signers principal */, signedAt: string,
             checked: { item: string, by: "tool" | "ai-supported" | "human" }[],
             notChecked: { item: string, reason: string }[],
-            residualRisk: { text: string, acceptedRefusalIds: string[] } }
+            residualRisk: { text: string, acceptedRefusalIds: string[] },
+            hunks: { hunkId: string, file: string, coverage: Coverage, readBy: string | null /* the owner for "read" hunks, else null */ }[] }
 ReceiptRecord = { schemaVersion: 1, changeId: string, receipt: Receipt, signature: string /* armored SSH signature */,
                   notesRef: "refs/notes/countersign",
                   verify: { command: string, output: string, ok: boolean, verifiedAt: string } }
 ```
 
-The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt.diffSha256 !== review.diff.diffSha256`.
+The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt.diffSha256 !== review.diff.diffSha256`. `hunks` comes from `review.routing.coverage` at draft time, so the signature covers which hunks the owner read and which checks covered the rest. Because the receipt binds the diff, not a commit, a squash or rebase that leaves the diff unchanged keeps it valid.
 
 ### Diff identity (`src/lib/git/diffIdentity.ts`)
 
@@ -348,7 +353,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 
 - `pnpm pipeline run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
 - `pnpm evals`: blind runs (no A5) of every `planted-bug` input, 3 anchored and 3 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
-- Env: `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
+- Env: `AI_BACKEND` (`claude-code` default | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
 
 ### Receipt CLI (`src/receipt/cli.ts`)
 
@@ -360,18 +365,18 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 
 ### Simulated escapes (`src/lib/simulation/escapes.ts`)
 
-A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, undo(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes))`.
+A React context provider mounted in the root layout plus `useEscapes(): { escapes: Partial<Record<Area, number>>, record(area: Area): void, undo(area: Area): void, reset(): void, total: number }`, persisted to `localStorage` key `countersign.escapes.v1` (wrapped in try/catch; works without storage). Every screen that shows a tier computes it with `route(review, applyEscapes(reportCardLevels, escapes), routingPolicy, escapes)`.
 
 ### Policy (`src/policy/`)
 
-- `refusals.ts` (`refusalPolicyVersion = "v1"`): `R1` Requirement intent: whether the requested behaviour is right · decides: product owner (the library maintainers). `R2` Security design: trust boundaries, untrusted-input handling, crypto, secrets · security owner. `R3` Data handling: retention, personal data, legal · data protection owner. `R4` Irreversible changes: wire-format or persisted-data changes old readers can't read, destructive migrations, data deletion · change owner. `R5` New third-party dependencies and licences · tech lead. `R6` Changes it can't trace to the requirement · change owner. `R7` Public contract: new or changed public API, diagnostic IDs or documented behaviour · API owner (the maintainers).
+- `refusals.ts` (`refusalPolicyVersion = "v1"`): `R1` Requirement intent: whether the requested behaviour is right · decides: product owner (the library maintainers). `R2` Security design: trust boundaries, untrusted-input handling, crypto, secrets · security owner. `R3` Data handling: retention, personal data, legal · data protection owner. `R4` Irreversible changes: wire-format or persisted-data changes old readers can't read, destructive migrations, data deletion · change owner. `R5` New third-party dependencies and licences · tech lead. `R6` Changes it can't trace to the requirement · change owner. `R7` Public contract: new or changed public API, diagnostic IDs or documented behaviour · API owner (the maintainers). `fixedRefusals`: `[{ ruleId: "R7", glob: "**/PublicAPI.Unshipped.txt", reason: "Changes the declared public API" }, { ruleId: "R7", glob: "src/MessagePack.Annotations/**", reason: "Changes the public attributes" }]`; after A3 the pipeline adds a `source: "rule"` refusal for the hunks each glob matches (merged into an AI `R7` refusal on the same hunks), so these always reach a human whatever the model says.
 - `areas.ts`: file kind and area by path, first match wins: `tests/**/Resources/**` and `**/*.verified.*` → generated, area null · `tests/**` → test, area null · `**/*.md` → docs, area null except `doc/analyzers/**` → analyzer · `src/MessagePack.SourceGenerator/Analyzers/**`, `**/AnalyzerReleases.*.md` → source, analyzer · `src/MessagePack.SourceGenerator/Transforms/**`, `src/MessagePack/**` → source, security (they generate or run deserialization of untrusted input) · `src/MessagePack.SourceGenerator/**`, `src/MessagePack.Annotations/**` → source, generator · anything else → source, area null. Plus the four area checklists for A3 (6–10 items each, written by T09 from public .NET, Roslyn and OWASP deserialization guidance, labelled "our checklist until Tieto's standards arrive").
 - `routing.ts`: `sizeLimit: 400`, `readShareFull: 0.75`, `linesPerMinute: 25`, `sensitivePaths: [{ glob: "src/MessagePack.Annotations/**", label: "public attributes (MessagePack.Annotations)" }, { glob: "**/AnalyzerReleases.*.md", label: "diagnostic IDs (analyzer releases)" }, { glob: "src/MessagePack/**", label: "the runtime serializer" }]`.
 - `ladder.ts`: the thresholds above.
 
 ## 6. AI behaviour
 
-**Model and client.** Every call goes through `src/ai/client.ts`: the official `@anthropic-ai/sdk`, model `claude-opus-5-5`, structured outputs (the SDK's `messages.parse` with a zod schema per call), `output_config.effort: "high"`, adaptive thinking (the model default; it can't be disabled), `max_tokens: 16000`, request timeout 180 s, `maxRetries: 2`, and the server-side refusal fallback (`betas: ["server-side-fallback-2026-07-01"]`, `fallbacks: "default"`); a `refusal` stop reason is logged and fails the step. No `temperature` (removed on this model): repeatability comes from the recordings, not from sampling. On a schema validation failure the client retries once with the validation error appended; a second failure fails the step and the run (no partial review is written). Each call logs model, prompt version, input and output tokens, cost (input $4 and output $20 per million tokens) and milliseconds, never the content. Recording key: sha256 of model + prompt version + the rendered prompt + the run index.
+**Model and client.** Every call goes through `src/ai/client.ts`, which has two backends chosen by `AI_BACKEND`. **`claude-code`** (default): Claude Code's headless mode (`claude -p`) on the operator's own subscription, one turn, no tools, our system text replacing Claude Code's, JSON output parsed and validated with the call's zod schema, effort through `CLAUDE_CODE_EFFORT_LEVEL`; exact flags per Claude Code's CLI reference, checked in T10; cost logged as Claude Code reports it. **`api`**: the official `@anthropic-ai/sdk`. Both use model `claude-opus-5-5` and the same prompts, retry and recording rules. API backend details: structured outputs (the SDK's `messages.parse` with a zod schema per call), `output_config.effort: "high"`, adaptive thinking (the model default; it can't be disabled), `max_tokens: 16000`, request timeout 180 s, `maxRetries: 2`, and the server-side refusal fallback (`betas: ["server-side-fallback-2026-07-01"]`, `fallbacks: "default"`); a `refusal` stop reason is logged and fails the step. No `temperature` (removed on this model): repeatability comes from the recordings, not from sampling. On a schema validation failure the client retries once with the validation error appended; a second failure fails the step and the run (no partial review is written). Each call logs model, prompt version, input and output tokens, cost (input $4 and output $20 per million tokens) and milliseconds, never the content. Recording key: sha256 of model + prompt version + the rendered prompt + the run index.
 
 **Prompts** live in `src/prompts/a<n>.ts`, each exporting `version` (e.g. `"a2.v1"`), the system text, a typed `render(input)` and its zod output schema. Changing a prompt bumps its version and the reviewer version (`rv1` → `rv2`), and is logged in `docs/lessons.md`. Untrusted text (the diff, the author description, file contents) goes in clearly delimited blocks and is never treated as instructions.
 
@@ -393,7 +398,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 ### A3 · Area review and refusals (`a3.v1`)
 
 - **Input:** the hunks, the touched files (as A2), the four area checklists and the refusal policy (rule ids, titles, deciders), A1's expectation and A2's claims.
-- **Output:** `{ findings: { kind: "defect" | "missing" | "scope-creep", area, severity, title, detail, hunkIds, citations }[], refusals: { ruleId, reason, hunkIds }[] }`. Every finding needs at least one citation that passes the quote check, or it is dropped and counted (`hallucinations.findingsDropped`).
+- **Output:** `{ findings: { kind: "defect" | "missing" | "scope-creep", area, severity, title, detail, hunkIds, citations }[], refusals: { ruleId, reason, hunkIds }[] }`. Every finding needs at least one citation that passes the quote check, or it is dropped and counted (`hallucinations.findingsDropped`). The check also tests fit to the record: a refusal whose `ruleId` isn't in the refusal policy is dropped and recorded in `quoteCheck.failures` with reason "unknown rule id". Struck items stay visible there and on S3; nothing the model said is silently lost.
 - **Note:** one generalist call with per-area checklists; the planted bugs measure that breadth.
 - **Eval cases:** the 10 planted bugs (caught when a defect or missing finding has a citation in the answer key's file whose lines overlap the planted range ±3 lines, and its area equals the answer key's); on `mp-2283` at least one refusal cites `R7` or `R1` (the change silently drops diagnostics for types from referenced assemblies, a documented-behaviour decision).
 
@@ -409,7 +414,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - **Two sources of tests:** (1) the PR's own added or changed test methods; (2) one test per functional requirement item, written by A5 **from the requirement and A1's expectation, not from the diff**.
 - **A5 input:** the requirement item, A1's expectation for it, and the base-side text of one existing test file in the touched test project as a style example. No hunks.
 - **A5 output:** `{ testFile: string /* path inside the test project */, code: string, testNames: string[], requirementItemId: string }`.
-- **Run:** in two git worktrees of `SAMPLE_REPO_DIR` (base and head), the test file is added to each, then `dotnet test <project> --filter "FullyQualifiedName~<name>"` runs on both (timeout 15 min per side). For (1) the base worktree gets only the PR's test files. A claim citing hunks of that requirement item becomes `verified` only when a test **fails on base and passes on head**; both outputs are attached as evidence. Passes on both: the claim stays `supported`, noted "the test doesn't tell the versions apart". Fails on head with a test failure (not a build error): the claim is retracted (`retractions`, logged in `docs/lessons.md`). Build error: logged and counted, the claim stays as it was.
+- **Run:** in two git worktrees of `SAMPLE_REPO_DIR` (base and head), the test file is added to each, then `dotnet test <project> --filter "FullyQualifiedName~<name>"` runs on both (timeout 15 min per side). For (1) the base worktree gets only the PR's test files. A claim citing hunks of that requirement item becomes `verified` only when an A5 test (2) **fails on base and passes on head**; both outputs are attached as evidence. A PR's own test (1) that does the same makes the claim at most `supported`, noted "the PR's own test: the same agent wrote the code and the test" (an agent can encode one mistake in both; `docs/research.md`). Passes on both: the claim stays `supported`, noted "the test doesn't tell the versions apart". Fails on head with a test failure (not a build error): the claim is retracted (`retractions`, logged in `docs/lessons.md`). Build error: logged and counted, the claim stays as it was.
 - **Go/no-go Sat 01:00 (Miska):** `dotnet test tests/MessagePack.SourceGenerator.Tests` runs on the pipeline laptop (.NET SDK 8.0.4xx installed). With the ideas-first emphasis, a borderline result (it runs only after workarounds, or a run takes over 15 min) counts as no-go. If not, A5 is cut, no claim can be Verified, S2 shows Supported as the top level, and the concept card's limits say why.
 
 ### Planted-bug eval
@@ -419,7 +424,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 
 ## 7. External integrations
 
-- Anthropic API (`ANTHROPIC_API_KEY` from the Junction partner credits, spending limit set by Miska) through `src/ai/client.ts`, with record/replay.
+- Claude through `src/ai/client.ts`, with record/replay: Claude Code headless on Miska's Max plan by default (recording runs are scheduled outside build sessions, checked against `/usage`); the Anthropic API (`ANTHROPIC_API_KEY`, spending limit set by Miska) as the alternative backend.
 - git and GitHub: our fork of Tieto's repo (branches, worktrees, notes under `refs/notes/countersign`, pushed with `git push origin refs/notes/countersign`); SSH signing with `ssh-keygen -Y` (namespace `countersign-receipt`).
 - .NET SDK 8.0.4xx on the pipeline laptop for A5.
 - Vercel: project "junction-2026" (team "junction"), Git integration, a preview per PR, production from `main`; `vercel.json` sets the framework to Next.js and the pnpm commands.
@@ -505,6 +510,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 - **What we measured**, numbers with sample sizes, or "not measured yet" and why.
 - **How to adopt it** in your own review product: what you need, what it costs, the smallest first step.
 - **Limits and failure modes**, including the ones we saw (link `docs/lessons.md` entries).
+- **Where it comes from**, when the idea borrows from another field, in one or two sentences with the source from `docs/research.md`: the trust ladder from continuous sampling plans (Dodge, 1943), the quote check from the admissibility of expert evidence (Daubert, 1993), blind-first from measured anchoring of reviewers on AI hints.
 - **In the code**, links to the modules with the idea header (`.claude/rules/readability.md`) and to the screen that shows it.
 
 **T09 · hunk count.** T09 reports the real hunk count of `mp-2283` and, if it isn't 8, updates the example numbers in sections 2–3 in its PR. Tests compute expectations from the data, never from the example numbers.
