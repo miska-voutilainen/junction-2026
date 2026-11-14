@@ -23,7 +23,7 @@ interface DiffViewProps {
  * snapshot files last. This ordering is the hunk coverage map (idea 3) made
  * visible: the reader sees what to read before anything else.
  */
-export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, onToggleRead }: DiffViewProps) {
+export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, onToggleRead }: Readonly<DiffViewProps>) {
   const coveredCount = sections.covered.length + sections.generated.length;
 
   return (
@@ -71,14 +71,14 @@ function ReadThisSection({
   highlightedLines,
   readIds,
   onToggleRead,
-}: {
+}: Readonly<{
   entries: HunkEntry[];
   coveredCount: number;
   tokens: HighlightedHunks;
   highlightedLines: HighlightedLines[];
   readIds: ReadonlySet<string>;
   onToggleRead: (hunkId: string) => void;
-}) {
+}>) {
   if (entries.length === 0) {
     return (
       <p className="rounded-control border border-border-subtle bg-surface-panel px-3 py-2 text-base text-text-secondary">
@@ -115,7 +115,7 @@ interface CoveredListProps {
   reveal: DiffReveal;
 }
 
-function CoveredList({ entries, tokens, highlightedLines, reveal }: CoveredListProps) {
+function CoveredList({ entries, tokens, highlightedLines, reveal }: Readonly<CoveredListProps>) {
   return (
     <div className="divide-y divide-border-subtle overflow-hidden rounded-control border border-border-subtle bg-surface-code">
       {entries.map((entry) => (
@@ -132,7 +132,7 @@ function CoveredList({ entries, tokens, highlightedLines, reveal }: CoveredListP
   );
 }
 
-function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: CoveredListProps) {
+function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<CoveredListProps>) {
   const fileCount = new Set(entries.map((entry) => entry.hunk.file)).size;
   const noun = fileCount === 1 ? "generated snapshot file" : "generated snapshot files";
   return (

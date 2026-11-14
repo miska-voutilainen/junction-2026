@@ -11,7 +11,7 @@ import type { BlindCheck, FindingView } from "./stepsModel";
  * description and the code disagree, and how much reading blind helped on
  * the planted contradictions. Spec section 3, S2 Blind check.
  */
-export function BlindCheckStep({ blindCheck }: { blindCheck: BlindCheck }) {
+export function BlindCheckStep({ blindCheck }: Readonly<{ blindCheck: BlindCheck }>) {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-1.5">
@@ -40,7 +40,7 @@ export function BlindCheckStep({ blindCheck }: { blindCheck: BlindCheck }) {
   );
 }
 
-function Expected({ requirementId, expected }: Pick<BlindCheck, "requirementId" | "expected">) {
+function Expected({ requirementId, expected }: Readonly<Pick<BlindCheck, "requirementId" | "expected">>) {
   // Anchored runs have no expectation: nothing was written down before the diff.
   if (expected.length === 0) return null;
   return (
@@ -63,7 +63,7 @@ function Expected({ requirementId, expected }: Pick<BlindCheck, "requirementId" 
   );
 }
 
-function Contradictions({ contradictions }: { contradictions: FindingView[] }) {
+function Contradictions({ contradictions }: Readonly<{ contradictions: FindingView[] }>) {
   return (
     <section aria-labelledby="contradictions-heading" className="flex flex-col gap-3">
       <h4 id="contradictions-heading" className="text-sm font-semibold text-text-primary">
@@ -91,7 +91,7 @@ function Contradictions({ contradictions }: { contradictions: FindingView[] }) {
 }
 
 /** The measured effect of reading blind: this change's planted contradiction, then the count over every plant. */
-function ReadingOrder({ blindCheck }: { blindCheck: BlindCheck }) {
+function ReadingOrder({ blindCheck }: Readonly<{ blindCheck: BlindCheck }>) {
   if (blindCheck.overallLine === null) return null;
   return (
     <section aria-labelledby="reading-order-heading" className="flex flex-col gap-2">
@@ -121,7 +121,7 @@ function ReadingOrder({ blindCheck }: { blindCheck: BlindCheck }) {
   );
 }
 
-function FindingList({ heading, emptyText, findings }: { heading: string; emptyText: string; findings: FindingView[] }) {
+function FindingList({ heading, emptyText, findings }: Readonly<{ heading: string; emptyText: string; findings: FindingView[] }>) {
   return (
     <section aria-label={heading} className="flex flex-col gap-2">
       <h4 className="text-sm font-semibold text-text-primary">

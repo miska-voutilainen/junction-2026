@@ -26,14 +26,14 @@ export function ReviewHeader({
   signer,
   receiptHref,
   isReceiptUnreadable = false,
-}: {
+}: Readonly<{
   change: ChangeInput;
   review?: Review;
   receiptStatus?: ReceiptStatusValue;
   signer: SignerState;
   receiptHref?: string;
   isReceiptUnreadable?: boolean;
-}) {
+}>) {
   return (
     <header className="flex flex-col gap-2">
       <div className="flex items-start justify-between gap-4">
@@ -63,7 +63,7 @@ export function ReviewHeader({
   );
 }
 
-function MetaRow({ change, review }: { change: ChangeInput; review: Review }) {
+function MetaRow({ change, review }: Readonly<{ change: ChangeInput; review: Review }>) {
   const { diff, reviewer, run } = review;
   return (
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">

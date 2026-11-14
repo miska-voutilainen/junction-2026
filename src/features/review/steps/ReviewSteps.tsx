@@ -36,7 +36,7 @@ interface ReviewStepsProps {
  * keys 1 to 4 are bound by `useStepKeys`). The active underline slides
  * between tabs through one shared `layoutId`. UI plan section 5.2.
  */
-export function ReviewSteps({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: ReviewStepsProps) {
+export function ReviewSteps({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: Readonly<ReviewStepsProps>) {
   const tabs = useMemo(() => buildStepTabs(review, record, signState), [review, record, signState]);
   const slide = useEnterTransition();
 
@@ -118,7 +118,7 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
   );
 }
 
-function ActiveStep({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: ReviewStepsProps) {
+function ActiveStep({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: Readonly<ReviewStepsProps>) {
   const story = useMemo(() => buildStory(review), [review]);
   const blindCheck = useMemo(() => buildBlindCheck(review, reportCard), [review, reportCard]);
   const refusals = useMemo(() => buildRefusals(review, record, signState), [review, record, signState]);

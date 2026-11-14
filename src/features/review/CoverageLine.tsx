@@ -22,7 +22,7 @@ const MAX_PLAIN_REASONS = 2;
  * coverage map (idea 3): they come from `route()`, so every one of them can
  * be traced to a rule. Spec section 3, S2 tier banner.
  */
-export function CoverageLine({ decision }: { decision: TierDecision }) {
+export function CoverageLine({ decision }: Readonly<{ decision: TierDecision }>) {
   return (
     <section aria-label="Review tier" className="flex flex-col gap-2">
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-md">
@@ -41,7 +41,7 @@ export function CoverageLine({ decision }: { decision: TierDecision }) {
  * nothing animates after hydration; below that, more than two go behind a
  * "Why <Tier>" disclosure to keep the phone's first screen short.
  */
-function Reasons({ decision }: { decision: TierDecision }) {
+function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
   const list = (
     <ul className="flex flex-col gap-1">
       {decision.reasons.map((reason, index) => (

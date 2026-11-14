@@ -18,7 +18,7 @@ interface RefusedStepProps {
  * A refusal stays open until a valid receipt for this exact diff accepts it.
  * Spec section 3, S2 Refused.
  */
-export function RefusedStep({ refusals, onShowHunk }: RefusedStepProps) {
+export function RefusedStep({ refusals, onShowHunk }: Readonly<RefusedStepProps>) {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex flex-col gap-1.5">
@@ -46,7 +46,7 @@ export function RefusedStep({ refusals, onShowHunk }: RefusedStepProps) {
   );
 }
 
-function RefusalItem({ refusal, onShowHunk }: { refusal: RefusalView } & Pick<RefusedStepProps, "onShowHunk">) {
+function RefusalItem({ refusal, onShowHunk }: Readonly<{ refusal: RefusalView } & Pick<RefusedStepProps, "onShowHunk">>) {
   return (
     <li className="flex flex-col gap-2 border-t border-border-subtle py-4 first:border-t-0 first:pt-0">
       <p className="flex items-baseline gap-2">
@@ -87,7 +87,7 @@ const FIXED_RULE_NOTE = "A fixed policy rule raised this, no model involved. It 
  * reader description carry the explanation (idea 8). The tooltip is controlled
  * so a tap opens it on a touch screen, where hover and focus never fire.
  */
-function RaisedBy({ source }: { source: RefusalView["source"] }) {
+function RaisedBy({ source }: Readonly<{ source: RefusalView["source"] }>) {
   const chip = "w-fit rounded-chip border border-border-default px-1.5 text-xs text-text-muted";
   const [isOpen, setIsOpen] = useState(false);
   if (source === "ai") return <span className={chip}>AI</span>;
