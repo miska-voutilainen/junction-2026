@@ -2,6 +2,18 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-15 · The new-API rule for A5 would change no claim: no-go (#215)
+
+- **What we checked:** the follow-up named in the A5 entry below: count "does not compile on the base, passes on the head" as Verified when the base error is in A5's own test file and names a symbol the diff declares or changes. It was checked against every A5 build error stored in `inconclusiveTests` of the four recorded reviews, and the symbols `changedDeclarations()` reads from the `src/**/*.cs` hunks.
+- **Result:** the rule would lift 0 of 40 claims. mp-2129's 7 A5 methods fail to build on the base for two reasons:
+  - 5 hit `CS0117 'MyGeneratedCompositeResolver' does not contain a definition for 'Instance'` in `GeneratedCompositeResolverTests.cs`. That file is not A5's own, and `Instance` is emitted by the source generator, not declared in the diff.
+  - 2 hit `CS0535` on `IMessagePackFormatter<T>.Deserialize`, which the diff doesn't change.
+
+  mp-2283's 2 F2 methods hit `CS0104` (an ambiguous reference): a mistake in the test, not missing API. mp-2234 and mp-2297 have no A5 build errors.
+
+- **Why not widen it:** counting symbols a generator would emit, or errors in neighbouring files, means guessing which build errors are "the feature is missing". A wrong guess turns a test that never ran into Verified, the one mistake the evidence levels exist to prevent.
+- **What we changed (Miska decided to go ahead; the evidence said no-go):** nothing in the rule, and no re-recording. The known limit stays as written below: changes that add API stay Supported unless a test also exercises behaviour that compiles on both sides.
+
 ## 2026-11-14 · The 93 findings on planted-bug runs that match no plant
 
 - **What happened:** The 30 planted-bug runs (10 plants, 3 runs each) produced 117 findings; 24 match their plant by the eval's rule. The report card leaves the other 93 unscored, so the share of wrong findings is unknown, and it's the first thing a reviewer of an AI reviewer asks.
@@ -34,7 +46,7 @@ The entry below, "Security caught 0 of 3 planted bugs: all three are real misses
 
 - **What happened:** With `a5.v2` in Docker, no claim was retracted on any of the three changes. mp-2297 has 7 claims Verified and 6 Supported; 4 test methods tell the versions apart and none fail on the head. mp-2129 and mp-2234 add new API, so the tests of the feature, A5's and the pull request's, do not compile on the base commit and get no verdict under the rule. mp-2129: 17 claims, all Supported; 7 A5 and 7 PR test methods have a build error on the base, and 4 PR test files sit in another test project. mp-2234: 10 claims, all Supported; 2 PR test methods have a build error on the base and 1 test file sits in another test project. The build errors are `CS0117` and `CS0535`: the tests call members the base version does not have.
 - **Why:** A test that needs an API the change introduces cannot compile on the base. The runner reads that as no verdict, never as a failure of the claim, so the claims stay Supported. A build error in one file also blocks every test in that project build on that side, so a good test can inherit the error of its neighbour.
-- **What we changed (Miska decided):** Nothing: the rule stays and the recordings ship as they came out. We did not tune the prompts to these changes. Known limit and follow-up: count "does not compile on the base, passes on the head" as Verified only when the base error is in A5's own file and names a symbol the diff adds.
+- **What we changed (Miska decided):** Nothing: the rule stays and the recordings ship as they came out. We did not tune the prompts to these changes. Known limit. The follow-up rule (Verified when the base error is in A5's own file and names a symbol the diff adds) was checked on 2026-11-15 and would change no claim (entry above).
 
 ## 2026-11-14 · A5 on mp-2283, final recording: two claims Verified by two methods, the F2 tests did not build
 
