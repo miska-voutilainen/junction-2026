@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Copy, FileDiff, Inbox } from "lucide-react";
+import { ArrowRight, Copy, FileDiff, Gauge, Inbox } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -228,6 +228,7 @@ function buildQuickActions(
 function buildPages(needsReviewCount: number): Row[] {
   return [
     { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
+    { id: "go-reviewer", label: "Reviewer report card", meta: "Trust by area", icon: Gauge, shortcut: ["g", "r"], href: "/reviewer" },
   ];
 }
 

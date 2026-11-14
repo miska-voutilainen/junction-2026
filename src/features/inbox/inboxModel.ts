@@ -20,8 +20,11 @@ export interface InboxSource {
   receipt: ReceiptRecord | "unreadable" | null;
 }
 
-/** The report card as the server found it. */
-export type ReportCardInput = { state: "ok"; data: ReportCard } | { state: "missing" } | { state: "unreadable" };
+/** The report card as the server found it; `error` is the validation message when it is unreadable. */
+export type ReportCardInput =
+  | { state: "ok"; data: ReportCard }
+  | { state: "missing" }
+  | { state: "unreadable"; error?: string };
 
 /** The notice shown above the list when the report card file fails validation. */
 export const REPORT_CARD_NOTICE =

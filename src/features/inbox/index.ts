@@ -1,3 +1,4 @@
 export { InboxError } from "./InboxError";
 export { InboxScreen } from "./InboxScreen";
-export type { InboxSource, ReportCardInput } from "./inboxModel";
+export { buildInboxModel, inboxLevels, toShellChanges } from "./inboxModel";
+export type { InboxModel, InboxSource, InboxSummary, ReportCardInput } from "./inboxModel";
