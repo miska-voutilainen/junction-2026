@@ -4,9 +4,7 @@ import { canonicalJson } from "./canonicalJson";
 describe("canonicalJson", () => {
   it("sorts keys at every depth and indents with two spaces", () => {
     const text = canonicalJson({ b: 1, a: { d: true, c: null } });
-    expect(text).toBe(
-      '{\n  "a": {\n    "c": null,\n    "d": true\n  },\n  "b": 1\n}\n',
-    );
+    expect(text).toBe('{\n  "a": {\n    "c": null,\n    "d": true\n  },\n  "b": 1\n}\n');
   });
 
   it("keeps array order and sorts keys inside array items", () => {
@@ -16,9 +14,7 @@ describe("canonicalJson", () => {
   });
 
   it("orders integer-like keys as strings, not numerically", () => {
-    expect(canonicalJson({ b: 1, 10: 1, 2: 1 })).toBe(
-      '{\n  "10": 1,\n  "2": 1,\n  "b": 1\n}\n',
-    );
+    expect(canonicalJson({ b: 1, 10: 1, 2: 1 })).toBe('{\n  "10": 1,\n  "2": 1,\n  "b": 1\n}\n');
   });
 
   it("orders keys by code unit, so uppercase sorts before lowercase", () => {

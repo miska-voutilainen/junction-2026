@@ -7,9 +7,7 @@ import { CommandError } from "./context";
  * tests name Git for Windows' build; elsewhere the PATH one is used.
  */
 export const defaultSshKeygenPath =
-  process.platform === "win32"
-    ? "C:/Program Files/Git/usr/bin/ssh-keygen.exe"
-    : "ssh-keygen";
+  process.platform === "win32" ? "C:/Program Files/Git/usr/bin/ssh-keygen.exe" : "ssh-keygen";
 
 /** Forward slashes for every path handed to ssh-keygen: its msys build misreads backslashes. */
 export function toSshPath(path: string): string {

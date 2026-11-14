@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { CommandError, type ReceiptOptions } from "./context";
@@ -31,7 +32,9 @@ async function main(): Promise<number> {
     },
   });
   const [command, changeId] = positionals;
-  if (!changeId || !["draft", "sign", "verify", "export"].includes(command)) {
+  const isKnownCommand = ["draft", "sign", "verify", "export"].includes(command);
+  // The id goes into file paths, so only plain ids are accepted.
+  if (!changeId || !isKnownCommand || !/^[a-z0-9-]+$/i.test(changeId)) {
     console.error(usage);
     return 1;
   }
@@ -51,10 +54,11 @@ function runCommand(
       ownerOption: values.owner,
       force: values.force,
     });
-  if (command === "sign")
-    return signReceipt(changeId, options, { keyOption: values.key });
+  if (command === "sign") return signReceipt(changeId, options, { keyOption: values.key });
   if (command === "export") return exportReceipt(changeId, options);
-  return verifyReceipt(changeId, options).then((verified) => verified.lines);
+  if (command === "verify")
+    return verifyReceipt(changeId, options).then((verified) => verified.lines);
+  throw new CommandError(1, usage);
 }
 
 /** The project root is the working directory: pnpm runs scripts from it. */
@@ -66,6 +70,9 @@ function optionsFromEnv(): ReceiptOptions {
       "SAMPLE_REPO_DIR is not set. Run pnpm seed, then set it to the clone's absolute path.",
     );
   }
+  if (!existsSync(repoDir)) {
+    throw new CommandError(1, `SAMPLE_REPO_DIR ${repoDir} does not exist. Run pnpm seed.`);
+  }
   const projectRoot = process.cwd();
   const dataDir = process.env.COUNTERSIGN_DATA_DIR ?? join(projectRoot, "data");
   return {
@@ -73,15 +80,16 @@ function optionsFromEnv(): ReceiptOptions {
     dataDir,
     draftsDir: join(projectRoot, ".scratch", "receipts"),
     allowedSignersPath:
-      process.env.COUNTERSIGN_ALLOWED_SIGNERS ??
-      join(dataDir, "sample", "allowed_signers"),
+      process.env.COUNTERSIGN_ALLOWED_SIGNERS ?? join(dataDir, "sample", "allowed_signers"),
     sshKeygenPath: defaultSshKeygenPath,
   };
 }
 
 main()
-  .then((exitCode) => process.exit(exitCode))
+  .then((exitCode) => {
+    process.exitCode = exitCode;
+  })
   .catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : String(error));
-    process.exit(error instanceof CommandError ? error.exitCode : 1);
+    process.exitCode = error instanceof CommandError ? error.exitCode : 1;
   });

@@ -36,8 +36,6 @@ function writeObject(object: Record<string, unknown>, indent: string): string {
   const keys = Object.keys(object).sort();
   if (keys.length === 0) return "{}";
   const inner = `${indent}  `;
-  const lines = keys.map(
-    (key) => `${inner}${JSON.stringify(key)}: ${write(object[key], inner)}`,
-  );
+  const lines = keys.map((key) => `${inner}${JSON.stringify(key)}: ${write(object[key], inner)}`);
   return `{\n${lines.join(",\n")}\n${indent}}`;
 }

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,11 +8,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ReceiptRecordSchema, ReceiptSchema } from "@/contracts/receipt";
 import { ReviewSchema } from "@/contracts/review";
 import { computeDiffIdentity } from "@/lib/git";
-import { CommandError, type ReceiptOptions } from "./context";
+import { CommandError, signatureNamespace, type ReceiptOptions } from "./context";
 import { draftReceipt } from "./draft";
 import { exportReceipt } from "./exportRecord";
 import { signReceipt } from "./sign";
-import { defaultSshKeygenPath } from "./sshKeygen";
+import { canonicalJson } from "./canonicalJson";
+import { defaultSshKeygenPath, toSshPath } from "./sshKeygen";
 import { verifyReceipt } from "./verify";
 
 /** Over a real temp git repo and a throwaway ssh key: git and ssh-keygen are not mocked. */
@@ -24,7 +25,13 @@ const slow = 60_000;
 let root: string;
 let options: ReceiptOptions;
 let keyPath: string;
+let otherKeyPath: string;
 let shas: { a: string; b: string; c: string };
+
+/** Creates a throwaway ed25519 key with the given passphrase (empty = unencrypted). */
+function makeKey(path: string, passphrase: string): void {
+  run(root, defaultSshKeygenPath, ["-q", "-t", "ed25519", "-N", passphrase, "-f", toSshPath(path)]);
+}
 
 function run(cwd: string, command: string, args: string[]): string {
   return execFileSync(command, args, { cwd, encoding: "utf8" }).trim();
@@ -42,8 +49,7 @@ async function writeJson(path: string, value: unknown): Promise<void> {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-const changeInputPath = () =>
-  join(options.dataDir, "sample", "changes", `${changeId}.json`);
+const changeInputPath = () => join(options.dataDir, "sample", "changes", `${changeId}.json`);
 
 function changeInput(headSha: string) {
   return {
@@ -61,25 +67,94 @@ function changeInput(headSha: string) {
   };
 }
 
-/** A review of A..B: the mp-2283 fixture with this repo's diff identity. */
+/** Four hunks of mixed coverage: h1 verified, h2 supported, h3 and h4 read. */
+const coverageByHunk = { h1: "verified", h2: "supported", h3: "read", h4: "read" } as const;
+
+/** A schema-valid review of A..B with a few hunks of mixed coverage, built here instead of read from a fixture. */
 async function writeReview(): Promise<void> {
-  const fixture = JSON.parse(
-    readFileSync(
-      join(process.cwd(), "data/fixtures/runs/mp-2283/review.json"),
-      "utf8",
-    ),
-  );
   const identity = await computeDiffIdentity(options.repoDir, shas.a, shas.b);
   const review = {
-    ...fixture,
+    schemaVersion: 1,
     changeId,
-    diff: { ...fixture.diff, baseSha: shas.a, headSha: shas.b, ...identity },
+    requirementId: "req-1",
+    title: "Test change",
+    authorAgent: "test-agent",
+    kind: "tieto",
+    mode: "blind-first",
+    reviewer: {
+      version: "rv1",
+      model: "test-model",
+      promptVersions: { a1: "v1", a2: "v1", a3: "v1", a4: "v1", a5: "v1" },
+    },
+    run: {
+      id: "run-1",
+      startedAt: "2026-01-01T00:00:00Z",
+      finishedAt: "2026-01-01T00:01:00Z",
+      durationMs: 60000,
+      usage: { inputTokens: 0, outputTokens: 0, costUsd: 0, calls: 0 },
+    },
+    diff: {
+      baseSha: shas.a,
+      headSha: shas.b,
+      ...identity,
+      filesChanged: 1,
+      linesAdded: 1,
+      linesRemoved: 0,
+    },
+    files: [
+      {
+        path: "f.txt",
+        kind: "source",
+        area: null,
+        added: 1,
+        removed: 0,
+        hunkIds: ["h1", "h2", "h3", "h4"],
+      },
+    ],
+    hunks: Object.keys(coverageByHunk).map((id) => ({
+      id,
+      file: "f.txt",
+      header: "@@ -1 +1,2 @@",
+      oldStart: 1,
+      oldLines: 1,
+      newStart: 1,
+      newLines: 2,
+      lines: [],
+    })),
+    requirement: {
+      id: "req-1",
+      title: "Test requirement",
+      intent: "Test",
+      functional: [],
+      nonFunctional: [],
+      derivedFrom: { kind: "github-issue", url: "https://example.com/1", note: "test" },
+    },
+    expectation: null,
+    story: { what: "Adds a line", why: "Test", touches: [] },
+    claims: [],
+    findings: [],
+    refusals: [],
+    quoteCheck: { checked: 0, passed: 0, downgraded: 0, dropped: 0, failures: [] },
+    retractions: [],
+    receiptDraft: {
+      checked: [{ item: "Adds a line", by: "tool" }],
+      notChecked: [{ item: "Performance", reason: "No benchmark" }],
+      residualRisk: { text: "None known", acceptedRefusalIds: [] },
+    },
+    routing: {
+      tier: "focused",
+      reasons: [],
+      coverage: coverageByHunk,
+      readHunks: 2,
+      totalHunks: 4,
+      readLines: 2,
+      totalLines: 4,
+      readMinutes: 1,
+      fullMinutes: 2,
+    },
   };
   ReviewSchema.parse(review);
-  await writeJson(
-    join(options.dataDir, "runs", changeId, "review.json"),
-    review,
-  );
+  await writeJson(join(options.dataDir, "runs", changeId, "review.json"), review);
 }
 
 beforeAll(async () => {
@@ -97,22 +172,15 @@ beforeAll(async () => {
   shas = { a, b, c: commitAll(repoDir, "C") };
 
   keyPath = join(root, "key");
-  run(root, defaultSshKeygenPath, [
-    "-q",
-    "-t",
-    "ed25519",
-    "-N",
-    "",
-    "-C",
-    "test",
-    "-f",
-    keyPath,
-  ]);
+  otherKeyPath = join(root, "other-key");
+  makeKey(keyPath, "");
+  makeKey(otherKeyPath, "");
   const publicKey = readFileSync(`${keyPath}.pub`, "utf8").trim();
+  const otherPublicKey = readFileSync(`${otherKeyPath}.pub`, "utf8").trim();
   const allowedSignersPath = join(root, "allowed_signers");
   await writeFile(
     allowedSignersPath,
-    `# comment line\n${owner} namespaces="countersign-receipt" ${publicKey}\n`,
+    `# comment line\n${owner} namespaces="countersign-receipt" ${publicKey}\nother-owner namespaces="countersign-receipt" ${otherPublicKey}\n`,
   );
 
   options = {
@@ -149,8 +217,7 @@ const showNote = (sha: string) =>
   run(options.repoDir, "git", ["notes", "--ref=countersign", "show", sha]);
 const noteBlobOn = (sha: string) =>
   run(options.repoDir, "git", ["notes", "--ref=countersign", "list", sha]);
-const pointChangeAt = (headSha: string) =>
-  writeJson(changeInputPath(), changeInput(headSha));
+const pointChangeAt = (headSha: string) => writeJson(changeInputPath(), changeInput(headSha));
 
 // The tests share one repo and run in order: each leaves it as the next expects.
 describe("receipt commands", () => {
@@ -158,20 +225,14 @@ describe("receipt commands", () => {
     "drafts a schema-valid receipt with the hunk ledger",
     async () => {
       await draftReceipt(changeId, options, { ownerOption: owner });
-      const draft = JSON.parse(
-        readFileSync(join(options.draftsDir, `${changeId}.json`), "utf8"),
-      );
+      const draft = JSON.parse(readFileSync(join(options.draftsDir, `${changeId}.json`), "utf8"));
       const parsed = ReceiptSchema.omit({ signedAt: true }).parse(draft);
-      expect(parsed.hunks).toHaveLength(8);
+      expect(parsed.hunks).toHaveLength(4);
       expect(
-        parsed.hunks
-          .filter((hunk) => hunk.readBy === owner)
-          .map((hunk) => hunk.hunkId),
+        parsed.hunks.filter((hunk) => hunk.readBy === owner).map((hunk) => hunk.hunkId),
       ).toEqual(["h3", "h4"]);
       expect(
-        parsed.hunks.every(
-          (hunk) => (hunk.coverage === "read") === (hunk.readBy !== null),
-        ),
+        parsed.hunks.every((hunk) => (hunk.coverage === "read") === (hunk.readBy !== null)),
       ).toBe(true);
       expect(parsed.commit).toBe(shas.b);
     },
@@ -181,11 +242,7 @@ describe("receipt commands", () => {
   it(
     "refuses to overwrite a draft without --force",
     async () => {
-      expect(
-        await exitCodeOf(
-          draftReceipt(changeId, options, { ownerOption: owner }),
-        ),
-      ).toBe(1);
+      expect(await exitCodeOf(draftReceipt(changeId, options, { ownerOption: owner }))).toBe(1);
     },
     slow,
   );
@@ -202,9 +259,7 @@ describe("receipt commands", () => {
     "signs, then verifies with the diff unchanged",
     async () => {
       const lines = await draftAndSign();
-      expect(lines[0]).toBe(
-        `Signed. Verify: pnpm countersign verify ${changeId}`,
-      );
+      expect(lines[0]).toBe(`Signed. Verify: pnpm countersign verify ${changeId}`);
       const verified = await verifyReceipt(changeId, options);
       expect(verified.lines[0]).toContain("Good");
       expect(verified.lines[1]).toBe("diff unchanged");
@@ -216,11 +271,7 @@ describe("receipt commands", () => {
     "refuses a second receipt on the same commit and leaves the note unchanged",
     async () => {
       const before = noteBlobOn(shas.b);
-      expect(
-        await exitCodeOf(
-          signReceipt(changeId, options, { keyOption: keyPath }),
-        ),
-      ).toBe(4);
+      expect(await exitCodeOf(signReceipt(changeId, options, { keyOption: keyPath }))).toBe(4);
       expect(noteBlobOn(shas.b)).toBe(before);
     },
     slow,
@@ -231,9 +282,7 @@ describe("receipt commands", () => {
     async () => {
       await exportReceipt(changeId, options);
       const path = join(options.dataDir, "receipts", `${changeId}.json`);
-      const record = ReceiptRecordSchema.parse(
-        JSON.parse(readFileSync(path, "utf8")),
-      );
+      const record = ReceiptRecordSchema.parse(JSON.parse(readFileSync(path, "utf8")));
       expect(record.verify.ok).toBe(true);
       expect(record.signature).toContain("BEGIN SSH SIGNATURE");
     },
@@ -269,12 +318,7 @@ describe("receipt commands", () => {
   it(
     "exits 1 as stale, and exports nothing, when the change input moves to another head",
     async () => {
-      run(options.repoDir, "git", [
-        "notes",
-        "--ref=countersign",
-        "remove",
-        shas.b,
-      ]);
+      run(options.repoDir, "git", ["notes", "--ref=countersign", "remove", shas.b]);
       await draftAndSign();
       await rm(join(options.dataDir, "receipts", `${changeId}.json`));
       await pointChangeAt(shas.c);
@@ -284,9 +328,7 @@ describe("receipt commands", () => {
         "Stale: the diff changed since signing",
       );
       expect(await exitCodeOf(exportReceipt(changeId, options))).toBe(1);
-      expect(
-        existsSync(join(options.dataDir, "receipts", `${changeId}.json`)),
-      ).toBe(false);
+      expect(existsSync(join(options.dataDir, "receipts", `${changeId}.json`))).toBe(false);
       await pointChangeAt(shas.b);
     },
     slow,
@@ -313,9 +355,9 @@ describe("receipt refusals", () => {
         ownerOption: "someone-else",
         force: true,
       });
-      await expect(
-        signReceipt(changeId, options, { keyOption: keyPath }),
-      ).rejects.toThrow("is not in");
+      await expect(signReceipt(changeId, options, { keyOption: keyPath })).rejects.toThrow(
+        "is not in",
+      );
     },
     slow,
   );
@@ -334,22 +376,115 @@ describe("receipt refusals", () => {
     "exits 1 for a passphrase-protected key instead of waiting for a prompt",
     async () => {
       const encryptedKey = join(root, "encrypted");
-      run(root, defaultSshKeygenPath, [
-        "-q",
-        "-t",
-        "ed25519",
-        "-N",
-        "secret",
-        "-f",
-        encryptedKey,
-      ]);
+      makeKey(encryptedKey, "secret");
       await draftReceipt(changeId, options, {
         ownerOption: owner,
         force: true,
       });
-      await expect(
-        signReceipt(changeId, options, { keyOption: encryptedKey }),
-      ).rejects.toThrow("Use an unencrypted demo key");
+      await expect(signReceipt(changeId, options, { keyOption: encryptedKey })).rejects.toThrow(
+        "Use an unencrypted demo key",
+      );
+    },
+    slow,
+  );
+});
+
+const marker = "-----BEGIN SSH SIGNATURE-----";
+
+/** Signs `payload` with `signingKey` in `namespace`, returning the armored signature. */
+function signWith(signingKey: string, namespace: string, payload: string): string {
+  const folder = mkdtempSync(join(tmpdir(), "countersign-forge-"));
+  try {
+    writeFileSync(join(folder, "p.json"), payload);
+    execFileSync(
+      defaultSshKeygenPath,
+      ["-Y", "sign", "-f", toSshPath(signingKey), "-n", namespace, "p.json"],
+      { cwd: folder },
+    );
+    return readFileSync(join(folder, "p.json.sig"), "utf8").replace(/\r\n/g, "\n");
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
+}
+
+/** Replaces the note on the head commit with the current payload signed by another key or namespace. */
+function forgeNote(signingKey: string, namespace: string): void {
+  const note = showNote(shas.b);
+  const payload = `${note.slice(0, note.indexOf(marker)).trimEnd()}\n`;
+  const file = join(root, "forged.txt");
+  writeFileSync(file, payload + signWith(signingKey, namespace, payload));
+  run(options.repoDir, "git", [
+    "notes",
+    "--ref=countersign",
+    "add",
+    "-f",
+    "--no-stripspace",
+    "-F",
+    file,
+    shas.b,
+  ]);
+}
+
+describe("receipts that must not verify", () => {
+  it(
+    "refuses to sign with a key that is not the owner's, and writes no note",
+    async () => {
+      run(options.repoDir, "git", ["notes", "--ref=countersign", "remove", shas.b]);
+      await draftReceipt(changeId, options, { ownerOption: owner, force: true });
+      await expect(signReceipt(changeId, options, { keyOption: otherKeyPath })).rejects.toThrow(
+        "is not test-owner's key",
+      );
+      expect(run(options.repoDir, "git", ["notes", "--ref=countersign", "list"])).toBe("");
+    },
+    slow,
+  );
+
+  it(
+    "exits 3 for a payload claiming test-owner that another listed signer signed",
+    async () => {
+      await signReceipt(changeId, options, { keyOption: keyPath });
+      forgeNote(otherKeyPath, signatureNamespace);
+      expect(await exitCodeOf(verifyReceipt(changeId, options))).toBe(3);
+    },
+    slow,
+  );
+
+  it(
+    "exits 3 for the owner's signature made in another namespace",
+    async () => {
+      forgeNote(keyPath, "other-namespace");
+      expect(await exitCodeOf(verifyReceipt(changeId, options))).toBe(3);
+    },
+    slow,
+  );
+
+  it(
+    "still verifies when a signature marker appears inside a payload field",
+    async () => {
+      run(options.repoDir, "git", ["notes", "--ref=countersign", "remove", shas.b]);
+      await draftReceipt(changeId, options, { ownerOption: owner, force: true });
+      const draftFile = join(options.draftsDir, `${changeId}.json`);
+      const draft = JSON.parse(readFileSync(draftFile, "utf8"));
+      draft.residualRisk.text = `none\n${marker}\nnone`;
+      writeFileSync(draftFile, canonicalJson(draft));
+      await signReceipt(changeId, options, { keyOption: keyPath });
+      expect(await exitCodeOf(verifyReceipt(changeId, options))).toBe(0);
+    },
+    slow,
+  );
+
+  it(
+    "refuses to sign a hunk ledger that names someone else as reader",
+    async () => {
+      run(options.repoDir, "git", ["notes", "--ref=countersign", "remove", shas.b]);
+      await draftReceipt(changeId, options, { ownerOption: owner, force: true });
+      const draftFile = join(options.draftsDir, `${changeId}.json`);
+      const draft = JSON.parse(readFileSync(draftFile, "utf8"));
+      draft.hunks[2].readBy = "someone-else";
+      writeFileSync(draftFile, canonicalJson(draft));
+      await expect(signReceipt(changeId, options, { keyOption: keyPath })).rejects.toThrow(
+        "hunk ledger doesn't match",
+      );
     },
     slow,
   );

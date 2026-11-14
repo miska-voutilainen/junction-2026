@@ -1,16 +1,8 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { ReceiptSchema, type Receipt } from "@/contracts/receipt";
 import { computeDiffIdentity } from "@/lib/git";
-import {
-  CommandError,
-  readChangeInput,
-  signatureNamespace,
-  type ReceiptOptions,
-} from "./context";
+import { CommandError, isSameDiff, readChangeInput, type ReceiptOptions } from "./context";
 import { listNotes, readNote, type NoteEntry } from "./notes";
-import { runSshKeygen, toSshPath } from "./sshKeygen";
+import { checkSignature } from "./signature";
 
 /**
  * Signed receipt in git, the merge gate: a receipt counts only if its signature
@@ -48,32 +40,24 @@ export async function verifyReceipt(
   const change = await readChangeInput(options, changeId);
   const note = await findNewestNote(changeId, change.headSha, options);
 
-  const goodLine = await checkSignature(note, options);
+  const owner = note.claimed.owner;
+  if (typeof owner !== "string")
+    throw new CommandError(3, "Signature invalid: the receipt names no owner");
+  const check = await checkSignature(note.payload, note.signature, owner, options);
+  if (!check.isValid) throw new CommandError(3, `Signature invalid: ${check.reason}`);
   const parsed = ReceiptSchema.safeParse(note.claimed);
   if (!parsed.success)
-    throw new CommandError(
-      3,
-      "Signature invalid: the signed payload is not a valid receipt",
-    );
+    throw new CommandError(3, "Signature invalid: the signed payload is not a valid receipt");
   const receipt = parsed.data;
 
-  const current = await computeDiffIdentity(
-    options.repoDir,
-    change.baseSha,
-    change.headSha,
-  );
-  const isCurrent =
-    receipt.commit === change.headSha &&
-    receipt.baseTree === current.baseTree &&
-    receipt.headTree === current.headTree &&
-    receipt.diffSha256 === current.diffSha256;
-  if (!isCurrent)
+  const current = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
+  if (!isSameDiff(receipt, change.headSha, current))
     throw new CommandError(1, "Stale: the diff changed since signing");
 
   return {
     receipt,
     signature: note.signature,
-    lines: [goodLine, "diff unchanged"],
+    lines: [check.goodLine, "diff unchanged"],
   };
 }
 
@@ -95,7 +79,7 @@ async function findNewestNote(
       continue;
     }
     if (note.claimed.changeId !== changeId) continue;
-    if (newest === null || signedAtOf(note) > signedAtOf(newest)) newest = note;
+    if (newest === null || isLater(note, newest)) newest = note;
   }
   if (newest === null) throw new CommandError(2, `No receipt for ${changeId}`);
   return newest;
@@ -108,24 +92,40 @@ function unreadableNote(entry: NoteEntry): CommandError {
   );
 }
 
+/**
+ * `signedAt` values are toISOString() UTC strings, which sort in time order as
+ * text. A forged note with a later claim wins here and then fails its signature
+ * check: verify fails closed with exit 3, by decision, instead of falling back
+ * to an older receipt.
+ */
+function isLater(note: ParsedNote, other: ParsedNote): boolean {
+  return signedAtOf(note) > signedAtOf(other);
+}
+
 function signedAtOf(note: ParsedNote): string {
   return typeof note.claimed.signedAt === "string" ? note.claimed.signedAt : "";
 }
 
+/**
+ * Where the signature starts: the marker at the very start of a line. Searching
+ * for a newline plus the marker keeps a marker string inside a JSON field from
+ * splitting the note (canonical JSON escapes newlines in strings, so a real line
+ * start is never inside the payload).
+ */
+function signatureStart(bytes: Buffer): number {
+  if (bytes.subarray(0, signatureMarker.length).toString("utf8") === signatureMarker) return 0;
+  const afterNewline = bytes.indexOf(`\n${signatureMarker}`);
+  return afterNewline === -1 ? -1 : afterNewline + 1;
+}
+
 /** Splits at the signature marker line; everything before it is the payload, byte for byte. */
 function parseNote(bytes: Buffer): ParsedNote | null {
-  const marker = bytes.indexOf(signatureMarker);
-  const startsLine = marker === 0 || (marker > 0 && bytes[marker - 1] === 0x0a);
-  if (!startsLine) return null;
+  const marker = signatureStart(bytes);
+  if (marker === -1) return null;
   const payload = bytes.subarray(0, marker);
   try {
     const claimed: unknown = JSON.parse(payload.toString("utf8"));
-    if (
-      claimed === null ||
-      typeof claimed !== "object" ||
-      Array.isArray(claimed)
-    )
-      return null;
+    if (claimed === null || typeof claimed !== "object" || Array.isArray(claimed)) return null;
     return {
       payload,
       signature: bytes.subarray(marker).toString("utf8"),
@@ -133,44 +133,5 @@ function parseNote(bytes: Buffer): ParsedNote | null {
     };
   } catch {
     return null;
-  }
-}
-
-/** Runs `ssh-keygen -Y verify` with the payload on stdin and returns its "Good ..." line. */
-async function checkSignature(
-  note: ParsedNote,
-  options: ReceiptOptions,
-): Promise<string> {
-  const owner = note.claimed.owner;
-  if (typeof owner !== "string")
-    throw new CommandError(3, "Signature invalid: the receipt names no owner");
-  const folder = await mkdtemp(join(tmpdir(), "countersign-verify-"));
-  try {
-    const signaturePath = join(folder, "receipt.sig");
-    await writeFile(signaturePath, note.signature);
-    const result = await runSshKeygen(
-      options.sshKeygenPath,
-      [
-        "-Y",
-        "verify",
-        "-f",
-        toSshPath(options.allowedSignersPath),
-        "-I",
-        owner,
-        "-n",
-        signatureNamespace,
-        "-s",
-        toSshPath(signaturePath),
-      ],
-      { stdin: note.payload, cwd: folder },
-    );
-    if (result.code !== 0)
-      throw new CommandError(
-        3,
-        `Signature invalid: ${result.stderr.trim() || result.stdout.trim()}`,
-      );
-    return result.stdout.trim();
-  } finally {
-    await rm(folder, { recursive: true, force: true });
   }
 }
