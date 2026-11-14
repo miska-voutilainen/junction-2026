@@ -202,19 +202,24 @@ export function legacyRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
 }
 
 /**
- * One `source: "rule"` R8 refusal per touch point, for the hunks no rule refusal
- * names yet (a zone hunk already has its zone refusal, and R7 hunks keep theirs).
+ * One `source: "rule"` R8 refusal per touch point, for the hunks that no refusal
+ * already sends to a person for the same decision: one owner decision is counted
+ * once. A zone hunk already has its zone refusal and keeps it. A consumer-contract
+ * touch skips hunks any R7 refusal names (AI or rule), because R7 is the same
+ * API owner's decision; other kinds skip hunks a rule refusal names.
  * The reason says the kind, the owner and what guards the touch: a guard never
  * takes the hunk off the reading list, it tells the owner what covers it.
  */
 export function legacyTouchRefusalsFor(
   touchPoints: readonly LegacyTouchPoint[],
-  refusals: readonly Pick<UnnumberedRefusal, "source" | "hunkIds">[],
+  refusals: readonly Pick<UnnumberedRefusal, "ruleId" | "source" | "hunkIds">[],
 ): UnnumberedRefusal[] {
-  const named = new Set(
-    refusals.filter((refusal) => refusal.source === "rule").flatMap((refusal) => refusal.hunkIds),
-  );
+  const namedBy = (isCounted: (refusal: (typeof refusals)[number]) => boolean) =>
+    new Set(refusals.filter(isCounted).flatMap((refusal) => refusal.hunkIds));
+  const namedByRule = namedBy((refusal) => refusal.source === "rule");
+  const namedByR7 = namedBy((refusal) => refusal.ruleId === "R7");
   return touchPoints.flatMap((touch) => {
+    const named = touch.kind === "consumer-contract" ? new Set([...namedByRule, ...namedByR7]) : namedByRule;
     const hunkIds = touch.hunkIds.filter((id) => !named.has(id));
     if (hunkIds.length === 0) return [];
     return [

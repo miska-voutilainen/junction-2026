@@ -64,7 +64,10 @@ async function legacyCodeTouchPoints(
   return groupSightings("legacy-code", sightings, async ([symbol]) => guardByTests(symbol, tree));
 }
 
-/** One sighting per zone hunk; the subject is the file's type name, which tests name when they cover it. */
+/**
+ * One sighting per zone hunk; the subject is the file's type name, which tests name when they cover it.
+ * @example "src/MessagePack/MessagePackWriter.cs" gives subject "MessagePackWriter"
+ */
 function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
   return hunks.flatMap((hunk) => {
     const zone = legacyZoneOf(hunk.file);
@@ -159,6 +162,8 @@ async function oldPlatformTouchPoints(
 ): Promise<LegacyTouchPoint[]> {
   const sightings = hunks.flatMap((hunk) => {
     const project = hunk.file.match(/^src\/([^/]+)\//)?.[1];
+    // The first directive stands for the hunk: one hunk is one sighting, and a hunk
+    // that changes several `#if` lines still asks the same question of the owner.
     const directive = hunk.lines
       .filter((line) => line.kind !== "context" && oldPlatformDirective.test(line.text))
       .map((line) => line.text.trim())[0];
@@ -190,6 +195,7 @@ export function parseTargets(csproj: string): Target[] {
     [...body.matchAll(/<TargetFrameworks?([^>]*)>([^<]*)</g)].flatMap(([, attributes, value]) =>
       value
         .split(";")
+        .map((framework) => framework.trim())
         .filter((framework) => /^net/i.test(framework))
         .map((framework) => ({
           framework,
@@ -199,13 +205,21 @@ export function parseTargets(csproj: string): Target[] {
   );
 }
 
+/**
+ * A test project's csproj for a source project: the folder is `<project>.<Name>Tests`
+ * with no further dot, so `MessagePack` claims `tests/MessagePack.Tests` but not
+ * `tests/MessagePack.SourceGenerator.Tests`, which belongs to the generator.
+ * @example for "MessagePack.SourceGenerator", "tests/MessagePack.SourceGenerator.ExecutionTests/X.csproj" matches
+ */
+function testProjectPattern(project: string): RegExp {
+  const escaped = project.replace(/[.]/g, "\\.");
+  return new RegExp(`^tests/${escaped}\\.\\w*Tests/[^/]+\\.csproj$`);
+}
+
 /** The test projects for the touched source projects and what they target; a legacy target must be built, not conditional, to run. */
 async function guardByTestTargets(sourceProjects: string[], tree: BaseTree): Promise<Guard> {
   const csprojs = (await tree.listFiles("tests")).filter((path) =>
-    sourceProjects.some(
-      (project) =>
-        path.startsWith(`tests/${project}`) && /^tests\/[^/]+\/[^/]+\.csproj$/.test(path),
-    ),
+    sourceProjects.some((project) => testProjectPattern(project).test(path)),
   );
   const described: string[] = [];
   let hasUnconditional = false;
