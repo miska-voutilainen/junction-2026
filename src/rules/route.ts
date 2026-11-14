@@ -20,17 +20,21 @@ import { routingPolicy, type RoutingPolicy } from "../policy/routing";
 type Hunk = Review["hunks"][number];
 type Reason = TierDecision["reasons"][number];
 
+/** The parts of a review route() reads; its routing and receipt draft are what it produces or ignores. */
+type RoutedReview = Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals">;
+
 const tierRank: Record<Tier, number> = { light: 0, focused: 1, full: 2 };
 
 /**
  * Decides how much of a change a human must read, and why.
- * @param review the recorded review (hunks, claims, findings, refusals)
+ * @param review the recorded review (files, hunks, claims, findings, refusals)
  * @param levels trust-ladder level per area, from the report card and any simulated escapes
  * @param policy thresholds; defaults to the committed routing policy
  * @param escapes simulated escapes per area; any area with one or more triggers R-escape
+ * @returns the tier, the reasons that set it, each hunk's coverage, and the hunk, line and minute counts of the reading list
  */
 export function route(
-  review: Review,
+  review: RoutedReview,
   levels: Record<Area, LadderLevel>,
   policy: RoutingPolicy = routingPolicy,
   escapes: Partial<Record<Area, number>> = {},
@@ -46,7 +50,7 @@ export function route(
   const readLines = sumChangedLines(readHunkList);
 
   const reasons = collectReasons({ review, levels, policy, areaOf, escapes, readHunks, totalHunks, generatedHunks });
-  const tier = reasons.reduce<Tier>((highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest), "light");
+  const tier = highestTier(reasons);
 
   return {
     tier,
@@ -61,19 +65,31 @@ export function route(
   };
 }
 
+/** The tier the strictest fired rule asks for; light when none fired. */
+function highestTier(reasons: readonly Reason[]): Tier {
+  return reasons.reduce<Tier>((highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest), "light");
+}
+
+/** `word` for a count of one, `manyWord` otherwise: plural(2, "place", "places") is "places". */
+function plural(count: number, word: string, manyWord: string): string {
+  return count === 1 ? word : manyWord;
+}
+
 /** Rule 1. First match wins, so a finding beats a verified claim on the same hunk, and a generated file's hunk needs no claim. */
 function coverHunks(
-  review: Review,
+  review: RoutedReview,
   levels: Record<Area, LadderLevel>,
   areaOf: Map<string, Area | null>,
 ): Record<string, Coverage> {
   const kindOf = new Map(review.files.map((file) => [file.path, file.kind]));
-  const flagged = new Set([...review.findings, ...review.refusals].flatMap((item) => item.hunkIds));
+  const flagged = new Set([...review.findings, ...review.refusals].flatMap((flaggedItem) => flaggedItem.hunkIds));
   const coverage: Record<string, Coverage> = {};
   for (const hunk of review.hunks) {
     const area = areaOf.get(hunk.file) ?? null;
     const claims = review.claims.filter((claim) => claim.hunkIds.includes(hunk.id));
     // A finding or refusal still sends a generated hunk to a person: someone flagged it.
+    // Generated files have area null (policy/areas.ts), so the Shadow test never
+    // catches them and they reach the generated branch below.
     if (flagged.has(hunk.id) || (area !== null && levels[area] === "shadow")) coverage[hunk.id] = "read";
     else if (kindOf.get(hunk.file) === "generated") coverage[hunk.id] = "generated";
     else if (claims.some((claim) => claim.level === "verified")) coverage[hunk.id] = "verified";
@@ -94,11 +110,11 @@ export function coverageReason(
   levels: Record<Area, LadderLevel>,
   hunkId: string,
 ): string {
-  const finding = review.findings.find((item) => item.hunkIds.includes(hunkId));
+  const finding = review.findings.find((candidate) => candidate.hunkIds.includes(hunkId));
   if (finding) return `Finding ${finding.id} (${finding.kind}) names this hunk`;
-  const refusal = review.refusals.find((item) => item.hunkIds.includes(hunkId));
+  const refusal = review.refusals.find((candidate) => candidate.hunkIds.includes(hunkId));
   if (refusal) return `Refusal ${refusal.id} (${refusal.ruleId}) names this hunk: a person decides`;
-  const hunk = review.hunks.find((item) => item.id === hunkId);
+  const hunk = review.hunks.find((candidate) => candidate.id === hunkId);
   const area = review.files.find((file) => file.path === hunk?.file)?.area ?? null;
   if (area !== null && levels[area] === "shadow") {
     return `${areaLabel[area]} is at Shadow: the AI's evidence routes nothing here yet`;
@@ -107,7 +123,7 @@ export function coverageReason(
 }
 
 interface RuleInput {
-  review: Review;
+  review: RoutedReview;
   levels: Record<Area, LadderLevel>;
   policy: RoutingPolicy;
   areaOf: Map<string, Area | null>;
@@ -124,30 +140,24 @@ function collectReasons(input: RuleInput): Reason[] {
   const readableHunks = totalHunks - generatedHunks;
   const reasons: Reason[] = [];
 
-  const sizedLines = review.files.filter((file) => file.kind !== "generated").reduce((sum, file) => sum + file.added + file.removed, 0);
-  if (sizedLines > policy.sizeLimit) {
-    reasons.push({ ruleId: "R-size", tier: "full", text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})` });
-  }
-
-  if (readableHunks > 0 && readHunks / readableHunks >= policy.readShareFull) {
-    reasons.push({ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${readableHunks} hunks: most of the change needs a human` });
-  }
+  reasons.push(...sizeReasons(review, policy));
+  reasons.push(...readShareReasons(readHunks, readableHunks, policy));
 
   reasons.push(...escapeReasons(input));
 
   const refusals = review.refusals.length;
   if (refusals > 0) {
-    reasons.push({ ruleId: "R-refusal", tier: "focused", text: `${refusals} ${refusals === 1 ? "item" : "items"} refused: a human decides` });
+    reasons.push({ ruleId: "R-refusal", tier: "focused", text: `${refusals} ${plural(refusals, "item", "items")} refused: a human decides` });
   }
 
   const contradictions = review.findings.filter((finding) => finding.kind === "contradiction").length;
   if (contradictions > 0) {
-    reasons.push({ ruleId: "R-contradiction", tier: "focused", text: `The PR description contradicts the code in ${contradictions} ${contradictions === 1 ? "place" : "places"}` });
+    reasons.push({ ruleId: "R-contradiction", tier: "focused", text: `The PR description contradicts the code in ${contradictions} ${plural(contradictions, "place", "places")}` });
   }
 
   const defects = review.findings.filter((finding) => finding.kind === "defect").length;
   if (defects > 0) {
-    reasons.push({ ruleId: "R-defect", tier: "focused", text: `${defects} ${defects === 1 ? "defect" : "defects"} found` });
+    reasons.push({ ruleId: "R-defect", tier: "focused", text: `${defects} ${plural(defects, "defect", "defects")} found` });
   }
 
   const sensitiveLabels = sensitiveLabelsTouched(review.hunks, policy);
@@ -158,13 +168,26 @@ function collectReasons(input: RuleInput): Reason[] {
   reasons.push(...areaLevelReasons(input));
 
   if (readHunks > 0 && reasons.length === 0) {
-    reasons.push({ ruleId: "R-unread", tier: "focused", text: `${readHunks} ${readHunks === 1 ? "hunk has" : "hunks have"} no checked evidence` });
+    reasons.push({ ruleId: "R-unread", tier: "focused", text: `${readHunks} ${plural(readHunks, "hunk has", "hunks have")} no checked evidence` });
   }
   // Last, and at tier light, so it explains the count without raising the tier or hiding R-unread.
   if (generatedHunks > 0) {
     reasons.push({ ruleId: "R-generated", tier: "light", text: generatedReason(generatedHunks) });
   }
   return reasons;
+}
+
+/** Rule 2: Full when the change is too big to read closely, not counting generated files. */
+function sizeReasons(review: RoutedReview, policy: RoutingPolicy): Reason[] {
+  const sizedLines = review.files.filter((file) => file.kind !== "generated").reduce((sum, file) => sum + file.added + file.removed, 0);
+  if (sizedLines <= policy.sizeLimit) return [];
+  return [{ ruleId: "R-size", tier: "full", text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})` }];
+}
+
+/** Rule 3: Full when checked evidence covers so little that the AI saved the reader no effort. */
+function readShareReasons(readHunks: number, readableHunks: number, policy: RoutingPolicy): Reason[] {
+  if (readableHunks === 0 || readHunks / readableHunks < policy.readShareFull) return [];
+  return [{ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${readableHunks} hunks: most of the change needs a human` }];
 }
 
 /** How many hunks route() marked "generated": the ones the reading count leaves out. */
@@ -178,7 +201,7 @@ export function countGenerated(coverage: Record<string, Coverage> | Coverage[]):
  * @example "411 are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught"
  */
 export function generatedReason(generatedHunks: number): string {
-  return `${generatedHunks} ${generatedHunks === 1 ? "is a generated snapshot" : "are generated snapshots"}: read the template that produces ${generatedHunks === 1 ? "it" : "them"}, because code hidden in a snapshot would not be caught`;
+  return `${generatedHunks} ${plural(generatedHunks, "is a generated snapshot", "are generated snapshots")}: read the template that produces ${plural(generatedHunks, "it", "them")}, because code hidden in a snapshot would not be caught`;
 }
 
 /** Labels of the sensitive paths any hunk falls in, in policy order. */
