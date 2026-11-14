@@ -1,6 +1,6 @@
 # Idea 3 · The hunk coverage map
 
-Every hunk of a change gets exactly one state, Verified, Supported or Read this, from rules a person can read, so the human reads only what no checked evidence covers.
+Every hunk of a change gets exactly one state, Verified, Supported, Read this or Generated, from rules a person can read, so the human reads only what no checked evidence covers.
 
 > Draft. The routing spread over Tieto's four changes is "not measured yet".
 
@@ -17,10 +17,11 @@ Every hunk of a change gets exactly one state, Verified, Supported or Read this,
 
 1. **Coverage per hunk, first match wins:**
    - **Read this:** a finding or refusal lists the hunk, its area is at Shadow ([Idea 1](trust-ladder.md)), or no Verified or Supported claim lists it.
+   - **Generated:** the hunk is in a generated file (a snapshot) and no finding or refusal lists it. It stays visible but leaves the reading count, so a change of 400 snapshots doesn't hide its 12 real hunks. The change says so in one line: "411 are generated snapshots: read the template change that produces them" (`R-generated`).
    - **Verified:** a Verified claim lists it: a test that fails before and passes after, which the authoring agent didn't write ([Idea 8](separation-of-duties.md)).
    - **Supported:** otherwise; a quote matched the code ([Idea 4](quote-check.md)).
 2. **A tier for the change.** Each rule that fires adds one reason with its id; the tier is the highest asked for, and none means Light.
-   - **Full:** `R-size` (over 400 changed lines outside generated files), `R-read-share` (75% or more hunks Read this), `R-escape` (a bug escaped in a touched area, so that area's next changes go to Full).
+   - **Full:** `R-size` (over 400 changed lines outside generated files), `R-read-share` (75% or more of the non-generated hunks Read this), `R-escape` (a bug escaped in a touched area, so that area's next changes go to Full).
    - **Focused:** `R-refusal` (the AI refused something), `R-contradiction` (description contradicts code), `R-defect`, `R-sensitive-path` (public attributes, diagnostic IDs, the runtime serializer), `R-area-level` (a touched area isn't Trusted), `R-unread` (some hunks Read this and nothing else fired).
 3. **One honest line on top:** "Focused · Read 2 of 8 hunks · ~3 min (full read ~9 min)", then one line per reason with its id. Reading time assumes 25 changed lines a minute, and the page says so.
 4. **No model in the routing.** `route()` is pure: the same review and ladder levels give the same tier. It runs in the pipeline and in the browser, so a simulated escape re-routes the page live.
