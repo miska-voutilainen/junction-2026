@@ -36,7 +36,7 @@ The levels feed the coverage map: a Verified claim makes its hunk Verified, a Su
 
 ## What we measured
 
-MP-2283: 8 claims, **2 Verified, 6 Supported, 0 Unverified**. Both Verified claims rest on A5 tests failing on base and passing on head; two more didn't build on the base. All 96 claims in the 10 planted-bug runs are Supported; none has a test result.
+Tieto's four changes: 48 claims, **9 Verified, 39 Supported, 0 Unverified**. All 9 Verified (2 on MP-2283, 7 on MP-2297) rest on A5 tests failing on base and passing on head. 23 A5 tests were inconclusive: 18 didn't build on base, 5 weren't run.
 
 ## How to adopt it
 

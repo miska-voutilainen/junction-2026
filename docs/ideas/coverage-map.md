@@ -26,7 +26,7 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 
 ## What we measured
 
-MP-2283: **Full · Read 7 of 8 hunks · ~10 min (full read ~10 min)**, from `R-read-share`. All 10 planted-bug runs also went Full, reading 7 to 9 of 9 or 10 hunks. So far the map saves almost no reading: the reviewer finds something on nearly every hunk. Tieto's other three changes are not measured yet: they aren't recorded.
+**All 4 of Tieto's changes routed Full**, reading 55 of 473 hunks, ~51 of ~119 minutes. MP-2297 read 21 of 423: its 402 generated snapshots left the count (`R-generated`). MP-2129 read 20 of 33 (Full from `R-size`), MP-2234 7 of 9, MP-2283 7 of 8. The 10 planted-bug runs also went Full. Outside the snapshots the map saves little: the reviewer finds something on most hunks.
 
 ## How to adopt it
 
