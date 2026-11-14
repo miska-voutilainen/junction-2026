@@ -48,7 +48,7 @@ export function Disclosure({
         aria-expanded={isOpen}
         aria-controls={contentId}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 rounded-item px-1 py-1.5 text-left text-base text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary"
+        className="flex w-full items-center gap-2 rounded-item px-1 py-1.5 max-compact:min-h-11 text-left text-base text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary"
       >
         <span className="relative size-4 shrink-0">
           <AnimatePresence initial={false} mode="popLayout">

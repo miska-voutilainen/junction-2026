@@ -72,7 +72,7 @@ function HowIsThisComputed() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="rounded-chip text-xs text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+            className="inline-flex items-center rounded-chip text-xs text-link max-compact:min-h-11 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
           >
             How is this computed?
           </button>

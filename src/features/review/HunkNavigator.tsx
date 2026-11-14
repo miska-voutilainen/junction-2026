@@ -21,7 +21,8 @@ const ITEM_SELECTOR = "button[data-navigator-item]";
 /**
  * The hunk navigator: every hunk of the change grouped by coverage, Read
  * this first. Pick one to scroll the diff to it and focus its header. Arrow
- * keys move between items; Enter or Space jumps. A column from 1100 px.
+ * keys move between items; Enter or Space jumps. A column from 1100 px, as
+ * tall as the row so its sticky list stays in view while the diff scrolls.
  */
 export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonly<NavigatorProps>) {
   function moveFocus(event: KeyboardEvent<HTMLElement>) {
@@ -40,7 +41,7 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
     <nav
       aria-label="Hunks"
       onKeyDown={moveFocus}
-      className="hidden w-56 shrink-0 wide:block xwide:w-navigator"
+      className="hidden w-52 shrink-0 wide:block wide:self-stretch xwide:w-navigator"
     >
       <div className="sticky top-topbar flex max-h-below-topbar flex-col gap-4 overflow-y-auto py-4 pr-1">
         {groups.map((group) => (
@@ -57,17 +58,31 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                     data-navigator-item
                     aria-current={item.hunkId === activeHunkId ? "true" : undefined}
                     onClick={() => onJump(item.hunkId)}
-                    className="flex w-full items-center gap-2 rounded-item px-2 py-1.5 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover aria-[current=true]:bg-surface-selected"
+                    className="flex w-full items-start gap-2 rounded-item px-2 py-1.5 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover aria-[current=true]:bg-surface-selected"
                   >
                     <CoverageMark coverage={item.coverage} isLabelHidden />
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-text-secondary">{item.label}</span>
+                    {/* The area sits under the name, not beside it: in a 192 px column a chip on the
+                        same line left only "Type…" of TypeCollector.cs. */}
+                    <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                      {/* The name truncates at its end and the line range stays whole, so two hunks of one file stay apart. */}
+                      <span title={item.label} className="flex w-full min-w-0 font-mono text-xs text-text-secondary">
+                        {item.lineRange === null ? (
+                          <span className="truncate">{item.fileName}</span>
+                        ) : (
+                          <>
+                            <span className="truncate">{item.fileName}</span>
+                            <span className="shrink-0">:{item.lineRange}</span>
+                          </>
+                        )}
+                      </span>
+                      {item.area && <AreaChip area={item.area} />}
+                    </span>
                     {readIds.has(item.hunkId) && !item.isGenerated && (
                       <>
                         <Check aria-hidden="true" className="size-3.5 shrink-0 text-text-muted" />
                         <span className="sr-only">Read</span>
                       </>
                     )}
-                    {item.area && <AreaChip area={item.area} />}
                   </button>
                 </li>
               ))}

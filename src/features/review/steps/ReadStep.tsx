@@ -108,7 +108,7 @@ function ClaimRow({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryCla
         className="flex w-full flex-col items-start gap-1.5 rounded-item px-2 py-2 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
         {retraction ? <RetractedBadge /> : <EvidenceBadge level={claim.level} />}
-        <span data-written-text className={cn("max-w-full font-mono text-sm text-text-primary [overflow-wrap:anywhere]", retraction && "text-text-muted line-through")}>{claim.text}</span>
+        <span data-written-text className={cn("max-w-full text-sm text-text-primary [overflow-wrap:anywhere]", retraction && "text-text-muted line-through")}>{claim.text}</span>
       </button>
       {retraction && <Retraction retraction={retraction} />}
       <div id={detailsId} hidden={!isSelected} className="px-2 pb-2">
