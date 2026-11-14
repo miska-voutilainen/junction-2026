@@ -16,6 +16,7 @@
     },
     "app": {
       "owner": "miska-voutilainen",
+      "coOwners": ["eliasnorta"],
       "paths": [
         "src/app/**",
         "src/proxy.ts",
