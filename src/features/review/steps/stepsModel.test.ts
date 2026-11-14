@@ -47,7 +47,7 @@ describe("story", () => {
     const review = await loadFixtureReview("mp-2283");
     const story = buildStory(review);
     expect(story.groups.flatMap((group) => group.claims).length).toBe(review.claims.length);
-    expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code; 1 claim downgraded.");
+    expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code, 1 claim downgraded.");
   });
 });
 
@@ -170,7 +170,7 @@ describe("quote check", () => {
   it("counts downgraded claims and dropped findings apart", async () => {
     const review = structuredClone(await loadFixtureReview("mp-2283"));
     review.quoteCheck = { ...review.quoteCheck, downgraded: 1, dropped: 2 };
-    expect(buildStory(review).quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code; 1 claim downgraded, 2 findings dropped.");
+    expect(buildStory(review).quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code, 1 claim downgraded, 2 findings dropped.");
   });
 });
 

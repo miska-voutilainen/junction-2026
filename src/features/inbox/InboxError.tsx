@@ -11,7 +11,7 @@ export function InboxError({ details }: { details: string }) {
   return (
     <ErrorState
       title="Couldn't read the recorded changes"
-      body="A change file under data/sample/changes is missing or doesn't match its schema. Fix the file and rebuild the site; in pnpm dev a reload is enough."
+      body="A change file under data/sample/changes is missing or doesn't match its schema. Fix the file and rebuild the site. In pnpm dev, a reload is enough."
       details={details}
       onRetry={() => window.location.reload()}
       retryLabel="Reload"

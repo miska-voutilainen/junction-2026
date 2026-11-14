@@ -39,7 +39,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
   const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
 
   return (
-    <div className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
+    <div data-console className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
         {heading ?? <span className="truncate text-xs text-text-muted">{label}</span>}
         <div className="flex shrink-0 items-center gap-0.5 print:hidden">

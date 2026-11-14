@@ -95,7 +95,7 @@ export interface Story {
   why: string;
   touches: Review["story"]["touches"];
   groups: ClaimGroup[];
-  /** "Quote check: 9 of 10 quotes found in the code; 1 claim downgraded, 1 finding dropped.", or null when no quote was checked. */
+  /** "Quote check: 9 of 10 quotes found in the code, 1 claim downgraded, 1 finding dropped.", or null when no quote was checked. */
   quoteCheckLine: string | null;
   defects: FindingView[];
 }
@@ -147,7 +147,7 @@ function quoteCheckLine({ checked, passed, downgraded, dropped }: Review["quoteC
   if (checked === 0) return null;
   const base = `Quote check: ${passed} of ${checked} quotes found in the code`;
   const outcomes = [downgraded > 0 && plural(downgraded, "claim") + " downgraded", dropped > 0 && plural(dropped, "finding") + " dropped"].filter(Boolean);
-  return outcomes.length === 0 ? `${base}.` : `${base}; ${outcomes.join(", ")}.`;
+  return outcomes.length === 0 ? `${base}.` : `${base}, ${outcomes.join(", ")}.`;
 }
 
 /** What the reviewer expected from one requirement item before it saw the diff. */

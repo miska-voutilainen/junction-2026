@@ -72,6 +72,9 @@
   /* Height of the phone's fixed Sign bar, without the device's bottom safe area; the page keeps a spacer of the same height. */
   --layout-sign-bar: 4rem;
   --spacing-topbar: var(--layout-topbar);
+  /* The top bar sticks, so everything that sticks or scrolls into view must clear it. */
+  --spacing-below-topbar: calc(100dvh - var(--layout-topbar));
+  --spacing-scroll-clear: calc(var(--layout-topbar) + 1rem);
   --container-nav: var(--layout-nav);
   --container-navigator: var(--layout-navigator);
   --container-steps-panel: var(--layout-steps-panel);

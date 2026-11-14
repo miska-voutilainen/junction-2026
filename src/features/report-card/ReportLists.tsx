@@ -71,7 +71,7 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
                     <span className="font-mono break-all">{quote.location}</span>
                   </span>
                   <code className="font-mono text-sm break-words text-text-secondary">{quote.quote}</code>
-                  <span className="text-text-secondary">{quote.reason}</span>
+                  <span data-written-text className="text-text-secondary">{quote.reason}</span>
                 </li>
               ))}
             </ul>
@@ -91,7 +91,7 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
               <li key={`${claim.changeId}-${claim.claimId}`} className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0">
                 <span className="text-text-secondary">&ldquo;{claim.claimText}&rdquo;</span>
                 <span className="text-sm text-text-muted">
-                  <span className="font-mono">{claim.changeId}</span> · {claim.reason}
+                  <span className="font-mono">{claim.changeId}</span> · <span data-written-text>{claim.reason}</span>
                 </span>
               </li>
             ))}

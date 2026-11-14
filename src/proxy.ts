@@ -7,9 +7,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skips /unlock, Next's own assets and static files, so the form can load.
+  // Skips Next's own assets and static files. /unlock is matched so the gate can redirect it when off.
   // Example: "/logo.svg" and "/_next/static/chunk.js" are skipped; "/changes/mp-2283" is gated.
   matcher: [
-    "/((?!unlock(?:/|$)|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|woff|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|woff|woff2)$).*)",
   ],
 };

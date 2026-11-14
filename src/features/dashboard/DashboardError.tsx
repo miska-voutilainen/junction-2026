@@ -11,7 +11,7 @@ export function DashboardError({ details }: { details: string }) {
   return (
     <ErrorState
       title="Couldn't read the recorded data"
-      body="The counts need every recorded review, receipt and the report card, so none are shown. Fix the files named below and rebuild the site; in pnpm dev a reload is enough."
+      body="The counts need every recorded review, receipt and the report card, so none are shown. Fix the files named below and rebuild the site. In pnpm dev, a reload is enough."
       details={details}
       onRetry={() => window.location.reload()}
       retryLabel="Reload"

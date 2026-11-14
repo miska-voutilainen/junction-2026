@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { DashboardError, DashboardScreen, loadDashboardSources } from "@/features/dashboard";
 import { FALLBACK_REPO } from "@/lib/data/loadInboxSources";
+
+export const metadata: Metadata = { title: "Dashboard · Countersign" };
 
 /**
  * S5 · Dashboard. Reads every review, receipt and the report card on the

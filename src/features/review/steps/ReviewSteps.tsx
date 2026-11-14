@@ -55,7 +55,7 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
   }
 
   return (
-    <section id={REVIEW_STEPS_ID} aria-labelledby="review-steps-heading" className="scroll-mt-4 overflow-hidden rounded-page border border-border-subtle bg-surface-panel wide:sticky wide:top-4 wide:flex wide:max-h-[calc(100dvh-2rem)] wide:flex-col">
+    <section id={REVIEW_STEPS_ID} aria-labelledby="review-steps-heading" className="scroll-mt-4 compact:scroll-mt-scroll-clear overflow-hidden rounded-page border border-border-subtle bg-surface-panel wide:sticky wide:top-scroll-clear wide:flex wide:max-h-[calc(var(--spacing-below-topbar)-2rem)] wide:flex-col">
       <h2 id="review-steps-heading" className="sr-only">
         Review steps
       </h2>

@@ -71,7 +71,7 @@ export interface ReceiptDocumentView {
   changeId: string;
   title: string;
   requirementId: string;
-  /** "Focused review. A person read 2 of 8 hunks; ..."; null unless signed, because only then the review describes the signed diff. */
+  /** "Focused review. A person read 2 of 8 hunks. ..."; null unless signed, because only then the review describes the signed diff. */
   summary: string | null;
   identity: IdentityRow[];
   checked: CheckedItem[];
@@ -152,10 +152,10 @@ function statusOf(review: Review | null, record: ReceiptRecord): ReceiptDocument
   return status === "needs-review" ? "unverified" : status;
 }
 
-/** "Focused review. A person read 2 of 8 hunks; tests or checked quotes covered the other 6." */
+/** "Focused review. A person read 2 of 8 hunks. Tests or checked quotes covered the other 6." */
 function readingSummary({ routing }: Review): string {
   const covered = routing.totalHunks - routing.readHunks;
-  return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks; tests or checked quotes covered the other ${covered}.`;
+  return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.`;
 }
 
 function identityRows({ receipt }: ReceiptRecord, authorAgent: string): IdentityRow[] {

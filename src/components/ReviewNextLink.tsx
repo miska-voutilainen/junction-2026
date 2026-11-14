@@ -21,7 +21,7 @@ export function ReviewNextLink({ changeId, className }: { changeId: string; clas
       )}
     >
       Review next
-      <span className="font-mono text-xs font-medium opacity-85">{changeId}</span>
+      <span className="font-mono text-xs font-medium">{changeId}</span>
       <Kbd className="hidden bg-primary-foreground/15 text-primary-foreground compact:inline-flex">N</Kbd>
       <ArrowRight aria-hidden="true" className="size-4" />
     </Link>

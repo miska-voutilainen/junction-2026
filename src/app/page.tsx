@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError, InboxScreen } from "@/features/inbox";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
+
+export const metadata: Metadata = { title: "Inbox · Countersign" };
 
 /**
  * S1 · Inbox. Reads every change with its recorded review and receipt on the
