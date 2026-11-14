@@ -21,6 +21,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 export async function generateMetadata({ params }: Readonly<{ params: Params }>): Promise<Metadata> {
   const { id } = await params;
   const change = await loadChange(id);
+  if (change.status === "missing") return { title: `No change with id ${id} · Countersign` };
   if (change.status !== "ok") return { title: "Countersign" };
   return { title: `${change.data.requirementId} · ${change.data.title} · Countersign` };
 }

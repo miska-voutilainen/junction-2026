@@ -72,6 +72,7 @@ describe("accessGate", () => {
     vi.stubEnv("ACCESS_CODE", "8888");
     const response = await accessGate(requestFor("/opengraph-image"));
     expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
   });
 
   it.each(["/opengraph-image-x", "/opengraph-image/x", "/OpenGraph-Image"])(
