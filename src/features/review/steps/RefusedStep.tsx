@@ -32,7 +32,7 @@ export function RefusedStep({ refusals, onShowHunk }: RefusedStepProps) {
       </header>
       {refusals.items.length === 0 && (
         <p className="text-sm text-text-secondary">
-          Nothing refused. Policy {refusals.policyVersion} has {refusals.ruleCount} rules; none applied to this change.
+          Nothing refused. Policy {refusals.policyVersion} has {refusals.ruleCount} rules. None applied to this change.
         </p>
       )}
       <ul className="flex flex-col">
@@ -51,7 +51,7 @@ function RefusalItem({ refusal, onShowHunk }: { refusal: RefusalView } & Pick<Re
         <span className="shrink-0 rounded-chip border border-border-default px-1.5 font-mono text-xs text-text-secondary">{refusal.ruleId}</span>
         <span className="text-base font-medium text-text-primary">{refusal.title}</span>
       </p>
-      <p className="text-sm text-text-secondary">{refusal.reason}</p>
+      <p data-written-text className="text-sm text-text-secondary">{refusal.reason}</p>
       {refusal.locations.length > 0 && (
         <div className="flex flex-wrap gap-x-3 gap-y-0.5">
           {refusal.locations.map((location) => (

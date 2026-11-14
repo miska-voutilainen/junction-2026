@@ -41,7 +41,7 @@ export function SignedSections({ view }: { view: ReceiptDocumentView }) {
         )}
       </Section>
       <Section title="Residual risk">
-        <p className="text-md text-text-primary">{residualRisk.text}</p>
+        <p data-written-text className="text-md text-text-primary">{residualRisk.text}</p>
         {residualRisk.accepted.length > 0 && (
           <ul aria-label="Accepted refusals" className="flex flex-col gap-1 text-sm text-text-secondary">
             {residualRisk.accepted.map(({ refusalId, rule, runId }) => (
