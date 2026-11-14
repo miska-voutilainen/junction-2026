@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Eight ideas built, four next ideas on paper
+
+- **Context:** After the research, the team chose the final idea list; more than seven was allowed.
+- **Decision:** Idea 8, "The author never checks its own work", joins the seven: it names three rules we already had (an agent's own test gives Supported at most, the AI drafts but never signs, plants are written blind). Four next ideas (registered PRs, audit sampling, round-trip property tests, post-merge reverts) appear on the concept card and idea index, marked "not built". Miska decided.
+- **Why:** Separation of duties had the broadest support in the research (agents encode one mistake in code and test; PCI DSS 6.2.3.1 asks for review by someone other than the author; Tieto asks who makes decisions) and costs one roles line to show. More built ideas would crowd a 2-minute pitch.
+- **Rejected:** Folding evidence levels into the quote check to stay at seven ("no confidence scores" is a stance worth its own line); building any next idea (no time to finish one properly).
+- **PR:** this PR
+
 ## 2026-11-14 · Review page: three columns from 1100 px, narrower until 1600 px
 
 - **Context:** With the Review steps panel added, the diff column at 1440 px was about 415 px wide (app nav 248, navigator 264, panel 392), so most C# lines scrolled sideways.

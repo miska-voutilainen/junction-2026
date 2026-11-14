@@ -1,6 +1,6 @@
 # Countersign
 
-**Seven ideas for reviewing agent-written code, each shown working on Tieto's real repository.**
+**Eight ideas for reviewing agent-written code, each shown working on Tieto's real repository.**
 
 AI reviews. A named human countersigns, on evidence they can check.
 
