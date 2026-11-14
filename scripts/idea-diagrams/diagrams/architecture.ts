@@ -126,8 +126,9 @@ function dataAndRules(): string[] {
       "tint-acc",
     ),
     // The pipeline imports P3 to decide a tier; the app re-runs the same code.
-    path(`M758,${DATA_Y - 2} L758,${LAPTOP_BOTTOM + 3}`, "la", "a"),
-    label(752, 242, "imported by P2", "s", "end"),
+    // The elbow runs through the gap right of P2 so the arrowhead lands on P2, not P5.
+    path(`M758,${DATA_Y - 2} L758,170 L516,170 L516,100 L506,100`, "la", "a"),
+    label(640, 164, "imported by P2"),
   ];
 }
 
