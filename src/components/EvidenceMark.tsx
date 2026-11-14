@@ -43,7 +43,7 @@ const MARKS: Record<EvidenceLevel, { colour: string; shape: ReactNode }> = {
 };
 
 /** The 16 px mark for an evidence level. Decorative: pair it with the text label. */
-export function EvidenceMark({ level, className }: { level: EvidenceLevel; className?: string }) {
+export function EvidenceMark({ level, className }: Readonly<{ level: EvidenceLevel; className?: string }>) {
   const { colour, shape } = MARKS[level];
   return (
     <svg
@@ -59,7 +59,7 @@ export function EvidenceMark({ level, className }: { level: EvidenceLevel; class
 }
 
 /** The mark followed by its text label, so the level is never carried by the shape alone. */
-export function EvidenceBadge({ level, className }: { level: EvidenceLevel; className?: string }) {
+export function EvidenceBadge({ level, className }: Readonly<{ level: EvidenceLevel; className?: string }>) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-xs text-text-secondary", className)}>
       <EvidenceMark level={level} />

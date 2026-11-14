@@ -8,6 +8,6 @@ import { MotionConfig } from "motion/react";
  * with it on, transforms and layout animations are skipped. Mount once in the
  * root layout.
  */
-export function MotionProvider({ children }: { children: ReactNode }) {
+export function MotionProvider({ children }: Readonly<{ children: ReactNode }>) {
   return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }

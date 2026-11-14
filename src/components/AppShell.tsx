@@ -29,7 +29,7 @@ export function AppShell({
   title,
   backHref,
   children,
-}: {
+}: Readonly<{
   changes: ShellChange[];
   repo: string;
   breadcrumb?: BreadcrumbItem[];
@@ -37,7 +37,7 @@ export function AppShell({
   title: string;
   backHref?: string;
   children: ReactNode;
-}) {
+}>) {
   const needsReviewCount = changes.filter((change) => change.needsReview).length;
 
   return (

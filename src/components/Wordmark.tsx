@@ -10,7 +10,7 @@ const SIZES = {
  * @param size "lg" for full-page use such as the gate, "sm" for the top bar.
  * @param showName False shows the mark alone, for the mobile header where the page title sits next to it.
  */
-export function Wordmark({ size = "lg", showName = true }: { size?: keyof typeof SIZES; showName?: boolean }) {
+export function Wordmark({ size = "lg", showName = true }: Readonly<{ size?: keyof typeof SIZES; showName?: boolean }>) {
   const { text, logoWidth, logoHeight } = SIZES[size];
   return (
     <span

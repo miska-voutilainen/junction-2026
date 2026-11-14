@@ -29,12 +29,12 @@ export function TopBar({
   breadcrumb = [],
   escapeSlot,
   needsReviewCount,
-}: {
+}: Readonly<{
   repo: string;
   breadcrumb?: BreadcrumbItem[];
   escapeSlot?: ReactNode;
   needsReviewCount: number;
-}) {
+}>) {
   return (
     <header className="flex h-topbar shrink-0 items-center gap-3.5 border-b border-border-subtle bg-surface-raised px-4 text-sm">
       <NavSheet needsReviewCount={needsReviewCount} className="-ml-2 nav:hidden" />
@@ -53,7 +53,7 @@ export function TopBar({
   );
 }
 
-function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
+function Breadcrumb({ items }: Readonly<{ items: BreadcrumbItem[] }>) {
   return (
     <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-text-muted compact:flex">
       {items.map((item, index) => {

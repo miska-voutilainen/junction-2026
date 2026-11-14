@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * the eight ideas and links to its page in a new tab. The name and page come
  * from `IDEAS`, so a label cannot disagree with the list. Spec section 3.
  */
-export function IdeaLabel({ n, className }: { n: IdeaNumber; className?: string }) {
+export function IdeaLabel({ n, className }: Readonly<{ n: IdeaNumber; className?: string }>) {
   const url = ideaUrl(n);
   const { name } = IDEAS[n];
 

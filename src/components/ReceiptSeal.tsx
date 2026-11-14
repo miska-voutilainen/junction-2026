@@ -6,7 +6,7 @@
  *
  * @param size The drawing's width and height in pixels.
  */
-export function ReceiptSeal({ size = 64 }: { size?: number }) {
+export function ReceiptSeal({ size = 64 }: Readonly<{ size?: number }>) {
   return (
     <div className="flex flex-none flex-col items-center gap-1.5">
       <span className="rounded-full text-green motion-safe:animate-[unlock-pulse_900ms_var(--ease-out)_1]">

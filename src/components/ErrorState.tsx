@@ -21,7 +21,7 @@ export function ErrorState({
   retryLabel = "Try again",
   actions,
   className,
-}: {
+}: Readonly<{
   title: string;
   body: ReactNode;
   details?: string;
@@ -29,7 +29,7 @@ export function ErrorState({
   retryLabel?: string;
   actions?: ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <section className={cn("mx-auto flex max-w-lg flex-col gap-3 py-12", className)}>
       <div role="alert" className="flex flex-col gap-3">

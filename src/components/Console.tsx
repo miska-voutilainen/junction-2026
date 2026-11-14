@@ -35,7 +35,7 @@ interface ConsoleProps {
  * choice is remembered per `kind`. The scroll region takes focus when it
  * scrolls, so arrow keys work without a mouse. UI plan section 6.
  */
-export function Console({ label, text, kind, defaultWrap = false, heading, actions, isFlush = false, children, className }: ConsoleProps) {
+export function Console({ label, text, kind, defaultWrap = false, heading, actions, isFlush = false, children, className }: Readonly<ConsoleProps>) {
   const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
 
   return (
@@ -64,7 +64,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
   );
 }
 
-function WrapButton({ isWrapped, onToggle }: { isWrapped: boolean; onToggle: () => void }) {
+function WrapButton({ isWrapped, onToggle }: Readonly<{ isWrapped: boolean; onToggle: () => void }>) {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
