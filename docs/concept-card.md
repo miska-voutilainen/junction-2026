@@ -46,7 +46,7 @@
 
 1. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
 2. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
-3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this.
+3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
 4. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
 5. [A written refusal policy](ideas/refusal-policy.md): seven things the AI never decides.
 6. [Evidence levels instead of confidence](ideas/evidence-levels.md): a claim is labelled by what backs it.

@@ -8,8 +8,11 @@ export type Area = z.infer<typeof AreaSchema>;
 export const EvidenceLevelSchema = z.enum(["verified", "supported", "unverified", "refused"]);
 export type EvidenceLevel = z.infer<typeof EvidenceLevelSchema>;
 
-/** Per-hunk review coverage, part of TierDecision (producer: engine, route()). */
-export const CoverageSchema = z.enum(["verified", "supported", "read"]);
+/**
+ * Per-hunk review coverage, part of TierDecision (producer: engine, route()).
+ * "generated" marks hunks in generated files (snapshots): visible, but left out of the reading count.
+ */
+export const CoverageSchema = z.enum(["verified", "supported", "read", "generated"]);
 export type Coverage = z.infer<typeof CoverageSchema>;
 
 /** Review tier, part of TierDecision (producer: engine, route()). */
@@ -65,6 +68,7 @@ export const coverageLabel: Record<Coverage, string> = {
   verified: "Verified",
   supported: "Supported",
   read: "Read this",
+  generated: "Generated",
 };
 
 /** UI labels for EvidenceLevel. */

@@ -549,13 +549,18 @@
         "ruleId": "R-area-level",
         "text": "Security: Shadow, the AI's output routes nothing here",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-generated",
+        "text": "2 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)",
+        "tier": "light"
       }
     ],
     "coverage": {
       "h1": "read",
       "h2": "read",
-      "h3": "verified",
-      "h4": "verified",
+      "h3": "generated",
+      "h4": "generated",
       "h5": "supported"
     },
     "readHunks": 2,

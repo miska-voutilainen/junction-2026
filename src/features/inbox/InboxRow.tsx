@@ -73,7 +73,7 @@ function ReviewedCells({ row }: Readonly<{ row: ReviewedRow }>) {
       <div role="cell" className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <TierBadge tier={row.tier} />
-          <span className="text-xs text-text-muted">{readingText(row)}</span>
+          <span className="text-xs whitespace-nowrap text-text-muted">{readingText(row)}</span>
         </div>
         <CoverageStrip coverage={row.coverage} className="hidden lg:flex" />
       </div>

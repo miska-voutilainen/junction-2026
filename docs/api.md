@@ -25,7 +25,7 @@ All objects are strict: an unknown key fails validation. Lines are 1-based and i
 | --------------- | -------------------------------------------------- | ------------------------------------------ |
 | `Area`          | `generator`, `analyzer`, `security`, `performance` | Generator, Analyzer, Security, Performance |
 | `EvidenceLevel` | `verified`, `supported`, `unverified`, `refused`   | Verified, Supported, Unverified, Refused   |
-| `Coverage`      | `verified`, `supported`, `read`                    | Verified, Supported, Read this             |
+| `Coverage`      | `verified`, `supported`, `read`, `generated`       | Verified, Supported, Read this, Generated  |
 | `Tier`          | `light`, `focused`, `full`                         | Light, Focused, Full                       |
 | `LadderLevel`   | `shadow`, `calibrated`, `trusted`                  | Shadow, Calibrated, Trusted                |
 | `FileKind`      | `source`, `test`, `docs`, `generated`              |                                            |

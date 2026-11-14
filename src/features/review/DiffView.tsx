@@ -24,13 +24,14 @@ interface DiffViewProps {
  * visible: the reader sees what to read before anything else.
  */
 export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, onToggleRead }: Readonly<DiffViewProps>) {
-  const coveredCount = sections.covered.length + sections.generated.length;
+  const coveredCount = sections.covered.length;
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <ReadThisSection
         entries={sections.read}
         coveredCount={coveredCount}
+        generatedCount={sections.generated.length}
         tokens={tokens}
         highlightedLines={highlightedLines}
         readIds={readIds}
@@ -46,19 +47,17 @@ export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, 
               <span>
                 Covered by evidence: {coveredCount} {coveredCount === 1 ? "hunk" : "hunks"}
               </span>
-              <span className="text-xs text-text-muted">{coveredSummary([...sections.covered, ...sections.generated])}</span>
+              <span className="text-xs text-text-muted">{coveredSummary(sections.covered)}</span>
             </span>
           }
         >
           <div className="mb-1 flex flex-col gap-3">
-            {sections.covered.length > 0 && (
-              <CoveredList entries={sections.covered} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
-            )}
-            {sections.generated.length > 0 && (
-              <GeneratedFiles entries={sections.generated} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
-            )}
+            <CoveredList entries={sections.covered} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
           </div>
         </Disclosure>
+      )}
+      {sections.generated.length > 0 && (
+        <GeneratedFiles entries={sections.generated} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
       )}
     </div>
   );
@@ -67,6 +66,7 @@ export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, 
 function ReadThisSection({
   entries,
   coveredCount,
+  generatedCount,
   tokens,
   highlightedLines,
   readIds,
@@ -74,6 +74,7 @@ function ReadThisSection({
 }: Readonly<{
   entries: HunkEntry[];
   coveredCount: number;
+  generatedCount: number;
   tokens: HighlightedHunks;
   highlightedLines: HighlightedLines[];
   readIds: ReadonlySet<string>;
@@ -82,7 +83,7 @@ function ReadThisSection({
   if (entries.length === 0) {
     return (
       <p className="rounded-control border border-border-subtle bg-surface-panel px-3 py-2 text-base text-text-secondary">
-        Nothing to read: evidence covers all {coveredCount} hunks.
+        {nothingToReadText(coveredCount, generatedCount)}
       </p>
     );
   }
@@ -106,6 +107,15 @@ function ReadThisSection({
       ))}
     </section>
   );
+}
+
+/** "Nothing to read: evidence covers all 8 hunks.", or with snapshots: "...covers 2 hunks; the other 411 are generated files." */
+function nothingToReadText(coveredCount: number, generatedCount: number): string {
+  if (generatedCount === 0) return `Nothing to read: evidence covers all ${coveredCount} hunks.`;
+  if (coveredCount === 0) return generatedCount === 1 ? "Nothing to read: the one hunk is a generated file." : `Nothing to read: all ${generatedCount} hunks are generated files.`;
+  const covered = `${coveredCount} ${coveredCount === 1 ? "hunk" : "hunks"}`;
+  const others = generatedCount === 1 ? "the other hunk is a generated file" : `the other ${generatedCount} are generated files`;
+  return `Nothing to read: evidence covers ${covered}; ${others}.`;
 }
 
 interface CoveredListProps {
@@ -132,6 +142,7 @@ function CoveredList({ entries, tokens, highlightedLines, reveal }: Readonly<Cov
   );
 }
 
+/** Generated hunks: visible, collapsed, and outside the reading count; the title says so. */
 function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<CoveredListProps>) {
   const fileCount = new Set(entries.map((entry) => entry.hunk.file)).size;
   const noun = fileCount === 1 ? "generated snapshot file" : "generated snapshot files";
@@ -139,8 +150,10 @@ function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<
     <Disclosure
       isOpen={reveal.isGeneratedOpen}
       onOpenChange={reveal.setGeneratedOpen}
-      title={`${fileCount} ${noun} · ${reveal.isGeneratedOpen ? "Hide" : "Show"}`}
+      className="rounded-control border border-dashed border-border-default px-2 py-1"
+      title={`${fileCount} ${noun} · not in the reading count · ${reveal.isGeneratedOpen ? "Hide" : "Show"}`}
     >
+      <p className="px-1 pb-2 text-xs text-text-muted">{"Generated files aren't read, so code hidden in one wouldn't be caught. Read the template change that produces them."}</p>
       <CoveredList entries={entries} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
     </Disclosure>
   );

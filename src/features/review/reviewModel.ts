@@ -5,6 +5,7 @@
  * 5); this file only arranges it. Pure functions, no React.
  */
 import type { Area, Citation, Coverage, LadderLevel, Review, TierDecision } from "@/contracts";
+import { countGenerated } from "@/rules/route";
 
 type Hunk = Review["hunks"][number];
 type File = Review["files"][number];
@@ -28,7 +29,7 @@ export interface HunkSections {
   read: HunkEntry[];
   /** Covered hunks of ordinary files, in diff order. */
   covered: HunkEntry[];
-  /** Covered hunks of generated files; shown collapsed as snapshot files. */
+  /** Hunks route() marked "generated"; shown collapsed as snapshot files, outside the reading count. */
   generated: HunkEntry[];
 }
 
@@ -50,8 +51,8 @@ export interface NavigatorGroup {
   items: NavigatorItem[];
 }
 
-const GROUP_ORDER: Coverage[] = ["read", "supported", "verified"];
-const GROUP_TITLE: Record<Coverage, string> = { read: "Read this", supported: "Supported", verified: "Verified" };
+const GROUP_ORDER: Coverage[] = ["read", "supported", "verified", "generated"];
+const GROUP_TITLE: Record<Coverage, string> = { read: "Read this", supported: "Supported", verified: "Verified", generated: "Generated" };
 
 /** Last path segment: "src/a/Foo.cs" -> "Foo.cs". */
 export function fileName(path: string): string {
@@ -66,10 +67,10 @@ export function hunkRange(hunk: Hunk): string {
 
 /**
  * The hunks of a review with their coverage, split into what a person reads,
- * what evidence covers and the covered generated files.
+ * what evidence covers and the generated hunks.
  *
- * A generated file only collapses when evidence covers it: a generated hunk
- * route() marks "read" is something a person must read, so it stays in `read`.
+ * A generated file's hunk only collapses when route() marks it "generated": one
+ * a finding or refusal names comes back as "read", so it stays in `read`.
  */
 export function buildSections(review: Review, decision: TierDecision, levels: Record<Area, LadderLevel>): HunkSections {
   const fileOf = new Map(review.files.map((file) => [file.path, file]));
@@ -87,7 +88,7 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
       isOwnTest: isCoveredByOwnTestOnly(review, hunk, coverage),
     };
     if (coverage === "read") sections.read.push(entry);
-    else if (file.kind === "generated") sections.generated.push(entry);
+    else if (coverage === "generated") sections.generated.push(entry);
     else sections.covered.push(entry);
   }
   return sections;
@@ -103,6 +104,8 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
  * @param areaLevel trust level of the hunk's area, null when the file has no area
  */
 function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
+  // The generated section title says why these hunks are outside the count, so a row repeats nothing.
+  if (coverage === "generated") return "";
   if (coverage === "read") return readReason(review, hunk, areaLevel);
   const claims = claimsAtLevel(review, hunk, coverage);
   if (coverage === "verified") return verifiedLine(claims);
@@ -180,15 +183,15 @@ function readReason(review: Review, hunk: Hunk, areaLevel: LadderLevel | null): 
 }
 
 /**
- * The navigator's groups: "Read this", "Supported", "Verified", empty ones
- * omitted. Covered generated hunks of a group become one item, "<n> generated
- * snapshot files", so a snapshot-heavy change doesn't drown the list.
+ * The navigator's groups: "Read this", "Supported", "Verified", "Generated",
+ * empty ones omitted. Generated hunks become one item, "<n> generated snapshot
+ * files", so a snapshot-heavy change doesn't drown the list.
  */
 export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
   const groups: NavigatorGroup[] = [];
   for (const coverage of GROUP_ORDER) {
     const hunkEntries = [...sections.read, ...sections.covered].filter((entry) => entry.coverage === coverage);
-    const generated = sections.generated.filter((entry) => entry.coverage === coverage);
+    const generated = coverage === "generated" ? sections.generated : [];
     const items: NavigatorItem[] = hunkEntries.map((entry) => ({
       hunkId: entry.hunk.id,
       label: `${fileName(entry.hunk.file)}:${entry.range}`,
@@ -214,17 +217,20 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
 
 /**
  * The text after the tier badge: "read 2 of 8 hunks · ~1 min (full read ~3 min)".
- * Like the inbox row, it leaves the reading estimate out when nothing needs reading.
+ * Like the inbox row, it leaves the reading estimate out when nothing needs reading,
+ * and names the generated hunks when the count leaves some out: "read 12 of 423 hunks · 411 generated".
  */
 export function coverageLineText(decision: TierDecision): string {
+  const generated = countGenerated(decision.coverage);
+  const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
   const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
-  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${reading} (full read ~${decision.fullMinutes} min)`;
+  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading} (full read ~${decision.fullMinutes} min)`;
 }
 
-/** The line under a collapsed covered section: "4 verified · 5 supported". */
+/** The line under a collapsed covered section: "4 verified · 5 supported", a zero part left out. */
 export function coveredSummary(entries: HunkEntry[]): string {
   const count = (coverage: Coverage) => entries.filter((entry) => entry.coverage === coverage).length;
-  return `${count("verified")} verified · ${count("supported")} supported`;
+  return [`${count("verified")} verified`, `${count("supported")} supported`].filter((part) => !part.startsWith("0 ")).join(" · ");
 }
 
 /** Raw unified text of a hunk, as `git diff` prints it; what Copy puts on the clipboard. */
