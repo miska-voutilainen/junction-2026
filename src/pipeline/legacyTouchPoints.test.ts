@@ -233,6 +233,16 @@ describe("old-platform", () => {
     expect(points[0]).toMatchObject({ detail: "#else of #if NET8_0_OR_GREATER", hunkIds: ["h6"] });
   });
 
+  it("walks a removed #else back through removed lines and skips the added version's #endif", async () => {
+    const removedElse = hunk("h9", "src/MessagePack/Formatters/F.cs", [
+      ["context", "#if NET8_0_OR_GREATER"],
+      ["add", "#endif"],
+      ["del", "#else"],
+    ]);
+    const [point] = await find([removedElse], fakeTree());
+    expect(point).toMatchObject({ detail: "#else of #if NET8_0_OR_GREATER", hunkIds: ["h9"] });
+  });
+
   it("groups hunks with the same directive and ignores other #if lines", async () => {
     const second = hunk("h2", "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs", [
       ["del", directive],

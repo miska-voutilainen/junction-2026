@@ -13,6 +13,7 @@ import {
   maintainersOwner,
   maxListedFiles,
   oldPlatformDirective,
+  preprocessor,
 } from "../policy/legacyTouch";
 import { groupSightings, type Guard, type Hunk, type Sighting } from "./touchSightings";
 
@@ -37,22 +38,29 @@ export async function oldPlatformTouchPoints(
  */
 function directiveSighting(hunk: Hunk): Sighting[] {
   const project = hunk.file.match(/^src\/([^/]+)\//)?.[1];
-  // The first directive stands for the hunk: one hunk is one sighting, and a hunk
-  // that changes several `#if` lines still asks the same question of the owner.
-  const directive = hunk.lines.flatMap((line, index) => {
-    if (line.kind === "context") return [];
-    if (oldPlatformDirective.test(line.text)) return [line.text.trim()];
-    if (!elseDirective.test(line.text)) return [];
-    const opening = openingIf(hunk.lines, index);
-    return opening && currentPlatformIf.test(opening) ? [`#else of ${opening}`] : [];
-  })[0];
+  const directive = firstOldPlatformDirective(hunk.lines);
   if (!project || !directive) return [];
   return [
     { detail: directive, owner: maintainersOwner.platform, hunkId: hunk.id, subject: project },
   ];
 }
 
-const elseDirective = /^\s*#\s*else\b/;
+/**
+ * The first changed line that only old targets compile: an old-platform `#if`,
+ * or an `#else` of an `#if` on one current target. The first stands for the
+ * hunk: a hunk that changes several such lines asks the owner the same question.
+ * @example a hunk with context "#if NET8_0_OR_GREATER" and an added "#else" gives "#else of #if NET8_0_OR_GREATER"
+ */
+function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
+  for (const [index, line] of lines.entries()) {
+    if (line.kind === "context") continue;
+    if (oldPlatformDirective.test(line.text)) return line.text.trim();
+    if (!preprocessor.elseLine.test(line.text)) continue;
+    const opening = openingIf(lines, index);
+    if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
+  }
+  return null;
+}
 
 /**
  * The `#if` line an `#else` at `index` closes, or null when it opened above the
@@ -67,8 +75,8 @@ function openingIf(lines: Hunk["lines"], index: number): string | null {
   for (let i = index - 1; i >= 0; i -= 1) {
     const { kind, text } = lines[i];
     if (kind !== "context" && kind !== version) continue;
-    if (/^\s*#\s*endif\b/.test(text)) depth += 1;
-    else if (/^\s*#\s*if\b/.test(text)) {
+    if (preprocessor.endifLine.test(text)) depth += 1;
+    else if (preprocessor.ifLine.test(text)) {
       if (depth === 0) return text.trim();
       depth -= 1;
     }

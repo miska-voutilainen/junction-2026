@@ -71,11 +71,25 @@ export const oldPlatformDirective =
 
 /**
  * An `#if` whose whole condition is one current target, so its `#else` is
- * code only old targets compile. A compound condition (`NET8_0_OR_GREATER ||
- * NETSTANDARD2_1`) is left out: its `#else` may still build on a current target.
- * @example "#if NET8_0_OR_GREATER" and "#if NETCOREAPP" match; "#if NET8_0_OR_GREATER || NETSTANDARD2_1" and "#if DEBUG" do not.
+ * code only old targets compile. That holds because the fork's source projects
+ * build netstandard2.0, netstandard2.1, net472 and net8.0 and nothing between.
+ * A compound condition (`NET8_0_OR_GREATER || NETSTANDARD2_1`) is left out:
+ * its `#else` may still build on a current target.
+ * @example "#if NET8_0_OR_GREATER", "#if (NET8_0_OR_GREATER) // fast path" and "#if NETCOREAPP" match; "#if NET8_0_OR_GREATER || NETSTANDARD2_1" and "#if DEBUG" do not.
  */
-export const currentPlatformIf = /^\s*#\s*if\s+(?:NET(?:[5-9]|\d{2,})_\d+\w*|NETCOREAPP\w*)\s*$/;
+export const currentPlatformIf =
+  /^\s*#\s*if\s+\(?\s*(?:NET(?:[5-9]|\d{2,})_\d+\w*|NETCOREAPP\w*)\s*\)?\s*(?:\/\/.*)?$/;
+
+/**
+ * The directives `#else` matching reads. `#elif` is none of them on purpose: an
+ * `#else` after `#if NET8_0_OR_GREATER ... #elif X` still closes that `#if`.
+ * @example "#else", "#if DEBUG" and "#endif" match their pattern; "#elif DEBUG" matches none.
+ */
+export const preprocessor = {
+  elseLine: /^\s*#\s*else\b/,
+  ifLine: /^\s*#\s*if\b/,
+  endifLine: /^\s*#\s*endif\b/,
+};
 
 /**
  * A test project target that runs old code: .NET Framework 4.x or netstandard.

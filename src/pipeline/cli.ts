@@ -101,7 +101,7 @@ async function legacyCommand(changeId: string): Promise<void> {
   for (const comparison of runs) {
     const before = comparison ? await loadRecordedRun(changeId, comparison) : await loadRecordedReview(changeId);
     const label = comparison ? `${changeId} ${comparison.mode} ${comparison.runNumber}` : changeId;
-    if (!before) fail(`${label} does not match the Review contract. Record it again with pnpm review run.`);
+    if (!before) fail(`${label} does not match the Review contract; runs listed above are already updated. Record it again with pnpm review run, then re-run this command (it is safe to repeat).`);
     const after = await addLegacyGuard(before, repoDir, levels);
     await writeRecordedReview(after, comparison);
     printLegacyResult(label, before, after);

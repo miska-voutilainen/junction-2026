@@ -205,19 +205,22 @@ function legacyReasons(review: RoutedReview): Reason[] {
   const touched = legacyZones
     .map((zone) => ({ zone, count: review.hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone).length }))
     .filter(({ count }) => count > 0);
-  const legacyHunks = new Set([
-    ...review.hunks.filter((hunk) => legacyZoneOf(hunk.file) !== null).map((hunk) => hunk.id),
-    ...(review.legacyTouchPoints ?? []).filter((touch) => touch.kind === "legacy-code").flatMap((touch) => touch.hunkIds),
-  ]);
-  const tier: Tier = legacyHunks.size >= legacyTouchFull ? "full" : "focused";
+  const zoneHunks = new Set(review.hunks.filter((hunk) => legacyZoneOf(hunk.file) !== null).map((hunk) => hunk.id));
+  const reachIns = (review.legacyTouchPoints ?? []).filter((touch) => touch.kind === "legacy-code" && touch.hunkIds.some((id) => !zoneHunks.has(id)));
+  const reachInHunks = new Set(reachIns.flatMap((touch) => touch.hunkIds).filter((id) => !zoneHunks.has(id)));
+  const total = zoneHunks.size + reachInHunks.size;
+  const tier: Tier = total >= legacyTouchFull ? "full" : "focused";
+  // Named whenever it lifts the tier, so a Full on "3 hunks" says where the other 2 came from.
+  const reaching = reachInHunks.size > 0 && tier === "full" ? `, plus ${reachInHunks.size} reaching in` : "";
   const zoneReasons = touched.map(({ zone, count }): Reason => ({
     ruleId: "R-legacy",
     tier,
-    text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}, the ${zone.owner} decides`,
+    text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}${reaching}, the ${zone.owner} decides`,
   }));
   // Reach-ins alone have no zone reason to carry the Full tier, so they get their own.
   if (zoneReasons.length > 0 || tier !== "full") return zoneReasons;
-  return [{ ruleId: "R-legacy", tier, text: `Legacy code: reaches into the legacy zones from ${legacyHunks.size} hunks, their owners decide` }];
+  const owners = [...new Set(reachIns.map((touch) => touch.owner))].join(" and the ");
+  return [{ ruleId: "R-legacy", tier, text: `Legacy code: reaches into the legacy zones from ${reachInHunks.size} hunks, the ${owners} decides` }];
 }
 
 /**

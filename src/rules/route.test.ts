@@ -430,15 +430,19 @@ describe("legacy guard", () => {
     const legacyTiers = (review: ReturnType<typeof withReachIns>) =>
       route(review, trustedEverywhere).reasons.filter((reason) => reason.ruleId === "R-legacy").map((reason) => reason.tier);
 
-    it("counts reach-in hunks with zone hunks: 3 in the zone and 2 reaching in is Full", () => {
-      expect(legacyTiers(withReachIns(3, 2))).toEqual(["full"]);
+    it("counts reach-in hunks with zone hunks: 3 in the zone and 2 reaching in is Full, and says so", () => {
+      expect(route(withReachIns(3, 2), trustedEverywhere).reasons).toContainEqual({
+        ruleId: "R-legacy",
+        tier: "full",
+        text: "Wire format: edits legacy code in 3 hunks, plus 2 reaching in, the runtime owner (the maintainers) decides",
+      });
     });
 
-    it("gives reach-ins alone their own Full reason at the threshold, and none below it", () => {
+    it("gives reach-ins alone their own Full reason at the threshold, naming the owner, and none below it", () => {
       expect(route(withReachIns(0, 5), trustedEverywhere).reasons).toContainEqual({
         ruleId: "R-legacy",
         tier: "full",
-        text: "Legacy code: reaches into the legacy zones from 5 hunks, their owners decide",
+        text: "Legacy code: reaches into the legacy zones from 5 hunks, the runtime owner (the maintainers) decides",
       });
       expect(legacyTiers(withReachIns(0, 4))).toEqual([]);
     });
