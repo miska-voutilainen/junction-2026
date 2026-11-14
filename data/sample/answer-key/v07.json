@@ -1,0 +1,13 @@
+{
+  "plantId": "v07",
+  "changeId": "v07",
+  "kind": "planted-bug",
+  "area": "generator",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1179,
+  "endLine": 1179,
+  "defect": "In the string-key branch of the second member loop the duplicate check consults intMembers by IntKey instead of stringMembers by StringKey, so duplicate string keys still reach stringMembers.Add and throw.",
+  "why": "The change exists to stop duplicate keys from throwing while the member tables are built; this copy of the guard checks the wrong dictionary, so the crash remains for these members.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

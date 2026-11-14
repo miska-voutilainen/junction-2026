@@ -1,0 +1,13 @@
+{
+  "plantId": "v09",
+  "changeId": "v09",
+  "kind": "planted-bug",
+  "area": "analyzer",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1008,
+  "endLine": 1011,
+  "defect": "A member with a mismatched key kind is skipped only when the type uses string keys (if (!isIntKey)); for integer-key types it is not skipped and falls through into the string-key branch.",
+  "why": "The skip must apply to both key kinds; for integer-key types the mismatched member is added to stringMembers, mixing the tables the analyzer builds and risking the throw that N1 forbids.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "plantId": "v03",
+  "changeId": "v03",
+  "kind": "planted-bug",
+  "area": "generator",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1434,
+  "endLine": 1434,
+  "defect": "GetPropertyIdentifierLocation casts the declaring syntax to PropertyDeclarationSyntax instead of testing the type, so a property declared by a record's positional parameter throws InvalidCastException.",
+  "why": "The helper exists to avoid a crash on unusual declarations; the hard cast brings back a crash for properties whose syntax is a parameter, which breaks F1 and F2 for record structs declared in source.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

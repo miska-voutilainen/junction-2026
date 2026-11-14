@@ -1,0 +1,13 @@
+{
+  "plantId": "cp3",
+  "changeId": "cp3",
+  "kind": "contradiction",
+  "area": null,
+  "file": null,
+  "startLine": null,
+  "endLine": null,
+  "defect": "A member with a mismatched key kind is skipped before its diagnostic is reported.",
+  "why": "The diff adds the skip (continue) after the DoNotMixStringAndIntKeys diagnostic is reported, not before; skipping first would hide the problem the analyzer must report.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

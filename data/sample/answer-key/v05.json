@@ -1,0 +1,13 @@
+{
+  "plantId": "v05",
+  "changeId": "v05",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 973,
+  "endLine": 973,
+  "defect": "The check that a keyed member is non-public is inverted (== Public instead of != Public), so a keyed non-public member no longer marks non-public members as serialized.",
+  "why": "Serialized private members then escape the rule that every non-public member must carry an explicit [Key] or [IgnoreMember], so private state can be serialized without the author deciding it.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

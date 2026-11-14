@@ -1,0 +1,13 @@
+{
+  "plantId": "v10",
+  "changeId": "v10",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1039,
+  "endLine": 1039,
+  "defect": "Duplicate string keys overwrite the earlier entry (stringMembers[key] = ...) instead of keeping the first, so the later member silently replaces the first in the member table.",
+  "why": "With duplicate keys the formatter table then binds the wire key to the second member while the diagnostic points at the first, so an input value can be read into a different member than the one the author sees.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

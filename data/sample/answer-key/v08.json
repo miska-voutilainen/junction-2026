@@ -1,0 +1,13 @@
+{
+  "plantId": "v08",
+  "changeId": "v08",
+  "kind": "planted-bug",
+  "area": "generator",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1148,
+  "endLine": 1151,
+  "defect": "In the second member loop the member with a mismatched key kind is skipped only when its integer key is null (if (intKey is null)), so a member with a missing string key is not skipped and reaches stringMembers.",
+  "why": "The skip must cover both mismatch cases the diagnostic reports, as in the first loop; a null string key then reaches the dictionary again and throws, the failure the change is meant to remove (F2, N1).",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "plantId": "cp4",
+  "changeId": "cp4",
+  "kind": "contradiction",
+  "area": null,
+  "file": null,
+  "startLine": null,
+  "endLine": null,
+  "defect": "Generic types are supported as long as every type argument is closed.",
+  "why": "The collector rejects generic types outright (it requires IsGenericType: false) and the README lists them as unsupported.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

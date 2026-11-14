@@ -1,0 +1,13 @@
+{
+  "plantId": "v01",
+  "changeId": "v01",
+  "kind": "planted-bug",
+  "area": "analyzer",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1446,
+  "endLine": 1446,
+  "defect": "The location filter also lets diagnostics without a location through, so diagnostics about members of types from referenced assemblies are reported again instead of being dropped.",
+  "why": "Members loaded from metadata have no source location, so their diagnostics carry Location.None. Dropping exactly those is the point of the filter; the added Location.None branch defeats it.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}

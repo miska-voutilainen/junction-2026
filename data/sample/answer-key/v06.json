@@ -1,0 +1,13 @@
+{
+  "plantId": "v06",
+  "changeId": "v06",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1078,
+  "endLine": 1078,
+  "defect": "Accessibility is tested with a bit mask against Public (!= 0), although Accessibility is not a flags enum; internal and protected members are treated as public.",
+  "why": "Internal, protected and protected-internal members pass the test, so the diagnostic for unkeyed members is reported eagerly as if they were public, and the deferral rule for non-public members no longer applies to them.",
+  "writtenBy": "engine lane (Miska), drafted by an isolated Claude Sonnet builder that never saw prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T07:20:00.000Z"
+}
