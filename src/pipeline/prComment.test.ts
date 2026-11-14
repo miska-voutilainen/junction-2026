@@ -34,6 +34,12 @@ describe("renderReviewComment", () => {
     expect(comment).toContain(`${routing.readHunks} of ${routing.totalHunks} hunks`);
   });
 
+  it("words the cost as the recording's, so a replayed comment does not claim calls it never made", () => {
+    expect(renderReviewComment(review, 0, measured)).toContain(
+      `recorded with ${review.run.usage.calls} model calls, $${review.run.usage.costUsd.toFixed(2)}.`,
+    );
+  });
+
   it.each([
     [0, "Signed."],
     [1, "Stale."],

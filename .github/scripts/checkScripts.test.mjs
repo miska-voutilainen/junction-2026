@@ -1,9 +1,16 @@
 // Tests for the pure functions behind the three CI checks.
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { findLaneViolations, summarise } from "./checkLanes.mjs";
 import { findMessageProblems } from "./checkMessages.mjs";
-import { findVersionProblem, readsIntoPrompt } from "./checkReviewerVersion.mjs";
+import {
+  findVersionProblem,
+  promptInputs,
+  readPromptSources,
+  readsIntoPrompt,
+  reviewerVersionIn,
+} from "./checkReviewerVersion.mjs";
 import { findChangeId } from "./countersignChange.mjs";
 import { compareLevels, renderLevelTable } from "./levelDiff.mjs";
 import { bannedSegment, findTreeProblems, readRootNames } from "./checkTree.mjs";
@@ -178,21 +185,69 @@ test("level diff: a rise, no change and a new area pass", () => {
   assert.equal(result.rows[1].from, "shadow");
 });
 
-test("reviewer version: only files the model reads count, not their tests", () => {
-  assert.equal(readsIntoPrompt("src/prompts/a3.ts"), true);
-  assert.equal(readsIntoPrompt("src/policy/areaChecklists.ts"), true);
-  assert.equal(readsIntoPrompt("src/prompts/a3.test.ts"), false);
-  assert.equal(readsIntoPrompt("src/policy/routing.ts"), false);
+test("reviewer version: the prompts' relative imports are prompt inputs, contracts and packages are not", () => {
+  const sources = [
+    {
+      file: "src/prompts/a3.ts",
+      text: [
+        'import { z } from "zod";',
+        'import { AreaSchema } from "../contracts";',
+        'import { HUNK_LINE_LEGEND } from "../pipeline/promptContext";',
+        'import type { A1Output } from "./a1";',
+      ].join("\n"),
+    },
+  ];
+  const exists = (file) => file !== "src/contracts.ts";
+  assert.deepEqual([...promptInputs(sources, exists)], ["src/pipeline/promptContext.ts"]);
 });
 
-test("reviewer version: a prompt change without a bump names the files and the fix", () => {
-  const problem = findVersionProblem(["src/prompts/a3.ts", "docs/spec.md"], "");
-  assert.match(problem, /^src\/prompts\/a3\.ts change what the model reads/);
+test("reviewer version: the real prompts pull in the prompt context, checklists, refusals and A5's limits", () => {
+  const inputs = promptInputs(readPromptSources(), existsSync);
+  for (const file of [
+    "src/pipeline/promptContext.ts",
+    "src/policy/areaChecklists.ts",
+    "src/policy/refusals.ts",
+    "src/policy/differentialTests.ts",
+  ])
+    assert.ok(inputs.has(file), `${file} should count as a prompt input`);
+});
+
+test("reviewer version: the eval workflow runs on every prompt input", () => {
+  const workflow = readFileSync(".github/workflows/countersign-eval.yml", "utf8");
+  for (const file of promptInputs(readPromptSources(), existsSync)) {
+    const isCovered =
+      workflow.includes(`"${file}"`) ||
+      (file.startsWith("src/policy/") && workflow.includes('"src/policy/**"'));
+    assert.ok(isCovered, `countersign-eval.yml paths: should include "${file}"`);
+  }
+});
+
+test("reviewer version: only prompt files and their inputs count, not tests", () => {
+  const inputs = new Set(["src/policy/refusals.ts"]);
+  assert.equal(readsIntoPrompt("src/prompts/a3.ts", inputs), true);
+  assert.equal(readsIntoPrompt("src/policy/refusals.ts", inputs), true);
+  assert.equal(readsIntoPrompt("src/prompts/a3.test.ts", inputs), false);
+  assert.equal(readsIntoPrompt("src/policy/routing.ts", inputs), false);
+});
+
+test("reviewer version: a prompt change with the same version names the files, the version and the fix", () => {
+  const problem = findVersionProblem(["src/prompts/a3.ts"], "rv2", "rv2");
+  assert.match(
+    problem,
+    /^src\/prompts\/a3\.ts change what the model reads, but reviewerVersion is still rv2/,
+  );
   assert.match(problem, /Bump it in src\/pipeline\/assembleReview\.ts/);
 });
 
-test("reviewer version: a bump, or no prompt change, passes", () => {
-  const bump = '-export const reviewerVersion = "rv1";\n+export const reviewerVersion = "rv2";';
-  assert.equal(findVersionProblem(["src/prompts/a3.ts"], bump), null);
-  assert.equal(findVersionProblem(["src/app/page.tsx"], ""), null);
+test("reviewer version: a changed value, or no prompt change, passes", () => {
+  assert.equal(findVersionProblem(["src/prompts/a3.ts"], "rv2", "rv3"), null);
+  assert.equal(findVersionProblem([], "rv2", "rv2"), null);
+});
+
+test("reviewer version: reads the value, so a moved or reformatted line is not a bump", () => {
+  assert.equal(
+    reviewerVersionIn(["// x", 'export const reviewerVersion = "rv2";', ""].join("\n")),
+    "rv2",
+  );
+  assert.equal(reviewerVersionIn("const other = 1;"), null);
 });

@@ -10,6 +10,10 @@ import { pathToFileURL } from "node:url";
 
 const CHANGE_LINE = /^Countersign:[ \t]*([A-Za-z0-9-]+)[ \t]*$/m;
 
+// The id later becomes a path and a shell argument, so it is letters, digits and dashes only; a
+// manual input like "../../package" would otherwise pass the existence check in main().
+const CHANGE_ID = /^[A-Za-z0-9-]+$/;
+
 /**
  * Reads the change id out of a PR body.
  * @returns the id, or null when the body has no `Countersign:` line
@@ -25,6 +29,12 @@ function main() {
     console.log("No `Countersign: <changeId>` line in the PR body: nothing to gate or review.");
     writeOutput("");
     return;
+  }
+  if (!CHANGE_ID.test(changeId)) {
+    console.error(
+      `::error::"${changeId}" is not a change id: use letters, digits and dashes, like mp-2283.`,
+    );
+    process.exit(1);
   }
   if (!existsSync(`data/sample/changes/${changeId}.json`)) {
     console.error(

@@ -9,7 +9,7 @@ import { existsSync } from "node:fs";
 import { isDeepStrictEqual, parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../../ai/client";
 import type { Area, AnswerKey, LadderLevel, ReportCard, Review } from "../../contracts";
-import { levelsFromReportCard } from "../../rules/ladder";
+import { levelsForReviewer, levelsFromReportCard } from "../../rules/ladder";
 import {
   hasChangeInput,
   loadAnswerKeys,
@@ -251,8 +251,9 @@ async function scoreFromDisk(
     otherReviews: tietoReviews,
     now: new Date(),
   });
+  // The new levels count only for the model the eval measured; a review by another model stays Shadow.
   const rerouted = tietoReviews.map((review) =>
-    rerouteReview(review, levelsFromReportCard(measured)),
+    rerouteReview(review, levelsForReviewer(measured, review.reviewer.model)),
   );
   return { card: { ...measured, routingSpread: routingSpreadOf(rerouted) }, rerouted };
 }

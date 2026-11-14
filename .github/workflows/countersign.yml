@@ -24,8 +24,10 @@ on:
         required: true
 
 # One run per PR; a push replaces the run still going, so a stale review never posts over a newer one.
+# Edits to the title or body get their own group: an edit re-runs only the gate, and in the shared
+# group it would cancel the review of the push before it, leaving the comment on the older head.
 concurrency:
-  group: countersign-${{ github.event.pull_request.number || inputs.change_id }}
+  group: countersign-${{ github.event.pull_request.number || inputs.change_id }}-${{ github.event.action == 'edited' && 'edit' || 'run' }}
   cancel-in-progress: true
 
 permissions:
@@ -89,7 +91,8 @@ jobs:
               0) echo "Signed: the signature verifies and the diff is unchanged since signing." ;;
               1) echo "Stale: the diff changed since the receipt was signed." ;;
               2) echo "No receipt for this diff: a named person has not signed it." ;;
-              *) echo "Signature invalid." ;;
+              3) echo "Signature invalid: the receipt does not verify against the allowed signers." ;;
+              *) echo "Verify did not finish (exit $code): nothing here says the diff is signed." ;;
             esac
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$code"
@@ -111,11 +114,13 @@ jobs:
       CHANGE_ID: ${{ needs.change.outputs.change_id }}
       RECEIPT_EXIT: ${{ needs.receipt.outputs.exit_code }}
       AI_BACKEND: api
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
+      # The key is set only on the steps that need it, so install and seed scripts never see it.
       - name: Choose live or replay
         id: mode
         shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             echo "mode=record" >> "$GITHUB_OUTPUT"
@@ -140,6 +145,7 @@ jobs:
         id: review
         env:
           AI_MODE: ${{ steps.mode.outputs.mode }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         # A5 mounts each git worktree into a container that runs as uid 1654, not the runner's user.
         # Docker Desktop's mounts are writable by anyone; a Linux runner's keep their 755 owner bits, so
         # dotnet restore could not write obj/. umask 0000 makes git create the worktrees writable; the
@@ -152,12 +158,15 @@ jobs:
           umask 0000
           if pnpm review run "$CHANGE_ID"; then
             echo "source=$AI_MODE" >> "$GITHUB_OUTPUT"
-          elif [ "$AI_MODE" = "replay" ]; then
+          elif [ "$AI_MODE" != "replay" ]; then
+            exit 1
+          elif ! git ls-files --error-unmatch "data/runs/$CHANGE_ID/review.json" > /dev/null 2>&1; then
+            echo "::error::No API key, the recordings do not cover every step of $CHANGE_ID, and there is no committed review to show. Record one with pnpm review run $CHANGE_ID."
+            exit 1
+          else
             git checkout -- "data/runs/$CHANGE_ID"
             echo "::warning::The recordings do not cover every step of $CHANGE_ID, so the comment shows the committed review."
             echo "source=committed" >> "$GITHUB_OUTPUT"
-          else
-            exit 1
           fi
 
       - name: Comment
@@ -175,6 +184,13 @@ jobs:
           if [ -n "$note" ]; then printf '\n%s\n' "$note" >> "$RUNNER_TEMP/comment.md"; fi
           cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
           # One comment per PR, updated on every push. A manual run has no PR: the summary is the output.
-          if [ -n "$PR_NUMBER" ]; then
-            gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/comment.md" --edit-last --create-if-none
+          # The bot's comment is found by its first line (COMMENT_MARKER in src/pipeline/prComment.ts),
+          # so another workflow's comment is never overwritten, and a pasted marker from a person is ignored.
+          if [ -z "$PR_NUMBER" ]; then exit 0; fi
+          bot_comment='.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- countersign -->"))) | .id'
+          comment_id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --jq "$bot_comment" | tail -n 1)
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -F "body=@$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/comment.md"
           fi
