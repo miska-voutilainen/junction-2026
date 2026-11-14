@@ -24,7 +24,7 @@ export function AcceptedRiskTable({ risks }: { risks: AcceptedRisk[] }) {
   return (
     <DashboardSection title="Accepted risk" subtitle="Residual risk lines from signed receipts, and whether their code still holds">
       <div role="table" aria-label="Accepted risk" className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
-        <div role="row" className={`sr-only compact:not-sr-only border-b border-border-subtle px-4 py-2.5 text-xs text-text-muted ${ROW_COLUMNS}`}>
+        <div role="row" className={`max-compact:sr-only border-b border-border-subtle px-4 py-2.5 text-xs text-text-muted ${ROW_COLUMNS}`}>
           <span role="columnheader">Risk, in the signer&apos;s words</span>
           <span role="columnheader">Accepted by</span>
           <span role="columnheader">Change</span>

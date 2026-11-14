@@ -32,7 +32,7 @@ function Fact({ term, value, note, isMuted = false }: { term: string; value: str
   return (
     <div className="flex min-w-0 flex-col gap-1 bg-surface-panel px-4 py-3.5">
       <dt className="text-sm text-text-muted">{term}</dt>
-      <dd className={isMuted ? "text-base text-text-muted" : "font-mono text-xl font-semibold tabular-nums"}>{value}</dd>
+      <dd className={isMuted ? "text-base text-text-muted" : "text-xl font-semibold tabular-nums"}>{value}</dd>
       {note && <dd className="text-xs text-text-muted">{note}</dd>}
     </div>
   );
