@@ -1,0 +1,10 @@
+# Secret scan rules: gitleaks' defaults, plus one allowance (Miska's decision, PR #141).
+title = "Countersign secret scan"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "A receipt's verify line prints the signer's public key fingerprint, which is public by design: anyone checking a receipt compares it with allowed_signers."
+regexTarget = "line"
+regexes = ['''signature for [A-Za-z0-9-]+ with ED25519 key SHA256:[A-Za-z0-9+/]{43}''']
