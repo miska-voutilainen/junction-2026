@@ -9,7 +9,7 @@ export async function unlock(page: Page): Promise<void> {
   if (!code) return;
 
   await page.goto("/unlock");
+  // The form submits itself on the last character.
   await page.getByLabel(/4-digit code|Access code/).pressSequentially(code);
-  await page.keyboard.press("Enter");
   await page.waitForURL((url) => url.pathname !== "/unlock");
 }

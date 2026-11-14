@@ -20,6 +20,7 @@ const NOTES_REF = "refs/notes/countersign";
 /** The part of a change input the seed needs: which commit to look for. */
 export interface SampleChange {
   id: string;
+  baseSha: string;
   headSha: string;
 }
 
@@ -68,9 +69,11 @@ function cloneIfMissing(
   // `git clone` accepts an empty folder, so only a folder with content is left alone.
   if (existsSync(dir) && readdirSync(dir).length > 0) return;
   log(`Cloning ${forkUrl} into ${dir}`);
-  // Windows refuses the long snapshot file names in the fork unless long paths are on.
+  // Windows refuses the fork's long snapshot file names unless long paths are on. Clone's own -c
+  // writes the setting into the clone's .git/config, so later checkouts and pulls keep working;
+  // `git -c ... clone` would apply it to the clone command only.
   git(
-    ["-c", "core.longpaths=true", "clone", forkUrl, dir],
+    ["clone", "-c", "core.longpaths=true", forkUrl, dir],
     process.cwd(),
     `Could not clone the fork. Check your network and your access to ${forkUrl}, then run pnpm seed again`,
   );
@@ -101,6 +104,8 @@ function checkOrigin(dir: string, forkUrl: string): void {
 }
 
 function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
+  // Clones made before the setting existed (or by hand) lack it; without it a later checkout fails on Windows.
+  git(["config", "core.longpaths", "true"], dir);
   git(["fetch", "origin"], dir);
   // No `+` on the notes refspec: a local notes ref that has diverged holds receipts not yet pushed, and forcing would drop them.
   // Fetching a ref that doesn't exist fails the whole command, so ask the remote first.
@@ -114,8 +119,9 @@ function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
 }
 
 /**
- * Checks that each change's head commit is in the clone, so a force-pushed or
- * missing branch is caught here and not as a confusing diff error later.
+ * Checks that each change's base and head commits are in the clone, so a
+ * recorded commit that is gone (for example after a force-push to the fork) fails
+ * here and not as a confusing diff error later.
  * Example line: `mp-2283 9df83c38409c8bfad0517aebffe48211eda4a5b4`.
  */
 function checkChangeHeads(
@@ -125,12 +131,14 @@ function checkChangeHeads(
 ): void {
   const missing: string[] = [];
   for (const change of changes) {
-    try {
-      git(["cat-file", "-e", `${change.headSha}^{commit}`], dir);
-      log(`${change.id} ${change.headSha}`);
-    } catch {
-      missing.push(`${change.id} (${change.headSha})`);
+    for (const sha of [change.baseSha, change.headSha]) {
+      try {
+        git(["cat-file", "-e", `${sha}^{commit}`], dir);
+      } catch {
+        missing.push(`${change.id} (${sha})`);
+      }
     }
+    log(`${change.id} ${change.headSha}`);
   }
   if (missing.length > 0) {
     throw new Error(
@@ -139,17 +147,30 @@ function checkChangeHeads(
   }
 }
 
-/** Reads every data/sample/changes/*.json, validated, in file-name order. */
+/**
+ * Reads every data/sample/changes/*.json, validated, in file-name order.
+ * The folder is found from this file, so the script runs from any directory.
+ */
 function loadSampleChanges(): SampleChange[] {
-  const changesDir = "data/sample/changes";
+  const changesDir = fileURLToPath(
+    new URL("../data/sample/changes", import.meta.url),
+  );
   return readdirSync(changesDir)
     .filter((file) => file.endsWith(".json"))
     .sort()
-    .map((file) =>
-      ChangeInputSchema.parse(
-        JSON.parse(readFileSync(join(changesDir, file), "utf8")),
-      ),
-    );
+    .map((file) => {
+      try {
+        return ChangeInputSchema.parse(
+          JSON.parse(readFileSync(join(changesDir, file), "utf8")),
+        );
+      } catch (failure) {
+        const reason =
+          failure instanceof Error ? failure.message : String(failure);
+        throw new Error(
+          `data/sample/changes/${file} is invalid: ${reason}. Run pnpm test scripts/sampleData.test.ts`,
+        );
+      }
+    });
 }
 
 function trimUrl(url: string): string {
@@ -179,11 +200,22 @@ function git(args: string[], cwd: string, failureMessage?: string): string {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (existsSync(".env")) process.loadEnvFile();
-  process.exitCode = seed({
-    sampleRepoDir: process.env.SAMPLE_REPO_DIR,
-    forkUrl: FORK_URL,
-    changes: loadSampleChanges(),
-    log: (line) => process.stdout.write(`${line}\n`),
-    error: (line) => process.stderr.write(`${line}\n`),
-  });
+  try {
+    process.exitCode = seed({
+      sampleRepoDir: process.env.SAMPLE_REPO_DIR,
+      forkUrl: FORK_URL,
+      changes: loadSampleChanges(),
+      log: (line) =>
+        process.stdout.write(`${line}
+`),
+      error: (line) =>
+        process.stderr.write(`${line}
+`),
+    });
+  } catch (failure) {
+    process.stderr
+      .write(`${failure instanceof Error ? failure.message : String(failure)}
+`);
+    process.exitCode = 1;
+  }
 }
