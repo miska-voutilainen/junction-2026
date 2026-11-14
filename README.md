@@ -27,11 +27,21 @@ Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([chal
 
 <!-- demo-prep turns this part into the judges' README at the freeze: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools. -->
 
-## Prepared before the event: Markdown only
+<!-- demo-prep keeps the next section word for word: it is the team's declaration of what existed before the event. -->
 
-The agent environment below was set up before Junction started, as Markdown only: written guidance on how the team works, how the agents behave, and specs for the tooling. The event rules let us bring only Markdown files, so the first commit (`chore: add agent environment`) holds nothing else.
+## Prepared before the event
 
-Every line of code was written during the event, by the team and its agents, starting with the kickoff branch on Fri 13.11. That includes the hooks, settings and CI described here. Nothing from other projects is in this repository.
+Junction 2026 started on Fri 13.11.2026 at 19:30 EET. The rules let teams bring Markdown files but no code. This is everything that existed before 19:30, and when work started. Times are EET, from GitHub and `git log`; check them with `git log --reverse` and `gh repo view --json createdAt`.
+
+| Time (Fri 13.11) | What happened                                                                                                                                                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 19:12            | Empty repository created on GitHub                                                                                                                                                                                                                                                       |
+| 19:13            | Issue #1 (the agent sync log) opened with a one-line description; first comment at 20:49                                                                                                                                                                                                 |
+| 19:30            | Event starts                                                                                                                                                                                                                                                                             |
+| 19:40            | First commit `bac8ef7`, `chore: add agent environment`: 38 Markdown files written before the event (rules, skills, subagent definitions, templates, setup guide) and two plain-text config files, `.gitignore` (9 ignore patterns) and `.gitattributes` (one line, `* text=auto eol=lf`) |
+| 22:03            | First code: the skeleton, PR #26                                                                                                                                                                                                                                                         |
+
+The Markdown is project-agnostic. It never names Countersign, Tieto or the challenge, and `docs/spec.md` in that commit is an empty template. We picked the challenge, the idea, the name and the spec at the event. Every line of code, including the hooks, settings and CI that the Markdown describes, was written during the event by the team and its agents. Nothing from other projects is in this repository; tools such as Lightfoot and Graphify run on our laptops and are not committed.
 
 ## Agent environment
 
