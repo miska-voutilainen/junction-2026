@@ -89,7 +89,7 @@ function NoEvaluation() {
   return (
     <EmptyState
       title="No evaluation recorded yet."
-      body="Every area is at Shadow: the reviewer has no track record, so its view can't lower any tier. Run this command to measure the reviewer."
+      body="Every area is at Shadow and nothing counts as covered, so every change is Full until the reviewer is measured. Run this command to measure it."
       command="pnpm evals"
       actions={<LevelLadder level="shadow" />}
     />
@@ -102,8 +102,8 @@ function UnreadableReportCard({ error }: { error: string }) {
       title="The report card couldn't be read."
       body={
         <>
-          Re-run <code className="font-mono text-sm">pnpm evals</code>. Until it reads, every area is treated as Shadow and changes
-          route as if the reviewer had no track record.
+          Re-run <code className="font-mono text-sm">pnpm evals</code>. Until it reads, nothing counts as covered and every change
+          is Full.
         </>
       }
       details={error}
