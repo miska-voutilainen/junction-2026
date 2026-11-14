@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · T14 choices: how A5 reads test results
+
+- **Context:** Spec section 6 says what a test result means but leaves open which claims a test covers, what a build error on one side means and how the tests run.
+- **Decision:** An A5 test covers the behaviour claims that cite hunks and carry its requirement item id. A5 writes tests only for functional items that such a claim names. Only a Supported claim becomes Verified; an Unverified claim has no matching quote, so a test does not lift it. A build error, a filter that matches no test and a timeout on either side are "could not say": the claim stays as it was and the run is counted in the log. An A5 test that fails on the head retracts the claims it covers (they become Unverified, with the head output in `retractions`). A PR test that fails on the head adds evidence only: it may fail for reasons unrelated to the claim. The PR's own tests are the methods with an added line in the PR's test files, and they run on a base that holds only the PR's test files, after A5's runs, so a PR test that does not compile on the base cannot break A5's. `dotnet` runs with an allow-listed environment (no API keys), without a shell, and its process tree is killed on a timeout.
+- **Why:** "Fails on base and passes on head" is the one signal that tells the versions apart; a build error on the base (the test uses a type the change adds) is the common case and must not count as a failing test. Model-written C# runs on this laptop, so it only ever runs in a worktree that is deleted afterwards.
+- **Rejected:** Treating a build error on the base as "fails on base" (hands out Verified for free); retracting on a failing PR test; running the PR's tests before A5's in the same worktree.
+- **PR:** T14
+
 ## 2026-11-14 · T13 choices: area by path, AI refusals only, nullable failure citation
 
 - **Context:** A3 and A4 needed rules the spec left open or split between section 6 and 9.1.
