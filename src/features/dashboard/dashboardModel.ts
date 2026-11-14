@@ -7,8 +7,10 @@
  */
 import { areaLabel, tierLabel } from "@/contracts";
 import type { Area, LadderLevel, Tier } from "@/contracts";
-import { buildInboxModel, decideChange, inboxLevels, isReviewed } from "@/features/inbox";
-import type { InboxModel, InboxSource, ReportCardInput } from "@/features/inbox";
+import { buildInboxModel, isReviewed } from "@/features/inbox";
+import type { InboxModel, InboxSource } from "@/features/inbox";
+import { decideChange, inboxLevels } from "@/lib/decideChange";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";

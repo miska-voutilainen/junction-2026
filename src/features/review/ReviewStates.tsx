@@ -1,8 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
-import type { ChangeInput, Review } from "@/contracts";
-import type { EvidenceAlert } from "./reviewModel";
+import type { ChangeInput, Review, TierDecision } from "@/contracts";
 
 /** The change has no recorded review: say so and show the command that records one. */
 export function ReviewMissing({ changeId }: Readonly<{ changeId: string }>) {
@@ -58,4 +57,23 @@ export function EvidenceUnavailable({ alert }: Readonly<{ alert: EvidenceAlert }
       </div>
     </div>
   );
+}
+
+/** What the report-card alert says; the second sentence is the same for a missing and an unreadable card. */
+export interface EvidenceAlert {
+  title: string;
+  /** "Run" or "Re-run", before the command. */
+  verb: string;
+  command: string;
+  consequence: string;
+}
+
+/** The alert for a report card that is not readable, from the decision that applies without it. */
+export function evidenceAlert(state: "missing" | "unreadable", decision: TierDecision): EvidenceAlert {
+  return {
+    title: state === "missing" ? "No report card yet" : "Couldn't read the report card",
+    verb: state === "missing" ? "Run" : "Re-run",
+    command: "pnpm evals",
+    consequence: `Until then nothing counts as covered, so this change is Full: read ${decision.readHunks} of ${decision.totalHunks} hunks.`,
+  };
 }

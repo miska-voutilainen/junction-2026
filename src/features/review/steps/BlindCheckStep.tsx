@@ -3,7 +3,8 @@
 import { Disclosure } from "@/components/Disclosure";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import { FindingLocations } from "./FindingLocations";
-import type { BlindCheck, FindingView } from "./stepsModel";
+import type { BlindCheck } from "./blindCheckModel";
+import type { FindingView } from "./storyModel";
 
 /**
  * Step 2, blind-first review (idea 2): what the reviewer expected from the

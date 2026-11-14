@@ -1,10 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { ReceiptRecord, Review } from "@/contracts";
-import type { ReportCardInput } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { loadReceipt, loadReportCard, loadReview } from "@/lib/data/loaders";
 import { receiptStatus } from "@/lib/data/receiptStatus";
-import { buildBlindCheck, buildRefusals, buildSignView, buildStepTabs, buildStory, citationLabel, formatSignedAt } from "./stepsModel";
+import { buildBlindCheck } from "./blindCheckModel";
+import { buildRefusals } from "./refusalsModel";
+import { buildSignView, formatSignedAt, isSignable, signActionLabel } from "./signModel";
+import { buildStepTabs } from "./stepsModel";
+import { buildStory, citationLabel } from "./storyModel";
 
 const fixtureRoot = "data/fixtures";
 
@@ -202,6 +206,13 @@ describe("labels", () => {
     const citation = { file: "src/a/Foo.cs", side: "new" as const, startLine: 10, endLine: 12, quote: "" };
     expect(citationLabel(citation)).toBe("Foo.cs:10–12");
     expect(citationLabel({ ...citation, endLine: 10 })).toBe("Foo.cs:10");
+  });
+
+  it("offers a Sign button only where there is something to sign", () => {
+    expect(signActionLabel("needs-review")).toBe("Sign");
+    expect(signActionLabel("stale")).toBe("Re-sign");
+    expect(isSignable("signed")).toBe(false);
+    expect(isSignable("unreadable")).toBe(false);
   });
 
   it("formats the signing time in UTC", () => {

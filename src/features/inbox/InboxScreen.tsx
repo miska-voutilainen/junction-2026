@@ -5,10 +5,13 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
+import { toShellChanges } from "@/components/shellChange";
+import { reportCardNotice } from "@/lib/decideChange";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { clearRerouted, peekRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { InboxView } from "./InboxView";
-import { buildInboxModel, reportCardNotice, toShellChanges } from "./inboxModel";
-import type { InboxSource, ReportCardInput } from "./inboxModel";
+import { buildInboxModel } from "./inboxModel";
+import type { InboxSource } from "./inboxModel";
 
 /**
  * The inbox page inside its shell. Routing runs here, once, with the current

@@ -3,7 +3,8 @@
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
+import type { InboxSource } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import { ReviewBody } from "./ReviewBody";
 import { ReviewHeader } from "./ReviewHeader";
@@ -11,7 +12,7 @@ import { ReviewMissing, ReviewUnreadable } from "./ReviewStates";
 import { SelectedClaimProvider } from "./SelectedClaim";
 import { ReviewStepProvider } from "./steps/ReviewStep";
 import type { HighlightedHunks } from "./highlightHunks";
-import { useShellChanges } from "./useShellChanges";
+import { useShellChanges } from "@/components/useShellChanges";
 
 /**
  * S2 · Review inside its shell. The page (in `ReviewBody`) and the shell's

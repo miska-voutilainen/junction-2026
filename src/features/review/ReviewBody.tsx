@@ -2,8 +2,8 @@
 
 import { useEffect, useEffectEvent, useMemo } from "react";
 import type { ChangeInput, Citation, ReceiptRecord, Review } from "@/contracts";
-import { decideChange } from "@/features/inbox";
-import type { ReportCardInput } from "@/features/inbox";
+import { decideChange } from "@/lib/decideChange";
+
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { isTypingTarget } from "@/lib/useShortcuts";
@@ -11,19 +11,22 @@ import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
 import { MobileHunks } from "./MobileHunks";
-import { EmptyDiff, EvidenceUnavailable } from "./ReviewStates";
+import { EmptyDiff, EvidenceUnavailable, evidenceAlert } from "./ReviewStates";
 import { useSelectedClaim } from "./SelectedClaim";
 import type { HighlightedHunks } from "./highlightHunks";
-import { buildNavigator, buildSections, evidenceAlert, highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./reviewModel";
-import type { HighlightedLines, HunkSections, NavigatorGroup } from "./reviewModel";
+import { highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./citationHighlights";
+import type { HighlightedLines } from "./citationHighlights";
+import { buildNavigator, buildSections } from "./reviewModel";
+import type { HunkSections, NavigatorGroup } from "./reviewModel";
 import { useDiffReveal } from "./useDiffReveal";
 import { useMediaQuery } from "./useMediaQuery";
 import { useReadHunks } from "./useReadHunks";
 import { useReviewStep } from "./steps/ReviewStep";
 import { ReviewSteps } from "./steps/ReviewSteps";
 import { SignBar, SignBarSpacer } from "./steps/SignBar";
-import type { SignState } from "./steps/stepsModel";
+import type { SignState } from "./steps/signModel";
 import { useStepKeys } from "./steps/useStepKeys";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /** From this width up (`compact` in `globals.css`) the page shows the full diff; below it, the read-only list. */
 const COMPACT_UP_QUERY = "(min-width: 760px)";
@@ -107,7 +110,7 @@ export function ReviewBody({
         </div>
       </div>
       {/* The spacer keeps the phone's fixed Sign bar from covering the end of the page. */}
-      <SignBarSpacer />
+      <SignBarSpacer signState={signState} />
       <SignBar signState={signState} onOpenSign={() => openStep("sign")} />
     </>
   );
