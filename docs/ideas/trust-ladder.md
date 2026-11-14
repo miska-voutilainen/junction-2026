@@ -30,7 +30,7 @@ From the report card, one blind run per planted bug:
 
 - **Generator:** 4 of 4 caught. Calibrated.
 - **Analyzer:** 3 of 3 caught. Calibrated.
-- **Security:** 0 of 3 caught. Shadow: a human reads every security hunk.
+- **Security:** 0 of 3 caught, all real misses ([lessons](../lessons.md#2026-11-14--security-caught-0-of-3-planted-bugs-all-three-are-real-misses)). Shadow: a human reads every security hunk.
 - **Performance:** no planted bugs, so Shadow; its catch rate is not measured yet.
 
 No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 40 findings across the 10 runs, 8 matched a plant; the rest aren't scored.
