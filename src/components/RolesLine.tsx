@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 /**
  * Who did what on a change: "Written by <author agent> · Reviewed by <reviewer
  * version> · Signed by <owner>". The author never checks its own work (idea 8):
- * three different parties. Below 760 px the roles stack one per line with no
- * separators; from 760 px they share a line. Each "role name" pair stays whole
- * unless one alone is wider than the line.
+ * three different parties. The roles share a line and wrap at any width (a
+ * stack of one role per line made the phone header twice as tall). Each
+ * "role name" pair stays whole unless one alone is wider than the line.
  *
  * The "·" is drawn before each pair, shifted left so it sits in the gap. When a
  * pair wraps to a new line its dot lands left of the container and is clipped
@@ -31,7 +31,7 @@ export function RolesLine({
 }>) {
   return (
     <span className={cn("block [clip-path:inset(-4px_-4px_-4px_0)]", className)}>
-      <span className="flex min-w-0 flex-col gap-y-0.5 compact:-ml-4 compact:flex-row compact:flex-wrap compact:items-center compact:gap-y-1">
+      <span className="-ml-4 flex min-w-0 flex-row flex-wrap items-center gap-y-1">
         <Role>Written by {authorAgent}</Role>
         {reviewerVersion !== null && (
           <>
@@ -43,7 +43,7 @@ export function RolesLine({
         )}
         <span className="sr-only">, </span>
         <Role>{signerText(signer)}</Role>
-        <span className="compact:pl-4">
+        <span className="pl-4">
           <IdeaLabel n={8} />
         </span>
       </span>
@@ -64,10 +64,10 @@ function signerText(signer: SignerState): ReactNode {
   }
 }
 
-/** One "role name" pair; the separator before it is decoration, drawn only when the roles share a line. */
+/** One "role name" pair; the separator before it is decoration, clipped when the pair starts a line. */
 function Role({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <span className="relative min-w-0 [overflow-wrap:anywhere] compact:max-w-full compact:pl-4 compact:before:absolute compact:before:left-1.5 compact:before:content-['·']">
+    <span className="relative max-w-full min-w-0 pl-4 [overflow-wrap:anywhere] before:absolute before:left-1.5 before:content-['·']">
       {children}
     </span>
   );
