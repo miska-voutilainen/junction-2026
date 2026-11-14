@@ -17,7 +17,7 @@ Three roles on every change, never the same one twice:
 
 1. **The authoring agent's test is Supported at most.** A test the PR adds shows the change behaves as the author meant, not as the requirement says. When it fails on base and passes on head the claim is Supported, labelled "the PR's own test". Verified needs a test written from the requirement without seeing the diff (A5, [Idea 6](evidence-levels.md)).
 2. **The AI drafts, a person signs.** `pnpm countersign draft` writes the receipt; only `pnpm countersign sign`, with the owner's SSH key, makes it valid ([Idea 7](signed-receipt.md)).
-3. **The planter never sees the prompts.** The evidence lane writes planted bugs and contradiction plants blind: it doesn't open the prompts, pipeline or recorded output until the plants are merged ([Idea 1](trust-ladder.md)).
+3. **The planter never sees the prompts.** An isolated subagent writes the planted bugs and contradiction plants blind: it doesn't open the prompts, pipeline or recorded output until the plants are merged, and the agents writing the prompts never open the plants ([Idea 1](trust-ladder.md), [decision](../decisions.md)).
 4. **The roles are shown.** S2 and S4 carry "Written by <agent> · Reviewed by rv1 · Signed by <owner>", and claims backed only by the PR's own test say so.
 
 ## What we measured

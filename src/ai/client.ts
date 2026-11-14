@@ -218,16 +218,7 @@ async function askUntilValid<T>(
   for (let attempt = 0; attempt <= MAX_VALIDATION_RETRIES; attempt++) {
     const startedAt = Date.now();
     const log = (outcome: UsageEntry["outcome"], model: string, usage: Usage) =>
-      logUsage({
-        model,
-        promptVersion: request.promptVersion,
-        inputTokens: usage.inputTokens,
-        outputTokens: usage.outputTokens,
-        costUsd: costOf(usage),
-        milliseconds: Date.now() - startedAt,
-        outcome,
-        source: "model",
-      });
+      logAttempt(logUsage, request.promptVersion, startedAt, outcome, model, usage);
 
     let response: TransportResponse;
     try {
@@ -268,6 +259,27 @@ async function askUntilValid<T>(
       `Answer again with only the corrected JSON: fix what the error names and keep the rest.`;
   }
   throw new ModelValidationError(request.promptVersion, lastProblem);
+}
+
+/** Writes one usage line for one request: what it cost, how long it took and how it ended. */
+function logAttempt(
+  logUsage: UsageSink,
+  promptVersion: string,
+  startedAt: number,
+  outcome: UsageEntry["outcome"],
+  model: string,
+  usage: Usage,
+): void {
+  logUsage({
+    model,
+    promptVersion,
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    costUsd: costOf(usage),
+    milliseconds: Date.now() - startedAt,
+    outcome,
+    source: "model",
+  });
 }
 
 /** One transport call under the per-request time budget. */

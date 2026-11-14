@@ -1,3 +1,4 @@
+import type { ReceiptRecord } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
 import { loadChanges, loadReceipt, loadReportCard, loadReview } from "./loaders";
 import type { ReportCardInput } from "@/lib/decideChange";
@@ -13,6 +14,13 @@ export type InboxData =
       /** The validation error of every file that failed, one entry each; empty when all files read. */
       problems: string[];
     };
+
+/** A change's receipt for the inbox: the record, "unreadable" when the file fails validation, null when nobody signed. */
+function receiptOf(result: Awaited<ReturnType<typeof loadReceipt>>): ReceiptRecord | "unreadable" | null {
+  if (result.status === "ok") return result.data;
+  if (result.status === "invalid") return "unreadable";
+  return null;
+}
 
 /**
  * Reads the four changes, each review and receipt, and the report card, and
@@ -37,7 +45,7 @@ export async function loadInboxData(root?: string): Promise<InboxData> {
       review.status === "ok"
         ? { state: "ok", data: review.data }
         : { state: review.status === "missing" ? "missing" : "unreadable" },
-    receipt: receipt.status === "ok" ? receipt.data : receipt.status === "invalid" ? "unreadable" : null,
+    receipt: receiptOf(receipt),
   }));
   const reportCard: ReportCardInput =
     reportCardResult.status === "ok"

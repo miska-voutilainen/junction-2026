@@ -7,10 +7,12 @@ import {
   failedQuotes,
   hallucinationLines,
   missedPlants,
+  plantedTotal,
   retractedClaims,
   unknownRuleRefusals,
 } from "./reportCardModel";
 import type { ReviewOfChange } from "./reportCardModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * The three lists under the ladder: planted bugs the reviewer missed, what the
@@ -26,133 +28,155 @@ export function ReportLists({
   reviews,
   hasRealVariants,
 }: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[]; hasRealVariants: boolean }>) {
-  const missed = missedPlants(reportCard);
-  const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
-  const quotes = failedQuotes(reviews);
-  const unknownRules = unknownRuleRefusals(reviews);
-  const retracted = retractedClaims(reviews);
-  const inReviews =
-    reviews.length === 1 ? "In the 1 recorded review" : `In the ${reviews.length} recorded reviews`;
-
   return (
     <div className="grid grid-cols-1 items-start gap-4 nav:grid-cols-2 wide:grid-cols-3">
-      <ListCard title="Missed planted bugs" count={missed.length} defaultOpen>
-        <Scope>
-          Of {planted} planted bugs in the eval: {missed.length} missed
-        </Scope>
-        {missed.length === 0 ? (
-          <p className="text-text-muted">The reviewer caught every planted bug.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-border-subtle">
-            {missed.map((plant) => (
-              <li key={plant.plantId} className="flex flex-col gap-1.5 py-2.5 first:pt-0 last:pb-0">
-                <span className="text-text-secondary">{plant.defect}</span>
-                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-text-muted">
-                  <span className="font-mono">{plant.plantId}</span>
-                  <AreaChip area={plant.area} />
-                  {/* A fixture's planted bugs are invented, so their commits don't exist in the fork. */}
-                  {hasRealVariants && (
-                    <a
-                      href={plant.variantUrl}
-                      target="_blank"
-                      rel="noopener"
-                      aria-label={`View variant ${plant.plantId}, opens in a new tab`}
-                      className="text-link hover:underline"
-                    >
-                      View variant
-                    </a>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </ListCard>
-
-      <ListCard title="Hallucinations caught" count={quotes.length + unknownRules.length} idea>
-        <Scope>Across the eval runs and recorded reviews</Scope>
-        <ul className="flex flex-col gap-1 text-text-secondary">
-          {hallucinationLines(reportCard).map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-        <div className="mt-3 border-t border-border-subtle pt-3">
-          <Scope>
-            {inReviews}: {quotes.length} quote{quotes.length === 1 ? "" : "s"} failed the check
-          </Scope>
-          {quotes.length > 0 && (
-            <ul className="flex flex-col divide-y divide-border-subtle">
-              {quotes.map((quote) => (
-                <li
-                  key={`${quote.changeId}-${quote.itemId}`}
-                  className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0"
-                >
-                  <span className="flex flex-wrap items-center gap-x-2.5 text-sm text-text-muted">
-                    <span className="font-mono">{quote.changeId}</span>
-                    <span className="font-mono break-all">{quote.location}</span>
-                  </span>
-                  <code className="font-mono text-sm break-words text-text-secondary">
-                    {quote.quote}
-                  </code>
-                  <span data-written-text className="text-text-secondary">
-                    {quote.reason}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="mt-3 border-t border-border-subtle pt-3">
-          <Scope>
-            {unknownRules.length === 0
-              ? "Refusals struck for an unknown rule id"
-              : `${inReviews}: ${unknownRules.length} refusal${unknownRules.length === 1 ? "" : "s"} struck for an unknown rule id`}
-          </Scope>
-          {unknownRules.length === 0 ? (
-            <p className="text-text-muted">
-              None in the {reviews.length} recorded {reviews.length === 1 ? "review" : "reviews"}.
-            </p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border-subtle">
-              {unknownRules.map((refusal) => (
-                <li
-                  key={`${refusal.changeId}-${refusal.itemId}`}
-                  className="flex flex-wrap items-baseline gap-x-2.5 py-2.5 text-text-secondary first:pt-0 last:pb-0"
-                >
-                  <span>Refusal {refusal.itemId} · unknown rule id</span>
-                  <span className="font-mono text-sm text-text-muted">{refusal.changeId}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </ListCard>
-
-      <ListCard title="Retracted claims" count={retracted.length}>
-        <Scope>
-          {inReviews}: {retracted.length}
-        </Scope>
-        {retracted.length === 0 ? (
-          <p className="text-text-muted">No claim was retracted.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-border-subtle">
-            {retracted.map((claim) => (
-              <li
-                key={`${claim.changeId}-${claim.claimId}`}
-                className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0"
-              >
-                <span className="text-text-secondary">&ldquo;{claim.claimText}&rdquo;</span>
-                <span className="text-sm text-text-muted">
-                  <span className="font-mono">{claim.changeId}</span> ·{" "}
-                  <span data-written-text>{claim.reason}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </ListCard>
+      <MissedPlantsCard reportCard={reportCard} hasRealVariants={hasRealVariants} />
+      <HallucinationsCard reportCard={reportCard} reviews={reviews} />
+      <RetractedClaimsCard reviews={reviews} />
     </div>
   );
+}
+
+/** What the eval missed: each planted bug the reviewer did not find, with a link to the variant commit. */
+function MissedPlantsCard({ reportCard, hasRealVariants }: Readonly<{ reportCard: ReportCard; hasRealVariants: boolean }>) {
+  const missed = missedPlants(reportCard);
+  const planted = plantedTotal(reportCard);
+  return (
+    <ListCard title="Missed planted bugs" count={missed.length} defaultOpen>
+      <Scope>
+        Of {planted} planted bugs in the eval: {missed.length} missed
+      </Scope>
+      {missed.length === 0 ? (
+        <p className="text-text-muted">The reviewer caught every planted bug.</p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-border-subtle">
+          {missed.map((plant) => (
+            <li key={plant.plantId} className="flex flex-col gap-1.5 py-2.5 first:pt-0 last:pb-0">
+              <span className="text-text-secondary">{plant.defect}</span>
+              <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-text-muted">
+                <span className="font-mono">{plant.plantId}</span>
+                <AreaChip area={plant.area} />
+                {/* A fixture's planted bugs are invented, so their commits don't exist in the fork. */}
+                {hasRealVariants && (
+                  <a
+                    href={plant.variantUrl}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={`View variant ${plant.plantId}, opens in a new tab`}
+                    className="text-link hover:underline"
+                  >
+                    View variant
+                  </a>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </ListCard>
+  );
+}
+
+/** What the mechanical checks caught: the eval's counts, then the quotes and refusals struck in the recorded reviews (idea 4). */
+function HallucinationsCard({ reportCard, reviews }: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[] }>) {
+  const quotes = failedQuotes(reviews);
+  const unknownRules = unknownRuleRefusals(reviews);
+  const inReviews = inRecordedReviews(reviews);
+  return (
+    <ListCard title="Hallucinations caught" count={quotes.length + unknownRules.length} hasIdeaLabel>
+      <Scope>Across the eval runs and recorded reviews</Scope>
+      <ul className="flex flex-col gap-1 text-text-secondary">
+        {hallucinationLines(reportCard).map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+      <div className="mt-3 border-t border-border-subtle pt-3">
+        <Scope>
+          {inReviews}: {countOf(quotes.length, "quote")} failed the check
+        </Scope>
+        {quotes.length > 0 && (
+          <ul className="flex flex-col divide-y divide-border-subtle">
+            {quotes.map((quote) => (
+              <li
+                key={`${quote.changeId}-${quote.itemId}`}
+                className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0"
+              >
+                <span className="flex flex-wrap items-center gap-x-2.5 text-sm text-text-muted">
+                  <span className="font-mono">{quote.changeId}</span>
+                  <span className="font-mono break-all">{quote.location}</span>
+                </span>
+                <code className="font-mono text-sm break-words text-text-secondary">
+                  {quote.quote}
+                </code>
+                <span data-written-text className="text-text-secondary">
+                  {quote.reason}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="mt-3 border-t border-border-subtle pt-3">
+        <Scope>
+          {unknownRules.length === 0
+            ? "Refusals struck for an unknown rule id"
+            : `${inReviews}: ${countOf(unknownRules.length, "refusal")} struck for an unknown rule id`}
+        </Scope>
+        {unknownRules.length === 0 ? (
+          <p className="text-text-muted">
+            None in the {countOf(reviews.length, "recorded review")}.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border-subtle">
+            {unknownRules.map((refusal) => (
+              <li
+                key={`${refusal.changeId}-${refusal.itemId}`}
+                className="flex flex-wrap items-baseline gap-x-2.5 py-2.5 text-text-secondary first:pt-0 last:pb-0"
+              >
+                <span>Refusal {refusal.itemId} · unknown rule id</span>
+                <span className="font-mono text-sm text-text-muted">{refusal.changeId}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </ListCard>
+  );
+}
+
+/** Claims the pipeline retracted, with the reason, from the recorded reviews. */
+function RetractedClaimsCard({ reviews }: Readonly<{ reviews: ReviewOfChange[] }>) {
+  const retracted = retractedClaims(reviews);
+  return (
+    <ListCard title="Retracted claims" count={retracted.length}>
+      <Scope>
+        {inRecordedReviews(reviews)}: {retracted.length}
+      </Scope>
+      {retracted.length === 0 ? (
+        <p className="text-text-muted">No claim was retracted.</p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-border-subtle">
+          {retracted.map((claim) => (
+            <li
+              key={`${claim.changeId}-${claim.claimId}`}
+              className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0"
+            >
+              <span className="text-text-secondary">&ldquo;{claim.claimText}&rdquo;</span>
+              <span className="text-sm text-text-muted">
+                <span className="font-mono">{claim.changeId}</span> ·{" "}
+                <span data-written-text>{claim.reason}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </ListCard>
+  );
+}
+
+/** "In the 4 recorded reviews": the scope of every count taken from the recorded reviews. */
+function inRecordedReviews(reviews: ReviewOfChange[]): string {
+  return `In the ${countOf(reviews.length, "recorded review")}`;
 }
 
 function Scope({ children }: Readonly<{ children: ReactNode }>) {
@@ -162,14 +186,14 @@ function Scope({ children }: Readonly<{ children: ReactNode }>) {
 function ListCard({
   title,
   count,
-  idea = false,
+  hasIdeaLabel = false,
   defaultOpen = false,
   children,
 }: Readonly<{
   title: string;
   count: number;
   /** Shows the "Idea 4 · Quote check" label at the top of the open card (a link can't sit inside the disclosure button, and the column is too narrow to fit it beside the heading). */
-  idea?: boolean;
+  hasIdeaLabel?: boolean;
   defaultOpen?: boolean;
   children: ReactNode;
 }>) {
@@ -187,7 +211,7 @@ function ListCard({
         }
       >
         <div className="px-1 pt-2">
-          {idea && <IdeaLabel n={4} className="mb-2" />}
+          {hasIdeaLabel && <IdeaLabel n={4} className="mb-2" />}
           {children}
         </div>
       </Disclosure>

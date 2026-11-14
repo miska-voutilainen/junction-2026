@@ -4,7 +4,7 @@
 
 AI reviews. A named human countersigns, on evidence they can check.
 
-Agent-written pull requests now outnumber human ones, and line-by-line review doesn't scale. Countersign is a set of ideas for how AI review can keep pace while a named person stays accountable. Each idea stands on its own, so a product team can adopt one without the others. The app is the reference implementation: it proves the ideas on agent-written changes to Tieto's sample repository.
+Coding agents now produce more code than people do (agent tokens passed human tokens in February 2026, [challenge](docs/challenge.md)), and line-by-line review doesn't scale. Countersign is a set of ideas for how AI review can keep pace while a named person stays accountable. Each idea stands on its own, so a product team can adopt one without the others. The app is the reference implementation: it proves the ideas on agent-written changes to Tieto's sample repository.
 
 ## The ideas
 
@@ -23,11 +23,42 @@ What the AI does in the product, what stays with rules and people, and why the r
 
 ## See them working
 
-**Live:** https://countersign-junction.com, the review of one agent-written change (MP-2283), with each idea labelled where it appears.
+**Live:** https://countersign-junction.com. Start at the review of `mp-2283`; each idea is labelled where it appears and links to its page.
 
-Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([challenge text](docs/challenge.md)). What we build: [docs/spec.md](docs/spec.md). Why: [docs/decisions.md](docs/decisions.md).
+<img src="docs/img/review-mp-2283.png" alt="The review page for mp-2283: the tier line 'Full, read 7 of 8 hunks, about 10 min', the routing reasons with their rule ids, the reading list of hunks with their coverage state, a hunk refused under rule R7, and the steps sidebar: Read, Blind check, Refused, Sign." width="880">
 
-<!-- demo-prep turns this part into the judges' README at the freeze: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools. -->
+| Screen                               | What it answers                                                                                                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inbox (`/`)                          | Which changes need a person, how much of each, and whose receipt is signed or stale                                                                       |
+| Review (`/changes/mp-2283`)          | What the change does, claim by claim with evidence; what to read and why; what the AI refused to decide; the receipt                                      |
+| Report card (`/reviewer`)            | How often the reviewer caught planted bugs per area, and how much it may be trusted there. "Record escape" lowers an area and re-routes every change live |
+| Receipt (`/changes/mp-2283/receipt`) | The signed receipt: what was checked, what wasn't, the risk accepted, and the `verify` output                                                             |
+| Dashboard (`/dashboard`)             | Signed changes, open decisions by who decides them, and why changes were escalated                                                                        |
+
+Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([challenge text](docs/challenge.md)). What we build: [docs/spec.md](docs/spec.md). Why: [docs/decisions.md](docs/decisions.md). How the ideas came about and fit together: [From the challenge to the product](docs/ideas/from-challenge-to-product.md).
+
+## Tieto's repository and the four changes
+
+Tieto gave a copy of MessagePack-CSharp, a C# serializer with a Roslyn source generator and analyzer, with four agent-written changes on one base commit. We review all four; `mp-2283` is the demo.
+
+| Change    | Issue                                                                              | Size                                     |
+| --------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
+| `mp-2283` | Generator and analyzer crash on a closed generic struct from a referenced assembly | 4 files, +225 −3                         |
+| `mp-2234` | The analyzer does not work if `SuppressSourceGeneration = true`                    | 4 files, +262 −4                         |
+| `mp-2129` | Allow generating a formatter for a type in a referenced assembly                   | 28 files, +1034 −9                       |
+| `mp-2297` | Add `ExcludeFromCodeCoverage` to generated code                                    | 237 files (223 test snapshots), +1383 −9 |
+
+## What's real and what's synthetic
+
+- **Real:** Tieto's code and the four changes; every review on the site, recorded from `claude-opus-5-5` and replayed (the site makes no model calls); the quote check, routing and test results computed from them; the signed receipt for `mp-2283`, a git note in our fork that `pnpm countersign verify` checks.
+- **Synthetic or derived, and labelled so:** the author PR descriptions (the commits carry one-line messages); the 10 planted-bug variants and the planted contradictions the reviewer is measured on, written by an agent that never saw the reviewer's prompts; the requirement records, derived from the upstream issues until Tieto's arrive.
+- **Simulated:** escapes. "Record escape" on the report card is stored in your browser only.
+
+Measured results, including what didn't work (security caught 0 of 3 planted bugs; blind-first showed no advantage on our sample), are in [docs/lessons.md](docs/lessons.md).
+
+## Stack
+
+Next.js 16 (static, no server state) with React 19, TypeScript, Tailwind CSS and shadcn/ui, deployed on Vercel. The review pipeline and the receipt CLI are TypeScript on Node 24; the model is Anthropic `claude-opus-5-5` behind one client with record and replay; A5 runs .NET 8 tests in Docker; receipts are signed with `ssh-keygen -Y` and stored as git notes. Architecture: [docs/architecture.md](docs/architecture.md).
 
 <!-- demo-prep keeps the next section word for word: it is the team's declaration of what existed before the event. -->
 
@@ -57,103 +88,16 @@ pnpm dev               # http://localhost:3000
 
 Needs Node 24 and pnpm. The site reads the committed files under `data/`. The receipt CLI is built, and so are review steps A1 to A5 with the quote check; the fork clone (`pnpm seed`), the .NET SDK, every command and the env vars are in [docs/development.md](docs/development.md).
 
-## Agent environment
+## How we built it with AI
 
-A project-agnostic AI-agent environment for a 48-hour hackathon team that ships a **polished, well-documented product from a clean repository**, with several people each running their own agent in parallel. Built for Claude Code; other assistants follow it through `AGENTS.md`.
+Three people, each running Claude Code on their own lane of the repository (engine, app, evidence), working from one spec. A main session on Claude Opus planned, reviewed and integrated; Sonnet subagents wrote most of the code from written briefs; a `code-reviewer` subagent reviewed every pull request that changed behaviour before it merged, at a depth set by its risk (small docs and copy changes skip it). Every PR has an **AI use** section saying which models and agents did what. The planted bugs were written by an isolated agent that never saw the reviewer's prompts or recorded output, so the reviewer's catch rate isn't graded by its own author.
 
-Everything here is Markdown. Rules, skills and subagents are in place. Hooks, settings, the lane map and CI are **specs** the agent writes as code: the safety core (settings, lane map, guard, briefing) at kickoff, the rest as the first **foundation tasks** that the lanes build with "go". The project, spec, stack, file tree and lanes are **decided at kickoff** from the project info; after that, each person says **"go"** and their agent works through its lane's tasks.
+People decided the idea, the spec, the lanes, what to cut and what each measured result meant; those decisions are in [docs/decisions.md](docs/decisions.md). The agent environment we brought (rules, skills, subagents, hooks) and how it was made: [docs/setup.md, section 8](docs/setup.md#8-the-agent-environment).
 
-### Principles
+## Team
 
-1. **The spec decides, "go" builds.** `docs/spec.md` is written so precisely at kickoff that agents build from it without questions; they ask only where it conflicts. Cut scope, never quality.
-2. **Lanes, not collisions.** Every code path belongs to one lane; each lane works its own task issues; requests go through handoff issues; every session ends with a summary on the agent sync log (issue #1).
-3. **Quality where it's cheapest.** Hooks on every edit and turn; reviews scaled to each PR's risk (tiers S/M/L); a fast CI that only confirms.
-4. **The main session decides, subagents do.** Mechanical and well-specified work goes to cheaper models.
-5. **The repo is part of the product.** Docs in the same PR as the code, well-written PRs, a file tree that reads like a table of contents.
-
-### The harness
-
-| When                | What                                                                                         | Where                           |
-| ------------------- | -------------------------------------------------------------------------------------------- | ------------------------------- |
-| Session start       | lane, handoffs, my task queue, overlapping PRs, new sync-log summaries, the next task        | `session-brief` hook            |
-| Every action        | secrets, force pushes, pushes to `main`, other lanes' files, stray files, GitHub text format | `guard` hook                    |
-| Every edit          | formatting, lint, accessibility lint, hard-coded colours, placeholder copy                   | `format-on-edit` hook           |
-| Every turn          | type errors, failing unit tests                                                              | `quality-on-stop` hook          |
-| Every task          | pick the next ready issue, build to the spec, ship, merge, repeat                            | `go` skill                      |
-| Every PR            | lanes touched, self-check, reviews by tier, docs, PR description, e2e                        | `ship-pr` skill                 |
-| Every push / deploy | lane check, tree check, hook tests, lint, typecheck, tests, build; e2e on previews           | CI                              |
-| Session end         | commit, push, decisions recorded, summary on issue #1                                        | `handover` skill                |
-| Midpoint and freeze | whole-product, docs and tree sweep into `polish` issues; judge's-eye critique                | `polish-pass`, `product-critic` |
-
-### Subagents and models
-
-| Model  | Agents                                                                                                              | For                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| opus   | main session on Max, `product-critic`; `code-reviewer`, `ux-reviewer`, `test-writer` follow the session (`inherit`) | judgment: architecture, hard bugs, reviews, critique     |
-| sonnet | main session on Pro (so the `inherit` agents too), `builder`, `docs-keeper`, `pr-writer`, `researcher`              | well-specified building, tests, docs, PR prose, research |
-| haiku  | `scout`, `tidy`                                                                                                     | search, log digging, file-tree hygiene                   |
-
-Delegation rules and budget mode for Pro plans: [.claude/rules/delegation.md](.claude/rules/delegation.md).
-
-### Tools on every machine
-
-| Tool      | What it does here                                                                                                                               | Rule                                                        |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Lightfoot | Installed at the venue (docs/setup.md section 1). A local proxy that trims what each turn re-sends; on Pro and Max it stretches the usage limit | `lightfoot claude`, or `lightfoot integrate on` for VS Code |
-| Graphify  | A code map in `graphify-out/` (gitignored), rebuilt by git hooks with no model calls; agents query it before searching                          | [.claude/rules/tools.md](.claude/rules/tools.md)            |
-| Obsidian  | Each person's vault gets a Lightfoot handoff note at the end of every session; private, issue #1 stays the team record                          | [.claude/rules/tools.md](.claude/rules/tools.md)            |
-
-Setup: [docs/setup.md](docs/setup.md) section 1.
-
-### What's in here
-
-| Path                               | What it is                                                                                                            |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| [docs/setup.md](docs/setup.md)     | Machine setup, repo and issue #1, settings, lane map, hook specs, GitHub workflow, CI spec                            |
-| [CLAUDE.md](CLAUDE.md)             | Agent entry point: how to work, lanes, commands, stack, file tree; `kickoff` fills it                                 |
-| [AGENTS.md](AGENTS.md)             | Pointer for Cursor, Codex, Gemini and others                                                                          |
-| [.github/](.github/)               | `pull_request_template.md`                                                                                            |
-| [docs/](docs/)                     | `spec` (what to build, with the Ready checklist), `architecture`, `decisions`, `api`, `development`                   |
-| [.claude/rules/](.claude/rules/)   | `lanes`, `quality`, `design`, `ai-features`, `structure`, `docs`, `git`, `delegation`, `security`, `testing`, `tools` |
-| [.claude/agents/](.claude/agents/) | The ten subagents above                                                                                               |
-| [.claude/skills/](.claude/skills/) | `join`, `go`, `kickoff`, `ship-pr`, `handover`, `polish-pass`, `demo-prep`                                            |
-
-### Team
-
-| Name  | GitHub              | Role                                                                                       |
-| ----- | ------------------- | ------------------------------------------------------------------------------------------ |
-| Miska | `miska-voutilainen` | Repo owner; runs `kickoff`                                                                 |
-| Elias | `eliasnorta`        | Miska's backup: admin on the repo, takes over `kickoff` if Miska's laptop or account fails |
-| Veijo | `Kasanen`           |                                                                                            |
-
-Lanes and their owners are decided at kickoff.
-
-### Kickoff
-
-1. As a team, without agents: pick the challenge, the idea, the stack, the demo path and the **lanes**; the designer sets the visual direction.
-2. Miska (`miska-voutilainen`; backup: Elias, `eliasnorta`) sets up the repo, the labels and **issue #1, the agent sync log** (docs/setup.md section 2); the kit files are already in place.
-3. Miska (`miska-voutilainen`) runs the `kickoff` skill with the project info (timeboxed to 90 minutes; skeleton PR ~45 minutes in): idea check, file tree and lanes, `docs/spec.md` with a cold-read check, your sign-off, task issues, the skeleton PR, then the harness core (settings, lane map, guard, briefing). The design system, the other hooks, test harnesses, CI, docs and the deployed skeleton are foundation tasks (T01…) spread across the lanes.
-4. As soon as the repo exists, Elias and Veijo clone it and say **"join"** (their agent sets up their machine). When the skeleton PR merges, they say **"go"** (following the guard's rules by hand and holding merges until the harness core merges); after it merges: `git merge origin/main`, a new session, "Verify the harness" (docs/setup.md 4.7).
-5. From then on: "go" in each lane; `handover` before sleeping; one person runs `polish-pass` at the midpoint and after the freeze, and `demo-prep` at the freeze; the lanes' "go" fixes what they file.
-
-## Credits
-
-Miska (`miska-voutilainen`) made this environment together with Claude Opus 5.5, Anthropic's AI model, working in Claude Code.
-
-**Miska decided:**
-
-- The goal and the scope: a project-agnostic kit for a three-person, 48-hour team. It stays Markdown only (plus two plain-text config files, `.gitignore` and `.gitattributes`), with nothing installed or coded before the event.
-- The team, the roles and the backup: Miska runs kickoff and owns the repo, and Elias takes over if Miska's laptop or account fails.
-- The Claude plans and how usage is split: Max 5x for Miska, and Pro in budget mode for Elias and Veijo.
-- The tools on every machine (Lightfoot, Graphify, Obsidian), and the rule that experimental or unsupported add-ons stay out.
-- How AI use is disclosed: a short technical AI use section in every PR and in the final README, with no co-author trailers or generated-by lines.
-- The Git conventions: squash merges, a protected `main` (GitHub Pro), no emoji in commits or PRs, and no Lefthook or Husky.
-- The lanes: every code path belongs to one lane, with one person and their agent per lane.
-- The reviews: S/M/L tiers scaled to each PR's risk.
-- What to keep, change or cut in every draft.
-
-**Claude did:**
-
-- Wrote the files: the rules, the skills, the ten subagents, the templates, setup.md and checklist.md.
-- Worked out the rest of the working model for Miska to review: the spec-first kickoff, the harness hook specs and the opus/sonnet/haiku model split.
-- Kept every file consistent as the decisions changed.
+| Name  | GitHub              | Lane           |
+| ----- | ------------------- | -------------- |
+| Miska | `miska-voutilainen` | engine and app |
+| Elias | `eliasnorta`        | app (UI)       |
+| Veijo | `Kasanen`           | evidence       |

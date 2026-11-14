@@ -1,45 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, CircleAlert, Copy } from "lucide-react";
 import { crossfade, useMotionPreset, usePress } from "@/lib/motion";
+import { COPY_ANNOUNCEMENT, useCopy } from "@/lib/useCopy";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Long enough to read "Copied", short enough that a second copy is not blocked.
-const CONFIRMATION_MS = 1500;
-
-type CopyStatus = "idle" | "copied" | "failed";
-
-/** What the polite live region says; the visible change is only the icon, so a screen reader hears it once. */
-const ANNOUNCEMENT: Record<CopyStatus, string> = {
-  idle: "",
-  copied: "Copied",
-  failed: "Couldn't copy. Select the text instead.",
-};
-
-/** Copy state for one button: `copy()` writes the text to the clipboard and the status resets after 1.5 s. */
-function useCopy(text: string | (() => string)) {
-  const [status, setStatus] = useState<CopyStatus>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(typeof text === "function" ? text() : text);
-      setStatus("copied");
-    } catch {
-      setStatus("failed");
-    }
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setStatus("idle"), CONFIRMATION_MS);
-  }
-
-  return { status, copy };
-}
 
 /**
  * A button that copies `text` and shows a check, or an alert icon when the browser refuses, for 1.5 s. The icon
@@ -64,7 +31,8 @@ export function CopyButton({
   describedBy?: string;
   className?: string;
 }>) {
-  const { status, copy } = useCopy(text);
+  const { status, copy } = useCopy();
+  const copyText = () => copy(typeof text === "function" ? text() : text);
   const iconSwap = useMotionPreset(crossfade);
   const press = usePress();
 
@@ -81,7 +49,7 @@ export function CopyButton({
   return (
     <TooltipProvider>
       {variant === "text" ? (
-        <Button type="button" variant="secondary" onClick={copy} aria-describedby={describedBy} className={cn("min-h-8", className)}>
+        <Button type="button" variant="secondary" onClick={copyText} aria-describedby={describedBy} className={cn("min-h-8", className)}>
           <span className="relative size-4 shrink-0">{icon}</span>
           {label}
         </Button>
@@ -91,7 +59,7 @@ export function CopyButton({
             <motion.button
               type="button"
               aria-label={label}
-              onClick={copy}
+              onClick={copyText}
               {...press}
               className={cn(
                 "relative inline-flex size-7 items-center justify-center rounded-button text-text-muted transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover hover:text-text-primary",
@@ -105,7 +73,7 @@ export function CopyButton({
         </Tooltip>
       )}
       <span role="status" aria-live="polite" className="sr-only">
-        {ANNOUNCEMENT[status]}
+        {COPY_ANNOUNCEMENT[status]}
       </span>
     </TooltipProvider>
   );

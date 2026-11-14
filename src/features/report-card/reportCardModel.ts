@@ -6,14 +6,11 @@
  * known bugs the number rests on. Pure functions, no React. Spec section 3, S3,
  * and section 5, Ladder.
  */
-import { ladderLevelLabel } from "@/contracts";
+import { AreaSchema, ladderLevelLabel } from "@/contracts";
 import type { Area, Citation, LadderLevel, ReportCard, Review } from "@/contracts";
 import { ladderPolicy } from "@/policy/ladder";
 import { applyEscapes } from "@/rules/ladder";
 import type { Escapes } from "@/lib/simulation/escapes";
-
-/** Cards run in this order on screen and in the spec. */
-const AREA_ORDER: readonly Area[] = ["generator", "analyzer", "security", "performance"];
 
 type ReportCardArea = ReportCard["areas"][number];
 
@@ -74,7 +71,7 @@ export function areaCardModel(area: Area, entry: ReportCardArea | undefined, esc
 
 /** The four cards in order, from the report card (or none) and the escapes. */
 export function areaCardModels(reportCard: ReportCard | null, escapes: Escapes): AreaCardModel[] {
-  return AREA_ORDER.map((area) =>
+  return AreaSchema.options.map((area) =>
     areaCardModel(area, reportCard?.areas.find((entry) => entry.area === area), escapes[area] ?? 0),
   );
 }
@@ -118,9 +115,14 @@ function nextStep(input: {
   return `Calibrated needs ${needed} of ${planted} planted bugs caught: ${caught} so far`;
 }
 
+/** How many planted bugs the report card was measured on, across all areas. */
+export function plantedTotal(reportCard: ReportCard): number {
+  return reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
+}
+
 /** The sentence under the title: reviewer version, model and how many bugs the levels rest on. */
 export function measuredLine(reportCard: ReportCard): string {
-  const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
+  const planted = plantedTotal(reportCard);
   const { version, model } = reportCard.reviewer;
   return `Reviewer ${version} · ${model} · measured on ${planted} planted bugs, planted by an agent that never saw the prompts`;
 }
@@ -135,7 +137,7 @@ export interface MissedPlant {
 
 /** Every plant with `caught: false`, in card order. */
 export function missedPlants(reportCard: ReportCard): MissedPlant[] {
-  return AREA_ORDER.flatMap((area) =>
+  return AreaSchema.options.flatMap((area) =>
     (reportCard.areas.find((entry) => entry.area === area)?.plants ?? [])
       .filter((plant) => !plant.caught)
       .map((plant) => ({ plantId: plant.plantId, area, defect: plant.defect, variantUrl: plant.variantUrl })),

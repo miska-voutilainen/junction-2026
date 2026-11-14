@@ -6,13 +6,13 @@ import { decideChange } from "@/lib/decideChange";
 
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { useEscapes } from "@/lib/simulation/escapes";
-import { isTypingTarget } from "@/lib/useShortcuts";
+import { nextIndex, stepFromKey } from "@/lib/useShortcuts";
 import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
 import { MobileHunks } from "./MobileHunks";
 import { EmptyDiff, EvidenceUnavailable, evidenceAlert } from "./ReviewStates";
-import { useSelectedClaim } from "./SelectedClaim";
+import { useSelection } from "./SelectionProvider";
 import type { HighlightedHunks } from "./highlightHunks";
 import { highlightedLinesOfSelection, hunkIdHolding, scrollTargetOf } from "./citationHighlights";
 import type { HighlightedLines } from "./citationHighlights";
@@ -36,7 +36,7 @@ const COMPACT_UP_QUERY = "(min-width: 760px)";
  * reasons, the navigator, and the diff. It owns what the pieces share: which
  * hunks are marked read, what is open, and which lines a selected claim
  * highlights. The Review steps panel sits in a column to the right (below the
- * diff on narrower screens) and selects claims through `useSelectedClaim`.
+ * diff on narrower screens) and selects claims through `useSelection`.
  *
  * Routing is decided here, once per review, report card and set of escapes,
  * so nothing downstream re-runs (or re-scrolls) on an unrelated render.
@@ -126,7 +126,7 @@ function useHighlightedLines(
   sections: HunkSections,
   showHighlight: (hunkId: string) => void,
 ): HighlightedLines[] {
-  const { selection } = useSelectedClaim();
+  const { selection } = useSelection();
   const highlightedLines = useMemo(() => highlightedLinesOfSelection(review, selection), [review, selection]);
 
   // An effect event reads the latest sections without re-running when they change: only a new selection scrolls.
@@ -147,14 +147,11 @@ function useHunkKeys(groups: NavigatorGroup[], activeHunkId: string | null, jump
   useEffect(() => {
     const items = groups.flatMap((group) => group.items);
     function onKeyDown(event: KeyboardEvent) {
-      if (event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
-      const step = event.key === "j" ? 1 : event.key === "k" ? -1 : 0;
+      const step = stepFromKey(event);
       if (step === 0 || items.length === 0) return;
       event.preventDefault();
       const current = items.findIndex((item) => item.hunkId === activeHunkId);
-      // With nothing active yet, j lands on the first hunk and k on the last, as in the inbox.
-      const next = current === -1 ? (step === 1 ? 0 : items.length - 1) : Math.min(items.length - 1, Math.max(0, current + step));
-      jumpTo(items[next].hunkId);
+      jumpTo(items[nextIndex(current, step, items.length)].hunkId);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

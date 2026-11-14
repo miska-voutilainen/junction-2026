@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ChangeInputSchema, ReceiptRecordSchema, ReviewSchema } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
 import type { Review } from "@/contracts";
-import { buildReceiptView, formatUtc, readingSummary } from "./receiptModel";
+import { buildReceiptView, readingSummary } from "./receiptModel";
 import type { ReceiptDocumentView } from "./receiptModel";
 
 const fixtureText = (relativePath: string): string =>
@@ -32,7 +32,7 @@ describe("buildReceiptView", () => {
     expect(view.status).toBe("signed");
     expect(view.verifyLine).toBe("Signature valid · diff unchanged");
     expect(view.staleHashes).toBeNull();
-    expect(view.signedAt).toBe("2026-11-14 09:40 UTC");
+    expect(view.signedAt).toBe("14 Nov 2026, 09:40 UTC");
   });
 
   it("labels who checked each item", () => {
@@ -153,12 +153,6 @@ describe("accepted refusals", () => {
     expect(accepted.refusalId).toBe("r1");
     expect(accepted.rule).toBeNull();
     expect(accepted.runId).toBe("run-20261113-mp-2129");
-  });
-});
-
-describe("formatUtc", () => {
-  it("formats without locale, converting an offset to UTC", () => {
-    expect(formatUtc("2026-11-14T11:40:12+02:00")).toBe("2026-11-14 09:40 UTC");
   });
 });
 

@@ -7,6 +7,7 @@ import { areaLabel, ladderLevelLabel } from "@/contracts";
 import type { Area, LadderLevel } from "@/contracts";
 import { cn } from "@/lib/utils";
 import type { AreaCardModel } from "./reportCardModel";
+import { countOf } from "@/lib/countOf";
 
 const LEVEL_PILL: Record<LadderLevel, string> = {
   shadow: "border-border-default text-text-muted",
@@ -81,7 +82,7 @@ export function AreaCard({
         >
           <span>
             Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to {ladderLevelLabel[escapeDrop.to]}
-            {` · ${escapes === 1 ? "1 simulated escape" : `${escapes} simulated escapes`}`}
+            {` · ${countOf(escapes, "simulated escape")}`}
           </span>
           <Button ref={undoButton} type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
             Undo

@@ -10,8 +10,9 @@ import { ReceiptSeal } from "@/components/ReceiptSeal";
 import type { Review } from "@/contracts";
 import { STALE_BODY, STALE_TITLE, verifyLine } from "@/lib/receiptCopy";
 import { ReceiptSections } from "./ReceiptSections";
-import { formatSignedAt } from "./signModel";
 import type { SignCommands, SignView } from "./signModel";
+import { countersignCommand } from "@/lib/countersignCommand";
+import { formatSignedAt } from "@/lib/formatSignedAt";
 
 interface SignStepProps {
   view: SignView;
@@ -86,7 +87,7 @@ function Unreadable({ changeId }: Readonly<{ changeId: string }>) {
       <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title="The receipt file couldn't be read.">
         Re-export it with the command below, or open the receipt page for the details.
       </Notice>
-      <Console label="Export command" text={`pnpm countersign export ${changeId}`} kind="log" heading={<CommandHeading note="writes the receipt file again" />} />
+      <Console label="Export command" text={countersignCommand("export", changeId)} kind="log" heading={<CommandHeading note="writes the receipt file again" />} />
       <ReceiptLink changeId={changeId} label="Open the receipt page" />
     </>
   );

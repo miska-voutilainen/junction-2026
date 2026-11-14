@@ -17,7 +17,7 @@ An agent-written pull request arrives with the agent's own story. A reviewer who
 2. **Then the code (A2).** It reads the hunks with A1's expectation beside them and writes the story and claims, each citing code.
 3. **The description last (A4).** It checks each sentence against the claims: `supported`, `contradicted` or `unsupported`. The last two become findings.
 4. **Tests are blind-first too (A5).** One test per functional item, written from the requirement, never from the diff ([Idea 6](evidence-levels.md)).
-5. **We measure the effect.** The evidence lane plants false sentences in 5 PR descriptions. The reviewer runs 2 times per mode on each:
+5. **We measure the effect.** An isolated agent that never sees the prompts plants false sentences in 5 PR descriptions. The reviewer runs 2 times per mode on each:
    - **Anchored:** A2 reads the description first; A1 is skipped.
    - **Blind-first:** A1, A2, A4 in order (A3 and A5 skipped).
 
@@ -43,7 +43,7 @@ Failure modes we saw go in `docs/lessons.md`.
 
 ## Where it comes from
 
-Studies of code review with AI hints find reviewers' attention pulled to what the AI flagged (not yet checked in [`docs/research.md`](../research.md), so no figure here). Preregistration in science (Registered Reports, Chambers 2013) writes expectations down before seeing results.
+A study of code review with AI hints (Tufano et al., 29 developers) found that reviewers who started from the AI review found more low-severity issues but not more high-severity ones; figures and caveats in [`docs/research.md`](../research.md). Preregistration in science (Registered Reports, Chambers 2013) writes expectations down before seeing results.
 
 ## In the code
 

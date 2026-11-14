@@ -12,7 +12,7 @@ export interface Selection {
   focus?: Citation;
 }
 
-interface SelectedClaim {
+interface SelectionState {
   /** The current selection, a new object on every press so pressing the same citation again scrolls again; null when nothing is selected. */
   selection: Selection | null;
   /** The claim whose cited lines the diff highlights, or null. */
@@ -24,7 +24,7 @@ interface SelectedClaim {
   setSelectedFindingId: (findingId: string | null, focus?: Citation) => void;
 }
 
-const SelectedClaimContext = createContext<SelectedClaim | null>(null);
+const SelectionContext = createContext<SelectionState | null>(null);
 
 /**
  * Page-level state shared by the diff and the review steps panel: which claim
@@ -34,9 +34,9 @@ const SelectedClaimContext = createContext<SelectedClaim | null>(null);
  * two unrelated things, and the scroll target travels with the selection
  * instead of racing it.
  */
-export function SelectedClaimProvider({ children }: Readonly<{ children: ReactNode }>) {
+export function SelectionProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [selection, setSelection] = useState<Selection | null>(null);
-  const value = useMemo<SelectedClaim>(
+  const value = useMemo<SelectionState>(
     () => ({
       selection,
       selectedClaimId: selection?.kind === "claim" ? selection.id : null,
@@ -46,12 +46,12 @@ export function SelectedClaimProvider({ children }: Readonly<{ children: ReactNo
     }),
     [selection],
   );
-  return <SelectedClaimContext.Provider value={value}>{children}</SelectedClaimContext.Provider>;
+  return <SelectionContext.Provider value={value}>{children}</SelectionContext.Provider>;
 }
 
-/** The selected claim or finding and their setters; must sit inside `SelectedClaimProvider`. */
-export function useSelectedClaim(): SelectedClaim {
-  const value = useContext(SelectedClaimContext);
-  if (value === null) throw new Error("useSelectedClaim needs a SelectedClaimProvider above it.");
+/** The selected claim or finding and their setters; must sit inside `SelectionProvider`. */
+export function useSelection(): SelectionState {
+  const value = useContext(SelectionContext);
+  if (value === null) throw new Error("useSelection needs a SelectionProvider above it. ReviewScreen mounts one around the diff and the steps panel; render this component inside it.");
   return value;
 }
