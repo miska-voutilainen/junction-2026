@@ -23,7 +23,7 @@ A model can describe code that doesn't exist: a call that isn't made, a check th
 
 ## What we measured
 
-From the report card, over all recorded runs: **quote failures 0 of 917 quote checks run**, 0 findings dropped, 0 claims retracted by a failing test. The 917 counts checks, not distinct quotes: a claim shared by several runs of one change is checked once per run ([decision](../decisions.md)). A unit test checks that a deliberately wrong quote is caught, so the zero isn't a check that can't fire. It says this model quoted this repository accurately, not that its claims are right (see Limits).
+From the report card, over all recorded runs: **quote failures 1 of 1422 quote checks run**, 0 findings dropped, 0 claims retracted by a failing test. The 1422 counts checks, not distinct quotes: a claim shared by several runs of one change is checked once per run ([decision](../decisions.md)). A unit test checks that a deliberately wrong quote is caught, so the check can fire, and it did once. It says this model quoted this repository accurately in all but one check, not that its claims are right (see Limits).
 
 ## How to adopt it
 
