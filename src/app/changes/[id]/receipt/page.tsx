@@ -21,7 +21,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
  * The inbox reader reports a bad receipt only as "unreadable", so the page
  * reads the file once more for its validation error.
  */
-export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReceiptPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
   const data = await loadInboxData();
   if (data.status === "invalid") {

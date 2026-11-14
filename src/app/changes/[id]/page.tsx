@@ -21,7 +21,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
  * and highlights its hunks with shiki, then hands plain data to
  * `ReviewScreen`, which routes it in the browser.
  */
-export default async function ReviewPage({ params }: { params: Params }) {
+export default async function ReviewPage({ params }: Readonly<{ params: Params }>) {
   const { id } = await params;
   const data = await loadInboxData();
   if (data.status === "invalid") {

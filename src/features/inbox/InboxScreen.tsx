@@ -21,12 +21,12 @@ export function InboxScreen({
   reportCard,
   repo,
   usesFixture,
-}: {
+}: Readonly<{
   sources: InboxSource[];
   reportCard: ReportCardInput;
   repo: string;
   usesFixture: boolean;
-}) {
+}>) {
   const { escapes } = useEscapes();
   const model = useMemo(() => buildInboxModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
   const hasAnyReview = sources.some((source) => source.review.state === "ok");

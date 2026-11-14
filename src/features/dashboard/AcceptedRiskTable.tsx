@@ -20,7 +20,7 @@ const STATUS: Record<RiskStatus, { text: string; className: string }> = {
  * is "Signature failed verification". Neither carries the signer's acceptance.
  * Rows stack on a phone and become a table from 760 px.
  */
-export function AcceptedRiskTable({ risks }: { risks: AcceptedRisk[] }) {
+export function AcceptedRiskTable({ risks }: Readonly<{ risks: AcceptedRisk[] }>) {
   return (
     <DashboardSection title="Accepted risk" subtitle="Residual risk lines from signed receipts, and whether their code still holds">
       <div role="table" aria-label="Accepted risk" className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel">

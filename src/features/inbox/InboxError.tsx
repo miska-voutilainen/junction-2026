@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/ErrorState";
  * validation error so it can be pasted into an issue. The site is built from
  * the data files, so a reload only helps under `pnpm dev`; the copy says so.
  */
-export function InboxError({ details }: { details: string }) {
+export function InboxError({ details }: Readonly<{ details: string }>) {
   return (
     <ErrorState
       title="Couldn't read the recorded changes"

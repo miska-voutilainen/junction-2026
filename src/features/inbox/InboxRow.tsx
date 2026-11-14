@@ -20,7 +20,7 @@ import type { InboxRow as Row, ReviewedRow } from "./inboxModel";
  *
  * @param index Position in the list, for the entrance stagger.
  */
-export function InboxRow({ row, index }: { row: Row; index: number }) {
+export function InboxRow({ row, index }: Readonly<{ row: Row; index: number }>) {
   const entrance = useStaggeredPreset(fadeUpItem, index);
 
   return (
@@ -45,7 +45,7 @@ export function InboxRow({ row, index }: { row: Row; index: number }) {
   );
 }
 
-function ChangeCell({ row }: { row: Row }) {
+function ChangeCell({ row }: Readonly<{ row: Row }>) {
   return (
     <div role="cell" className="min-w-0">
       <Link
@@ -67,7 +67,7 @@ function ChangeCell({ row }: { row: Row }) {
   );
 }
 
-function ReviewedCells({ row }: { row: ReviewedRow }) {
+function ReviewedCells({ row }: Readonly<{ row: ReviewedRow }>) {
   return (
     <>
       <div role="cell" className="flex min-w-0 flex-col gap-1">
@@ -104,7 +104,7 @@ function ReviewedCells({ row }: { row: ReviewedRow }) {
 }
 
 /** A change without a readable review: one message across the effort and risk columns, no receipt. */
-function UnreviewedCells({ row }: { row: Row }) {
+function UnreviewedCells({ row }: Readonly<{ row: Row }>) {
   return (
     <>
       <div role="cell" className="col-span-2 text-sm text-text-muted">

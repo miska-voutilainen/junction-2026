@@ -21,12 +21,12 @@ export function InboxTable({
   label,
   emptyText,
   withHeader = true,
-}: {
+}: Readonly<{
   rows: Row[];
   label: string;
   emptyText: string;
   withHeader?: boolean;
-}) {
+}>) {
   return (
     <div className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
       <div role="table" aria-label={label}>

@@ -30,11 +30,11 @@ export function AreaCard({
   card,
   onRecord,
   onUndo,
-}: {
+}: Readonly<{
   card: AreaCardModel;
   onRecord: (area: Area) => void;
   onUndo: (area: Area) => void;
-}) {
+}>) {
   const { area, level, escapes, escapeDrop } = card;
   const headingId = useId();
   const promptId = useId();
@@ -117,7 +117,7 @@ export function AreaCard({
   );
 }
 
-function Row({ term, detail, note }: { term: string; detail: string; note?: string | null }) {
+function Row({ term, detail, note }: Readonly<{ term: string; detail: string; note?: string | null }>) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-xs text-text-muted">{term}</dt>
