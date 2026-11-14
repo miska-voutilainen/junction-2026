@@ -2,71 +2,12 @@
  * Examples for the legacy guard detectors (idea 9): each kind of touch, found or
  * skipped, and the guard it gets. A false negative lets a legacy touch skip its
  * owner, so most cases here are near misses that must still be caught; a false
- * positive costs one extra read. The fake tree below stands in for git.
+ * positive costs one extra read. The fake tree in legacyGuardFixtures.ts stands in for git.
  */
 import { describe, expect, it } from "vitest";
-import type { Review } from "../contracts";
 import { legacyTouchRefusalsFor } from "./checkFindings";
-import type { BaseTree } from "../lib/git/baseTree";
-import { findLegacyTouchPoints } from "./legacyTouchPoints";
+import { fakeTree, find, hunk } from "./legacyGuardFixtures";
 import { parseTargets } from "./oldPlatformTouchPoints";
-
-type Hunk = Review["hunks"][number];
-
-function hunk(id: string, file: string, lines: Array<["add" | "del" | "context", string]>): Hunk {
-  return {
-    id,
-    file,
-    header: "@@ -1,1 +1,1 @@",
-    oldStart: 1,
-    oldLines: 1,
-    newStart: 1,
-    newLines: 1,
-    lines: lines.map(([kind, text]) => ({ kind, text, oldLine: null, newLine: null })),
-  };
-}
-
-function fileOf(path: string): Review["files"][number] {
-  return { path, kind: "source", area: null, added: 1, removed: 0, hunkIds: [] };
-}
-
-/**
- * A base commit as the detectors see it: `mentions` are test files per word,
- * `zoneMentions` zone files per word, `zoneSymbols` what the zones declare,
- * `outsideSymbols` the src files outside the zones declaring each name, and
- * `files` the files (csproj) at base. Nothing is read from git.
- */
-function fakeTree(
-  parts: {
-    mentions?: Record<string, string[]>;
-    zoneMentions?: Record<string, string[]>;
-    zoneSymbols?: Record<string, string>;
-    outsideSymbols?: Record<string, string[]>;
-    files?: Record<string, string>;
-  } = {},
-): BaseTree {
-  const files = parts.files ?? {};
-  const declaration = (name: string, path: string) => ({
-    path,
-    text: `public void ${name}(int a)`,
-  });
-  return {
-    filesMentioning: async (word, pathspecs) =>
-      (pathspecs[0] === "tests" ? parts.mentions?.[word] : parts.zoneMentions?.[word]) ?? [],
-    // The whole of src/ is asked for when looking for declarations outside the zones.
-    accessModifierLines: async (pathspecs) =>
-      pathspecs[0] === ":(glob)src/**/*.cs"
-        ? Object.entries(parts.outsideSymbols ?? {}).flatMap(([name, paths]) =>
-            paths.map((path) => declaration(name, path)),
-          )
-        : Object.entries(parts.zoneSymbols ?? {}).map(([name, path]) => declaration(name, path)),
-    readFile: async (path) => files[path] ?? null,
-    listFiles: async () => Object.keys(files),
-  };
-}
-
-const find = (hunks: Hunk[], tree: BaseTree, changedPaths: string[] = []) =>
-  findLegacyTouchPoints({ repoDir: "", baseSha: "", files: changedPaths.map(fileOf), hunks }, tree);
 
 describe("legacy-code", () => {
   const writerHunk = hunk("h1", "src/MessagePack/MessagePackWriter.cs", [["add", "x = 1;"]]);

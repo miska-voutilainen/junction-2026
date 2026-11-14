@@ -5,23 +5,8 @@
  * wrong owner.
  */
 import { describe, expect, it } from "vitest";
-import type { Review } from "../contracts";
+import { hunk } from "./legacyGuardFixtures";
 import { addedCalls, changedDeclarations, declaredName } from "./csharpSymbols";
-
-type Hunk = Review["hunks"][number];
-
-function hunk(id: string, file: string, lines: Array<["add" | "del" | "context", string]>): Hunk {
-  return {
-    id,
-    file,
-    header: "@@ -1,1 +1,1 @@",
-    oldStart: 1,
-    oldLines: 1,
-    newStart: 1,
-    newLines: 1,
-    lines: lines.map(([kind, text]) => ({ kind, text, oldLine: null, newLine: null })),
-  };
-}
 
 describe("C# hunk readers", () => {
   it("names the type and method a declaration adds, not a field", () => {
