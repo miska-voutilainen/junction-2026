@@ -16,7 +16,7 @@ export const SHORTCUT_LIST = [
   { keys: ["1", "2", "3", "4"], label: "Review step" },
   { keys: ["g", "i"], label: "Inbox" },
   { keys: ["g", "d"], label: "Dashboard" },
-  { keys: ["g", "r"], label: "Reviewer Report Card" },
+  { keys: ["g", "r"], label: "Reviewer report card" },
 ] as const;
 
 /** True when the key press belongs to a text field, so a shortcut must not steal it. */

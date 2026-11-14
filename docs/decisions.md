@@ -26,6 +26,13 @@
 - **Why:** "Fails on base and passes on head" is the one signal that tells the versions apart; a build error on the base (the test uses a type the change adds) is the common case and must not count as a failing test. Model-written C# runs on this laptop, so it only ever runs in a worktree that is deleted afterwards.
 - **Rejected:** Treating a build error on the base as "fails on base" (hands out Verified for free); retracting on a failing PR test; running the PR's tests before A5's in the same worktree.
 - **PR:** T14
+## 2026-11-14 · A fifth research pass changes the limits and the wording, not the ideas
+
+- **Context:** A Gemini Deep Research pass audited all eight ideas and proposed replacing the trust ladder and adding Roslyn slicing, property tests, a rule ratchet and a pre-review gate. We opened none of its sources.
+- **Decision:** Keep all eight ideas. Correct two research claims we had worded wrongly (Gao: trust and agreement, not accuracy; Ehsani: 38% closed without review, not "too large"). Add three limits to the concept card (the catch rate measures the reviewer, the diff-only quote check strikes some true claims, hunks are judged one at a time) and three "Beyond the reference" items. The raw output is kept in `docs/research/`, labelled unverified.
+- **Why:** The limits are true of the design as built, and saying them is cheaper and more credible than building around them before the freeze. Roslyn and FsCheck need the .NET tooling that A5 (#110) is still fighting.
+- **Receipt wording:** The spec, `docs/api.md`, the signed-receipt idea page and `docs/research.md` said a squash or rebase with an unchanged diff keeps a receipt valid. The code is stricter: the signed receipt holds the head commit and both trees, and `verify` rejects a change in any of them. The docs now match the code. Shared spec change, decided by Miska.
+- **Rejected:** Dropping the trust ladder (the planted-bug rate measures the reviewer, not the agent, which the pass conflated); building Roslyn slices, property tests or the rule ratchet now (no time to finish one properly); quoting its DORA article numbers (not read in the primary text).
 
 ## 2026-11-14 · Generated hunks get their own coverage state and leave the reading count
 

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { BackAction } from "@/components/BackAction";
 import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
@@ -20,7 +20,7 @@ export function ReviewNotFound({ sources, reportCard, repo }: Readonly<{ sources
     <AppShell
       changes={changes}
       repo={repo}
-      title="Not Found"
+      title="Page not found"
       backHref="/"
       breadcrumb={[{ label: "Inbox", href: "/" }, { label: id }]}
       escapeSlot={<EscapeCounter />}
@@ -29,11 +29,7 @@ export function ReviewNotFound({ sources, reportCard, repo }: Readonly<{ sources
         <EmptyState
           title={`No change with id ${id}.`}
           body="The id may be mistyped, or that change isn't in this repository's inbox."
-          actions={
-            <Link href="/" className="rounded-item text-sm text-link hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring">
-              Back to the inbox
-            </Link>
-          }
+          actions={<BackAction href="/">Back to the inbox</BackAction>}
         />
       </div>
     </AppShell>

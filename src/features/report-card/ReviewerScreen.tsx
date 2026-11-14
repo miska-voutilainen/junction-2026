@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { LevelLadder } from "@/components/LevelLadder";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import { buildInboxModel, toShellChanges } from "@/features/inbox";
+import { areaLabel } from "@/contracts";
+import type { Area } from "@/contracts";
+import { buildInboxModel, describeReroute, toShellChanges } from "@/features/inbox";
 import type { InboxSource, ReportCardInput } from "@/features/inbox";
 import { REPO_BLOB_URL } from "@/lib/ideaLinks";
-import { useEscapes } from "@/lib/simulation/escapes";
+import { ESCAPE_TOAST_ID, markRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { BlindFirstSection } from "./BlindFirstSection";
 import { LevelsLegend } from "./LevelsLegend";
 import { ReportLists } from "./ReportLists";
@@ -48,6 +51,18 @@ export function ReviewerScreen({
     () => buildInboxModel(sources, reportCard, escapes),
     [sources, reportCard, escapes],
   );
+  // Routes again with the new escape to say what changed, so the toast reports the real effect
+  // rather than a fixed sentence, and hands the changed ids to S1's highlight.
+  const recordEscape = useCallback(
+    (area: Area) => {
+      const after = buildInboxModel(sources, reportCard, { ...escapes, [area]: (escapes[area] ?? 0) + 1 });
+      const { changedIds, sentence } = describeReroute(model.rows, after.rows);
+      markRerouted(changedIds);
+      record(area);
+      toast(`Escape recorded in ${areaLabel[area]} (simulated). ${sentence}.`, { id: ESCAPE_TOAST_ID });
+    },
+    [sources, reportCard, escapes, model.rows, record],
+  );
   const data = reportCard.state === "ok" ? reportCard.data : null;
   const cards = useMemo(() => areaCardModels(data, escapes), [data, escapes]);
   const reviews = useMemo<ReviewOfChange[]>(
@@ -62,8 +77,8 @@ export function ReviewerScreen({
     <AppShell
       changes={toShellChanges(model.rows)}
       repo={repo}
-      title="Reviewer Report Card"
-      breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Reviewer Report Card" }]}
+      title="Reviewer report card"
+      breadcrumb={[{ label: "Reviewer" }]}
       backHref="/"
       escapeSlot={<EscapeCounter />}
     >
@@ -79,7 +94,7 @@ export function ReviewerScreen({
             <LevelsLegend
               spotChecksClean={data.areas.reduce((sum, entry) => sum + entry.spotChecksClean, 0)}
             />
-            <TrustLadderSection cards={cards} record={record} undo={undo} />
+            <TrustLadderSection cards={cards} record={recordEscape} undo={undo} />
             <ReportLists
               reportCard={data}
               reviews={reviews}

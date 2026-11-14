@@ -17,7 +17,7 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 
 1. **Coverage per hunk, first match wins:**
    - **Read this:** a finding or refusal lists the hunk, its area is at Shadow ([Idea 1](trust-ladder.md)), or no Verified or Supported claim lists it.
-   - **Generated:** the hunk is in a generated file (a snapshot) and no finding or refusal lists it. It stays visible but leaves the reading count, so a change of 400 snapshots doesn't hide its 12 real hunks. The change says so in one line: "411 are generated snapshots: read the template change that produces them" (`R-generated`).
+   - **Generated:** the hunk is in a generated file (a snapshot) and no finding or refusal lists it. It stays visible but leaves the reading count, so a change of 400 snapshots doesn't hide its 12 real hunks. The change says so in one line: "411 are generated snapshots: read the template that produces them" (`R-generated`).
    - **Verified:** a Verified claim lists it: a test that fails before and passes after, which the authoring agent didn't write ([Idea 8](separation-of-duties.md)).
    - **Supported:** otherwise; a quote matched the code ([Idea 4](quote-check.md)).
 2. **A tier for the change.** Each rule that fires adds one reason with its id; the tier is the highest asked for, and none means Light.

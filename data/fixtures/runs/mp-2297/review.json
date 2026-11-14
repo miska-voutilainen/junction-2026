@@ -552,7 +552,7 @@
       },
       {
         "ruleId": "R-generated",
-        "text": "2 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)",
+        "text": "2 are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught",
         "tier": "light"
       }
     ],

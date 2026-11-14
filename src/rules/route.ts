@@ -175,10 +175,10 @@ export function countGenerated(coverage: Record<string, Coverage> | Coverage[]):
 /**
  * The one-line note on a change with generated hunks: the count, what to read
  * instead, and the risk of not reading them.
- * @example "411 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)"
+ * @example "411 are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught"
  */
 export function generatedReason(generatedHunks: number): string {
-  return `${generatedHunks} ${generatedHunks === 1 ? "is a generated snapshot" : "are generated snapshots"}: read the template change that produces ${generatedHunks === 1 ? "it" : "them"} (code hidden in one wouldn't be caught)`;
+  return `${generatedHunks} ${generatedHunks === 1 ? "is a generated snapshot" : "are generated snapshots"}: read the template that produces ${generatedHunks === 1 ? "it" : "them"}, because code hidden in a snapshot would not be caught`;
 }
 
 /** Labels of the sensitive paths any hunk falls in, in policy order. */

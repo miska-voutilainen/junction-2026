@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const widthOf = (projectName: string): number => (projectName === "mobile" ? 375 : 1440);
-const shot = (name: string) => `.review/idea8-${name}.png`;
+const shot = (name: string) => `.review/separation-of-duties-${name}.png`;
 const analyzerCard = (page: Page) => page.getByRole("article", { name: "Analyzer" });
 const headerOf = (page: Page): Locator => page.getByRole("heading", { level: 1 }).locator("xpath=ancestor::header[1]");
 

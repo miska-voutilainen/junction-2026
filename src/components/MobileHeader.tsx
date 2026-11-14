@@ -41,7 +41,7 @@ export function MobileHeader({
           <ArrowLeft aria-hidden="true" className="size-4.5" />
         </Link>
       ) : (
-        <Link href="/" aria-label="Countersign home" className="rounded-item">
+        <Link href="/" aria-label="Countersign home" className="flex items-center rounded-item">
           <Wordmark size="sm" showName={false} />
         </Link>
       )}
