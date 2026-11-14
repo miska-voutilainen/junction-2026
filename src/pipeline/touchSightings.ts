@@ -16,7 +16,8 @@ export interface Sighting {
   /** What the touch point will say it touches, e.g. "Wire format: src/MessagePack/MessagePackWriter.cs". */
   detail: string;
   owner: string;
-  hunkId: string;
+  /** Null for a file changed with no hunks (a binary file or a mode change): the touch has nothing to list. */
+  hunkId: string | null;
   /** What the guard looks up: a symbol, a type name or a source project. */
   subject: string;
 }
@@ -38,7 +39,11 @@ export async function groupSightings(
       const group = sightings.filter((sighting) => sighting.detail === detail);
       return {
         kind,
-        hunkIds: [...new Set(group.map((sighting) => sighting.hunkId))],
+        hunkIds: [
+          ...new Set(
+            group.flatMap((sighting) => (sighting.hunkId === null ? [] : [sighting.hunkId])),
+          ),
+        ],
         detail,
         owner: group[0].owner,
         guard: await guardOf([...new Set(group.map((sighting) => sighting.subject))]),

@@ -74,19 +74,32 @@ export const oldPlatformDirective =
  * code only old targets compile. That holds because the fork's source projects
  * build netstandard2.0, netstandard2.1, net472 and net8.0 and nothing between.
  * A compound condition (`NET8_0_OR_GREATER || NETSTANDARD2_1`) is left out:
- * its `#else` may still build on a current target.
+ * its `#else` may still build on a current target, and so may the `#else` of an exact version like `#if NET6_0`, so only `_OR_GREATER` and bare `NETCOREAPP` count.
  * @example "#if NET8_0_OR_GREATER", "#if (NET8_0_OR_GREATER) // fast path" and "#if NETCOREAPP" match; "#if NET8_0_OR_GREATER || NETSTANDARD2_1" and "#if DEBUG" do not.
  */
 export const currentPlatformIf =
-  /^\s*#\s*if\s+\(?\s*(?:NET(?:[5-9]|\d{2,})_\d+\w*|NETCOREAPP\w*)\s*\)?\s*(?:\/\/.*)?$/;
+  /^\s*#\s*if\s+\(?\s*(?:NET(?:[5-9]|\d{2,})_\d+_OR_GREATER|NETCOREAPP(?:\d+_\d+_OR_GREATER)?)\s*\)?\s*(?:\/\/.*)?$/;
 
 /**
- * The directives `#else` matching reads. `#elif` is none of them on purpose: an
- * `#else` after `#if NET8_0_OR_GREATER ... #elif X` still closes that `#if`.
- * @example "#else", "#if DEBUG" and "#endif" match their pattern; "#elif DEBUG" matches none.
+ * An `#if` or `#elif` whose whole condition only old targets meet: old target
+ * names joined by `||`, or one negated current target. Code under it is
+ * old-only, so editing it is an old-platform touch even when the directive is
+ * only context. Stricter than `oldPlatformDirective`, which a changed directive
+ * line meets by naming an old target anywhere: `#if !NETFRAMEWORK` mentions one
+ * but guards code the current targets build, so its block is not old-only.
+ * @example "#if NETFRAMEWORK", "#elif NETSTANDARD2_0 || NET472" and "#if !NET6_0_OR_GREATER" match; "#if !NETFRAMEWORK", "#if !NET6_0" and "#if NETFRAMEWORK && DEBUG" do not.
+ */
+export const oldOnlyCondition =
+  /^\s*#\s*(?:if|elif)\s+(?:\(?\s*(?:NETFRAMEWORK|NETSTANDARD\w*|NET[34]\w*|UNITY\w*)\s*\)?(?:\s*\|\|\s*\(?\s*(?:NETFRAMEWORK|NETSTANDARD\w*|NET[34]\w*|UNITY\w*)\s*\)?)*|!\s*\(?\s*(?:NET(?:[5-9]|\d{2,})_\d+_OR_GREATER|NETCOREAPP(?:\d+_\d+_OR_GREATER)?)\s*\)?)\s*(?:\/\/.*)?$/;
+
+/**
+ * The directive lines the block walk reads. `ifLine` does not match `#elif`, so
+ * a walk back from an `#else` passes any `#elif` on its way to the opening `#if`.
+ * @example "#else", "#elif DEBUG", "#if DEBUG" and "#endif" each match only their own pattern.
  */
 export const preprocessor = {
   elseLine: /^\s*#\s*else\b/,
+  elifLine: /^\s*#\s*elif\b/,
   ifLine: /^\s*#\s*if\b/,
   endifLine: /^\s*#\s*endif\b/,
 };

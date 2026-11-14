@@ -104,6 +104,69 @@ describe("legacy-code", () => {
   });
 });
 
+describe("old-platform: a changed line inside a block whose directive is context", () => {
+  const generator = "src/MessagePack.SourceGenerator/Gen.cs";
+  const detailOf = async (...lines: Array<["add" | "del" | "context", string]>) =>
+    (await find([hunk("h1", generator, lines)], fakeTree())).map((point) => point.detail);
+
+  it("finds the old-only block through a nested #if DEBUG", async () => {
+    expect(
+      await detailOf(
+        ["context", "#if NETFRAMEWORK"],
+        ["context", "#if DEBUG"],
+        ["context", "#endif"],
+        ["add", "Old();"],
+      ),
+    ).toEqual(["#if NETFRAMEWORK"]);
+  });
+
+  it("finds an old-only #elif branch", async () => {
+    expect(
+      await detailOf(
+        ["context", "#if NET8_0_OR_GREATER"],
+        ["context", "#elif NETSTANDARD2_0 || NET472"],
+        ["add", "Old();"],
+      ),
+    ).toEqual(["#elif NETSTANDARD2_0 || NET472"]);
+  });
+
+  it("skips code current targets build: under #if !NETFRAMEWORK, in the #else of #if NETFRAMEWORK, after #endif", async () => {
+    expect(await detailOf(["context", "#if !NETFRAMEWORK"], ["add", "Current();"])).toEqual([]);
+    expect(
+      await detailOf(
+        ["context", "#if NETFRAMEWORK"],
+        ["context", "Old();"],
+        ["context", "#else"],
+        ["add", "Current();"],
+      ),
+    ).toEqual([]);
+    expect(
+      await detailOf(["context", "#if NETFRAMEWORK"], ["context", "#endif"], ["add", "Current();"]),
+    ).toEqual([]);
+  });
+
+  it("finds an added #else of #if DEBUG inside an old-only block", async () => {
+    expect(
+      await detailOf(["context", "#if NETFRAMEWORK"], ["context", "#if DEBUG"], ["add", "#else"]),
+    ).toEqual(["#if NETFRAMEWORK"]);
+  });
+
+  it("skips code under #if !NET6_0: net8.0 builds it", async () => {
+    expect(await detailOf(["context", "#if !NET6_0"], ["add", "Current();"])).toEqual([]);
+  });
+
+  it("skips an #else that follows an #elif: it also runs when the #elif fails", async () => {
+    expect(
+      await detailOf(
+        ["context", "#if NET8_0_OR_GREATER"],
+        ["context", "#elif DEBUG"],
+        ["context", "#else"],
+        ["add", "Maybe();"],
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("old-platform", () => {
   const directive = "#if !NETSTANDARD2_0 && !NETFRAMEWORK";
   const template = hunk("h1", "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs", [
@@ -135,6 +198,27 @@ describe("old-platform", () => {
       ),
     });
     expect((await find([template], windowsOnly))[0].guard.status).toBe("partly");
+  });
+
+  it("says when the targets come from a Directory.Build.props, and lets the csproj's own targets win", async () => {
+    const props =
+      "<Project><PropertyGroup><TargetFrameworks>net8.0;net472</TargetFrameworks></PropertyGroup></Project>";
+    const inherits = fakeTree({
+      files: {
+        ...testProject("<OutputType>Library</OutputType>"),
+        "tests/Directory.Build.props": props,
+      },
+    });
+    expect((await find([template], inherits))[0].guard.evidence).toContain(
+      "tests/MessagePack.SourceGenerator.Tests targets net8.0, net472 (from tests/Directory.Build.props)",
+    );
+    const ownWins = fakeTree({
+      files: {
+        ...testProject("<TargetFramework>net8.0</TargetFramework>"),
+        "tests/Directory.Build.props": props,
+      },
+    });
+    expect((await find([template], ownWins))[0].guard.status).toBe("unguarded");
   });
 
   it("does not give a source project the test projects of a longer-named one", async () => {

@@ -32,7 +32,7 @@ export async function findLegacyTouchPoints(
 ): Promise<LegacyTouchPoint[]> {
   const { files, hunks } = input;
   return [
-    ...(await legacyCodeTouchPoints(hunks, tree)),
+    ...(await legacyCodeTouchPoints(files, hunks, tree)),
     ...(await oldPlatformTouchPoints(hunks, tree)),
     ...consumerContractTouchPoints(files, hunks),
     ...buildTouchPoints(hunks),
@@ -41,35 +41,59 @@ export async function findLegacyTouchPoints(
 
 /** A hunk in a zone, or a reach into one by name from outside it, guarded by tests that name it. */
 async function legacyCodeTouchPoints(
+  files: Review["files"],
   hunks: readonly Hunk[],
   tree: BaseTree,
 ): Promise<LegacyTouchPoint[]> {
-  const sightings = [...zoneSightings(hunks), ...(await reachInSightings(hunks, tree))];
+  const sightings = [
+    ...zoneSightings(hunks),
+    ...hunklessZoneSightings(files, hunks),
+    ...(await reachInSightings(hunks, tree)),
+  ];
   return groupSightings("legacy-code", sightings, async ([symbol]) => guardByTests(symbol, tree));
 }
 
 /**
  * One sighting per zone hunk; the subject is the file's type name, which tests
- * name when they cover it. A partial class file names its type before the first
- * dot: tests name `MessagePackReader`, never `MessagePackReader.Integers`, so
- * the whole file name would always read as unguarded.
- * @example "src/MessagePack/MessagePackReader.Integers.cs" gives subject "MessagePackReader"
+ * name when they cover it.
+ * @example a hunk in "src/MessagePack/MessagePackReader.Integers.cs" gives subject "MessagePackReader"
  */
 function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
-  return hunks.flatMap((hunk) => {
-    const zone = legacyZoneOf(hunk.file);
-    if (!zone) return [];
-    const fileName = hunk.file.split("/").pop() ?? hunk.file;
-    const typeName = fileName.split(".")[0];
-    return [
-      {
-        detail: `${zone.label}: ${hunk.file}`,
-        owner: zone.owner,
-        hunkId: hunk.id,
-        subject: typeName,
-      },
-    ];
-  });
+  return hunks.flatMap((hunk) => zoneSighting(hunk.file, hunk.id));
+}
+
+/**
+ * One sighting per zone file the change touches with no hunk: a binary file or
+ * a mode change. Detectors read hunks, so without this the zone's owner would
+ * never hear of a replaced DLL in the Unity client.
+ * @example a file "src/MessagePack.UnityClient/Assets/Plugin.dll" with no hunks gives detail "Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no text hunks: binary, mode change or rename)"
+ */
+function hunklessZoneSightings(files: Review["files"], hunks: readonly Hunk[]): Sighting[] {
+  const filesWithHunks = new Set(hunks.map((hunk) => hunk.file));
+  return files
+    .filter((file) => !filesWithHunks.has(file.path))
+    .flatMap((file) =>
+      zoneSighting(file.path, null, " (no text hunks: binary, mode change or rename)"),
+    );
+}
+
+/**
+ * The sighting for a path in a zone, or none. A partial class file names its
+ * type before the first dot: tests name `MessagePackReader`, never
+ * `MessagePackReader.Integers`, so the whole file name would always read as unguarded.
+ */
+function zoneSighting(path: string, hunkId: string | null, note = ""): Sighting[] {
+  const zone = legacyZoneOf(path);
+  if (!zone) return [];
+  const fileName = path.split("/").pop() ?? path;
+  return [
+    {
+      detail: `${zone.label}: ${path}${note}`,
+      owner: zone.owner,
+      hunkId,
+      subject: fileName.split(".")[0],
+    },
+  ];
 }
 
 /** The zones as git pathspecs, e.g. ":(glob)src/MessagePack/MessagePackWriter.cs". */

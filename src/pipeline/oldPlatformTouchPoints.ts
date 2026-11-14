@@ -12,6 +12,7 @@ import {
   legacyTargetFramework,
   maintainersOwner,
   maxListedFiles,
+  oldOnlyCondition,
   oldPlatformDirective,
   preprocessor,
 } from "../policy/legacyTouch";
@@ -47,17 +48,65 @@ function directiveSighting(hunk: Hunk): Sighting[] {
 
 /**
  * The first changed line that only old targets compile: an old-platform `#if`,
- * or an `#else` of an `#if` on one current target. The first stands for the
- * hunk: a hunk that changes several such lines asks the owner the same question.
+ * an `#else` of an `#if` on one current target, or any line inside an old-only
+ * block whose directive is only context. The first stands for the hunk: a hunk
+ * that changes several such lines asks the owner the same question.
  * @example a hunk with context "#if NET8_0_OR_GREATER" and an added "#else" gives "#else of #if NET8_0_OR_GREATER"
+ * @example a hunk with context "#if NETFRAMEWORK" and an added "LegacyOnly();" gives "#if NETFRAMEWORK"
  */
 function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
   for (const [index, line] of lines.entries()) {
     if (line.kind === "context") continue;
     if (oldPlatformDirective.test(line.text)) return line.text.trim();
-    if (!preprocessor.elseLine.test(line.text)) continue;
-    const opening = openingIf(lines, index);
-    if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
+    if (preprocessor.elseLine.test(line.text)) {
+      const opening = openingIf(lines, index);
+      if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
+      // Not that kind of #else: it may still sit inside an outer old-only block.
+    }
+    const block = enclosingOldOnlyBranch(lines, index);
+    if (block) return block;
+  }
+  return null;
+}
+
+/**
+ * The old-only branch a changed line sits in, innermost first, or null.
+ * Walks back through the same version of the file, like `openingIf`, closing
+ * one enclosing block at each opening `#if`: the branch is that `#if`, or the
+ * last `#elif` or `#else` passed on the way. A block opened above the hunk is
+ * not seen, so a line deep inside a long old-only block can still be missed.
+ * @example context "#if NETFRAMEWORK", "#if DEBUG", "#endif" then an added "Old();" gives "#if NETFRAMEWORK"
+ */
+function enclosingOldOnlyBranch(lines: Hunk["lines"], index: number): string | null {
+  const version = lines[index].kind;
+  let depth = 0;
+  let branch: string | null = null; // the #elif or #else the line sits under in the block being walked
+  let hasEarlierElif = false;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const { kind, text } = lines[i];
+    if (kind !== "context" && kind !== version) continue;
+    if (preprocessor.endifLine.test(text)) depth += 1;
+    else if (depth > 0) {
+      if (preprocessor.ifLine.test(text)) depth -= 1;
+    } else if (preprocessor.elseLine.test(text) || preprocessor.elifLine.test(text)) {
+      if (branch === null) branch = text.trim();
+      else hasEarlierElif = true;
+    } else if (preprocessor.ifLine.test(text)) {
+      const opening = text.trim();
+      if (branch === null && oldOnlyCondition.test(opening)) return opening;
+      if (branch !== null && preprocessor.elifLine.test(branch) && oldOnlyCondition.test(branch))
+        return branch;
+      // An #else after an #elif also runs when the #elif fails, so only a plain #if/#else pair counts.
+      if (
+        branch !== null &&
+        preprocessor.elseLine.test(branch) &&
+        !hasEarlierElif &&
+        currentPlatformIf.test(opening)
+      )
+        return `#else of ${opening}`;
+      branch = null;
+      hasEarlierElif = false;
+    }
   }
   return null;
 }
@@ -93,18 +142,13 @@ async function guardByTestTargets(sourceProjects: string[], tree: BaseTree): Pro
   const csprojs = (await tree.listFiles("tests")).filter((path) =>
     sourceProjects.some((project) => testProjectPattern(project).test(path)),
   );
-  const projects = await Promise.all(
-    csprojs.map(async (csproj) => ({
-      csproj,
-      targets: parseTargets((await tree.readFile(csproj)) ?? ""),
-    })),
-  );
+  const projects = await Promise.all(csprojs.map((csproj) => projectTargets(csproj, tree)));
   const oldTargets = projects.flatMap(({ targets }) =>
     targets.filter((target) => legacyTargetFramework.test(target.framework)),
   );
   const evidence =
     projects.length > 0
-      ? projects.map(({ csproj, targets }) => describeTargets(csproj, targets)).join("; ")
+      ? projects.map(describeTargets).join("; ")
       : `no test project under tests/ matches ${sourceProjects.join(", ")}`;
   const files = csprojs.slice(0, maxListedFiles);
 
@@ -142,13 +186,42 @@ interface Target {
   isConditional: boolean;
 }
 
+/** A test project's targets, and the Directory.Build.props they came from when the csproj sets none. */
+interface ProjectTargets {
+  csproj: string;
+  targets: Target[];
+  inheritedFrom: string | null;
+}
+
+/**
+ * The targets a test project builds. A csproj that sets none gets them from
+ * the nearest Directory.Build.props above it that sets targets. MSBuild
+ * imports only the nearest one, which may import its parent; taking the nearest
+ * that sets targets assumes it does. Without this, a test project
+ * that does run net472 would read as unguarded.
+ * @example "tests/A.Tests/A.csproj" with no targets, and tests/Directory.Build.props setting net8.0;net472, gives those two, inherited from tests/Directory.Build.props
+ */
+async function projectTargets(csproj: string, tree: BaseTree): Promise<ProjectTargets> {
+  const own = parseTargets((await tree.readFile(csproj)) ?? "");
+  if (own.length > 0) return { csproj, targets: own, inheritedFrom: null };
+  const folders = csproj.split("/").slice(0, -1);
+  for (let depth = folders.length; depth >= 0; depth -= 1) {
+    const props = [...folders.slice(0, depth), "Directory.Build.props"].join("/");
+    const targets = parseTargets((await tree.readFile(props)) ?? "");
+    if (targets.length > 0) return { csproj, targets, inheritedFrom: props };
+  }
+  return { csproj, targets: [], inheritedFrom: null };
+}
+
 /**
  * Targets a csproj builds for. Properties that are not a plain framework name
- * (`$(TargetFrameworks)`) are skipped.
+ * (`$(TargetFrameworks)`) and XML comments are skipped: a commented-out
+ * net472 is no evidence that anything runs on .NET Framework.
  * @example `<TargetFrameworks Condition="...Windows...">net472</TargetFrameworks>` gives [{ framework: "net472", isConditional: true }]
  */
 export function parseTargets(csproj: string): Target[] {
-  const groups = csproj.matchAll(/<PropertyGroup([^>]*)>([\s\S]*?)<\/PropertyGroup>/g);
+  const withoutComments = csproj.replace(/<!--[\s\S]*?-->/g, "");
+  const groups = withoutComments.matchAll(/<PropertyGroup([^>]*)>([\s\S]*?)<\/PropertyGroup>/g);
   return [...groups].flatMap(([, groupAttributes, body]) =>
     [...body.matchAll(/<TargetFrameworks?([^>]*)>([^<]*)</g)].flatMap(([, attributes, value]) =>
       value
@@ -166,11 +239,13 @@ export function parseTargets(csproj: string): Target[] {
 /**
  * The evidence line for one test project.
  * @example "tests/MessagePack.SourceGenerator.Tests targets net8.0"
+ * @example "tests/MessagePack.Tests targets net8.0, net472 (from tests/Directory.Build.props)"
  */
-function describeTargets(csproj: string, targets: Target[]): string {
+function describeTargets({ csproj, targets, inheritedFrom }: ProjectTargets): string {
   const folder = csproj.split("/").slice(0, 2).join("/");
   const names = targets.map(
     (target) => target.framework + (target.isConditional ? " (conditional)" : ""),
   );
-  return `${folder} targets ${names.join(", ") || "no plain framework"}`;
+  const source = inheritedFrom ? ` (from ${inheritedFrom})` : "";
+  return `${folder} targets ${names.join(", ") || "no plain framework"}${source}`;
 }
