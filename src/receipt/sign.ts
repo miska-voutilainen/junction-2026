@@ -47,7 +47,7 @@ export async function signReceipt(
   const draft = await readDraft(options, changeId);
   await requireListedSigner(draft.owner, options.allowedSignersPath);
   const keyPath = resolveKeyPath(keyOption ?? defaultKeyPath);
-  await requireUnencryptedKey(keyPath, options.sshKeygenPath);
+  const needsPassphrase = await requireUsableKey(keyPath, options.sshKeygenPath);
 
   if (await hasNote(options.repoDir, draft.commit)) {
     throw new CommandError(
@@ -64,7 +64,7 @@ export async function signReceipt(
     signedAt: new Date().toISOString(),
   });
   const payload = canonicalJson(receipt);
-  const signature = await signPayload(payload, keyPath, options.sshKeygenPath);
+  const signature = await signPayload(payload, keyPath, options.sshKeygenPath, needsPassphrase);
   await requireKeyListedForOwner(payload, signature, keyPath, draft.owner, options);
   await attachNote(options.repoDir, payload + signature, draft.commit);
 
@@ -125,23 +125,30 @@ async function requireListedSigner(owner: string, allowedSignersPath: string): P
 }
 
 /**
- * Fails early on a key ssh-keygen would prompt for. Exporting the public key with
- * an empty passphrase succeeds only for an unencrypted key.
+ * Returns whether the key has a passphrase. Exporting the public key with an
+ * empty passphrase succeeds only for an unencrypted key. A passphrase-protected
+ * key is the safer one (a copied key file can't sign), but ssh-keygen must then
+ * ask for the passphrase, which needs a terminal: without one the prompt would
+ * hang, so it fails here with what to do instead.
+ *
+ * @throws CommandError (exit 1) when the key is missing, or has a passphrase and stdin is not a terminal.
  */
-async function requireUnencryptedKey(keyPath: string, sshKeygenPath: string): Promise<void> {
+async function requireUsableKey(keyPath: string, sshKeygenPath: string): Promise<boolean> {
   if (!existsSync(keyPath)) {
     throw new CommandError(
       1,
-      `No signing key at ${keyPath}. Pass --key <path> or create one with ssh-keygen -t ed25519 -N "".`,
+      `No signing key at ${keyPath}. Pass --key <path> or create one with ssh-keygen -t ed25519.`,
     );
   }
   const probe = await runSshKeygen(sshKeygenPath, ["-y", "-P", "", "-f", toSshPath(keyPath)]);
-  if (probe.code !== 0) {
+  if (probe.code === 0) return false;
+  if (!process.stdin.isTTY) {
     throw new CommandError(
       1,
-      `Use an unencrypted demo key (ssh-keygen -t ed25519 -N ""). ssh-keygen said: ${probe.stderr.trim()}`,
+      `The key at ${keyPath} has a passphrase. Run pnpm countersign sign in a terminal so ssh-keygen can ask for it.`,
     );
   }
+  return true;
 }
 
 /** A draft made for another diff would sign claims about code the owner is not looking at. */
@@ -176,17 +183,31 @@ async function requireKeyListedForOwner(
   }
 }
 
-/** Signs in a private temp folder with stdin closed. */
-function signPayload(payload: string, keyPath: string, sshKeygenPath: string): Promise<string> {
+/**
+ * Signs in a private temp folder. Stdin is closed, unless the key has a
+ * passphrase: then ssh-keygen gets the terminal and asks for it itself, so the
+ * passphrase never passes through this process.
+ */
+function signPayload(
+  payload: string,
+  keyPath: string,
+  sshKeygenPath: string,
+  needsPassphrase: boolean,
+): Promise<string> {
   return withTempFolder("countersign-sign-", async (folder) => {
     await writeFile(join(folder, "receipt.json"), payload);
     const result = await runSshKeygen(
       sshKeygenPath,
       ["-Y", "sign", "-f", toSshPath(keyPath), "-n", signatureNamespace, "receipt.json"],
-      { cwd: folder },
+      { cwd: folder, useTerminal: needsPassphrase },
     );
     if (result.code !== 0)
-      throw new CommandError(1, `ssh-keygen could not sign: ${result.stderr.trim()}`);
+      throw new CommandError(
+        1,
+        needsPassphrase
+          ? "ssh-keygen could not sign: wrong passphrase, or the prompt was cancelled."
+          : `ssh-keygen could not sign: ${result.stderr.trim()}`,
+      );
     return (await readFile(join(folder, "receipt.json.sig"), "utf8")).replace(/\r\n/g, "\n");
   });
 }

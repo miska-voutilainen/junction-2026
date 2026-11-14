@@ -664,7 +664,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
   - The note is the payload followed directly by the armored signature, CRLF normalised to LF, with no extra blank line. `verify` splits at the line `-----BEGIN SSH SIGNATURE-----`; everything before it is the payload, byte for byte.
 - **Signing:**
   - In a `mkdtemp` folder: write the payload, run `ssh-keygen -Y sign -f <key> -n countersign-receipt <file>` with stdin closed, read `<file>.sig`, then delete the folder. `~` resolves with `os.homedir()`.
-  - A key that needs a passphrase fails with exit 1 "Use an unencrypted demo key (ssh-keygen -t ed25519 -N \"\")".
+  - A key with a passphrase: `sign` hands ssh-keygen the terminal so it asks for the passphrase itself (it never passes through the CLI); without a terminal it fails with exit 1 "The key at <path> has a passphrase. Run pnpm countersign sign in a terminal so ssh-keygen can ask for it."
   - `sign` does not push. It prints "Signed. Verify: pnpm countersign verify <id>" and "Publish: git -C <SAMPLE_REPO_DIR> push origin refs/notes/countersign".
 - **verify:**
   - Finds the newest receipt for the change id among all notes in `refs/notes/countersign` (`git notes --ref=countersign list`).
