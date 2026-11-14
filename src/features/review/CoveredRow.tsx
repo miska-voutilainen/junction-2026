@@ -1,10 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Console } from "@/components/Console";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import { CoverageMark } from "@/components/CoverageMark";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { reveal, useMotionPreset } from "@/lib/motion";
 import { DiffTable } from "./DiffTable";
 import type { CodeToken } from "./highlightHunks";
@@ -38,29 +40,29 @@ export function CoveredRow({
   return (
     <div data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
       <div className="flex flex-col items-start transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover">
-        <button
-          id={hunkHeaderId(hunk.id)}
-          type="button"
-          aria-expanded={isExpanded}
-          aria-controls={bodyId}
-          onClick={onToggle}
-          className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2 text-left"
-        >
-          <CoverageMark coverage={coverage} />
-          <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
-          <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
-          <span className="ml-auto flex min-w-0 items-center gap-2 text-xs text-text-muted">
-            {/* The own-test label is the point of this line, so it is never cut with an ellipsis; the idea label sits on its own line below. */}
-            <span className={isOwnTest ? "whitespace-nowrap" : "truncate"} title={isOwnTest ? OWN_TEST_NOTE : undefined}>
-              {evidence}
+        <OwnTestTooltip isActive={isOwnTest}>
+          <button
+            id={hunkHeaderId(hunk.id)}
+            type="button"
+            aria-expanded={isExpanded}
+            aria-controls={bodyId}
+            onClick={onToggle}
+            className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2 text-left"
+          >
+            <CoverageMark coverage={coverage} />
+            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
+            <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
+            <span className="ml-auto flex min-w-0 items-center gap-2 text-xs text-text-muted">
+              {/* The own-test line carries the point of this row, so it wraps instead of being cut with an ellipsis; the idea label sits on its own line below. */}
+              <span className={isOwnTest ? undefined : "truncate"}>{evidence}</span>
+              {isExpanded ? (
+                <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
+              ) : (
+                <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+              )}
             </span>
-            {isExpanded ? (
-              <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
-            ) : (
-              <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
-            )}
-          </span>
-        </button>
+          </button>
+        </OwnTestTooltip>
         {isOwnTest && <IdeaLabel n={8} className="mb-1.5 ml-10" />}
       </div>
       <div id={bodyId}>
@@ -81,5 +83,22 @@ export function CoveredRow({
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+/**
+ * Wraps the row's button in the note that explains an own-test line (idea 8),
+ * the same tooltip the Refused chip uses. The button is the trigger, so the
+ * note opens on hover and on keyboard focus too. Other rows pass through.
+ */
+function OwnTestTooltip({ isActive, children }: { isActive: boolean; children: ReactNode }) {
+  if (!isActive) return children;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent>{OWN_TEST_NOTE}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

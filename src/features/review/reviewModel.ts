@@ -106,7 +106,7 @@ function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel:
   if (coverage === "read") return readReason(review, hunk, areaLevel);
   const claims = claimsAtLevel(review, hunk, coverage);
   if (coverage === "verified") return verifiedLine(claims);
-  if (isCoveredByOwnTestOnly(review, hunk, coverage)) return OWN_TEST_LABEL;
+  if (isCoveredByOwnTestOnly(review, hunk, coverage)) return ownTestLine(hunk, claims);
   return supportedLine(hunk, claims);
 }
 
@@ -114,6 +114,13 @@ type Claim = Review["claims"][number];
 
 /** How a claim backed only by the PR's own test is named, on the hunk line and in the Read step. */
 export const OWN_TEST_LABEL = "Supported · the PR's own test";
+
+/** The own-test label, followed by the checked quote the claim also cites, when it cites one: "Supported · the PR's own test · quote checked at Foo.cs:12". */
+function ownTestLine(hunk: Hunk, claims: Claim[]): string {
+  const citations = claims.flatMap((claim) => claim.citations);
+  const citation = citations.find((candidate) => citationOverlapsHunk(candidate, hunk)) ?? citations[0];
+  return citation ? `${OWN_TEST_LABEL} · quote checked at ${fileName(citation.file)}:${citation.startLine}` : OWN_TEST_LABEL;
+}
 
 /** Why such a claim stops at Supported (idea 8): shown as the label's description. */
 export const OWN_TEST_NOTE = "The same agent wrote the code and this test, so it can't make the claim Verified.";

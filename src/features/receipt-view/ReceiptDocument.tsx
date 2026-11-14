@@ -36,7 +36,7 @@ export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
         </header>
         <IdentityList rows={view.identity} roles={view.roles} />
         <SignedSections view={view} />
-        {view.ledger.length > 0 && <HunkLedger rows={view.ledger} owner={view.owner} />}
+        {view.ledger.length > 0 && <HunkLedger rows={view.ledger} owner={view.owner} status={view.status} />}
         {showVerify && <VerifySection view={view} />}
         <Disclosure title="Receipt JSON">
           <Console label="Receipt JSON" kind="log" text={view.recordJson} />

@@ -29,7 +29,7 @@ test("the roles line names author, reviewer and signer once, in the header", asy
   await expect(header).toContainText("Written by Coding agent (Tieto sample)");
   await expect(header).toContainText("Reviewed by rv1");
   await expect(header).toContainText("Signed by miska-voutilainen");
-  await expect(header.getByRole("link", { name: "Idea 8 · Separation of duties, opens in a new tab" })).toHaveAttribute("href", /docs\/ideas\/separation-of-duties\.md$/);
+  await expect(header.getByRole("link", { name: "Idea 8: Separation of duties, opens the idea page" })).toHaveAttribute("href", /docs\/ideas\/separation-of-duties\.md$/);
   // The status keeps no "Signed by" of its own: the roles line owns it.
   await expect(header.getByText("Signed by")).toHaveCount(1);
   await expect(header.getByRole("link", { name: "View full receipt" })).toBeVisible();
@@ -49,17 +49,18 @@ test("an unsigned change says Not signed yet", async ({ page }, testInfo) => {
 test("the Refused tab marks a fixed-rule refusal and an AI refusal", async ({ page }, testInfo) => {
   await page.goto("/changes/mp-2129");
   await page.getByRole("tab", { name: /Refused/ }).click();
+  // The selected tab proves the page has hydrated, so the tap below reaches its handler.
+  await expect(page.getByRole("tab", { name: /Refused/ })).toHaveAttribute("aria-selected", "true");
   const panel = page.getByRole("tabpanel");
   const items = panel.getByRole("listitem");
   await expect(items.filter({ hasText: "R7" }).getByRole("button", { name: /^Fixed rule/ })).toBeVisible();
   await expect(items.filter({ hasText: "R1" }).getByText("AI", { exact: true })).toBeVisible();
 
   const chip = panel.getByRole("button", { name: /^Fixed rule/ });
-  // A click before the page hydrates does nothing, so retry until the tooltip opens.
-  await expect(async () => {
-    await chip.click();
-    await expect(page.getByRole("tooltip").getByText(FIXED_RULE_NOTE)).toBeVisible({ timeout: 1000 });
-  }).toPass();
+  // A tap opens it on a touch screen, where focus and hover never fire.
+  if (testInfo.project.name === "mobile") await chip.tap();
+  else await chip.focus();
+  await expect(page.getByRole("tooltip").getByText(FIXED_RULE_NOTE)).toBeVisible();
   await panel.screenshot({ path: shot(`refused-${widthOf(testInfo.project.name)}`) });
 });
 
@@ -70,13 +71,13 @@ test("a claim backed only by the PR's own test is Supported, and says why", asyn
   const panel = page.getByRole("tabpanel");
   await expect(panel.getByText("Supported · the PR's own test")).toBeVisible();
   await expect(panel.getByText(OWN_TEST_NOTE)).toBeVisible();
-  await expect(panel.getByRole("link", { name: /^Idea 8 · / })).toBeVisible();
+  await expect(panel.getByRole("link", { name: /^Idea 8: / })).toBeVisible();
   if (testInfo.project.name === "mobile") return;
 
   // On a phone the covered hunks are one summary line, so the diff's evidence line is desktop only.
   const row = page.locator('[data-hunk-id="h8"]');
   await expect(row.getByText("Supported · the PR's own test")).toBeVisible();
-  await expect(row.getByRole("link", { name: /^Idea 8 · / })).toBeVisible();
+  await expect(row.getByRole("link", { name: /^Idea 8: / })).toBeVisible();
   await row.scrollIntoViewIfNeeded();
   await row.screenshot({ path: shot("own-test-1440") });
   await claim.locator("xpath=ancestor::li[1]").screenshot({ path: shot("own-test-read-step-1440") });

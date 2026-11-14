@@ -61,7 +61,8 @@ describe("the PR's own test", () => {
     const review = await load("mp-2283");
     const { sections } = await sectionsOf(review, await readableCard());
     const entry = [...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h8");
-    expect(entry?.evidence).toBe(OWN_TEST_LABEL);
+    expect(entry?.evidence.startsWith(OWN_TEST_LABEL)).toBe(true);
+    expect(entry?.evidence).toMatch(/quote checked at AnalyzerTests\.cs:\d+$/);
     expect(entry?.isOwnTest).toBe(true);
     expect([...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h5")?.isOwnTest).toBe(false);
   });

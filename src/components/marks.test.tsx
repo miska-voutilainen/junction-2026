@@ -57,7 +57,7 @@ describe("AreaChip", () => {
 describe("IdeaLabel", () => {
   it("opens the idea page in a new tab with a descriptive name", () => {
     render(<IdeaLabel n={3} />);
-    const link = screen.getByRole("link", { name: "Idea 3 · Hunk coverage map, opens in a new tab" });
+    const link = screen.getByRole("link", { name: "Idea 3: Hunk coverage map, opens the idea page" });
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener");
   });

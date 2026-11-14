@@ -9,7 +9,8 @@
 import type { Coverage, ReceiptRecord, Review } from "@/contracts";
 import { tierLabel } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
-import { receiptStatus } from "@/lib/data/receiptStatus";
+import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
+import type { SignerState } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
 import { verifyLine } from "@/lib/receiptCopy";
 
@@ -83,7 +84,7 @@ export interface ReceiptDocumentView {
    */
   ledger: LedgerRow[];
   /** The roles line's three parties; `reviewerVersion` is the one the receipt names. */
-  roles: { authorAgent: string; reviewerVersion: string; owner: string };
+  roles: { authorAgent: string; reviewerVersion: string; signer: SignerState };
   owner: string;
   signedAt: string;
   verifyCommand: string;
@@ -139,7 +140,7 @@ export function buildReceiptView(
     notChecked: receipt.notChecked,
     residualRisk: { text: receipt.residualRisk.text, accepted: acceptedRefusals(record, review) },
     ledger: hunkLedger(receipt.hunks),
-    roles: { authorAgent: change.authorAgent, reviewerVersion: receipt.reviewerVersion, owner: receipt.owner },
+    roles: { authorAgent: change.authorAgent, reviewerVersion: receipt.reviewerVersion, signer: signerOf(record) },
     owner: receipt.owner,
     signedAt: formatUtc(receipt.signedAt),
     verifyCommand: verify.command,

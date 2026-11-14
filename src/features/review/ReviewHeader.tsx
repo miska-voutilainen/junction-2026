@@ -3,7 +3,7 @@ import { ReceiptStatus } from "@/components/ReceiptStatus";
 import { RolesLine } from "@/components/RolesLine";
 import { SyntheticTag } from "@/components/SyntheticTag";
 import type { ChangeInput, Review } from "@/contracts";
-import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import type { ReceiptStatusValue, SignerState } from "@/lib/data/receiptStatus";
 import { SignButton } from "./steps/SignButton";
 
 const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -14,7 +14,7 @@ const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "sh
  * model and date of the review. Everything the AI
  * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
  *
- * @param signedBy The receipt owner's login for the roles line; absent while nothing is signed.
+ * @param signer Who signed, for the roles line: a verified receipt's owner, or why nobody is named.
  * @param receiptHref Where the full receipt page is; set whenever a receipt file exists, whatever its status.
  * @param isReceiptUnreadable The receipt file exists but fails validation, so there is nothing to sign against.
  * @param review The recorded review; absent while it is missing or unreadable, so only the change's own facts show.
@@ -23,14 +23,14 @@ export function ReviewHeader({
   change,
   review,
   receiptStatus,
-  signedBy,
+  signer,
   receiptHref,
   isReceiptUnreadable = false,
 }: {
   change: ChangeInput;
   review?: Review;
   receiptStatus?: ReceiptStatusValue;
-  signedBy?: string;
+  signer: SignerState;
   receiptHref?: string;
   isReceiptUnreadable?: boolean;
 }) {
@@ -55,11 +55,10 @@ export function ReviewHeader({
         )}
       </p>
       {review && <MetaRow change={change} review={review} />}
-      {review && (
-        <div className="text-xs text-text-muted">
-          <RolesLine authorAgent={change.authorAgent} reviewerVersion={review.reviewer.version} owner={signedBy} isReceiptUnreadable={isReceiptUnreadable} />
-        </div>
-      )}
+      {/* Without a readable review there is no reviewer to name, but the author and signer still show. */}
+      <div className="text-xs text-text-muted">
+        <RolesLine authorAgent={change.authorAgent} reviewerVersion={review?.reviewer.version ?? null} signer={signer} />
+      </div>
     </header>
   );
 }

@@ -42,7 +42,7 @@ describe("buildReceiptView", () => {
   it("names author, reviewer version and signer once, in the roles line, not as identity rows", () => {
     const input = source("mp-2283");
     const view = documentOf(input);
-    expect(view.roles).toEqual({ authorAgent: input.change.authorAgent, reviewerVersion: "rv1", owner: "miska-voutilainen" });
+    expect(view.roles).toEqual({ authorAgent: input.change.authorAgent, reviewerVersion: "rv1", signer: { kind: "signed", owner: "miska-voutilainen" } });
     expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["author"]));
     expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["signer"]));
   });
@@ -64,6 +64,16 @@ describe("buildReceiptView", () => {
     const view = documentOf(failed);
     expect(view.status).toBe("unverified");
     expect(view.verifyLine).toBe("The signature check failed when this receipt was exported.");
+  });
+
+  it("names nobody as signer when the recorded signature check failed", () => {
+    const record = ReceiptRecordSchema.parse(fixture("receipts/mp-2283.json"));
+    const view = documentOf(source("mp-2283", { ...record, verify: { ...record.verify, ok: false } }));
+    expect(view.roles.signer).toEqual({ kind: "unverified" });
+  });
+
+  it("still names the signer of a stale receipt", () => {
+    expect(documentOf(source("mp-2129")).roles.signer).toEqual({ kind: "signed", owner: "miska-voutilainen" });
   });
 
   it("offers the sign command when there is no receipt", () => {

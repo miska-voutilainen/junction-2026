@@ -16,16 +16,16 @@ export interface Idea {
   page: string;
 }
 
-export const IDEAS: readonly Idea[] = [
-  { n: 1, name: "Trust ladder", page: "trust-ladder.md" },
-  { n: 2, name: "Blind-first review", page: "blind-first.md" },
-  { n: 3, name: "Hunk coverage map", page: "coverage-map.md" },
-  { n: 4, name: "Quote check", page: "quote-check.md" },
-  { n: 5, name: "Refusal policy", page: "refusal-policy.md" },
-  { n: 6, name: "Evidence levels", page: "evidence-levels.md" },
-  { n: 7, name: "Signed receipt", page: "signed-receipt.md" },
-  { n: 8, name: "Separation of duties", page: "separation-of-duties.md" },
-];
+export const IDEAS: Record<IdeaNumber, Idea> = {
+  1: { n: 1, name: "Trust ladder", page: "trust-ladder.md" },
+  2: { n: 2, name: "Blind-first review", page: "blind-first.md" },
+  3: { n: 3, name: "Hunk coverage map", page: "coverage-map.md" },
+  4: { n: 4, name: "Quote check", page: "quote-check.md" },
+  5: { n: 5, name: "Refusal policy", page: "refusal-policy.md" },
+  6: { n: 6, name: "Evidence levels", page: "evidence-levels.md" },
+  7: { n: 7, name: "Signed receipt", page: "signed-receipt.md" },
+  8: { n: 8, name: "Separation of duties", page: "separation-of-duties.md" },
+};
 
 /** Where files of this repository are shown on GitHub, for links to docs. */
 export const REPO_BLOB_URL = "https://github.com/miska-voutilainen/junction-2026/blob/main";
@@ -39,6 +39,5 @@ export const IDEA_PAGES_URL = `${REPO_BLOB_URL}/docs/ideas`;
  * @example ideaUrl(8) // ".../docs/ideas/separation-of-duties.md"
  */
 export function ideaUrl(n: IdeaNumber): string {
-  const idea = IDEAS.find((candidate) => candidate.n === n);
-  return `${IDEA_PAGES_URL}/${idea?.page}`;
+  return `${IDEA_PAGES_URL}/${IDEAS[n].page}`;
 }

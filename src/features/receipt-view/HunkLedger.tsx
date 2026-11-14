@@ -1,7 +1,7 @@
 import { Console } from "@/components/Console";
 import { coverageLabel } from "@/contracts";
 import { cn } from "@/lib/utils";
-import type { LedgerRow } from "./receiptModel";
+import type { LedgerRow, ReceiptDocumentStatus } from "./receiptModel";
 
 /**
  * Hunk ledger: every hunk of the signed diff, what covered it, and who read it.
@@ -11,16 +11,23 @@ import type { LedgerRow } from "./receiptModel";
  * text. Hunks a person read come first and are amber, the same signal as the
  * coverage gutter on the review page.
  *
+ * When the recorded signature check failed, the heading drops "signed" and the
+ * note says the signature failed, because nothing vouches for the ledger.
+ *
  * @param owner The signer's login, named in the note.
+ * @param status The receipt's state; "unverified" changes the heading and the note.
  */
-export function HunkLedger({ rows, owner }: { rows: LedgerRow[]; owner: string }) {
+export function HunkLedger({ rows, owner, status }: { rows: LedgerRow[]; owner: string; status: ReceiptDocumentStatus }) {
+  const isUnverified = status === "unverified";
   const lines = ledgerLines(rows);
   return (
     <section className="flex flex-col gap-2">
       <p className="text-sm text-text-muted">
-        Part of the signed payload: the signature covers which hunks {owner} read and which checks covered the rest.
+        {isUnverified
+          ? "The signature over this ledger failed verification."
+          : `Part of the signed payload: the signature covers which hunks ${owner} read and which checks covered the rest.`}
       </p>
-      <Console label="Hunk ledger · signed" kind="output" text={lines.map((line) => line.text).join("\n")}>
+      <Console label={isUnverified ? "Hunk ledger" : "Hunk ledger · signed"} kind="output" text={lines.map((line) => line.text).join("\n")}>
         <div>
           {lines.map((line) => (
             <div key={line.hunkId} className={cn(line.isRead && "text-amber-light")}>

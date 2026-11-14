@@ -4,24 +4,30 @@ import { RolesLine } from "./RolesLine";
 
 afterEach(cleanup);
 
+const author = "Coding agent (Tieto sample)";
+
 describe("RolesLine", () => {
   it("names the author, the reviewer version and the signer, with the idea 8 label", () => {
-    const { container, getByRole } = render(<RolesLine authorAgent="Coding agent (Tieto sample)" reviewerVersion="rv1" owner="miska-voutilainen" />);
-    expect(container.textContent).toContain("Written by Coding agent (Tieto sample)");
+    const { container, getByRole } = render(<RolesLine authorAgent={author} reviewerVersion="rv1" signer={{ kind: "signed", owner: "miska-voutilainen" }} />);
+    expect(container.textContent).toContain(`Written by ${author}`);
     expect(container.textContent).toContain("Reviewed by rv1");
     expect(container.textContent).toContain("Signed by miska-voutilainen");
-    expect(getByRole("link", { name: "Idea 8 · Separation of duties, opens in a new tab" })).toBeTruthy();
+    expect(getByRole("link", { name: "Idea 8: Separation of duties, opens the idea page" })).toBeTruthy();
   });
 
-  it("says Not signed yet while there is no receipt", () => {
-    const { container } = render(<RolesLine authorAgent="Coding agent (Tieto sample)" reviewerVersion="rv1" owner={undefined} />);
-    expect(container.textContent).toContain("Not signed yet");
+  it.each([
+    [{ kind: "unsigned" }, "Not signed yet"],
+    [{ kind: "unreadable" }, "Receipt couldn't be read"],
+    [{ kind: "unverified" }, "Signature failed verification"],
+  ] as const)("never says Signed by when the signer is %j", (signer, words) => {
+    const { container } = render(<RolesLine authorAgent={author} reviewerVersion="rv1" signer={signer} />);
+    expect(container.textContent).toContain(words);
     expect(container.textContent).not.toContain("Signed by");
   });
 
-  it("says the receipt couldn't be read, never Not signed yet, when the file is unreadable", () => {
-    const { container } = render(<RolesLine authorAgent="Coding agent (Tieto sample)" reviewerVersion="rv1" owner={undefined} isReceiptUnreadable />);
-    expect(container.textContent).toContain("Receipt couldn't be read");
-    expect(container.textContent).not.toContain("Not signed yet");
+  it("leaves the reviewer out when no review is readable but keeps the author", () => {
+    const { container } = render(<RolesLine authorAgent={author} reviewerVersion={null} signer={{ kind: "unsigned" }} />);
+    expect(container.textContent).toContain(`Written by ${author}`);
+    expect(container.textContent).not.toContain("Reviewed by");
   });
 });

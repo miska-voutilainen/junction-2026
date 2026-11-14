@@ -95,7 +95,11 @@ function RaisedBy({ source }: { source: RefusalView["source"] }) {
     <TooltipProvider>
       <Tooltip open={isOpen} onOpenChange={setIsOpen}>
         <TooltipTrigger asChild>
-          <button type="button" onClick={() => setIsOpen(true)} aria-label={`Fixed rule. ${FIXED_RULE_NOTE}`} className={`${chip} focus-visible:outline-2 focus-visible:outline-focus-ring`}>
+          <button type="button" onClick={(event) => {
+              // Radix closes the tooltip on press; stopping that default lets the tap open it.
+              event.preventDefault();
+              setIsOpen(true);
+            }} aria-label={`Fixed rule. ${FIXED_RULE_NOTE}`} className={`${chip} focus-visible:outline-2 focus-visible:outline-focus-ring`}>
             Fixed rule
           </button>
         </TooltipTrigger>
