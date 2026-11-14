@@ -80,7 +80,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   next.config.ts, eslint.config.mjs, vitest.config.ts, playwright.config.ts, .prettierrc.json, .prettierignore, .env.example
 ├── .github/      workflows/, scripts/ (CI lane and tree checks), pull_request_template.md
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
-├── docs/         challenge, gemma-bounty (proposal), spec, concept-card, lessons, architecture, how-countersign-uses-ai, decisions, research, research/ (raw research passes, unverified), api, development, setup, demo, pitch, design/, ideas/ (one page per idea), img/ (architecture diagram, README screenshot)
+├── docs/         challenge, gemma-bounty (proposal), spec, concept-card, lessons, architecture, how-countersign-uses-ai, decisions, research, research/ (raw research passes, unverified), api, security, development, setup, demo, pitch, design/, ideas/ (one page per idea), img/ (architecture diagram, README screenshot)
 ├── src/
 │   ├── app/                    routes: / (S1), /changes/[id] (S2), /changes/[id]/receipt (S4), /reviewer (S3), /dashboard (S5), layout, loading, error, not-found
 │   ├── features/inbox/         S1 components

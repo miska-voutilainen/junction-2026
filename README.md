@@ -55,6 +55,8 @@ Tieto gave a copy of MessagePack-CSharp, a C# serializer with a Roslyn source ge
 - **Synthetic or derived, and labelled so:** the author PR descriptions (the commits carry one-line messages); the 10 planted-bug variants and the planted contradictions the reviewer is measured on, written by an agent that never saw the reviewer's prompts; the requirement records, derived from the upstream issues until Tieto's arrive.
 - **Simulated:** escapes. "Record escape" on the report card is stored in your browser only.
 
+What is trusted, what isn't, and the test behind each claim: [docs/security.md](docs/security.md).
+
 Measured results, including what didn't work (security caught 1 of 3 planted bugs, in 3 of 3 runs for one and 0 of 3 for the other two; blind-first showed no advantage on our sample), are in [docs/lessons.md](docs/lessons.md).
 
 ## Stack
