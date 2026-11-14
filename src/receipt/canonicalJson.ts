@@ -41,8 +41,14 @@ function writeArray(items: unknown[], indent: string, path: string): string {
   return `[\n${lines.join(",\n")}\n${indent}]`;
 }
 
+/** UTF-16 code-unit order (RFC 8785): the signed bytes must not depend on locale. */
+function byCodeUnit(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
+
 function writeObject(object: Record<string, unknown>, indent: string, path: string): string {
-  const keys = Object.keys(object).sort();
+  const keys = Object.keys(object).sort(byCodeUnit);
   if (keys.length === 0) return "{}";
   const inner = `${indent}  `;
   const lines = keys.map(
