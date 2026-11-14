@@ -73,9 +73,14 @@ jobs:
         id: scope
         shell: bash
         run: |
+          # A push to main has no base branch and always runs every step, so only a PR diffs.
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "slow=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           # Capture first: a failing git diff must fail the step, not read as "no files changed".
           changed=$(git diff --name-only "$BASE_SHA...HEAD")
-          if [ "$EVENT_NAME" = "pull_request" ] && ! grep -qv '\.md$' <<< "$changed"; then
+          if ! grep -qv '\.md$' <<< "$changed"; then
             echo "slow=false" >> "$GITHUB_OUTPUT"
             echo "Only Markdown changed: lint, typecheck, tests and build are skipped." >> "$GITHUB_STEP_SUMMARY"
           else
