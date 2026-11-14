@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useSelectedClaim } from "../SelectedClaim";
+import { useSelection } from "../SelectionProvider";
 import type { StepId } from "./stepsModel";
 
 /** The panel's DOM id: the Sign buttons scroll it into view. */
@@ -21,11 +21,11 @@ const ReviewStepContext = createContext<ReviewStep | null>(null);
 /**
  * Which review step is open, shared by the panel, the `1` to `4` keys, the
  * header's Sign button and the phone's Sign bar. Sits inside
- * `SelectedClaimProvider` because changing step clears a finding's highlight.
+ * `SelectionProvider` because changing step clears a finding's highlight.
  */
 export function ReviewStepProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [step, setStepState] = useState<StepId>("read");
-  const { selection, setSelectedFindingId } = useSelectedClaim();
+  const { selection, setSelectedFindingId } = useSelection();
   const isFindingSelected = selection?.kind === "finding";
 
   const value = useMemo<ReviewStep>(() => {
@@ -48,6 +48,6 @@ export function ReviewStepProvider({ children }: Readonly<{ children: ReactNode 
 /** The open step and its setters; must sit inside `ReviewStepProvider`. */
 export function useReviewStep(): ReviewStep {
   const value = useContext(ReviewStepContext);
-  if (value === null) throw new Error("useReviewStep needs a ReviewStepProvider above it.");
+  if (value === null) throw new Error("useReviewStep needs a ReviewStepProvider above it. ReviewScreen mounts one around the steps panel; render this inside it.");
   return value;
 }

@@ -13,12 +13,14 @@ import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/
 import { countersignCommand } from "@/lib/countersignCommand";
 import { PAGES } from "@/lib/pages";
 import { COPY_ANNOUNCEMENT, useCopy } from "@/lib/useCopy";
+import type { CopyStatus } from "@/lib/useCopy";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./shellChange";
 
-// The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.
+// The dialog is centred, at most this wide, and sits this far down the viewport; both the placement and the aim of the entrance at the trigger read it.
 const MENU_MAX_WIDTH_PX = 640;
-const MENU_TOP_FRACTION = 1 / 3;
+const MENU_TOP_DVH = 15;
+const MENU_TOP_FRACTION = MENU_TOP_DVH / 100;
 const MENU_SIDE_MARGIN_PX = 32;
 
 type CommandMenuState = {
@@ -126,7 +128,8 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
     { heading: "Go to", rows: buildPages(needsReviewCount) },
     { heading: "Changes", rows: changeRows },
   ].filter((group) => group.rows.length > 0);
-  let rowIndex = 0;
+  // Each group's first row number, so the staggered entrance counts rows across groups without mutating a counter while rendering.
+  const firstRowOfGroup = groups.map((_, index) => groups.slice(0, index).reduce((rows, group) => rows + group.rows.length, 0));
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -134,7 +137,8 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
         showCloseButton={false}
         aria-describedby={undefined}
         // The entrance is the motion element below; the exit is the dialog's own shorter fade.
-        className="top-[15dvh] max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
+        style={{ top: `${MENU_TOP_DVH}dvh` }}
+        className="max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
         onCloseAutoFocus={(event) => {
           // Return focus to the button that opened the menu, not whatever Radix remembered.
           if (trigger?.isConnected) {
@@ -154,36 +158,43 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
               placeholder="Search changes or type a command…"
               aria-label="Search or run a command"
             />
-            {/* The list takes what is left under the 15dvh offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
-            <CommandList className="max-h-[min(25rem,calc(100dvh-15dvh-9rem))] p-1">
+            {/* The list takes what is left under the top offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
+            <CommandList className="p-1" style={{ maxHeight: `min(25rem, calc(100dvh - ${MENU_TOP_DVH}dvh - 9rem))` }}>
               <CommandEmpty className="px-3 py-7 text-text-muted">
                 No match for “{query}”. Try a change id, a requirement or a page.
               </CommandEmpty>
-              {groups.map((group) => (
+              {groups.map((group, groupIndex) => (
                 <CommandGroup key={group.heading} heading={group.heading} className="p-1.5">
-                  {group.rows.map((row) => (
-                    <MenuRow key={row.id} row={row} index={rowIndex++} onChoose={choose} />
+                  {group.rows.map((row, rowIndex) => (
+                    <MenuRow key={row.id} row={row} index={firstRowOfGroup[groupIndex] + rowIndex} onChoose={choose} />
                   ))}
                 </CommandGroup>
               ))}
             </CommandList>
-            <div className="flex h-9.5 items-center gap-3.5 border-t border-border-subtle bg-surface-raised px-3.5 text-xs text-text-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd> move
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Kbd>↵</Kbd> open
-              </span>
-              <span className="flex-1" />
-              <span role="status" aria-live="polite">
-                {COPY_ANNOUNCEMENT[copyStatus]}
-              </span>
-            </div>
+            <MenuFooter copyStatus={copyStatus} />
           </Command>
         </motion.div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** The key hints under the list, and the live region that says whether a copy worked. */
+function MenuFooter({ copyStatus }: Readonly<{ copyStatus: CopyStatus }>) {
+  return (
+    <div className="flex h-9.5 items-center gap-3.5 border-t border-border-subtle bg-surface-raised px-3.5 text-xs text-text-muted">
+      <span className="inline-flex items-center gap-1.5">
+        <Kbd>↑</Kbd>
+        <Kbd>↓</Kbd> move
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Kbd>↵</Kbd> open
+      </span>
+      <span className="flex-1" />
+      <span role="status" aria-live="polite">
+        {COPY_ANNOUNCEMENT[copyStatus]}
+      </span>
+    </div>
   );
 }
 

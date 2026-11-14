@@ -5,7 +5,7 @@ import {
   inboxLevels,
   reportCardNotice,
   REPORT_CARD_MISSING_NOTICE,
-  REPORT_CARD_NOTICE,
+  REPORT_CARD_UNREADABLE_NOTICE,
 } from "./decideChange";
 import type { ReportCardInput } from "./decideChange";
 
@@ -34,7 +34,7 @@ describe("decideChange", () => {
 
 describe("without a readable report card", () => {
   it("explains an unreadable report card and routes every area as Shadow", () => {
-    expect(reportCardNotice({ state: "unreadable" })).toBe(REPORT_CARD_NOTICE);
+    expect(reportCardNotice({ state: "unreadable" })).toBe(REPORT_CARD_UNREADABLE_NOTICE);
     expect(reportCardNotice({ state: "missing" })).toBe(REPORT_CARD_MISSING_NOTICE);
     expect(reportCardNotice({ state: "ok", data: {} as never, source: "fixture" })).toBeNull();
     expect(

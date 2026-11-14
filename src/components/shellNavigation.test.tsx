@@ -65,7 +65,7 @@ describe("AppNav", () => {
 
   it("shows the number of changes that need review on Inbox", () => {
     render(<AppNav needsReviewCount={3} />);
-    expect(screen.getByLabelText("3 need review").textContent).toBe("3");
+    expect(screen.getByRole("link", { name: /Inbox.*3 need review/ })).toBeTruthy();
   });
 });
 

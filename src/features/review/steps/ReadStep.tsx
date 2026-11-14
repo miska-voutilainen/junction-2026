@@ -8,7 +8,7 @@ import { EvidenceBadge } from "@/components/EvidenceMark";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import type { Review } from "@/contracts";
 import { cn } from "@/lib/utils";
-import { useSelectedClaim } from "../SelectedClaim";
+import { useSelection } from "../SelectionProvider";
 import { FindingLocations } from "./FindingLocations";
 import { LocationButton } from "./LocationButton";
 import { OWN_TEST_LABEL, OWN_TEST_NOTE, isOwnTestOnly } from "../reviewModel";
@@ -94,7 +94,7 @@ function ClaimGroupList({ group, onOpenRefused }: Readonly<{ group: ClaimGroup }
 
 function ClaimRow({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
   const { claim, retraction } = storyClaim;
-  const { selectedClaimId, setSelectedClaimId } = useSelectedClaim();
+  const { selectedClaimId, setSelectedClaimId } = useSelection();
   const isSelected = selectedClaimId === claim.id;
   const detailsId = `claim-details-${claim.id}`;
 
@@ -168,7 +168,7 @@ function ClaimEvidence({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: Sto
 }
 
 function Citations({ storyClaim }: Readonly<{ storyClaim: StoryClaim }>) {
-  const { setSelectedClaimId } = useSelectedClaim();
+  const { setSelectedClaimId } = useSelection();
   return (
     <ul className="flex flex-col gap-2">
       {storyClaim.citations.map(({ citation, isQuoteFound }) => (

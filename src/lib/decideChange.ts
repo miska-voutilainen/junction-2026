@@ -19,7 +19,7 @@ export type ReportCardInput =
   | { state: "unreadable"; error?: string };
 
 /** The notice shown above the list when the report card file fails validation. */
-export const REPORT_CARD_NOTICE =
+export const REPORT_CARD_UNREADABLE_NOTICE =
   "The report card couldn't be read, so nothing counts as covered and every change is Full. Re-run pnpm evals.";
 
 /** The notice shown above the list when no report card has been recorded. */
@@ -28,7 +28,7 @@ export const REPORT_CARD_MISSING_NOTICE =
 
 /** The line to show above the list when the report card is missing or unreadable, else null. */
 export function reportCardNotice(reportCard: ReportCardInput): string | null {
-  if (reportCard.state === "unreadable") return REPORT_CARD_NOTICE;
+  if (reportCard.state === "unreadable") return REPORT_CARD_UNREADABLE_NOTICE;
   return reportCard.state === "missing" ? REPORT_CARD_MISSING_NOTICE : null;
 }
 

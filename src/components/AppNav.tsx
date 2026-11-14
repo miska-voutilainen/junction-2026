@@ -127,11 +127,9 @@ function NavLink({
           </>
         )}
         {item.hasBadge && needsReviewCount > 0 && !isRail && (
-          <span
-            className="relative rounded-chip bg-surface-control px-1.5 font-mono text-xs text-text-primary"
-            aria-label={`${needsReviewCount} need review`}
-          >
-            {needsReviewCount}
+          <span className="relative rounded-chip bg-surface-control px-1.5 font-mono text-xs text-text-primary">
+            <span aria-hidden="true">{needsReviewCount}</span>
+            <span className="sr-only">{needsReviewCount} need review</span>
           </span>
         )}
       </Link>
