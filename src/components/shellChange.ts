@@ -1,6 +1,6 @@
 import { tierLabel } from "@/contracts";
 import type { InboxRow } from "@/features/inbox";
-import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+import type { ReceiptState } from "@/lib/receiptUnderEscapes";
 
 /** What the shell needs to know about a change: the nav badge and the command menu rows. */
 export type ShellChange = {
@@ -14,10 +14,11 @@ export type ShellChange = {
   needsReview: boolean;
 };
 
-const STATUS_LABEL: Record<ReceiptStatusValue, string> = {
+const STATUS_LABEL: Record<ReceiptState, string> = {
   "needs-review": "needs review",
   signed: "signed",
   stale: "stale",
+  reopened: "reopened by an escape",
   unverified: "signature failed verification",
 };
 
