@@ -17,7 +17,7 @@ import {
   RecordingMissingError,
   RecordingStaleError,
 } from "./errors";
-import { CALL_TIMEOUT_MS, MAX_VALIDATION_RETRIES, MODEL } from "./limits";
+import { CALL_LATENCY_BUDGET_MS, CALL_TIMEOUT_MS, MAX_VALIDATION_RETRIES, MODEL } from "./limits";
 import {
   readRecording,
   type Recording,
@@ -259,9 +259,13 @@ async function askUntilValid<T>(
 
     log("invalid", response.model, response.usage);
     lastProblem = checked.problem;
+    // The rejected answer goes back with the error, so the retry corrects the
+    // flagged items. Without it the model writes the whole answer again from the
+    // same prompt and tends to make the same mistake (seen with A2's citation ranges).
     prompt =
-      `${request.prompt}\n\nYour previous answer was rejected: ${checked.problem}\n` +
-      `Answer again with only the corrected JSON.`;
+      `${request.prompt}\n\nYour previous answer:\n${response.text}\n\n` +
+      `It was rejected: ${checked.problem}\n` +
+      `Answer again with only the corrected JSON: fix what the error names and keep the rest.`;
   }
   throw new ModelValidationError(request.promptVersion, lastProblem);
 }
@@ -273,6 +277,13 @@ async function askOnce<T>(
   prompt: string,
 ): Promise<TransportResponse> {
   const signal = AbortSignal.timeout(CALL_TIMEOUT_MS);
+  const overBudget = setTimeout(
+    () =>
+      console.error(
+        `${request.promptVersion}: over the ${CALL_LATENCY_BUDGET_MS / 1000} s latency budget, still waiting (stops at ${CALL_TIMEOUT_MS / 1000} s)`,
+      ),
+    CALL_LATENCY_BUDGET_MS,
+  );
   try {
     return await transport(
       {
@@ -290,5 +301,7 @@ async function askOnce<T>(
         CALL_TIMEOUT_MS / 1000,
       );
     throw error;
+  } finally {
+    clearTimeout(overBudget);
   }
 }

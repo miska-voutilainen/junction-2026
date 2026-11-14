@@ -12,10 +12,18 @@ export const MAX_CITATION_LINES = 12;
  * quote pass by sitting somewhere inside it. The message goes back to the model on
  * the one retry.
  *
- * @example citationRangeProblem({ ...citation, startLine: 5, endLine: 40 }) // "citation lines 5-40 must be a range of 1 to 12 lines"
+ * The message counts the lines and gives a range that fits: the model's usual
+ * mistake is one line too many (start + 12, counting only one end), and a bare
+ * "must be 1 to 12 lines" let it repeat the same range on the retry.
+ *
+ * @example citationRangeProblem({ ...citation, startLine: 1014, endLine: 1026 })
+ * // "citation lines 1014-1026 are 13 lines (both ends count); the range must be 1 to 12 lines, for example 1014-1025"
  */
 export function citationRangeProblem(citation: Pick<Citation, "startLine" | "endLine">): string | null {
-  const lines = citation.endLine - citation.startLine + 1;
+  const { startLine, endLine } = citation;
+  const lines = endLine - startLine + 1;
   if (lines >= 1 && lines <= MAX_CITATION_LINES) return null;
-  return `citation lines ${citation.startLine}-${citation.endLine} must be a range of 1 to ${MAX_CITATION_LINES} lines`;
+  if (lines < 1)
+    return `citation lines ${startLine}-${endLine} run backwards; startLine must not be after endLine`;
+  return `citation lines ${startLine}-${endLine} are ${lines} lines (both ends count); the range must be 1 to ${MAX_CITATION_LINES} lines, for example ${startLine}-${startLine + MAX_CITATION_LINES - 1}`;
 }

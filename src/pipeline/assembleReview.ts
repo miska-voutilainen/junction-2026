@@ -15,7 +15,7 @@ import { buildReceiptDraft } from "./buildReceiptDraft";
 import type { CheckedClaims } from "./quoteCheck";
 
 /** Reviewer version; bumps together with any prompt version (spec section 6). */
-export const reviewerVersion = "rv1";
+export const reviewerVersion = "rv2";
 
 /** Everything the finished review is made of. */
 export interface ReviewParts {

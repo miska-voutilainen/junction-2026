@@ -24,7 +24,7 @@ function run(
   changeId: string,
   mode: Review["mode"],
   findings: Review["findings"],
-  version = "rv1",
+  version = "rv2",
 ): Review {
   return {
     ...fixture,

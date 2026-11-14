@@ -209,7 +209,7 @@ describe("a3", () => {
       expect(text).toContain(area);
     for (const id of ["R1:", "R2:", "R3:", "R4:", "R5:", "R6:", "R7:"]) expect(text).toContain(id);
     expect(text).not.toContain("author-description");
-    expect(a3.version).toBe("a3.v1");
+    expect(a3.version).toBe("a3.v2");
   });
 
   it("does not ask the model for an area, and tells it the first cited file decides one", () => {
@@ -248,7 +248,7 @@ describe("a3", () => {
       citations: [{ ...finding.citations[0], startLine: 1, endLine: 40 }],
     };
     expect(problems(schema.safeParse({ findings: [wide], refusals: [] }))).toContain(
-      "must be a range of 1 to 12 lines",
+      "the range must be 1 to 12 lines",
     );
   });
 

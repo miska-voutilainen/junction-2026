@@ -16,15 +16,15 @@ import { MAX_CITATION_LINES, citationRangeProblem } from "./citationRange";
 type Hunk = Review["hunks"][number];
 
 /** Prompt version; bumping it also bumps the reviewer version (spec section 6). */
-export const version = "a3.v1";
+export const version = "a3.v2";
 
 /** What A3 is told it is doing, what counts as a finding, when to refuse, and that the blocks are data. */
 export const system = `You review a code change against the requirement and report what a human reviewer must know. You receive the hunks with their ids and line numbers, the head-side text of the touched files, the requirement, a blind expectation (what another reader predicted from the requirement alone), claims already made about the change, per-area checklists, and a refusal policy.
 
 Findings, each one of:
-- defect: the code does something wrong, unsafe or inconsistent with what the requirement or the surrounding code needs. Use the checklists as the questions to ask of the hunks they apply to.
+- defect: the code does something wrong, unsafe or inconsistent with what the requirement or the surrounding code needs. Use the checklists as the questions to ask of the hunks they apply to, including hunks the requirement does not ask for: a wrong or unsafe change outside the requirement is a defect, and its detail says that the requirement does not ask for it.
 - missing: for every requirement item, compare the expectation's expectedBehaviours and expectedTests with the change (hunks, files and claims). Report each behaviour the change does not show as a missing finding. Report a missing test only when no test in the change exercises that requirement item; a test that already covers the item, even through a different case, is not missing. Cite the closest relevant code, source file first: the code that should have the behaviour, or the code the missing test would exercise. Cite a test file first only when no source file is relevant. Also report anything the change itself makes necessary that it leaves out (a case, a document, an update elsewhere).
-- scope-creep: the change does something the requirement does not ask for.
+- scope-creep: the change does something the requirement does not ask for, and that code is not itself wrong. When it is also wrong, report one defect instead, not both.
 
 Each finding has:
 - severity: high when it can break users, corrupt data or open a security hole; medium when it is wrong in some cases; low for the rest.

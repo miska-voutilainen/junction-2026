@@ -82,8 +82,8 @@ describe("runEvalJobs", () => {
   it("reuses a current run without recording and re-records a stale one", async () => {
     const store: EvalStore = {
       load: async (j) =>
-        j.label === "current" ? reviewAt("rv1") : j.label === "stale" ? reviewAt("rv0") : null,
-      record: vi.fn(async () => reviewAt("rv1", 1.25)),
+        j.label === "current" ? reviewAt("rv2") : j.label === "stale" ? reviewAt("rv0") : null,
+      record: vi.fn(async () => reviewAt("rv2", 1.25)),
     };
     const outcomes = await runEvalJobs([[job("current")], [job("stale")], [job("none")]], store);
     const status = Object.fromEntries(
@@ -101,7 +101,7 @@ describe("runEvalJobs", () => {
       load: async () => null,
       record: async () => {
         if (++attempts < 2) throw new Error("schema");
-        return reviewAt("rv1");
+        return reviewAt("rv2");
       },
     };
     expect((await runEvalJobs([[job("a")]], flaky))[0].status).toBe("ran");
@@ -127,7 +127,7 @@ describe("runEvalJobs", () => {
         peak = Math.max(peak, running);
         await new Promise((resolve) => setTimeout(resolve, 5));
         running--;
-        return reviewAt("rv1");
+        return reviewAt("rv2");
       },
     };
     await runEvalJobs(
