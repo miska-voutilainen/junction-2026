@@ -22,7 +22,7 @@ describe("describeReroute", () => {
     const after = ["a", "b", "c", "d"].map((id) => row(id, { readHunks: 4 }));
     const result = describeReroute(before, after);
     expect(result.changedIds).toEqual(["a", "b", "c", "d"]);
-    expect(result.sentence).toBe("a now reads 4 of 8, b now reads 4 of 8, 2 more");
+    expect(result.sentence).toBe("a now reads 4 of 8, b now reads 4 of 8, and 2 more");
   });
 
   it("says so when nothing changed, and ignores rows without a review", () => {

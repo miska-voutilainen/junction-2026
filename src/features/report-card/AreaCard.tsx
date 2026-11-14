@@ -81,7 +81,7 @@ export function AreaCard({
         >
           <span>
             Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to {ladderLevelLabel[escapeDrop.to]}
-            {escapes > 1 && ` · ${escapes} simulated escapes`}
+            {` · ${escapes === 1 ? "1 simulated escape" : `${escapes} simulated escapes`}`}
           </span>
           <Button ref={undoButton} type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
             Undo

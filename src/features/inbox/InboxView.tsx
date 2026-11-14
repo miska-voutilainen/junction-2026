@@ -44,7 +44,7 @@ export function InboxView({
       )}
       <SummaryBar summary={model.summary} />
       <div className="compact:hidden">
-        <InboxMobile sections={mobileSections(model.rows)} />
+        <InboxMobile sections={mobileSections(model.rows)} highlightedIds={highlightedIds} />
       </div>
       <div className="hidden flex-col gap-4 compact:flex">
         <DesktopList rows={model.rows} highlightedIds={highlightedIds} filter={filter} onFilterChange={setFilter} />

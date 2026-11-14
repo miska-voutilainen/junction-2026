@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useEscapes } from "@/lib/simulation/escapes";
+import { ESCAPE_TOAST_ID, useEscapes } from "@/lib/simulation/escapes";
 
 /**
  * "Simulated escapes: 2" with a Reset button, for the top bar's `escapeSlot`.
@@ -16,7 +16,7 @@ export function EscapeCounter() {
   // The recording toast would otherwise stay up and contradict the cleared screen.
   function clearEscapes() {
     reset();
-    toast.dismiss();
+    toast.dismiss(ESCAPE_TOAST_ID);
     toast("Simulated escapes cleared");
   }
 

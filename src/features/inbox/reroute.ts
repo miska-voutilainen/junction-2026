@@ -5,8 +5,8 @@
  * no React.
  */
 import { tierLabel } from "@/contracts";
-import { type InboxRow, isReviewed } from "./inboxModel";
-import type { ReviewedRow } from "./inboxModel";
+import { isReviewed } from "./inboxModel";
+import type { InboxRow, ReviewedRow } from "./inboxModel";
 
 /** Changes whose tier or reading count differs between two routings, and a sentence naming them. */
 export interface Reroute {
@@ -39,7 +39,7 @@ export function describeReroute(before: InboxRow[], after: InboxRow[]): Reroute 
 
   const named = changed.slice(0, NAMED_CHANGES).map(({ was, now }) => changeSentence(was, now));
   const rest = changed.length - named.length;
-  if (rest > 0) named.push(`${rest} more`);
+  if (rest > 0) named.push(`and ${rest} more`);
   return { changedIds: changed.map(({ now }) => now.id), sentence: named.join(", ") };
 }
 

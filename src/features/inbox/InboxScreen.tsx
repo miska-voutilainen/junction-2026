@@ -63,6 +63,7 @@ const HIGHLIGHT_MS = 2400;
  * first render never differs from the server's HTML (which has none).
  */
 function useRecentlyRerouted(): ReadonlySet<string> {
+  // Taken in the initializer, not an effect: StrictMode runs effects twice, and the second run would find nothing.
   const [ids, setIds] = useState<ReadonlySet<string>>(() => new Set(takeRerouted()));
   useEffect(() => {
     if (ids.size === 0) return;

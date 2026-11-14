@@ -13,7 +13,7 @@ import type { Area } from "@/contracts";
 import { buildInboxModel, describeReroute, toShellChanges } from "@/features/inbox";
 import type { InboxSource, ReportCardInput } from "@/features/inbox";
 import { REPO_BLOB_URL } from "@/lib/ideaLinks";
-import { markRerouted, useEscapes } from "@/lib/simulation/escapes";
+import { ESCAPE_TOAST_ID, markRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { BlindFirstSection } from "./BlindFirstSection";
 import { LevelsLegend } from "./LevelsLegend";
 import { ReportLists } from "./ReportLists";
@@ -59,7 +59,7 @@ export function ReviewerScreen({
       const { changedIds, sentence } = describeReroute(model.rows, after.rows);
       markRerouted(changedIds);
       record(area);
-      toast(`Escape recorded in ${areaLabel[area]} (simulated). ${sentence}.`);
+      toast(`Escape recorded in ${areaLabel[area]} (simulated). ${sentence}.`, { id: ESCAPE_TOAST_ID });
     },
     [sources, reportCard, escapes, model.rows, record],
   );

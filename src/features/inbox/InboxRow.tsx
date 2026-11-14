@@ -10,7 +10,8 @@ import { fadeUpItem, useStaggeredPreset } from "@/lib/motion";
 import { CoverageStrip } from "./CoverageStrip";
 import { StatusIcon } from "./StatusIcon";
 import { countOf, readingText } from "./rowText";
-import { ROW_GRID } from "./tableLayout";
+import { ReroutedNote } from "./ReroutedNote";
+import { REROUTED_TINT, ROW_GRID } from "./tableLayout";
 import type { InboxRow as Row, ReviewedRow } from "./inboxModel";
 
 /**
@@ -29,12 +30,12 @@ export function InboxRow({ row, index, isHighlighted }: Readonly<{ row: Row; ind
       role="row"
       initial={entrance.initial}
       animate={entrance.animate}
-      className={`group relative ${ROW_GRID} gap-y-1 transition-colors duration-(--duration-slow) motion-reduce:transition-none ${isHighlighted ? "bg-rose/15" : ""} border-t border-border-subtle py-3 first:border-t-0 hover:bg-surface-hover has-focus-visible:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-focus-ring`}
+      className={`group relative ${ROW_GRID} gap-y-1 transition-colors duration-(--duration-slow) motion-reduce:transition-none ${isHighlighted ? REROUTED_TINT : ""} border-t border-border-subtle py-3 first:border-t-0 hover:bg-surface-hover has-focus-visible:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-focus-ring`}
     >
       <div role="cell">
         <StatusIcon row={row} />
       </div>
-      <ChangeCell row={row} />
+      <ChangeCell row={row} isHighlighted={isHighlighted} />
       {row.state === "reviewed" ? <ReviewedCells row={row} /> : <UnreviewedCells row={row} />}
       <div
         role="cell"
@@ -46,7 +47,7 @@ export function InboxRow({ row, index, isHighlighted }: Readonly<{ row: Row; ind
   );
 }
 
-function ChangeCell({ row }: Readonly<{ row: Row }>) {
+function ChangeCell({ row, isHighlighted }: Readonly<{ row: Row; isHighlighted: boolean }>) {
   return (
     <div role="cell" className="min-w-0">
       <Link
@@ -55,6 +56,7 @@ function ChangeCell({ row }: Readonly<{ row: Row }>) {
         className="line-clamp-2 text-base font-medium text-text-primary outline-none after:absolute after:inset-0"
       >
         {row.title}
+        {isHighlighted && <ReroutedNote />}
       </Link>
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5 font-mono text-xs text-text-muted">
         <span>{row.requirementId}</span>

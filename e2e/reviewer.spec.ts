@@ -5,7 +5,9 @@ import { unlock } from "./unlock";
 // The report card shows the committed fixture until a recorded one exists: generator and analyzer
 // Calibrated, security and performance Shadow.
 const AREA_ORDER = ["Generator", "Analyzer", "Security", "Performance"];
-const ESCAPE_TOAST = /Escape recorded in Generator \(simulated\)\. \S+ .+\./;
+// On the fixtures a Generator escape moves only mp-2283, the signed change, from Focused to Full.
+const ESCAPE_TOAST = "Escape recorded in Generator (simulated). mp-2283: Focused to Full.";
+const RE_ROUTED_TINT = /bg-rose\/15/;
 const ESCAPE_NOTICE = "Escape recorded (simulated) · dropped from Calibrated to Shadow";
 
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
@@ -120,6 +122,26 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
     ) ?? [])[1],
   );
   expect(readAfter).toBeGreaterThan(readBefore);
+});
+
+const inboxRowOf = (page: Page, id: string) => page.getByRole("row").filter({ hasText: new RegExp(id, "i") });
+
+test("tints the re-routed inbox row after an escape, and not after Undo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
+  const openInbox = () => page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+
+  await page.goto("/reviewer");
+  await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
+  await openInbox();
+  // mp-2283 is signed, so its row sits in the folded Signed list.
+  await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
+  await expect(inboxRowOf(page, "mp-2283")).toHaveClass(RE_ROUTED_TINT);
+
+  await page.getByRole("navigation").getByRole("link", { name: "Reviewer" }).click();
+  await generatorCard(page).getByRole("button", { name: "Undo" }).click();
+  await openInbox();
+  await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
+  await expect(inboxRowOf(page, "mp-2283")).not.toHaveClass(RE_ROUTED_TINT);
 });
 
 test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, each linking to its page", async ({

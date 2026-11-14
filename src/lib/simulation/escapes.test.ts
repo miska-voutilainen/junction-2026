@@ -100,3 +100,31 @@ describe("useEscapes", () => {
     expect(result.current.escapes).toEqual({ security: 1 });
   });
 });
+
+describe("re-routed changes for the inbox highlight", () => {
+  async function freshStore() {
+    vi.resetModules();
+    return import("./escapes");
+  }
+
+  it("adds up across escapes and is handed over once", async () => {
+    const { markRerouted, takeRerouted } = await freshStore();
+    markRerouted(["mp-2283"]);
+    markRerouted(["mp-2283", "mp-2129"]);
+    expect(takeRerouted()).toEqual(["mp-2283", "mp-2129"]);
+    expect(takeRerouted()).toEqual([]);
+  });
+
+  it("is dropped by undo and by reset", async () => {
+    const { markRerouted, takeRerouted, useEscapes } = await freshStore();
+    const { result } = renderHook(() => useEscapes());
+    act(() => result.current.record("generator"));
+    markRerouted(["mp-2283"]);
+    act(() => result.current.undo("generator"));
+    expect(takeRerouted()).toEqual([]);
+
+    markRerouted(["mp-2283"]);
+    act(() => result.current.reset());
+    expect(takeRerouted()).toEqual([]);
+  });
+});
