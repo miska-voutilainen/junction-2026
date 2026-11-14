@@ -276,6 +276,45 @@ describe("runReview with a fake model", () => {
     expect(result.refusals).toEqual([]);
   });
 
+  it("adds the fixed rule refusal on a run without A3", async () => {
+    const apiRepo = mkdtempSync(join(tmpdir(), "countersign-api-"));
+    const apiGit = (...args: string[]) =>
+      execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", ...args], {
+        cwd: apiRepo,
+        encoding: "utf8",
+      }).trim();
+    apiGit("init", "-q");
+    writeFileSync(join(apiRepo, "PublicAPI.Unshipped.txt"), "A\n");
+    apiGit("add", ".");
+    apiGit("commit", "-qm", "base");
+    const baseSha = apiGit("rev-parse", "HEAD");
+    writeFileSync(join(apiRepo, "PublicAPI.Unshipped.txt"), "A\nB\n");
+    apiGit("add", ".");
+    apiGit("commit", "-qm", "head");
+    const { client, prompts } = fakeClient([
+      {
+        ...goodClaim,
+        hunkIds: ["h1"],
+        citations: [
+          { file: "PublicAPI.Unshipped.txt", side: "new", startLine: 2, endLine: 2, quote: "B" },
+        ],
+      },
+    ]);
+    const result = await runReview({
+      change: { ...change, baseSha, headSha: apiGit("rev-parse", "HEAD") },
+      requirement,
+      repoDir: apiRepo,
+      client,
+      usage: createUsageTally(),
+      levels: levelsFromReportCard(null),
+      steps: ["a1", "a2", "a4"],
+    });
+    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(result.refusals).toHaveLength(1);
+    expect(result.refusals[0]).toMatchObject({ source: "rule", ruleId: "R7" });
+    expect(result.refusals[0]?.hunkIds).toHaveLength(1);
+  });
+
   it("an explicit steps list can turn A4 off", async () => {
     const { result, prompts } = await review([goodClaim], { steps: ["a1", "a2", "a3"] });
     expect(prompts["a4.v1"]).toBeUndefined();
