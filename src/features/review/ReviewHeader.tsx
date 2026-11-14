@@ -49,7 +49,9 @@ export function ReviewHeader({
         <h1 className="text-xl font-semibold text-balance [overflow-wrap:anywhere] text-text-primary">
           {change.title}
         </h1>
-        {receiptStatus && <SignButton signState={isReceiptUnreadable ? "unreadable" : signStateOf(receiptStatus)} />}
+        {receiptStatus && (
+          <SignButton signState={isReceiptUnreadable ? "unreadable" : signStateOf(receiptStatus)} />
+        )}
       </div>
       {/* Chips and meta share one row: each alone left most of a line empty and the header stacked four rows deep. */}
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-text-muted">
