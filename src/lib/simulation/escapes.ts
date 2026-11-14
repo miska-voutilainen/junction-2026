@@ -75,7 +75,7 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-/** The simulated escapes with the two actions the UI needs. */
+/** The simulated escapes with the actions the UI needs: record, undo, reset. */
 export interface EscapesApi {
   /** Escapes recorded per area. */
   escapes: Escapes;

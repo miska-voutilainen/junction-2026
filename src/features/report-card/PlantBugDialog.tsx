@@ -27,15 +27,7 @@ export function PlantBugDialog() {
           Plant a synthetic bug
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className="sm:max-w-xl"
-        // Focus the dialog itself: the first control is the console's Wrap button, whose tooltip
-        // would open on focus and swallow the first Escape.
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus();
-        }}
-      >
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Plant a synthetic bug</DialogTitle>
           <DialogDescription>

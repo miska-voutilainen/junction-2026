@@ -8,7 +8,8 @@ import { EscapeCounter } from "@/components/EscapeCounter";
 import { LevelLadder } from "@/components/LevelLadder";
 import { MockDataBanner } from "@/components/MockDataBanner";
 import { buildInboxModel, inboxLevels, toShellChanges } from "@/features/inbox";
-import type { InboxSource } from "@/features/inbox";
+import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import { REPO_BLOB_URL } from "@/lib/ideaLinks";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { BlindFirstSection } from "./BlindFirstSection";
 import { LevelsLegend } from "./LevelsLegend";
@@ -18,31 +19,31 @@ import { RoutingSpread } from "./RoutingSpread";
 import { TrustLadderSection } from "./TrustLadderSection";
 import { areaCardModels, measuredLine } from "./reportCardModel";
 import type { ReviewOfChange } from "./reportCardModel";
-import type { ReportCard } from "@/contracts";
 
-const LESSONS_LOG_URL = "https://github.com/miska-voutilainen/junction-2026/blob/main/docs/lessons.md";
-
-/** The report card as the server found it; "unreadable" carries the validation error. */
-export type ReportCardSource = { state: "ok"; data: ReportCard } | { state: "missing" } | { state: "unreadable"; error: string };
+const LESSONS_LOG_URL = `${REPO_BLOB_URL}/docs/lessons.md`;
 
 /**
  * S3 inside its shell. Routing runs here with the current simulated escapes and
  * feeds the shell too, so recording an escape on a card moves the cards, the
  * routing spread and the nav badge together (`inboxModel.ts` is the one place
  * tiers are computed). Spec section 3, S3.
+ *
+ * @param hasLessonsLog Whether `docs/lessons.md` exists; the footer link shows only then.
  */
 export function ReviewerScreen({
   sources,
   reportCard,
   repo,
   usesFixture,
+  hasLessonsLog,
 }: {
   sources: InboxSource[];
-  reportCard: ReportCardSource;
+  reportCard: ReportCardInput;
   repo: string;
   usesFixture: boolean;
+  hasLessonsLog: boolean;
 }) {
-  const { escapes, total } = useEscapes();
+  const { escapes, total, record, undo } = useEscapes();
   const model = useMemo(() => buildInboxModel(sources, inboxLevels(reportCard, escapes)), [sources, reportCard, escapes]);
   const data = reportCard.state === "ok" ? reportCard.data : null;
   const cards = useMemo(() => areaCardModels(data, escapes), [data, escapes]);
@@ -64,19 +65,21 @@ export function ReviewerScreen({
       <div className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 py-6 compact:px-8 compact:py-7">
         <ReviewerHeader measured={data ? measuredLine(data) : null} />
         {reportCard.state === "missing" && <NoEvaluation />}
-        {reportCard.state === "unreadable" && <UnreadableReportCard error={reportCard.error} />}
+        {reportCard.state === "unreadable" && <UnreadableReportCard error={reportCard.error ?? "No validation error was recorded."} />}
         {data && (
           <>
-            <LevelsLegend />
-            <TrustLadderSection cards={cards} />
+            <LevelsLegend spotChecksClean={data.areas.reduce((sum, entry) => sum + entry.spotChecksClean, 0)} />
+            <TrustLadderSection cards={cards} record={record} undo={undo} />
             <ReportLists reportCard={data} reviews={reviews} />
             <BlindFirstSection reportCard={data} />
             <RoutingSpread summary={model.summary} escapeCount={total} />
           </>
         )}
-        <a href={LESSONS_LOG_URL} target="_blank" rel="noopener" className="self-start text-sm text-link hover:underline">
-          Lessons log
-        </a>
+        {hasLessonsLog && (
+          <a href={LESSONS_LOG_URL} target="_blank" rel="noopener" className="self-start text-sm text-link hover:underline">
+            Lessons log
+          </a>
+        )}
       </div>
     </AppShell>
   );
@@ -97,7 +100,12 @@ function UnreadableReportCard({ error }: { error: string }) {
   return (
     <ErrorState
       title="The report card couldn't be read."
-      body="Re-run pnpm evals. Until it reads, every area is treated as Shadow and changes route as if the reviewer had no track record."
+      body={
+        <>
+          Re-run <code className="font-mono text-sm">pnpm evals</code>. Until it reads, every area is treated as Shadow and changes
+          route as if the reviewer had no track record.
+        </>
+      }
       details={error}
     />
   );

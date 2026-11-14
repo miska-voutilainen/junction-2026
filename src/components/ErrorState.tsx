@@ -23,7 +23,7 @@ export function ErrorState({
   className,
 }: {
   title: string;
-  body: string;
+  body: ReactNode;
   details?: string;
   onRetry?: () => void;
   retryLabel?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { toast } from "sonner";
 import { LevelLadder } from "@/components/LevelLadder";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ const LEVEL_PILL: Record<LadderLevel, string> = {
  * the sample size), what the level allows, what the next rung needs, and the
  * button that records a simulated escape. Spec section 3, S3.
  *
+ * After an escape is recorded the Record button disables, so focus moves to
+ * Undo rather than falling back to the page.
+ *
  * @param onRecord Records one escape in this area; the card toasts the result.
  * @param onUndo Takes the escape back.
  */
@@ -36,8 +39,17 @@ export function AreaCard({
   const headingId = useId();
   const promptId = useId();
   const name = areaLabel[area];
+  const undoButton = useRef<HTMLButtonElement>(null);
+  const shouldFocusUndo = useRef(false);
+
+  useEffect(() => {
+    if (!shouldFocusUndo.current || !escapeDrop) return;
+    shouldFocusUndo.current = false;
+    undoButton.current?.focus();
+  }, [escapeDrop]);
 
   function recordEscape() {
+    shouldFocusUndo.current = true;
     onRecord(area);
     toast(`Escape recorded in ${name} (simulated). Its changes re-routed.`);
   }
@@ -72,14 +84,12 @@ export function AreaCard({
       </dl>
 
       {escapeDrop && (
-        <div
-          role="status"
-          className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-rose/40 px-3 py-2 text-sm text-rose-light"
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-rose/40 px-3 py-2 text-sm text-rose-light"
         >
           <span>
             Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to {ladderLevelLabel[escapeDrop.to]}
           </span>
-          <Button type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
+          <Button ref={undoButton} type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
             Undo
           </Button>
         </div>

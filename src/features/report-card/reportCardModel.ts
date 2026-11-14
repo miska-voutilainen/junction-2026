@@ -10,12 +10,12 @@ import { ladderLevelLabel } from "@/contracts";
 import type { Area, LadderLevel, ReportCard, Review } from "@/contracts";
 import { ladderPolicy } from "@/policy/ladder";
 import { applyEscapes } from "@/rules/ladder";
+import type { Escapes } from "@/lib/simulation/escapes";
 
 /** Cards run in this order on screen and in the spec. */
-export const AREA_ORDER: readonly Area[] = ["generator", "analyzer", "security", "performance"];
+const AREA_ORDER: readonly Area[] = ["generator", "analyzer", "security", "performance"];
 
 type ReportCardArea = ReportCard["areas"][number];
-type Escapes = Partial<Record<Area, number>>;
 
 /** What one area's card shows, as plain strings and flags. */
 export interface AreaCardModel {
@@ -28,7 +28,7 @@ export interface AreaCardModel {
   effect: string;
   /** What the area needs for the next rung, with the count so far. */
   nextStep: string;
-  /** Said where the next step is Trusted: this reference records no spot checks. */
+  /** Said where the next step is Trusted and no spot check is recorded for the area. */
   nextStepNote: string | null;
   /** Simulated escapes recorded in this area. */
   escapes: number;
@@ -44,7 +44,7 @@ const EFFECT: Record<LadderLevel, string> = {
   trusted: "May lower a change here to Light.",
 };
 
-/** Said wherever Trusted is the next step: nothing in this reference records a human spot check. */
+/** Said where Trusted is the next step and the area has no clean spot check: this reference has no way to record one. */
 export const NO_SPOT_CHECKS_NOTE = "This reference records no spot checks, so no area can reach Trusted.";
 
 /**
@@ -65,9 +65,9 @@ export function areaCardModel(area: Area, entry: ReportCardArea | undefined, esc
     headline: planted > 0 ? `${caught} of ${planted} planted bugs caught · written blind` : "No track record",
     effect: EFFECT[level],
     nextStep: nextStep({ level, earned, planted, caught, spotChecksClean, escapes }),
-    nextStepNote: level === "calibrated" ? NO_SPOT_CHECKS_NOTE : null,
+    nextStepNote: level === "calibrated" && level === earned && spotChecksClean === 0 ? NO_SPOT_CHECKS_NOTE : null,
     escapes,
-    escapeDrop: escapes > 0 ? { from: levelAfter(area, earned, escapes - 1), to: level } : null,
+    escapeDrop: escapeDrop(area, earned, escapes),
     canRecordEscape: level !== "shadow",
   };
 }
@@ -79,9 +79,18 @@ export function areaCardModels(reportCard: ReportCard | null, escapes: Escapes):
   );
 }
 
+// The same applyEscapes the inbox routes with, so a card and the routing can never disagree.
 function levelAfter(area: Area, earned: LadderLevel, escapes: number): LadderLevel {
   const levels: Record<Area, LadderLevel> = { generator: "shadow", analyzer: "shadow", security: "shadow", performance: "shadow" };
   return applyEscapes({ ...levels, [area]: earned }, { [area]: escapes })[area];
+}
+
+/** The latest drop, or null when there is none (no escape, or the area was already at Shadow). */
+function escapeDrop(area: Area, earned: LadderLevel, escapes: number): AreaCardModel["escapeDrop"] {
+  if (escapes === 0) return null;
+  const from = levelAfter(area, earned, escapes - 1);
+  const to = levelAfter(area, earned, escapes);
+  return from === to ? null : { from, to };
 }
 
 function nextStep(input: {
@@ -94,8 +103,9 @@ function nextStep(input: {
 }): string {
   const { level, earned, planted, caught, spotChecksClean, escapes } = input;
   if (level !== earned) {
-    const count = escapes === 1 ? "1 simulated escape" : `${escapes} simulated escapes`;
-    return `Earned ${ladderLevelLabel[earned]}; ${count} hold it at ${ladderLevelLabel[level]}. Reset the escapes to restore it.`;
+    const [count, verb, undo] =
+      escapes === 1 ? ["1 simulated escape", "holds", "Undo the escape"] : [`${escapes} simulated escapes`, "hold", "Undo the escapes"];
+    return `Earned ${ladderLevelLabel[earned]}; ${count} ${verb} it at ${ladderLevelLabel[level]}. ${undo} to restore it.`;
   }
   if (level === "trusted") return "Top level. It holds while no escape is recorded.";
   if (level === "calibrated") {
@@ -141,17 +151,22 @@ export interface ReviewOfChange {
 /** A quote the model cited that the mechanical check could not find in the code. */
 export interface FailedQuote {
   changeId: string;
-  /** "src/Foo.cs:12-14" */
+  itemId: string;
+  /** "src/Foo.cs:12-14", or "src/Foo.cs:437" for one line. */
   location: string;
+  /** The text the model claimed is at that location. */
+  quote: string;
   reason: string;
 }
 
 /** Quotes that failed the check, across the recorded reviews. */
 export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures.map(({ citation, reason }) => ({
+    review.quoteCheck.failures.map(({ itemId, citation, reason }) => ({
       changeId,
-      location: `${citation.file}:${citation.startLine}-${citation.endLine}`,
+      itemId,
+      location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
+      quote: citation.quote,
       reason,
     })),
   );
@@ -170,6 +185,7 @@ export function hallucinationLines(reportCard: ReportCard): string[] {
 /** A claim the reviewer withdrew after a test or check contradicted it. */
 export interface RetractedClaim {
   changeId: string;
+  claimId: string;
   claimText: string;
   reason: string;
 }
@@ -179,7 +195,8 @@ export function retractedClaims(reviews: ReviewOfChange[]): RetractedClaim[] {
   return reviews.flatMap(({ changeId, review }) =>
     review.retractions.map(({ claimId, reason }) => ({
       changeId,
-      claimText: review.claims.find((claim) => claim.id === claimId)?.text ?? claimId,
+      claimId,
+      claimText: review.claims.find((claim) => claim.id === claimId)?.text ?? `claim ${claimId} (text not found)`,
       reason,
     })),
   );

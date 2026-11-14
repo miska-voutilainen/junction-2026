@@ -16,7 +16,7 @@ export default function Loading() {
         <div className="mx-auto flex w-full max-w-content min-w-0 flex-1 flex-col gap-5 px-4 py-6 compact:px-8 compact:py-7">
           <SkeletonLine className="h-6 w-56" />
           <SkeletonLine className="w-full max-w-prose" />
-          <div className="grid grid-cols-1 gap-4 min-[1100px]:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 wide:grid-cols-2">
             {Array.from({ length: CARD_COUNT }, (_, index) => (
               <SkeletonBlock key={index} className="h-56 rounded-page" />
             ))}

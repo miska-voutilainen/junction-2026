@@ -50,12 +50,18 @@ describe("areaCardModel", () => {
     const card = areaCardModel("generator", entry("generator"), 1);
     expect(card.level).toBe("shadow");
     expect(card.escapeDrop).toEqual({ from: "calibrated", to: "shadow" });
-    expect(card.nextStep).toMatch(/^Earned Calibrated; 1 simulated escape hold it at Shadow/);
+    expect(card.nextStep).toMatch(/^Earned Calibrated; 1 simulated escape holds it at Shadow\. Undo the escape to restore it\.$/);
     expect(card.canRecordEscape).toBe(false);
   });
 
-  it("returns to the earned level when the escape is undone", () => {
-    expect(areaCardModel("generator", entry("generator"), 0).level).toBe("calibrated");
+  it("shows no drop for an escape in an area already at Shadow, and plural wording for two", () => {
+    expect(areaCardModel("security", entry("security"), 1).escapeDrop).toBeNull();
+    expect(areaCardModel("generator", entry("generator"), 2).nextStep).toContain("2 simulated escapes hold it at Shadow. Undo the escapes");
+  });
+
+  it("drops the spot-check note once a clean spot check is recorded", () => {
+    const withSpotCheck = { ...entry("generator")!, spotChecksClean: 2 };
+    expect(areaCardModel("generator", withSpotCheck, 0).nextStepNote).toBeNull();
   });
 
   it("treats a missing report card as Shadow everywhere, in card order", () => {
@@ -87,7 +93,7 @@ describe("report card lists", () => {
   it("collects failed quotes and retractions from the recorded reviews with the claim text", () => {
     const reviews = [{ changeId: "mp-2283", review }];
     expect(failedQuotes(reviews)).toHaveLength(review.quoteCheck.failures.length);
-    expect(failedQuotes(reviews)[0].location).toMatch(/\.cs:\d+-\d+$/);
+    expect(failedQuotes(reviews)[0].location).toMatch(/\.cs:\d+(-\d+)?$/);
     const retracted = retractedClaims(reviews);
     expect(retracted).toHaveLength(review.retractions.length);
     expect(retracted[0].claimText).toBe(review.claims.find((claim) => claim.id === review.retractions[0].claimId)?.text);
