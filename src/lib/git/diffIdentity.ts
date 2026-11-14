@@ -2,9 +2,15 @@
  * Diff identity: the fingerprint a signed receipt binds to. A receipt that
  * said "approved" about a diff nobody can pin down would prove nothing, so the
  * hash covers the exact bytes git produces for base..head. What is pinned:
- * system and global git config are ignored, the diff options are fixed
- * (algorithm, no renames, prefixes, quoting), and git's environment overrides
- * are removed. The clone's own config is not touched here; `pnpm seed` sets it.
+ * system and global git config are ignored, git's environment overrides are
+ * removed, and the diff options are fixed (algorithm, no external diff, no
+ * renames, prefixes, quoting, binary and full-index output). What is not: the
+ * clone's own `.git/config` is still read (`pnpm seed` sets only
+ * `core.longpaths`, which does not change diff output), and the hashed diff
+ * passes no `-U`, `--no-textconv` or indent-heuristic flag. A clone whose own
+ * config sets `diff.context`, `diff.indentHeuristic` or a textconv driver
+ * would hash the same change differently, and `verify` would call a good
+ * receipt stale.
  * The review and the receipt call this one function; if the diff changes, the
  * hash changes and the receipt reads as stale. Spec section 5, Diff identity.
  */
@@ -14,7 +20,9 @@ import { runGit } from "./runGit";
 
 /** The identity of a diff between two commits. */
 export interface DiffIdentity {
+  /** Tree SHA of the base commit; binds the content the change started from, not the history that led to it. */
   baseTree: string;
+  /** Tree SHA of the head commit; binds the content that was reviewed, not the history that led to it. */
   headTree: string;
   /** Hex sha256 of git's raw diff output. */
   diffSha256: string;
