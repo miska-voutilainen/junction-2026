@@ -38,7 +38,7 @@ Each of these came from a measurement or a recorded run, not from taste.
 - **Generated hunks left the count.** Tieto's `mp-2297` has 237 files and 423 hunks, nearly all generated snapshots, so "Read 12 of 423" meant nothing. Generated hunks now have their own coverage state, and the recorded review reads 21 hunks and marks 402 generated ([decisions.md](../decisions.md)).
 - **A hunk is covered only where a claim quotes code in it.** A2 listed hunks on claims whose citations lay in one hunk, so a Supported claim could cover hunks it showed nothing about. After the quote check a claim keeps only the hunks a passing citation overlaps ([decisions.md](../decisions.md)).
 - **The receipt goes stale on a rebase, not only on a changed diff.** Our docs said a rebase with an unchanged diff kept the receipt valid. The code is stricter: the signed receipt holds the head commit and both trees, so `verify` rejects a change in any of them ([decisions.md](../decisions.md), fifth research pass).
-- **Security caught 0 of 3 planted bugs.** All three are real misses. We changed nothing in the prompts, because a prompt tuned to three plants would score better and measure nothing; Security stays at Shadow and the pitch says "0 of 3" ([lessons.md](../lessons.md)).
+- **Security caught 0 of 3 planted bugs (rv1), then 1 of 3 (rv2).** Under rv1 two of the misses were a labelling miss: A3 saw the bug but filed it as `scope-creep`, which the eval doesn't count. `a3.v2` files wrong out-of-scope code as a defect; v06 is now caught in 3 of 3 runs, v03 and v10 in 0 of 3. The scorer did not change. Security stays at Shadow and the pitch says "1 of 3" ([lessons.md](../lessons.md#correction-2026-11-14)).
 
 ## How each idea is applied in the product
 
@@ -70,7 +70,7 @@ The pipeline in [`src/pipeline/runReview.ts`](../../src/pipeline/runReview.ts) r
 | `route()`                  | 3 with 1         | One coverage state per hunk and a tier, with a reason per rule                                       | S1, S2, the receipt draft's "not checked" list            |
 | Receipt draft, then `sign` | 7 with 8         | Checked, not checked and residual risk; a person signs with their own key                            | `verify`, S4                                              |
 
-On the recorded `mp-2283` review, `route()` gives "Full · Read 7 of 8 hunks · ~10 min (full read ~10 min)" ([why-these-ideas.md](why-these-ideas.md)). The A5 recording has two claims Verified by two test methods that fail on the base and pass on the head; the PR's own three tests keep the other two at Supported ([lessons.md](../lessons.md)). The signed receipt lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked ([signed-receipt.md](signed-receipt.md)).
+On the recorded `mp-2283` review, `route()` gives "Full · Read 6 of 8 hunks" ([why-these-ideas.md](why-these-ideas.md)). The A5 recording has two claims Verified by two test methods that fail on the base and pass on the head; the PR's own three tests keep the other two at Supported ([lessons.md](../lessons.md)). The signed receipt lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked ([signed-receipt.md](signed-receipt.md)).
 
 Where one idea depends on another:
 

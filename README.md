@@ -10,7 +10,7 @@ Coding agents now produce more code than people do (agent tokens passed human to
 
 1. **[Planted-bug calibration and a trust ladder per area](docs/ideas/trust-ladder.md).** We test the AI reviewer on bugs planted by someone who never sees its prompts. Its catch rate in each area decides how much a human reads, and an escaped bug drops that area a level.
 2. **[Blind-first review](docs/ideas/blind-first.md).** The reviewer writes down what the requirement should produce before it reads the code or the author's description. We measure how much reading the description first costs.
-3. **[The hunk coverage map](docs/ideas/coverage-map.md).** "Read 7 of 8 hunks, and here is what covers the other 1" (the recorded review of `mp-2283`), from rules a person can read, with no AI in the routing.
+3. **[The hunk coverage map](docs/ideas/coverage-map.md).** "Read 6 of 8 hunks, and here is what covers the other 1" (the recorded review of `mp-2283`), from rules a person can read, with no AI in the routing.
 4. **[A mechanical quote check](docs/ideas/quote-check.md).** Every AI claim cites the code. A citation that doesn't match the code is never shown, and each one caught counts as a hallucination.
 5. **[A written refusal policy](docs/ideas/refusal-policy.md).** A versioned list of what the AI never decides, each item naming who decides instead.
 6. **[Evidence levels instead of confidence scores](docs/ideas/evidence-levels.md).** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
@@ -25,7 +25,7 @@ What the AI does in the product, what stays with rules and people, and why the r
 
 **Live:** https://countersign-junction.com. Start at the review of `mp-2283`; each idea is labelled where it appears and links to its page.
 
-<img src="docs/img/review-mp-2283.png" alt="The review page for mp-2283: the tier line 'Full, read 7 of 8 hunks, about 10 min', the routing reasons with their rule ids, the reading list of hunks with their coverage state, a hunk refused under rule R7, and the steps sidebar: Read, Blind check, Refused, Sign." width="880">
+<img src="docs/img/review-mp-2283.png" alt="The review page for mp-2283: the tier line 'Full, read 6 of 8 hunks', the routing reasons with their rule ids, the reading list of hunks with their coverage state, a hunk refused under rule R7, and the steps sidebar: Read, Blind check, Refused, Sign." width="880">
 
 | Screen                               | What it answers                                                                                                                                           |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,7 +54,7 @@ Tieto gave a copy of MessagePack-CSharp, a C# serializer with a Roslyn source ge
 - **Synthetic or derived, and labelled so:** the author PR descriptions (the commits carry one-line messages); the 10 planted-bug variants and the planted contradictions the reviewer is measured on, written by an agent that never saw the reviewer's prompts; the requirement records, derived from the upstream issues until Tieto's arrive.
 - **Simulated:** escapes. "Record escape" on the report card is stored in your browser only.
 
-Measured results, including what didn't work (security caught 0 of 3 planted bugs; blind-first showed no advantage on our sample), are in [docs/lessons.md](docs/lessons.md).
+Measured results, including what didn't work (security caught 1 of 3 planted bugs, in 3 of 3 runs for one and 0 of 3 for the other two; blind-first showed no advantage on our sample), are in [docs/lessons.md](docs/lessons.md).
 
 ## Stack
 
