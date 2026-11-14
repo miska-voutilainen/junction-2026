@@ -2466,6 +2466,15 @@
         "h1",
         "h2"
       ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R8",
+      "source": "rule",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "hunkIds": [
+        "h3"
+      ]
     }
   ],
   "quoteCheck": {
@@ -2542,10 +2551,28 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and the MsgPack004 help page now document a new policy: diagnostics about members of types from referenced assemblies are reported only by the defining assembly, never by the consuming project. That changes documented analyzer behaviour, which the maintainers must approve.",
+      "text": "r1 (R7): The README and the MsgPack004 help page now document a new policy: diagnostics about members of types from referenced assemblies are reported only by the defining assembly, never by the consuming project. That changes documented analyzer behaviour, which the maintainers must approve. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [
+    {
+      "kind": "consumer-contract",
+      "hunkIds": [
+        "h3"
+      ],
+      "detail": "contract paths",
+      "owner": "API owner (the maintainers)",
+      "guard": {
+        "status": "guarded",
+        "evidence": "the same change updates README.md, MsgPack004.md",
+        "files": [
+          "README.md",
+          "doc/analyzers/MsgPack004.md"
+        ]
+      }
+    }
+  ],
   "routing": {
     "tier": "full",
     "reasons": [
@@ -2556,8 +2583,13 @@
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "2 items refused: a human decides",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-legacy-guard",
+        "text": "Consumer contract: contract paths in 1 hunk, guarded: the same change updates README.md, MsgPack004.md",
+        "tier": "light"
       },
       {
         "ruleId": "R-defect",
