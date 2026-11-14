@@ -99,46 +99,18 @@ async function checkClaim(
 ): Promise<{ claim: Claim; hunkIdsRemoved: number }> {
   // A pathGlob claim covers every matching hunk and ignores the hunkIds the model wrote.
   const expanded = draft.pathGlob === null ? null : hunksMatchingGlob(draft.pathGlob, hunks);
-
-  const passing: Citation[] = [];
-  let isFirstCitationPassing = false;
-  // In order: the first citation's result decides whether a globbed claim stands.
-  for (const [index, citation] of draft.citations.entries()) {
-    let result = await checkCitation(citation, readSide);
-    // The first quote stands for every globbed hunk, so it must be in the added lines
-    // of each, whatever the other citations show.
-    if (result.passed && index === 0 && expanded !== null) {
-      const missingFrom = expanded.filter((hunk) => !isInAddedLines(citation.quote, hunk));
-      if (missingFrom.length > 0) {
-        result = {
-          passed: false,
-          reason: `quote not in the added lines of ${missingFrom.map((hunk) => hunk.id).join(", ")}`,
-        };
-      }
-    }
-    quoteCheck.checked++;
-    if (result.passed) {
-      quoteCheck.passed++;
-      passing.push(citation);
-      if (index === 0) isFirstCitationPassing = true;
-    } else {
-      quoteCheck.failures.push({ itemId: draft.id, citation, reason: result.reason });
-    }
-  }
+  const { passing, isFirstCitationPassing } = await checkCitations(
+    draft,
+    expanded,
+    readSide,
+    quoteCheck,
+  );
 
   const isSupported = passing.length > 0 && (expanded === null || isFirstCitationPassing);
   if (!isSupported) quoteCheck.downgraded++;
 
   const listed = expanded === null ? draft.hunkIds : expanded.map((hunk) => hunk.id);
-  const hunkIds =
-    isSupported && expanded === null
-      ? listed.filter((id) =>
-          isHunkCited(
-            hunks.find((hunk) => hunk.id === id),
-            passing,
-          ),
-        )
-      : listed;
+  const hunkIds = isSupported && expanded === null ? citedHunkIds(listed, hunks, passing) : listed;
   return {
     claim: {
       id: draft.id,
@@ -152,6 +124,66 @@ async function checkClaim(
     },
     hunkIdsRemoved: isSupported ? listed.length - hunkIds.length : 0,
   };
+}
+
+/**
+ * Checks a claim's citations in order, counting each into `quoteCheck`.
+ * In order because the first citation's result decides whether a globbed claim stands.
+ */
+async function checkCitations(
+  draft: IdentifiedClaimDraft,
+  expanded: readonly Hunk[] | null,
+  readSide: SideReader,
+  quoteCheck: QuoteCheck,
+): Promise<{ passing: Citation[]; isFirstCitationPassing: boolean }> {
+  const passing: Citation[] = [];
+  let isFirstCitationPassing = false;
+  for (const [index, citation] of draft.citations.entries()) {
+    const result = await checkClaimCitation(citation, index === 0 ? expanded : null, readSide);
+    quoteCheck.checked++;
+    if (!result.passed) {
+      quoteCheck.failures.push({ itemId: draft.id, citation, reason: result.reason });
+      continue;
+    }
+    quoteCheck.passed++;
+    passing.push(citation);
+    if (index === 0) isFirstCitationPassing = true;
+  }
+  return { passing, isFirstCitationPassing };
+}
+
+/**
+ * One citation's check. `globbedHunks` is set only for a pathGlob claim's first
+ * citation: that quote stands for every globbed hunk, so it must also be in the
+ * added lines of each, whatever the other citations show.
+ */
+async function checkClaimCitation(
+  citation: Citation,
+  globbedHunks: readonly Hunk[] | null,
+  readSide: SideReader,
+): Promise<{ passed: true } | { passed: false; reason: string }> {
+  const result = await checkCitation(citation, readSide);
+  if (!result.passed || globbedHunks === null) return result;
+  const missingFrom = globbedHunks.filter((hunk) => !isInAddedLines(citation.quote, hunk));
+  if (missingFrom.length === 0) return result;
+  return {
+    passed: false,
+    reason: `quote not in the added lines of ${missingFrom.map((hunk) => hunk.id).join(", ")}`,
+  };
+}
+
+/** The listed hunk ids a passing citation lies in; a hunk listed without a quote in it isn't covered. */
+function citedHunkIds(
+  listed: readonly string[],
+  hunks: readonly Hunk[],
+  passing: readonly Citation[],
+): string[] {
+  return listed.filter((id) =>
+    isHunkCited(
+      hunks.find((hunk) => hunk.id === id),
+      passing,
+    ),
+  );
 }
 
 /** True when a passing citation names the hunk's file and its lines overlap the hunk's lines on the cited side. */
