@@ -8,6 +8,6 @@
   "endLine": 1057,
   "defect": "For an ignored member the non-public flag is combined with &= instead of |=, so it can never become true there and ignored non-public members no longer count towards serializing non-public members.",
   "why": "The flag starts false, so &= leaves it false; later members are then treated as if no non-public member is serialized, changing which unkeyed members are reported and generated. This is an unrequested change next to the fix (N2).",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T02:30:32.000Z"
 }

@@ -8,6 +8,6 @@
   "endLine": 420,
   "defect": "The inaccessible-formatter diagnostic is reported only for formatters excluded from the source-generated resolver (the negation was dropped), instead of for those included in it.",
   "why": "A formatter the generated resolver includes but cannot access is the case the diagnostic exists for; excluded formatters are never referenced by the resolver, so reporting them is noise and the real cases go unreported.",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T03:03:32.000Z"
 }

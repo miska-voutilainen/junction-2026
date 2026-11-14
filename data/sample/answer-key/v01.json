@@ -8,6 +8,6 @@
   "endLine": 375,
   "defect": "The nullable-annotation filter matches formatters whose type argument is already annotated (NullableAnnotation.Annotated) instead of those that are not (NotAnnotated).",
   "why": "The NullableReferenceTypeFormatter warning exists for formatters that implement IMessagePackFormatter<T> without the nullable annotation. With the test flipped it fires on correct formatters and stays silent on the ones it is meant to flag.",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T03:03:05.000Z"
 }

@@ -8,6 +8,6 @@
   "endLine": null,
   "defect": "The new helper falls back to the location of the containing type when the property has no source declaration.",
   "why": "The helper returns null when the property has no declaration in source (its doc comment says so); it never falls back to the containing type.",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T03:07:06.691Z"
 }

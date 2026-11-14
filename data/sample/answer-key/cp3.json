@@ -8,6 +8,6 @@
   "endLine": null,
   "defect": "A member with a mismatched key kind is skipped before its diagnostic is reported.",
   "why": "The diff adds the skip (continue) after the DoNotMixStringAndIntKeys diagnostic is reported, not before; skipping first would hide the problem the analyzer must report.",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T03:07:06.693Z"
 }

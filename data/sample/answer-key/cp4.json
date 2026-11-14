@@ -8,6 +8,6 @@
   "endLine": null,
   "defect": "Generic types are supported as long as every type argument is closed.",
   "why": "The collector rejects generic types outright (it requires IsGenericType: false) and the README lists them as unsupported.",
-  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
   "writtenAt": "2026-11-14T03:07:06.694Z"
 }

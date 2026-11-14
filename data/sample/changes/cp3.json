@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change fixes analyzer failures on types marked with SuppressSourceGeneration = true (issue 2234). Those types are still serialized at run time, so they still need a valid contract. The cause was in the type collector: duplicate integer or string keys, and members whose key kind differed from the rest, made it throw while building its member tables. It now adds a key only if it is not already present. A member with a mismatched key kind is skipped before its diagnostic is reported. The analyzer therefore reports the problem instead of failing. I added analyzer tests for missing keys, AllowPrivate, duplicate keys and mixed key kinds, plus two execution tests: no formatter is generated for a suppressed type, and it round-trips through the dynamic resolver. The README gains a section on opting out of source generation and lists which diagnostics still apply.",
     "synthetic": true,
-    "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output"
+    "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants"
   }
 }

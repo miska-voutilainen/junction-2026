@@ -3,9 +3,10 @@
  * in src/contracts/, every change has its requirement, and the one false
  * statement in mp-2283's description is recorded verbatim in the answer key
  * (spec section 9.1, T07). The planted-bug and contradiction-plant checks
- * (T08) read only the committed files, except the one test that looks the
- * planted lines up in the fork through git, which runs when SAMPLE_REPO_DIR
- * is set and is skipped with a message otherwise.
+ * (T08) read only the committed files, except two tests that look the plants
+ * up in the fork through git (commit shape per variant; planted lines against
+ * the variant's and the parent's edits). They run when SAMPLE_REPO_DIR is set
+ * and are skipped with a message otherwise.
  */
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
@@ -44,7 +45,7 @@ const EXPECTED_CONTRADICTION_PARENTS = {
   cp4: "mp-2129",
 };
 const PLANT_WRITTEN_BY =
-  "engine lane (Miska), written by an isolated Claude Sonnet subagent before any reviewer prompt existed; it never opened prompts, pipeline or review output";
+  "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants";
 // Each fork check starts dozens of git processes, which is slow on Windows.
 const FORK_TEST_TIMEOUT_MS = 60_000;
 const sampleRepoDir = process.env.SAMPLE_REPO_DIR;
@@ -94,6 +95,14 @@ function changeById(id: string): ChangeInput {
     throw new Error(`No change ${id}. Add data/sample/changes/${id}.json.`);
   }
   return found.change;
+}
+
+/** The parent of a variant or plant; throws when the change input names none. */
+function parentIdOf(change: ChangeInput): string {
+  if (change.parentChangeId === null) {
+    throw new Error(`Variant ${change.id} has no parentChangeId`);
+  }
+  return change.parentChangeId;
 }
 
 /** A line range on the new side of a diff, 1-based and inclusive. */
@@ -233,7 +242,7 @@ describe("sample data", () => {
     const byParent: Record<string, number> = {};
     const byArea: Record<string, number> = {};
     for (const variant of variants) {
-      const parentId = String(variant.parentChangeId);
+      const parentId = parentIdOf(variant);
       byParent[parentId] = (byParent[parentId] ?? 0) + 1;
       const area = String(answerKeyFor(variant.id).area);
       byArea[area] = (byArea[area] ?? 0) + 1;
@@ -254,7 +263,7 @@ describe("sample data", () => {
 
   it("gives each planted bug its parent's description and a head that differs from the parent's", () => {
     for (const variant of variants) {
-      const parent = changeById(String(variant.parentChangeId));
+      const parent = changeById(parentIdOf(variant));
       expect(variant.authorDescription.text).toBe(parent.authorDescription.text);
       expect(variant.requirementId).toBe(parent.requirementId);
       expect(variant.branch).toBe(`variant/${variant.id}`);
@@ -269,7 +278,7 @@ describe("sample data", () => {
     );
     expect(parentOf).toEqual(EXPECTED_CONTRADICTION_PARENTS);
     for (const plant of contradictionPlants) {
-      const parent = changeById(String(plant.parentChangeId));
+      const parent = changeById(parentIdOf(plant));
       expect(plant.headSha).toBe(parent.headSha);
       expect(plant.branch).toBe(parent.branch);
     }
@@ -320,7 +329,7 @@ describe("sample data", () => {
         "keeps each variant to one commit on the base, with the parent's message, pushed to origin",
         () => {
           for (const variant of variants) {
-            const parent = changeById(String(variant.parentChangeId));
+            const parent = changeById(parentIdOf(variant));
             expect(
               git("rev-list", "--parents", "-n", "1", variant.headSha).trim(),
               `${variant.id} is one commit whose parent is the base`,
@@ -341,7 +350,7 @@ describe("sample data", () => {
         "finds each planted range in its variant's file, on lines only the variant changes",
         () => {
           for (const variant of variants) {
-            const parent = changeById(String(variant.parentChangeId));
+            const parent = changeById(parentIdOf(variant));
             const key = answerKeyFor(variant.id);
             if (key.file === null || key.startLine === null || key.endLine === null) {
               throw new Error(`${variant.id} needs a file and a line range.`);
@@ -353,7 +362,9 @@ describe("sample data", () => {
               countLines(content),
             );
 
-            // Exact: the variant's own edit is what the range marks.
+            // Exact: the variant's own edit is what the range marks. Comparing the
+            // parent's edit lines with the variant's lines assumes a plant replaces
+            // lines one for one, so line numbers do not shift between the two heads.
             const variantEdits = changedLines(parent.headSha, variant.headSha, file);
             expect(
               variantEdits.some((edit) => overlaps(edit, startLine, endLine, 0)),
