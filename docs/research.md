@@ -54,7 +54,9 @@ Tieto's customers are banks, insurers, healthcare and the public sector, so we a
 
 **How we say it:** "the receipt is the kind of change-approval record auditors already ask for, now for agent-written changes". Never "compliant with" a regulation: the spec rules out legal claims, and compliance is decided per organisation.
 
-Not quoted: the research summarised a Tieto article on governing AI agents ("who makes decisions, and when human oversight is required") that we couldn't find on tieto.com, and the company figures it cited are unchecked.
+**Tieto's own words.** Writing about AI agents chained together, Tieto said: "Organizations must define how risks are managed, how production use is monitored, how wrong or non-optimal use is tracked, who makes decisions, and when human oversight is required." The same article warns that without a shared governance model, isolated initiatives "can quickly lead to unmanageable, fragmented chaos." (Jutta Karjalainen and Kyösti Laiho, ["AI is not a quick win: Why AI winners act now, not tomorrow"](https://www.tietoevry.com/en/blog/2025/12/ai-is-not-a-quick-win-why-ai-winners-act-now-not-tomorrow/), Tieto, 29 December 2025; checked word for word.) Countersign answers that list for agent-written code: the refusal policy says who decides, the routing says when a human looks, and the report card tracks wrong output.
+
+Not quoted: the company figures the research cited (training completion, headcount) are unchecked.
 
 ## The hardest questions, and our answers
 
