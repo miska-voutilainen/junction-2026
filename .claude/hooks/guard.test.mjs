@@ -218,7 +218,7 @@ test("git push: bare push on main is denied, on a feature branch allowed", () =>
   state.branch = "feat/x";
   assert.equal(kind(shell("git push")), null);
   state.branch = null;
-  assert.equal(kind(shell("git push")), null);
+  assert.equal(kind(shell("git push")), "ask");
   state.branch = "feat/x";
 });
 
@@ -319,6 +319,7 @@ test("end to end: the canary, and silence on an allowed call", () => {
 // Review fixes: escapes, .env variants, push edge cases, false positives.
 const denies = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), "deny", cmd);
 const allows = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), null, cmd);
+const asks = (cmd, tool = "Bash", over) => assert.equal(kind(shell(cmd, tool, over)), "ask", cmd);
 
 test("escape characters cannot hide a command", () => {
   for (const c of ['echo \\"; cat .env', 'echo \\"; git push --force origin feat', "cat .e\\nv", "git push origin ma\\in", "git push -\\f origin x"])
@@ -460,4 +461,62 @@ test("PowerShell writes to harness files ask", () => {
   assert.equal(kind(shell("Get-Content .claude/hooks/guard.mjs", "PowerShell")), null);
   assert.equal(kind(shell("Set-Content .claude/hooks/guard.mjs x", "PowerShell")), "ask");
   assert.equal(kind(shell("ni notes.txt", "PowerShell")), null);
+});
+
+test("a nested command in an argument does not cut the command it sits in", () => {
+  denies("git push origin $(git branch --show-current) --force");
+  state.branch = "feat/x";
+  denies("git push $(git remote) main");
+  denies("git -C $(git rev-parse --show-toplevel) push --force origin x");
+  asks("sed -i $(echo s/a/b/) .claude/hooks/guard.mjs");
+  asks("cp <(echo x) .claude/hooks/guard.mjs");
+  asks("Set-Content -Value (Get-Date) -Path .claude/settings.json", "PowerShell");
+  asks("Set-Content -Value {x} -Path .claude/settings.json", "PowerShell");
+  denies("Remove-Item -Recurse -Force -Path (Join-Path $HOME x)", "PowerShell");
+  // The nested text is still a command of its own, and quoted brackets stay literal.
+  denies("echo $(git push -f origin x)");
+  denies("echo <(git push -f origin x)");
+  allows('git commit -m "fix (parser) and {braces}"');
+  allows("echo $(echo ')') done");
+});
+
+test("an unreadable branch asks, and a leading cd picks the lookup directory", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), cwd.endsWith("main-checkout") ? "main" : null) };
+  const run = (command) => kind(decide({ tool_name: "Bash", tool_input: { command }, cwd: root }, ctx({ io: spy })));
+  assert.equal(run("git push"), "ask");
+  assert.equal(run("cd main-checkout && git push"), "deny");
+  assert.equal(run("git -C main-checkout push"), "deny");
+  assert.equal(run("git push origin feat/x"), null);
+});
+
+test("gh pr merge looks the PR up in the repo it names", () => {
+  const calls = [];
+  const spy = { ...io, prAuthor: (n, cwd, repo) => (calls.push([n, repo]), state.author) };
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge -R other/repo 12" }, cwd: root }, ctx({ io: spy }));
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr -R o/r merge 7" }, cwd: root }, ctx({ io: spy }));
+  decide({ tool_name: "Bash", tool_input: { command: "gh pr merge 3" }, cwd: root }, ctx({ io: spy }));
+  assert.deepEqual(calls, [["12", "other/repo"], ["7", "o/r"], ["3", null]]);
+});
+
+test("wrappers: piped targets, timeout, nice, stdbuf, bash -ce, cmd /c, encoded PowerShell", () => {
+  assert.equal(kind(shell("ls | xargs rm -rf")), "ask");
+  for (const cmd of [
+    "timeout 5 git push -f origin x",
+    "nice -n 5 git push -f origin x",
+    "stdbuf -oL git push -f origin x",
+    'bash -ce "git push -f origin x"',
+    "cmd /c git push -f origin x",
+    "cmd //c git push -f origin x",
+  ])
+    denies(cmd);
+  for (const flag of ["-EncodedCommand", "-enc", "-e"]) asks(`pwsh ${flag} Z2l0`, "PowerShell");
+  allows("timeout 5 git status");
+});
+
+test("git -C directories combine, each relative to the one before", () => {
+  const seen = [];
+  const spy = { ...io, currentBranch: (cwd) => (seen.push(cwd), "feat/x") };
+  decide({ tool_name: "Bash", tool_input: { command: "git -C a -C b push" }, cwd: root }, ctx({ io: spy }));
+  assert.equal(seen[0], resolve(root, "a", "b"));
 });
