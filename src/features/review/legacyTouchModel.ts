@@ -1,7 +1,7 @@
 /**
  * Legacy guard on the review page (idea 9): the review's touch points as rows
  * the screen can print. Pure, no React. The touch points themselves come from
- * the pipeline (git and path rules); this only words them. Spec section 5, Policy.
+ * the pipeline (git and path rules); this only words them. Spec section 3, S2.
  */
 import type { LegacyTouchPoint, Review } from "@/contracts";
 import { countOf } from "@/lib/countOf";

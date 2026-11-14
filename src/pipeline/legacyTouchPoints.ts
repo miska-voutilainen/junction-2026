@@ -1,47 +1,30 @@
 /**
- * Legacy guard, touch points: every place a change reaches what old systems rely
- * on becomes a touch point with a kind, a named owner and a guard, the evidence
- * that the touch is safe. The guard differs per kind: tests at the base commit
- * for legacy code, the test projects' targets for old-platform code, release
- * notes for a consumer contract. Git and path/text rules only, no model, so the
- * owner can follow every line. Tests at base predate the change, so the agent
- * that wrote it did not write them (the author never checks its own work).
- * Spec section 5, Policy.
+ * Legacy guard, touch points: every place a change reaches what old systems
+ * rely on becomes a touch point with a kind, a named owner and a guard, the
+ * evidence that the touch is safe. The guard differs per kind: tests at the base
+ * commit for legacy code, the test projects' targets for old-platform code,
+ * release notes for a consumer contract. Git and path or text rules only, no
+ * model, so the owner can follow every line. Tests at the base commit predate
+ * the change, so the agent that wrote it did not write them (the author never
+ * checks its own work). Spec section 5, Policy.
+ *
+ * This module finds legacy-code touches and runs every detector; the other kinds
+ * live in oldPlatformTouchPoints.ts and contractTouchPoints.ts.
  */
-import type { LegacyTouchKind, LegacyTouchPoint, Review } from "../contracts";
+import type { LegacyTouchPoint, Review } from "../contracts";
 import { gitBaseTree, type BaseTree } from "../lib/git/baseTree";
-import { matchesGlob } from "../policy/globMatch";
 import { legacyZoneOf, legacyZones } from "../policy/legacy";
-import {
-  analyzerOnlyGlob,
-  buildGlobs,
-  commentLine,
-  consumerContractGlobs,
-  consumerNoteGlobs,
-  contractShapes,
-  legacyTargetFramework,
-  maintainersOwner,
-  maxListedFiles,
-  oldPlatformDirective,
-} from "../policy/legacyTouch";
+import { maintainersOwner, maxListedFiles } from "../policy/legacyTouch";
+import { buildTouchPoints, consumerContractTouchPoints } from "./contractTouchPoints";
 import { addedCalls, changedDeclarations, declaredName } from "./csharpSymbols";
-
-type Hunk = Review["hunks"][number];
-type Guard = LegacyTouchPoint["guard"];
-
-/** One place in one hunk that touches something legacy, before hunks are grouped. */
-interface Sighting {
-  detail: string;
-  owner: string;
-  hunkId: string;
-  /** What the guard looks up: a symbol, a type name or a source project. */
-  subject: string;
-}
+import { oldPlatformTouchPoints } from "./oldPlatformTouchPoints";
+import { groupSightings, type Guard, type Hunk, type Sighting } from "./touchSightings";
 
 /**
- * All touch points of a change, in kind order. Pure rules over the hunks and
- * the files at the base commit.
- * @param input.files the change's files (their paths decide consumer and build touches)
+ * All touch points of a change, in kind order: legacy code, old platform,
+ * consumer contract, build.
+ * @param input.files the change's files (release notes among them guard a contract touch)
+ * @param tree what the guards read from the base commit; tests pass a fake
  */
 export async function findLegacyTouchPoints(
   input: { repoDir: string; baseSha: string; files: Review["files"]; hunks: Review["hunks"] },
@@ -56,8 +39,7 @@ export async function findLegacyTouchPoints(
   ];
 }
 
-// --- legacy-code: a hunk in a zone, or a reach-in from outside it ---
-
+/** A hunk in a zone, or a reach into one by name from outside it, guarded by tests that name it. */
 async function legacyCodeTouchPoints(
   hunks: readonly Hunk[],
   tree: BaseTree,
@@ -67,18 +49,16 @@ async function legacyCodeTouchPoints(
 }
 
 /**
- * One sighting per zone hunk; the subject is the file's type name, which tests name when they cover it.
+ * One sighting per zone hunk; the subject is the file's type name, which tests
+ * name when they cover it.
  * @example "src/MessagePack/MessagePackWriter.cs" gives subject "MessagePackWriter"
  */
 function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
   return hunks.flatMap((hunk) => {
     const zone = legacyZoneOf(hunk.file);
     if (!zone) return [];
-    const typeName =
-      hunk.file
-        .split("/")
-        .pop()
-        ?.replace(/\.\w+$/, "") ?? hunk.file;
+    const fileName = hunk.file.split("/").pop() ?? hunk.file;
+    const typeName = fileName.replace(/\.\w+$/, ""); // drop the extension: "MessagePackWriter.cs" gives "MessagePackWriter"
     return [
       {
         detail: `${zone.label}: ${hunk.file}`,
@@ -90,28 +70,22 @@ function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
   });
 }
 
+/** The zones as git pathspecs, e.g. ":(glob)src/MessagePack/MessagePackWriter.cs". */
 const zonePathspecs = legacyZones.flatMap((zone) => zone.globs.map((glob) => `:(glob)${glob}`));
-
-/** Each type or method the zone files declare at base, with the first zone file declaring it. */
-async function zoneDeclarations(tree: BaseTree): Promise<Map<string, string>> {
-  const symbols = new Map<string, string>();
-  for (const { path, text } of await tree.accessModifierLines(zonePathspecs)) {
-    const name = declaredName(text);
-    if (name && !symbols.has(name)) symbols.set(name, path);
-  }
-  return symbols;
-}
 
 /**
  * A hunk outside the zones that declares or removes a symbol zone files use
  * ("called from"), or adds a call to a symbol zone files declare ("calls into").
- * Only `.cs` under src/: a test calling legacy code does not change it.
+ * Name matching, not type resolution: coarse, but a false touch costs one read
+ * and never lets a hunk skip one. Only `.cs` under src/: a test calling legacy
+ * code does not change it.
  */
 async function reachInSightings(hunks: readonly Hunk[], tree: BaseTree): Promise<Sighting[]> {
   const outside = hunks.filter(
     (hunk) => /^src\/.*\.cs$/.test(hunk.file) && legacyZoneOf(hunk.file) === null,
   );
   const sightings: Sighting[] = [];
+  // Read the zones' declarations only once, and only if some hunk adds a call.
   let zoneSymbols: Map<string, string> | null = null;
   for (const hunk of outside) {
     for (const symbol of changedDeclarations(hunk)) {
@@ -129,6 +103,17 @@ async function reachInSightings(hunks: readonly Hunk[], tree: BaseTree): Promise
   return sightings;
 }
 
+/** Each type or method the zone files declare at the base commit, with the first zone file declaring it. */
+async function zoneDeclarations(tree: BaseTree): Promise<Map<string, string>> {
+  const symbols = new Map<string, string>();
+  for (const { path, text } of await tree.accessModifierLines(zonePathspecs)) {
+    const name = declaredName(text);
+    if (name && !symbols.has(name)) symbols.set(name, path);
+  }
+  return symbols;
+}
+
+/** A reach-in sighting, owned by the zone the symbol lives in. */
 function reachIn(hunk: Hunk, symbol: string, direction: string, zoneFile: string): Sighting {
   const zone = legacyZoneOf(zoneFile);
   return {
@@ -138,225 +123,28 @@ function reachIn(hunk: Hunk, symbol: string, direction: string, zoneFile: string
     subject: symbol,
   };
 }
-/** Test files at the base commit that name the symbol: they predate the change, so the author did not write them. */
+
+/**
+ * Guarded when a test file at the base commit names the symbol. Those tests
+ * predate the change, so the author did not write them. Naming is not proof
+ * the test checks the behaviour that matters; running them on base and head
+ * is the next step (not built).
+ */
 async function guardByTests(symbol: string, tree: BaseTree): Promise<Guard> {
-  const found = (await tree.filesMentioning(symbol, ["tests"])).filter((file) =>
+  const testFiles = (await tree.filesMentioning(symbol, ["tests"])).filter((file) =>
     file.endsWith(".cs"),
   );
-  if (found.length === 0)
+  if (testFiles.length === 0) {
     return {
       status: "unguarded",
       evidence: `no test at the base commit names ${symbol}`,
       files: [],
     };
+  }
+  const count = testFiles.length === 1 ? "1 test file" : `${testFiles.length} test files`;
   return {
     status: "guarded",
-    evidence: `${found.length} ${found.length === 1 ? "test file" : "test files"} at the base commit name ${symbol}`,
-    files: found.slice(0, maxListedFiles),
+    evidence: `${count} at the base commit name ${symbol}`,
+    files: testFiles.slice(0, maxListedFiles),
   };
-}
-
-// --- old-platform: #if for a target only old systems build ---
-
-async function oldPlatformTouchPoints(
-  hunks: readonly Hunk[],
-  tree: BaseTree,
-): Promise<LegacyTouchPoint[]> {
-  const sightings = hunks.flatMap((hunk) => {
-    const project = hunk.file.match(/^src\/([^/]+)\//)?.[1];
-    // The first directive stands for the hunk: one hunk is one sighting, and a hunk
-    // that changes several `#if` lines still asks the same question of the owner.
-    const directive = hunk.lines
-      .filter((line) => line.kind !== "context" && oldPlatformDirective.test(line.text))
-      .map((line) => line.text.trim())[0];
-    if (!project || !directive) return [];
-    return [
-      { detail: directive, owner: maintainersOwner.platform, hunkId: hunk.id, subject: project },
-    ];
-  });
-  return groupSightings("old-platform", sightings, (projects) =>
-    guardByTestTargets(projects, tree),
-  );
-}
-
-/** One target a test project builds for. */
-interface Target {
-  framework: string;
-  /** Under a Condition, e.g. Windows only: a machine that doesn't meet it never runs it. */
-  isConditional: boolean;
-}
-
-/**
- * Targets a csproj builds for. Properties that are not a plain framework name
- * (`$(TargetFrameworks)`) are skipped.
- * @example `<TargetFrameworks Condition="...Windows...">net472</TargetFrameworks>` gives [{ framework: "net472", isConditional: true }]
- */
-export function parseTargets(csproj: string): Target[] {
-  const groups = csproj.matchAll(/<PropertyGroup([^>]*)>([\s\S]*?)<\/PropertyGroup>/g);
-  return [...groups].flatMap(([, groupAttributes, body]) =>
-    [...body.matchAll(/<TargetFrameworks?([^>]*)>([^<]*)</g)].flatMap(([, attributes, value]) =>
-      value
-        .split(";")
-        .map((framework) => framework.trim())
-        .filter((framework) => /^net/i.test(framework))
-        .map((framework) => ({
-          framework,
-          isConditional: /Condition=/.test(groupAttributes) || /Condition=/.test(attributes),
-        })),
-    ),
-  );
-}
-
-/**
- * A test project's csproj for a source project: the folder is `<project>.<Name>Tests`
- * with no further dot, so `MessagePack` claims `tests/MessagePack.Tests` but not
- * `tests/MessagePack.SourceGenerator.Tests`, which belongs to the generator.
- * @example for "MessagePack.SourceGenerator", "tests/MessagePack.SourceGenerator.ExecutionTests/X.csproj" matches
- */
-function testProjectPattern(project: string): RegExp {
-  const escaped = project.replace(/[.]/g, "\\.");
-  return new RegExp(`^tests/${escaped}\\.\\w*Tests/[^/]+\\.csproj$`);
-}
-
-/** The test projects for the touched source projects and what they target; a legacy target must be built, not conditional, to run. */
-async function guardByTestTargets(sourceProjects: string[], tree: BaseTree): Promise<Guard> {
-  const csprojs = (await tree.listFiles("tests")).filter((path) =>
-    sourceProjects.some((project) => testProjectPattern(project).test(path)),
-  );
-  const described: string[] = [];
-  let hasUnconditional = false;
-  let hasConditional = false;
-  for (const csproj of csprojs) {
-    const targets = parseTargets((await tree.readFile(csproj)) ?? "");
-    const legacy = targets.filter((target) => legacyTargetFramework.test(target.framework));
-    hasUnconditional ||= legacy.some((target) => !target.isConditional);
-    hasConditional ||= legacy.some((target) => target.isConditional);
-    const names = targets.map(
-      (target) => target.framework + (target.isConditional ? " (conditional)" : ""),
-    );
-    described.push(
-      `${csproj.split("/").slice(0, 2).join("/")} targets ${names.join(", ") || "no plain framework"}`,
-    );
-  }
-  const files = csprojs.slice(0, maxListedFiles);
-  const evidence =
-    described.length > 0
-      ? described.join("; ")
-      : `no test project under tests/ matches ${sourceProjects.join(", ")}`;
-  if (hasUnconditional) return { status: "guarded", evidence, files };
-  if (hasConditional)
-    return {
-      status: "partly",
-      evidence: `a test project targets an old platform only under a condition: ${evidence}`,
-      files,
-    };
-  return {
-    status: "unguarded",
-    evidence: `no test runs it on netstandard or .NET Framework: ${evidence}`,
-    files,
-  };
-}
-
-// --- consumer-contract (by path or by what the hunk changes) and build (by path) ---
-
-/**
- * A hunk is a consumer-contract touch when it sits in a contract path or changes
- * a contract shape: a public declaration, a wire attribute or a diagnostic id.
- * The shapes find contract changes the paths miss; the detail says which fired.
- */
-function consumerContractTouchPoints(
-  files: Review["files"],
-  hunks: readonly Hunk[],
-): LegacyTouchPoint[] {
-  const found = hunks.flatMap((hunk) => {
-    const reasons = contractReasons(hunk);
-    return reasons.length > 0 ? [{ hunk, reasons }] : [];
-  });
-  if (found.length === 0) return [];
-  const notes = files
-    .map((file) => file.path)
-    .filter((path) => matchesAny(consumerNoteGlobs, path));
-  const guard: Guard =
-    notes.length > 0
-      ? {
-          status: "guarded",
-          evidence: `the same change updates ${summarise(notes)}`,
-          files: notes.slice(0, maxListedFiles),
-        }
-      : { status: "unguarded", evidence: "no release note or doc tells old consumers", files: [] };
-  const detail = [...new Set(found.flatMap(({ reasons }) => reasons))].join(", ");
-  const hunkIds = found.map(({ hunk }) => hunk.id);
-  return [{ kind: "consumer-contract", hunkIds, detail, owner: maintainersOwner.api, guard }];
-}
-
-/** Why a hunk counts as a contract change, in the labels the touch point's detail lists. */
-function contractReasons(hunk: Hunk): string[] {
-  const reasons: string[] = [];
-  if (matchesAny(consumerContractGlobs, hunk.file)) reasons.push("contract paths");
-  // Only src/: a test that declares or calls public members changes no consumer's contract.
-  if (!/^src\/.*\.cs$/.test(hunk.file)) return reasons;
-  const changed = hunk.lines.filter(
-    (line) => line.kind !== "context" && !commentLine.test(line.text),
-  );
-  const isAnalyzer = matchesGlob(analyzerOnlyGlob, hunk.file);
-  for (const { label, pattern, appliesInAnalyzer } of contractShapes) {
-    if (isAnalyzer && !appliesInAnalyzer) continue;
-    if (changed.some((line) => pattern.test(line.text))) reasons.push(label);
-  }
-  return reasons;
-}
-
-function buildTouchPoints(hunks: readonly Hunk[]): LegacyTouchPoint[] {
-  const touched = hunks.filter((hunk) => matchesAny(buildGlobs, hunk.file));
-  if (touched.length === 0) return [];
-  const guard: Guard = {
-    status: "owner-read",
-    evidence: "no test shows what a build change does to old targets",
-    files: [],
-  };
-  return [touchPoint("build", touched, maintainersOwner.build, guard)];
-}
-
-function touchPoint(
-  kind: LegacyTouchKind,
-  hunks: Hunk[],
-  owner: string,
-  guard: Guard,
-): LegacyTouchPoint {
-  const paths = [...new Set(hunks.map((hunk) => hunk.file))];
-  return { kind, hunkIds: hunks.map((hunk) => hunk.id), detail: summarise(paths), owner, guard };
-}
-
-function matchesAny(globs: readonly string[], path: string): boolean {
-  return globs.some((glob) => matchesGlob(glob, path));
-}
-
-/** "a.cs, b.cs, c.cs and 2 more": file names, so a touch point reads on one line. */
-function summarise(paths: readonly string[]): string {
-  const names = [...new Set(paths.map((path) => path.split("/").pop() ?? path))];
-  const shown = names.slice(0, 3).join(", ");
-  return names.length > 3 ? `${shown} and ${names.length - 3} more` : shown;
-}
-
-// --- shared ---
-
-/** One touch point per detail, in first-seen order, its guard computed once from the subjects seen. */
-async function groupSightings(
-  kind: LegacyTouchKind,
-  sightings: readonly Sighting[],
-  guardOf: (subjects: string[]) => Promise<Guard>,
-): Promise<LegacyTouchPoint[]> {
-  const details = [...new Set(sightings.map((sighting) => sighting.detail))];
-  return Promise.all(
-    details.map(async (detail) => {
-      const group = sightings.filter((sighting) => sighting.detail === detail);
-      return {
-        kind,
-        hunkIds: [...new Set(group.map((sighting) => sighting.hunkId))],
-        detail,
-        owner: group[0].owner,
-        guard: await guardOf([...new Set(group.map((sighting) => sighting.subject))]),
-      };
-    }),
-  );
 }

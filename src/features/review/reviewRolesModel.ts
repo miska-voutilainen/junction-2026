@@ -11,6 +11,7 @@ import { legacyZoneOf } from "@/policy/legacy";
 /** The role that signs the receipt; it reads whatever no specialist decides. */
 export const changeOwnerRole = "change owner (signs the receipt)";
 
+/** The rule-only legacy refusal (policy/legacy.ts); its hunks go to the legacy owner first. */
 const legacyRuleId = "R8";
 
 /** One role and the hunks it reads. */
@@ -49,13 +50,22 @@ export function buildReviewRoles(review: Review, coverage: Record<string, Covera
   return changeOwner ? [...specialists, changeOwner] : specialists;
 }
 
-function assignHunk(review: Review, hunkId: string, file: string, coverage: Coverage): Assignment | null {
+/** The one role that reads a hunk, or null when no person needs to (Verified, Supported, Generated). */
+function assignHunk(
+  review: Review,
+  hunkId: string,
+  file: string,
+  coverage: Coverage,
+): Assignment | null {
   const refusals = review.refusals.filter((refusal) => refusal.hunkIds.includes(hunkId));
+  // R8 wins over other refusals: only the legacy owner knows the old system the
+  // hunk can break, and the API owner of an R7 on the same hunk can't judge that.
   const legacy = refusals.find((refusal) => refusal.ruleId === legacyRuleId);
   const refusal = legacy ?? refusals[0];
   if (refusal) {
     const rule = allRefusalRules.find((candidate) => candidate.id === refusal.ruleId);
     const role = legacy ? legacyOwner(review, hunkId, file, rule?.decider) : rule?.decider;
+    // A rule id the policy doesn't know has no decider; the hunk still reaches the change owner below.
     if (role) return { role, reason: reasonOf(refusal.ruleId, rule?.title) };
   }
   return coverage === "read" ? { role: changeOwnerRole, reason: "Needs a person" } : null;

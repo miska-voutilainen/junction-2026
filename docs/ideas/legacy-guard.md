@@ -42,7 +42,7 @@ Reach-in by symbol name found nothing on the four diffs. The prototype's only hi
 ## How to adopt it
 
 - **You need:** a list of the paths old systems rely on, with an owner each. Start with the zones and the old targets you still ship.
-- **It costs:** no model calls. `git grep` on the base commit and path rules; 659 lines in seven files (`legacy.ts` 79, `legacyTouch.ts` 87, `refusalPolicy.ts` 15, `legacyTouchPoints.ts` 319, `baseTree.ts` 59, `csharpSymbols.ts` 57, `addLegacyGuard.ts` 43) and 271 lines of tests, plus the two routing rules in `route.ts`.
+- **It costs:** no model calls. `git grep` on the base commit and path rules; 876 lines in ten files, the largest 150 (`legacyTouch.ts` holds what counts as each kind; `legacyTouchPoints.ts`, `oldPlatformTouchPoints.ts` and `contractTouchPoints.ts` hold the detectors) and 271 lines of tests, plus the two routing rules in `route.ts`.
 - **First step:** add the old-platform and consumer-contract kinds. They need no zone map, and they find touches that ownership by path misses.
 
 ## Limits and failure modes
@@ -57,7 +57,9 @@ Reach-in by symbol name found nothing on the four diffs. The prototype's only hi
 - [`src/policy/legacy.ts`](../../src/policy/legacy.ts): zones, owners, `legacyTouchFull`, rule R8
 - [`src/policy/legacyTouch.ts`](../../src/policy/legacyTouch.ts): touch kinds and what counts as each
 - [`src/policy/refusalPolicy.ts`](../../src/policy/refusalPolicy.ts): R1 to R7 plus R8, policy v2
-- [`src/pipeline/legacyTouchPoints.ts`](../../src/pipeline/legacyTouchPoints.ts): the detectors and guards
+- [`src/pipeline/legacyTouchPoints.ts`](../../src/pipeline/legacyTouchPoints.ts): runs every detector; legacy-code touches and their test guard
+- [`src/pipeline/oldPlatformTouchPoints.ts`](../../src/pipeline/oldPlatformTouchPoints.ts): old-platform touches and the test projects' targets
+- [`src/pipeline/contractTouchPoints.ts`](../../src/pipeline/contractTouchPoints.ts): consumer-contract and build touches
 - [`src/lib/git/baseTree.ts`](../../src/lib/git/baseTree.ts): what the guards read from the base commit
 - [`src/pipeline/csharpSymbols.ts`](../../src/pipeline/csharpSymbols.ts): the C# declarations and calls a hunk adds or removes
 - [`src/pipeline/addLegacyGuard.ts`](../../src/pipeline/addLegacyGuard.ts): adds touch points to a recorded review
