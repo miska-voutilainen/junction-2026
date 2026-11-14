@@ -11,6 +11,7 @@
  */
 import { areaLabel, ladderLevelLabel } from "../contracts";
 import type { Area, Coverage, LadderLevel, Review, Tier, TierDecision } from "../contracts";
+import { globToRegExp } from "../policy/globMatch";
 import { routingPolicy, type RoutingPolicy } from "../policy/routing";
 
 type Hunk = Review["hunks"][number];
@@ -177,21 +178,4 @@ function areaLevelReasons(input: RuleInput): Reason[] {
 
 function sumChangedLines(hunks: Hunk[]): number {
   return hunks.reduce((sum, hunk) => sum + hunk.lines.filter((line) => line.kind !== "context").length, 0);
-}
-
-/**
- * Glob to RegExp without a dependency (route() must run in the browser).
- * A double star crosses folders, a single star stays inside one name:
- * "**" + "/AnalyzerReleases.*.md" matches "src/X/AnalyzerReleases.Shipped.md"
- * and "AnalyzerReleases.Shipped.md".
- */
-function globToRegExp(glob: string): RegExp {
-  const pattern = glob
-    .replace(/[.+^${}()|[\]\\]/g, String.raw`\$&`)
-    .replace(/\*\*\//g, "<anyFolders>")
-    .replace(/\*\*/g, "<anything>")
-    .replace(/\*/g, "[^/]*")
-    .replace(/<anyFolders>/g, "(?:.*/)?")
-    .replace(/<anything>/g, ".*");
-  return new RegExp(`^${pattern}$`);
 }
