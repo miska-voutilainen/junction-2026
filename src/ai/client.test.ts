@@ -186,6 +186,34 @@ describe("model client", () => {
     });
   });
 
+  it("reuses a recording with the same key in record mode instead of calling the model", async () => {
+    const first = answering('{"verdict":"ok"}');
+    await createModelClient({ mode: "record", transport: first.transport, recordingsDirectory: directory, usageSink }).call(request);
+    const stderr = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const second = vi.fn<Transport>();
+    const reused = await createModelClient({ mode: "record", transport: second, recordingsDirectory: directory, usageSink }).call(request);
+
+    expect(reused).toEqual({ verdict: "ok" });
+    expect(second).not.toHaveBeenCalled();
+    expect(stderr).toHaveBeenCalledTimes(1);
+    expect(String(stderr.mock.calls[0][0])).toContain("reusing the recording");
+    expect(entries.at(-1)).toMatchObject({ source: "replay" });
+    stderr.mockRestore();
+  });
+
+  it("asks the model again in record mode when the recording no longer passes the schema", async () => {
+    const stale = answering('{"verdict":"ok"}');
+    await createModelClient({ mode: "record", transport: stale.transport, recordingsDirectory: directory, usageSink }).call(request);
+    const stricterSchema = z.object({ verdict: z.enum(["bad"]) });
+
+    const fresh = answering('{"verdict":"bad"}');
+    const answer = await createModelClient({ mode: "record", transport: fresh.transport, recordingsDirectory: directory, usageSink }).call({ ...request, schema: stricterSchema });
+
+    expect(answer).toEqual({ verdict: "bad" });
+    expect(fresh.prompts).toHaveLength(1);
+  });
+
   it("replays a call that needed a retry as the same number of requests", async () => {
     const { transport } = answering('{"verdict":"maybe"}', '{"verdict":"ok"}');
     await createModelClient({

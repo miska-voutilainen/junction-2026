@@ -5,6 +5,7 @@ import * as a1 from "./a1";
 import * as a2 from "./a2";
 import * as a3 from "./a3";
 import * as a4 from "./a4";
+import { MAX_CITATION_LINES } from "./citationRange";
 
 const requirement: Requirement = {
   id: "MP-1",
@@ -152,10 +153,10 @@ describe("a2", () => {
     const range = (startLine: number, endLine: number) =>
       claim({ citations: [{ file: "src/A.cs", side: "new", startLine, endLine, quote: "x" }] });
     expect(schema.safeParse({ story, claims: [range(5, 4)] }).success).toBe(false);
-    expect(schema.safeParse({ story, claims: [range(1, a2.MAX_CITATION_LINES + 1)] }).success).toBe(
+    expect(schema.safeParse({ story, claims: [range(1, MAX_CITATION_LINES + 1)] }).success).toBe(
       false,
     );
-    expect(schema.safeParse({ story, claims: [range(1, a2.MAX_CITATION_LINES)] }).success).toBe(
+    expect(schema.safeParse({ story, claims: [range(1, MAX_CITATION_LINES)] }).success).toBe(
       true,
     );
   });
@@ -211,9 +212,18 @@ describe("a3", () => {
     expect(a3.version).toBe("a3.v1");
   });
 
-  it("does not ask the model for an area, and rejects one", () => {
+  it("does not ask the model for an area, and tells it the first cited file decides one", () => {
     expect(a3.system).toContain("Do not choose an area");
+    expect(a3.system).toContain("source file before any test file");
     expect(schema.safeParse({ findings: [finding], refusals: [] }).success).toBe(true);
+  });
+
+  it("rejects a finding that names an area", () => {
+    expect(schema.safeParse({ findings: [{ ...finding, area: "security" }], refusals: [] }).success).toBe(false);
+  });
+
+  it("reports a missing test only when no test in the change exercises the item", () => {
+    expect(a3.system).toContain("only when no test in the change exercises that requirement item");
   });
 
   it("rejects a finding kind that is not defect, missing or scope-creep", () => {
@@ -291,6 +301,17 @@ describe("a4", () => {
     expect(
       schema.safeParse({ statements: [statement({ statement: "Fixes   the crash." })] }).success,
     ).toBe(true);
+  });
+
+  it("accepts a sentence that wraps across description lines, with or without the line markers", () => {
+    const wrapped = ["Adds a resolver", "for `Foo` types."].join(String.fromCharCode(10));
+    const wrappedSchema = a4.outputSchema({ authorDescription: wrapped, claimIds: ["c1"] });
+    for (const copied of ["Adds a resolver for `Foo` types.", "Adds a resolver | for `Foo` types."])
+      expect(wrappedSchema.safeParse({ statements: [statement({ statement: copied })] }).success).toBe(true);
+  });
+
+  it("tells the model statement is copied exactly, backticks included, though other fields are plain text", () => {
+    expect(a4.system).toContain("except statement");
   });
 
   it("rejects a statement that is not in the description", () => {

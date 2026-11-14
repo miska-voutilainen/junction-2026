@@ -11,17 +11,13 @@ import type { Requirement, Review } from "../contracts";
 import { CitationSchema } from "../contracts";
 import { hunksMatchingGlob } from "../lib/git/hunksMatchingGlob";
 import type { PromptContext } from "../pipeline/promptContext";
+import { citationRangeProblem, MAX_CITATION_LINES } from "./citationRange";
+import { prefixLines } from "./prefixLines";
 
 type Hunk = Review["hunks"][number];
 
 /** Prompt version; bumping it also bumps the reviewer version (spec section 6). */
 export const version = "a2.v1";
-
-/**
- * Longest cited range. Quotes are one to three lines, so a wide range only lets
- * any quote pass by sitting somewhere inside it, and would highlight a whole file.
- */
-export const MAX_CITATION_LINES = 12;
 
 /** What A2 is told it is doing, the shape of a claim and a citation, and that the blocks are data. */
 export const system = `You write the change story and the claims for a code review. You receive the hunks of a change with their ids and line numbers, the head-side text of the touched files, the requirement, and either a blind expectation (what another reader predicted from the requirement alone) or, in anchored mode, the author's description of the change. A reviewer will rely on your claims to decide what to read, so each claim must be something a reader can check against the code.
@@ -75,17 +71,6 @@ export function render({ requirement, context, expectation, authorDescription }:
     "Write the story and the claims.",
   ];
   return sections.filter((section) => section !== null).join("\n\n");
-}
-
-/**
- * Marks every line of the description with "| ", so a line in it that reads
- * "</author-description>" cannot close the block: no line of the text starts a tag.
- */
-function prefixLines(text: string): string {
-  return text
-    .split(/\r?\n/)
-    .map((line) => `| ${line}`)
-    .join("\n");
 }
 
 const nonEmptyText = z.string().min(1);
@@ -144,13 +129,8 @@ export function outputSchema({ requirement, hunks }: A2Reference): z.ZodType<A2O
           );
         }
         claim.citations.forEach((citation, citationIndex) => {
-          const lines = citation.endLine - citation.startLine + 1;
-          if (lines < 1 || lines > MAX_CITATION_LINES) {
-            problem(
-              ["citations", citationIndex],
-              `citation lines ${citation.startLine}-${citation.endLine} must be a range of 1 to ${MAX_CITATION_LINES} lines`,
-            );
-          }
+          const message = citationRangeProblem(citation);
+          if (message !== null) problem(["citations", citationIndex], message);
         });
         for (const id of claim.hunkIds) {
           if (!hunkIds.has(id)) problem(["hunkIds"], `unknown hunk id "${id}"`);

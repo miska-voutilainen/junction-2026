@@ -82,6 +82,7 @@ export async function checkClaims(
   const quoteCheck: QuoteCheck = { checked: 0, passed: 0, downgraded: 0, dropped: 0, failures: [] };
   const claims: Claim[] = [];
   let hunkIdsRemoved = 0;
+  // One claim at a time: the failure list and the counts follow the claim order.
   for (const draft of drafts) {
     const checked = await checkClaim(draft, hunks, readSide, quoteCheck);
     hunkIdsRemoved += checked.hunkIdsRemoved;
@@ -101,6 +102,7 @@ async function checkClaim(
 
   const passing: Citation[] = [];
   let isFirstCitationPassing = false;
+  // In order: the first citation's result decides whether a globbed claim stands.
   for (const [index, citation] of draft.citations.entries()) {
     let result = await checkCitation(citation, readSide);
     // The first quote stands for every globbed hunk, so it must be in the added lines
@@ -153,7 +155,7 @@ async function checkClaim(
 }
 
 /** True when a passing citation names the hunk's file and its lines overlap the hunk's lines on the cited side. */
-function isHunkCited(hunk: Hunk | undefined, passing: readonly Citation[]): boolean {
+export function isHunkCited(hunk: Hunk | undefined, passing: readonly Citation[]): boolean {
   if (hunk === undefined) return false;
   const start = (side: Citation["side"]) => (side === "new" ? hunk.newStart : hunk.oldStart);
   const length = (side: Citation["side"]) => (side === "new" ? hunk.newLines : hunk.oldLines);
