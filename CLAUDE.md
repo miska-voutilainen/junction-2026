@@ -29,7 +29,7 @@ Decided at kickoff (`.claude/rules/lanes.md`). Every code path belongs to exactl
 | Lane | Owner (GitHub login) | Owns (paths) | Responsible for |
 | --- | --- | --- | --- |
 | engine | `miska-voutilainen` | `src/ai/**`, `src/prompts/**`, `src/pipeline/**`, `src/rules/**`, `src/policy/**`, `src/lib/git/**`, `data/runs/**`, `data/eval/**`, `data/recordings/**` | The review pipeline (A1–A5, quote check, .NET differential tests), routing rules and trust ladder, the planted-bug eval and report card, the AI client and prompts, CI and the harness; the critical path of the demo (heaviest) |
-| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt-view/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots. Co-owner: `eliasnorta` (UI changes after the design build; `coOwners` in `lanes.json`) |
+| app | `miska-voutilainen` | `src/app/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt-view/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots. Co-owner: `eliasnorta` (UI changes after the design build; `coOwners` in `lanes.json`) |
 | evidence | `Kasanen` | `src/receipt/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants (data only; the plants were written by an isolated agent in the engine lane's session, see `docs/decisions.md`), the receipt CLI (SSH-signed git notes), the report card's data with the engine lane, quality hooks, the concept card (lightest) |
 | _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.prettierignore`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
 
@@ -58,7 +58,7 @@ pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_R
 
 Production: https://countersign-junction.com (public; `www` and `http` redirect to it; DNS on Cloudflare as DNS-only records pointing at Vercel). The `*.vercel.app` URLs stay behind Vercel Authentication (protection covers everything except custom domains). Previews: one per PR from Vercel (team "junction", project "junction-2026").
 
-Env (names in `.env.example`): `AI_BACKEND` (`claude-code` | `api` | `kimi`), `ANTHROPIC_API_KEY` (only for `api`), `KIMI_API_KEY` (only for `kimi` and the model canary), `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`), `ACCESS_CODE` (temporary gate; empty = off).
+Env (names in `.env.example`): `AI_BACKEND` (`claude-code` | `api` | `kimi`), `ANTHROPIC_API_KEY` (only for `api`), `KIMI_API_KEY` (only for `kimi` and the model canary), `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`).
 
 ## Stack
 
@@ -82,9 +82,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 ├── .claude/      rules/, agents/, skills/, hooks/, settings.json, lanes.json
 ├── docs/         challenge, gemma-bounty (proposal), spec, concept-card, lessons, architecture, how-countersign-uses-ai, decisions, research, research/ (raw research passes, unverified), api, development, setup, demo, pitch, design/, ideas/ (one page per idea), img/ (architecture diagram, README screenshot)
 ├── src/
-│   ├── app/                    routes: / (S1), /changes/[id] (S2), /changes/[id]/receipt (S4), /reviewer (S3), /dashboard (S5), /unlock (temporary gate), layout, loading, error, not-found
-│   ├── proxy.ts                temporary access gate entry
-│   ├── features/access-gate/   temporary access gate: check, cookie, unlock form; see its README
+│   ├── app/                    routes: / (S1), /changes/[id] (S2), /changes/[id]/receipt (S4), /reviewer (S3), /dashboard (S5), layout, loading, error, not-found
 │   ├── features/inbox/         S1 components
 │   ├── features/review/        S2 components: navigator, diff viewer, sidebar tabs
 │   ├── features/report-card/   S3 components

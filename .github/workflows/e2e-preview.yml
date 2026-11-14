@@ -27,13 +27,11 @@ jobs:
       - name: Check the secrets this deployment needs
         id: gate
         env:
-          ENVIRONMENT: ${{ github.event.deployment_status.environment }}
           URL: ${{ github.event.deployment_status.environment_url }}
           SHA: ${{ github.event.deployment.sha }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
         run: |
           if [ -z "$URL" ]; then
             echo "::notice::The deployment reports no URL; nothing to test."
@@ -44,9 +42,6 @@ jobs:
           elif [ -z "$BYPASS_SECRET" ]; then
             # Every environment_url is a *.vercel.app address, which Vercel Authentication covers.
             echo "::notice::Skipped: add the VERCEL_AUTOMATION_BYPASS_SECRET repository secret."
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          elif [ "$ENVIRONMENT" = "Production" ] && [ -z "$ACCESS_CODE" ]; then
-            echo "::notice::Skipped: add the ACCESS_CODE repository secret (the production access gate is on)."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
@@ -97,6 +92,4 @@ jobs:
         env:
           E2E_BASE_URL: ${{ github.event.deployment_status.environment_url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-          # The gate is on in production only; an empty code makes the specs skip unlocking.
-          ACCESS_CODE: ${{ github.event.deployment_status.environment == 'Production' && secrets.ACCESS_CODE || '' }}
         run: pnpm e2e --project=real-data

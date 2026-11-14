@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // The report card shows the committed fixture until a recorded one exists: generator and analyzer
 // Calibrated, security and performance Shadow.
@@ -26,7 +26,7 @@ function watchConsole(page: Page): string[] {
 const generatorCard = (page: Page) => page.getByRole("article", { name: "Generator" });
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
   // Reduced motion shows everything at rest, so screenshots never catch a half-faded element.
   await page.emulateMedia({ reducedMotion: "reduce" });
 });

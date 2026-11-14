@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-15 · Security headers, with `unsafe-inline` for scripts and styles
+
+- **Context:** Production sent only `Strict-Transport-Security`. A judge who runs the site through a header scanner should find the same care as in the pitch.
+- **Decision (Miska):** `next.config.ts` sends a Content-Security-Policy, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `X-Frame-Options` on every route. The CSP allows only our own origin, plus `'unsafe-inline'` for scripts and styles. `e2e/security-headers.spec.ts` asserts each header on S1 to S5; the shared console fixture fails on any CSP violation.
+- **Why:** Pages are statically generated, so a per-request nonce is not possible and Next's inline bootstrap scripts need `script-src 'unsafe-inline'`. Shiki writes highlighted code with inline styles, so `style-src` needs it too. Everything else (`default-src`, `img-src`, `font-src`, `connect-src`) stays on `'self'`, with `frame-ancestors 'none'`, `object-src 'none'`, `base-uri` and `form-action` pinned. `'unsafe-eval'` is added in `next dev` only.
+- **Rejected:** Nonces or hashes (need dynamic rendering, which the no-server design rules out); a looser `default-src *`.
+- **PR:** feat/t250-security-headers
+
 ## 2026-11-14 · Legacy guard (idea 9) and a trust-first order
 
 - **Context:** Tieto's engineer told us they run old infrastructure, that new agent code breaking old code is the main risk ("nothing passes that breaks old code"), that tests on legacy code matter most, that the SSH signing key has no value to them, and that "you could do these better than we do them ourselves".
@@ -237,6 +245,7 @@
 - **Why:** A short code is enough to keep casual visitors out; what matters is that it is clearly temporary and easy to delete.
 - **Rejected:** Vercel Password Protection (a paid-plan feature that treats custom domains differently). Basic Auth (the browser prompt would be the first thing a judge sees).
 - **PR:** #38
+- **Removed:** 2026-11-15, after the submission (#73). `ACCESS_CODE` was deleted from Vercel first, then the code; the site is public.
 
 ## 2026-11-14 · App lane moves to Miska for the UI build
 

@@ -47,8 +47,8 @@ export default defineConfig({
   ],
   // Two production servers. Pages are generated at build time, so each server is built with
   // its own COUNTERSIGN_DATA_ROOT (and its own build folder: two `next build`s must not share .next).
-  // A server already running on a port is reused as it is, so stop it before switching ACCESS_CODE
-  // or data; a server built without these settings would silently serve the wrong data.
+  // A server already running on a port is reused as it is, so stop it before switching
+  // data; a server built without these settings would silently serve the wrong data.
   webServer: externalBaseUrl
     ? undefined
     : [

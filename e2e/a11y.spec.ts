@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // Regression guard for the acceptance checklist: contrast and semantics (axe),
 // reflow (WCAG 1.4.10), keyboard, reduced motion and the no-percentage rule.
@@ -38,7 +38,7 @@ async function settle(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test.describe("axe, WCAG 2.2 AA", () => {
@@ -69,15 +69,6 @@ test.describe("axe, WCAG 2.2 AA", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
     // The rows fade in one after another; axe reads text colour mid-fade as lower contrast than it ends up.
     await page.waitForTimeout(600);
-    await expectNoViolations(page);
-  });
-
-  test("/unlock has no violations with the gate on", async ({ page }) => {
-    test.skip(!process.env.ACCESS_CODE, "needs ACCESS_CODE, the gate is off");
-    // Without the cookie, so the gate shows the form instead of redirecting away.
-    await page.context().clearCookies();
-    await page.goto("/unlock");
-    await expect(page.getByRole("heading", { name: "This project is private" })).toBeVisible();
     await expectNoViolations(page);
   });
 });

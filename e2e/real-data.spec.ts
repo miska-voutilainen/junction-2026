@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
-import { bypassHeaders, unlock } from "./unlock";
+import { bypassHeaders, bypassVercelAuth } from "./bypassVercelAuth";
 
 // Runs in the `real-data` project against a build of the committed data/ as it is.
 // Everything expected here is read from data/ at test time, so the spec keeps
@@ -44,7 +44,7 @@ const mockDataBanner = (page: import("@playwright/test").Page) =>
   page.getByText("Showing mock data");
 
 test.beforeEach(async ({ page }) => {
-  await unlock(page);
+  await bypassVercelAuth(page);
 });
 
 test("the inbox lists exactly the Tieto changes", async ({ page }) => {
@@ -89,15 +89,13 @@ for (const id of changeIds) {
 }
 
 test("planted inputs are not reviewable changes", async ({ page }) => {
-  // Sets the gate cookie in the context, which page.request shares.
-  await unlock(page);
   const plantIds = readdirSync(changesFolder)
     .filter((name) => name.endsWith(".json"))
     .map((name) => name.replace(/\.json$/, ""))
     .filter((id) => !changeIds.includes(id));
   for (const id of plantIds) {
     // A request, not a page visit: the browser logs every 404 as a console error.
-    // No redirects: a gate redirect to /unlock must fail the test, not read as a 200.
+    // No redirects: a redirect (to a login page, say) must fail the test, not read as a 200.
     const response = await page.request.get(`/changes/${id}`, {
       headers: bypassHeaders(),
       maxRedirects: 0,
