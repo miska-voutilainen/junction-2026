@@ -248,7 +248,7 @@ function Defects({ defects }: { defects: Story["defects"] }) {
               <span className="font-medium text-text-secondary capitalize">{view.finding.severity}</span>
               {view.finding.area && <AreaChip area={view.finding.area} />}
             </p>
-            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
             <p className="text-sm text-text-secondary">{view.finding.detail}</p>
             <FindingLocations view={view} />
           </li>
