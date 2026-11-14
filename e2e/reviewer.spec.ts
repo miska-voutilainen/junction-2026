@@ -33,7 +33,7 @@ test("shows the four areas in order with their sample sizes and no horizontal sc
   const problems = watchConsole(page);
   await page.goto("/reviewer");
 
-  await expect(page.getByRole("heading", { level: 1, name: "Reviewer report card" })).toBeAttached();
+  await expect(page.getByRole("heading", { level: 1, name: "Reviewer Report Card" })).toBeAttached();
   await expect(page.getByRole("heading", { level: 3 }).filter({ hasText: /^(Generator|Analyzer|Security|Performance)$/ })).toHaveText(
     AREA_ORDER,
   );
