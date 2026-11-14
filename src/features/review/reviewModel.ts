@@ -222,6 +222,13 @@ export function isLineHighlighted(
   });
 }
 
+/** The id of the first hunk (read, covered or generated) that holds a line in `range`, or null when no hunk does. */
+export function hunkIdHolding(sections: HunkSections, range: HighlightedLines): string | null {
+  const entries = [...sections.read, ...sections.covered, ...sections.generated];
+  const holder = entries.find(({ hunk }) => hunk.lines.some((line) => isLineHighlighted(hunk, line, [range])));
+  return holder?.hunk.id ?? null;
+}
+
 /** What the report-card alert says; the second sentence is the same for a missing and an unreadable card. */
 export interface EvidenceAlert {
   title: string;

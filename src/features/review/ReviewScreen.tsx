@@ -66,7 +66,7 @@ export function ReviewScreen({
           />
           {review.state === "missing" && <ReviewMissing changeId={change.id} />}
           {review.state === "unreadable" && <ReviewUnreadable changeId={change.id} details={reviewError} />}
-          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} tokens={tokens} />}
+          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} tokens={tokens} />}
         </div>
       </SelectedClaimProvider>
     </AppShell>

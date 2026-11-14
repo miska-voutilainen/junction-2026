@@ -1,0 +1,183 @@
+"use client";
+
+import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
+import { ShieldCheck, ShieldX, TriangleAlert } from "lucide-react";
+import type { ReactNode } from "react";
+import { Console } from "@/components/Console";
+import { IdeaLabel } from "@/components/IdeaLabel";
+import type { Review } from "@/contracts";
+import { CopySignButton } from "./CopySignButton";
+import { ReceiptSections } from "./ReceiptSections";
+import { formatSignedAt } from "./stepsModel";
+import type { SignCommands, SignView } from "./stepsModel";
+
+interface SignStepProps {
+  view: SignView;
+  review: Review;
+}
+
+/**
+ * Step 4, the signed receipt (idea 7). The site never signs: signing needs
+ * the owner's own SSH key, so an unsigned change shows the AI's draft and the
+ * command to run in a terminal. A signed receipt shows its verified seal, a
+ * stale one the two diff hashes that no longer match, and one whose signature
+ * failed the recorded check says so with the output. Spec section 3, S2 Receipt.
+ */
+export function SignStep({ view, review }: SignStepProps) {
+  return (
+    <div className="flex flex-col gap-4">
+      <header className="flex flex-wrap items-center gap-2">
+        <h3 className="text-base font-semibold text-text-primary">Receipt for {review.requirement.id}</h3>
+        <IdeaLabel n={7} />
+      </header>
+      {view.status === "needs-review" && <Unsigned view={view} review={review} />}
+      {view.status === "signed" && <Signed view={view} review={review} />}
+      {view.status === "stale" && <Stale view={view} changeId={review.changeId} />}
+      {view.status === "unverified" && <Unverified view={view} changeId={review.changeId} />}
+    </div>
+  );
+}
+
+function Unsigned({ view, review }: { view: Extract<SignView, { status: "needs-review" }>; review: Review }) {
+  return (
+    <>
+      <p className="text-sm text-text-secondary">Drafted by the AI. Only a named human can sign it.</p>
+      <ReceiptSections body={view.draft} refusals={review.refusals} />
+      <SignCommandsBlock commands={view.commands} heading="Sign on your own machine" />
+    </>
+  );
+}
+
+/** The draft and sign commands, and the primary Sign button that copies the sign command. */
+function SignCommandsBlock({ commands, heading }: { commands: SignCommands; heading: string }) {
+  const hintId = "sign-hint";
+  return (
+    <section aria-label={heading} className="flex flex-col gap-3 border-t border-border-subtle pt-4">
+      <h4 className="text-xs font-medium text-text-muted">{heading}</h4>
+      <p id={hintId} className="text-sm text-text-secondary">
+        Signing happens in your terminal with your own SSH key.
+      </p>
+      <Console label="Draft command" text={commands.draft} kind="log" heading={<CommandHeading note="writes the draft to edit" />} />
+      <Console label="Sign command" text={commands.sign} kind="log" heading={<CommandHeading note="signs with your key" />} />
+      <div>
+        <CopySignButton command={commands.sign} describedBy={hintId} />
+      </div>
+    </section>
+  );
+}
+
+function CommandHeading({ note }: { note: string }) {
+  return <span className="truncate text-xs text-text-muted">{note}</span>;
+}
+
+// The receipt page is opened on demand: the full receipt is long and most visitors to this step never open it.
+function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }>; review: Review }) {
+  return (
+    <>
+      <div className="flex items-center gap-3">
+        <Seal />
+        <div className="flex flex-col">
+          <span className="text-base font-medium text-green-light">Signature verified</span>
+          <span className="text-sm text-text-secondary">
+            Signed by {view.receipt.owner} · {formatSignedAt(view.receipt.signedAt)}
+          </span>
+        </div>
+      </div>
+      <ReceiptSections body={view.receipt} refusals={review.refusals} />
+      <section aria-label="Verify" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
+        <h4 className="text-xs font-medium text-text-muted">Verify</h4>
+        <VerifyConsole verify={view.verify} />
+        <p className="text-sm text-text-secondary">Signature valid · diff unchanged</p>
+        <Link
+          prefetch={false}
+          href={`/changes/${review.changeId}/receipt`}
+          className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+        >
+          View full receipt
+        </Link>
+      </section>
+    </>
+  );
+}
+
+/** The verified seal: a green shield that pulses once, and holds still under reduced motion. */
+function Seal() {
+  const isReduced = useReducedMotion();
+  return (
+    <motion.span
+      aria-hidden="true"
+      className="grid size-9 shrink-0 place-items-center rounded-full border border-green/40 bg-surface-raised text-green"
+      initial={isReduced ? false : { boxShadow: "0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent)" }}
+      animate={isReduced ? undefined : { boxShadow: "0 0 0 14px color-mix(in srgb, var(--green) 0%, transparent)" }}
+      transition={{ duration: 0.9, ease: "easeOut" }}
+    >
+      <ShieldCheck className="size-5" />
+    </motion.span>
+  );
+}
+
+function VerifyConsole({ verify }: { verify: Extract<SignView, { status: "signed" }>["verify"] }) {
+  return (
+    <Console
+      label="Verify output"
+      text={verify.output}
+      kind="output"
+      heading={<span className="truncate font-mono text-xs text-text-muted">$ {verify.command}</span>}
+    />
+  );
+}
+
+function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }>; changeId: string }) {
+  const hashes = `signed   ${view.receipt.diffSha256}\ncurrent  ${view.reviewDiffSha256}`;
+  return (
+    <>
+      <Notice tone="amber" icon={<TriangleAlert aria-hidden="true" className="size-4 shrink-0" />} title="The code changed after signing">
+        Stale: the code changed after signing. {view.receipt.owner} signed {formatSignedAt(view.receipt.signedAt)}; the receipt no longer
+        vouches for this diff.
+      </Notice>
+      <Console label="Diff hashes" text={hashes} kind="log" heading={<span className="truncate text-xs text-text-muted">diffSha256</span>} />
+      <SignCommandsBlock commands={view.commands} heading="Re-sign on your own machine" />
+      <Link
+        prefetch={false}
+        href={`/changes/${changeId}/receipt`}
+        className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+      >
+        View the signed receipt
+      </Link>
+    </>
+  );
+}
+
+function Unverified({ view, changeId }: { view: Extract<SignView, { status: "unverified" }>; changeId: string }) {
+  return (
+    <>
+      <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title="The signature failed verification">
+        The recorded check of {view.receipt.owner}&apos;s signature did not pass, so this receipt vouches for nothing.
+      </Notice>
+      <VerifyConsole verify={view.verify} />
+      <Console label="Verify command" text={view.commands.verify} kind="log" heading={<CommandHeading note="run it to check again" />} />
+      <Link
+        prefetch={false}
+        href={`/changes/${changeId}/receipt`}
+        className="w-fit rounded-chip text-sm text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+      >
+        View full receipt
+      </Link>
+    </>
+  );
+}
+
+/** An amber or rose notice. The icon and the title carry the meaning, so colour is never alone. */
+function Notice({ tone, icon, title, children }: { tone: "amber" | "rose"; icon: ReactNode; title: string; children: ReactNode }) {
+  const colour = tone === "amber" ? "border-amber/40 text-amber-light" : "border-rose/40 text-rose-light";
+  return (
+    <div className={`flex flex-col gap-1 rounded-item border bg-surface-raised p-3 ${colour}`}>
+      <p className="flex items-center gap-2 text-base font-medium">
+        {icon}
+        {title}
+      </p>
+      <p className="text-sm text-text-secondary">{children}</p>
+    </div>
+  );
+}

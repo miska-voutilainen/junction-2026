@@ -13,6 +13,7 @@ export const SHORTCUT_LIST = [
   { keys: ["N"], label: "Review next" },
   { keys: ["j", "k"], label: "Move" },
   { keys: ["↵"], label: "Open" },
+  { keys: ["1", "2", "3", "4"], label: "Review step" },
   { keys: ["g", "i"], label: "Inbox" },
   { keys: ["g", "d"], label: "Dashboard" },
   { keys: ["g", "r"], label: "Reviewer report card" },
