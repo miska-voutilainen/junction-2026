@@ -2,8 +2,8 @@
 
 import { useEffect, useEffectEvent, useMemo } from "react";
 import type { ChangeInput, Citation, ReceiptRecord, Review } from "@/contracts";
-import { decideChange } from "@/features/inbox";
-import type { ReportCardInput } from "@/features/inbox";
+import { decideChange } from "@/lib/decideChange";
+
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { isTypingTarget } from "@/lib/useShortcuts";
@@ -24,6 +24,7 @@ import { ReviewSteps } from "./steps/ReviewSteps";
 import { SignBar, SignBarSpacer } from "./steps/SignBar";
 import type { SignState } from "./steps/stepsModel";
 import { useStepKeys } from "./steps/useStepKeys";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /** From this width up (`compact` in `globals.css`) the page shows the full diff; below it, the read-only list. */
 const COMPACT_UP_QUERY = "(min-width: 760px)";

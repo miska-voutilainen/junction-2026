@@ -5,8 +5,9 @@ import { AppShell } from "@/components/AppShell";
 import { BackAction } from "@/components/BackAction";
 import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
-import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
-import { useShellChanges } from "./useShellChanges";
+import { useShellChanges } from "@/components/useShellChanges";
+import type { InboxSource } from "@/features/inbox";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /**
  * The page for an id that is not one of the Tieto changes. A not-found file

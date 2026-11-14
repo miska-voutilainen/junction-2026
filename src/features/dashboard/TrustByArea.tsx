@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Disclosure } from "@/components/Disclosure";
 import { LevelLadder } from "@/components/LevelLadder";
 import { ladderLevelLabel } from "@/contracts";
-import type { ReportCardInput } from "@/features/inbox";
+
 import type { AreaTrust } from "./dashboardModel";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /**
  * The reviewer's level per area (idea 1), after simulated escapes. The levels

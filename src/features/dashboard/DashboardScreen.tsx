@@ -7,8 +7,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
 import { buttonVariants } from "@/components/ui/button";
-import { toShellChanges } from "@/features/inbox";
-import type { InboxSource, ReportCardInput } from "@/features/inbox";
+import { toShellChanges } from "@/components/shellChange";
+import type { InboxSource } from "@/features/inbox";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { AcceptedRiskTable } from "./AcceptedRiskTable";
 import { AttentionByTier } from "./AttentionByTier";
@@ -18,6 +18,7 @@ import { FactsStrip } from "./FactsStrip";
 import { OpenDecisions } from "./OpenDecisions";
 import { TrustByArea } from "./TrustByArea";
 import { buildDashboardModel } from "./dashboardModel";
+import type { ReportCardInput } from "@/lib/decideChange";
 
 /**
  * The dashboard page inside its shell. Routing runs here with the current
