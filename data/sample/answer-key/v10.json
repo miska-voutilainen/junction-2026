@@ -1,0 +1,13 @@
+{
+  "plantId": "v10",
+  "changeId": "v10",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack/MessagePackSecurity.cs",
+  "startLine": 233,
+  "endLine": 233,
+  "defect": "DepthStep throws only when the depth is greater than the maximum (>) instead of when it reaches it (>=), so MaximumObjectGraphDepth + 1 levels of nesting are accepted.",
+  "why": "An off-by-one in the limit on object graph depth for untrusted input: the configured maximum is exceeded by one level before the exception is thrown.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
+  "writtenAt": "2026-11-14T03:03:35.000Z"
+}

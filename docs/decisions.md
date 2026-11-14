@@ -42,6 +42,14 @@
 - **Rejected:** Giving A2 only A1's expectation (it would map claims to item ids from the expectation's copy of them, losing the item text).
 - **PR:** T12
 
+## 2026-11-14 · T08 planted bugs written in Miska's session, by an isolated subagent
+
+- **Context:** Principle 9 said the planted bugs are written by someone who never sees the reviewer's prompts, and T08 sat in the evidence lane (Veijo). No person with that separation was free in time, and Miska's session writes the prompts.
+- **Decision:** An isolated Claude Sonnet subagent wrote the ten variants, four contradiction plants and all answer keys. It never opened `src/prompts/`, `src/pipeline/`, `data/runs/`, `data/recordings/` or any review output, and the agents writing the prompts never opened the plants. The two kinds of work overlapped in time. T08 moved to the engine lane. Every answer key and plant description says exactly this in `writtenBy`; the report card says it too. Two rules apply to every plant: its area is the area of its file by `classifyFile()` in `src/policy/areas.ts`, and its lines lie more than 3 lines from any line the parent change edits.
+- **Why:** The eval is only valid if the plants and the prompts do not inform each other. Blindness is kept in both directions by separate agents with file rules, not by time order. No second person was free.
+- **Rejected:** Asking Veijo or Elias to write the plants (their time was not available); keeping the wording "written blind by a person" (it would claim more than happened).
+- **PR:** T08
+
 ## 2026-11-14 · The AI client validates answers itself instead of using `messages.parse`
 
 - **Context:** Spec section 6 names the SDK's `messages.parse` for the API backend. T10 built one client for two backends (`claude-code` and `api`) with record and replay.

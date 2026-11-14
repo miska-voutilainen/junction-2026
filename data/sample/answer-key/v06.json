@@ -1,0 +1,13 @@
+{
+  "plantId": "v06",
+  "changeId": "v06",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack/MessagePackSecurity.cs",
+  "startLine": 134,
+  "endLine": 134,
+  "defect": "GetEqualityComparer<T> uses the collision-resistant comparer only for types other than string (&& typeof(T) != typeof(string)), so string keys fall back to the default equality comparer even when HashCollisionResistant is on.",
+  "why": "String keys are the usual vector for hash-flooding denial of service on untrusted input; the collision-resistant string comparer exists and is skipped, so hash collision resistance does not apply to them.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
+  "writtenAt": "2026-11-14T03:19:07.000Z"
+}
