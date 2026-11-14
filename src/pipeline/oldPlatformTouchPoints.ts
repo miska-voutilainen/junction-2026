@@ -55,6 +55,7 @@ function directiveSighting(hunk: Hunk): Sighting[] {
  * @example a hunk with context "#if NETFRAMEWORK" and an added "LegacyOnly();" gives "#if NETFRAMEWORK"
  */
 function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
+  const enclosing = enclosingOldOnlyBranches(lines);
   for (const [index, line] of lines.entries()) {
     if (line.kind === "context") continue;
     if (oldPlatformDirective.test(line.text)) return line.text.trim();
@@ -63,50 +64,66 @@ function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
       if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
       // Not that kind of #else: it may still sit inside an outer old-only block.
     }
-    const block = enclosingOldOnlyBranch(lines, index);
-    if (block) return block;
+    if (enclosing[index]) return enclosing[index];
   }
   return null;
 }
 
+/** An `#if` block open at some line: its opening, and the branch the line sits in. */
+interface OpenBlock {
+  opening: string;
+  /** The `#elif` or `#else` last passed in this block, or null while still under the `#if`. */
+  branch: string | null;
+  /** An `#else` after an `#elif` also runs when the `#elif` fails, so it is not the pure negation of the `#if`. */
+  hasElif: boolean;
+}
+
 /**
- * The old-only branch a changed line sits in, innermost first, or null.
- * Walks back through the same version of the file, like `openingIf`, closing
- * one enclosing block at each opening `#if`: the branch is that `#if`, or the
- * last `#elif` or `#else` passed on the way. A block opened above the hunk is
- * not seen, so a line deep inside a long old-only block can still be missed.
- * @example context "#if NETFRAMEWORK", "#if DEBUG", "#endif" then an added "Old();" gives "#if NETFRAMEWORK"
+ * For each line, the innermost old-only branch it sits in, or null. One
+ * forward pass per version of the file (context plus added lines, context plus
+ * removed lines) with a stack of open blocks, so a hunk costs one walk however
+ * many lines it changes. A block opened above the hunk is not seen, so a line
+ * deep inside a long old-only block can still be missed.
+ * @example context "#if NETFRAMEWORK", "#if DEBUG", "#endif" then an added "Old();" gives "#if NETFRAMEWORK" for the last line
  */
-function enclosingOldOnlyBranch(lines: Hunk["lines"], index: number): string | null {
-  const version = lines[index].kind;
-  let depth = 0;
-  let branch: string | null = null; // the #elif or #else the line sits under in the block being walked
-  let hasEarlierElif = false;
-  for (let i = index - 1; i >= 0; i -= 1) {
-    const { kind, text } = lines[i];
-    if (kind !== "context" && kind !== version) continue;
-    if (preprocessor.endifLine.test(text)) depth += 1;
-    else if (depth > 0) {
-      if (preprocessor.ifLine.test(text)) depth -= 1;
-    } else if (preprocessor.elseLine.test(text) || preprocessor.elifLine.test(text)) {
-      if (branch === null) branch = text.trim();
-      else hasEarlierElif = true;
-    } else if (preprocessor.ifLine.test(text)) {
-      const opening = text.trim();
-      if (branch === null && oldOnlyCondition.test(opening)) return opening;
-      if (branch !== null && preprocessor.elifLine.test(branch) && oldOnlyCondition.test(branch))
-        return branch;
-      // An #else after an #elif also runs when the #elif fails, so only a plain #if/#else pair counts.
-      if (
-        branch !== null &&
-        preprocessor.elseLine.test(branch) &&
-        !hasEarlierElif &&
-        currentPlatformIf.test(opening)
-      )
-        return `#else of ${opening}`;
-      branch = null;
-      hasEarlierElif = false;
+function enclosingOldOnlyBranches(lines: Hunk["lines"]): (string | null)[] {
+  const branches: (string | null)[] = lines.map(() => null);
+  for (const version of ["add", "del"] as const) {
+    const open: OpenBlock[] = [];
+    for (const [index, { kind, text }] of lines.entries()) {
+      if (kind !== "context" && kind !== version) continue;
+      // Read before this line's own directive applies: an added "#else" sits in the blocks around it.
+      if (kind === version) branches[index] = innermostOldOnly(open);
+      const top = open.at(-1);
+      if (preprocessor.ifLine.test(text))
+        open.push({ opening: text.trim(), branch: null, hasElif: false });
+      else if (preprocessor.elifLine.test(text) && top)
+        Object.assign(top, { branch: text.trim(), hasElif: true });
+      else if (preprocessor.elseLine.test(text) && top) top.branch = text.trim();
+      else if (preprocessor.endifLine.test(text)) open.pop();
     }
+  }
+  return branches;
+}
+
+/**
+ * The innermost open block whose current branch only old targets compile:
+ * an old-only `#if`, an old-only `#elif`, or the `#else` of an `#if` on one
+ * current target with no `#elif` between them.
+ * @example a stack [#if NETFRAMEWORK, #if DEBUG] gives "#if NETFRAMEWORK"
+ */
+function innermostOldOnly(open: readonly OpenBlock[]): string | null {
+  for (const { opening, branch, hasElif } of [...open].reverse()) {
+    if (branch === null && oldOnlyCondition.test(opening)) return opening;
+    if (branch !== null && preprocessor.elifLine.test(branch) && oldOnlyCondition.test(branch))
+      return branch;
+    if (
+      branch !== null &&
+      preprocessor.elseLine.test(branch) &&
+      !hasElif &&
+      currentPlatformIf.test(opening)
+    )
+      return `#else of ${opening}`;
   }
   return null;
 }
