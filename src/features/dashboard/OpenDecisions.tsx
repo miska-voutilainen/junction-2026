@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DashboardSection } from "./DashboardSection";
 import type { DeciderQueue } from "./dashboardModel";
 
@@ -24,7 +25,19 @@ export function OpenDecisions({ queues }: Readonly<{ queues: DeciderQueue[] }>) 
                     <span className="font-mono text-xs text-text-muted">{decision.ruleId}</span> {decision.title}
                     <span className="text-text-muted">
                       {" "}
-                      · {decision.count} in <span className="font-mono text-xs">{decision.changeIds.join(", ")}</span>
+                      · {decision.count} in{" "}
+                      {/* Each id opens the review, where the Refused tab names the refusal, its decider and its hunks. */}
+                      {decision.changeIds.map((changeId, index) => (
+                        <span key={changeId}>
+                          {index > 0 && ", "}
+                          <Link
+                            href={`/changes/${changeId}`}
+                            className="whitespace-nowrap font-mono text-xs text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                          >
+                            {changeId}
+                          </Link>
+                        </span>
+                      ))}
                     </span>
                   </li>
                 ))}

@@ -73,6 +73,14 @@ test("stacks the phone layout: summary, open decisions, accepted risk, attention
   expect(problems).toEqual([]);
 });
 
+test("links each change in an open decision to its review", async ({ page }) => {
+  await page.goto("/dashboard");
+  // mp-2129 is unsigned, so its R7 refusal is still open; mp-2283's receipt accepted its own.
+  const r7 = page.getByRole("listitem").filter({ hasText: /^R7 / });
+  await r7.getByRole("link", { name: "mp-2129" }).click();
+  await page.waitForURL((url) => url.pathname === "/changes/mp-2129");
+});
+
 test("has no horizontal scroll from 320 to 1920 px", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "sweeps the widths itself");
   await page.goto("/dashboard");
