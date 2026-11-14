@@ -152,6 +152,16 @@ describe("trimOutput", () => {
     expect(trimOutput(`${noise.repeat(300)}${failure}`)).toBe(failure);
   });
 
+  it("starts a build error excerpt at a whole line, so the first error read from it is not cut mid-path", () => {
+    const error =
+      "<worktree>/tests/T/A5_F1Tests.cs(58,36): error CS0117: 'Foo' does not contain a definition for 'Bar' [<worktree>/tests/T/T.csproj]";
+    const output = `${"Build started, compiling project files ...\n".repeat(60)}${error}\n${error}`;
+    const excerpt = trimOutput(output);
+    expect(excerpt.length).toBeLessThanOrEqual(2000);
+    expect(excerpt.split("\n")[0]).toBe("Build started, compiling project files ...");
+    expect(buildErrorLine(excerpt)).toBe(error);
+  });
+
   it("keeps the last 2,000 characters of output with no test lines", () => {
     const trimmed = trimOutput(`${"x".repeat(5000)}END`);
     expect(trimmed).toHaveLength(2000);
