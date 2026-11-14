@@ -45,7 +45,7 @@ export function ReviewBody({
   record,
   isReceiptUnreadable,
   tokens,
-}: {
+}: Readonly<{
   change: ChangeInput;
   review: Review;
   reportCard: ReportCardInput;
@@ -54,7 +54,7 @@ export function ReviewBody({
   /** The receipt file exists but fails validation; the Sign step says so instead of offering to sign. */
   isReceiptUnreadable: boolean;
   tokens: HighlightedHunks;
-}) {
+}>) {
   const { escapes } = useEscapes();
   const { decision, levels, isEvidenceAvailable } = useMemo(() => decideChange(review, reportCard, escapes), [review, reportCard, escapes]);
   const sections = useMemo(() => buildSections(review, decision, levels), [review, decision, levels]);

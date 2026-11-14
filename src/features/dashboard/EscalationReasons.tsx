@@ -6,7 +6,7 @@ import type { EscalationReason } from "./dashboardModel";
  * each fired in. Same rules as `route()`, so each line traces to a rule id
  * in the routing policy.
  */
-export function EscalationReasons({ reasons, changes }: { reasons: EscalationReason[]; changes: number }) {
+export function EscalationReasons({ reasons, changes }: Readonly<{ reasons: EscalationReason[]; changes: number }>) {
   const mostFrequent = reasons[0];
   return (
     <Disclosure

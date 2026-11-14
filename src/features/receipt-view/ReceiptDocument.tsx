@@ -15,7 +15,7 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * identity with the roles line, the signer's words, the signed hunk ledger and the signer. A stale or
  * unverified receipt shows what was signed but no seal.
  */
-export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
+export function ReceiptDocument({ view }: Readonly<{ view: ReceiptDocumentView }>) {
   // The failed check is already in the notice; repeating it in a Verify section would say the same twice.
   const showVerify = view.status !== "unverified";
 

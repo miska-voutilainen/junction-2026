@@ -6,7 +6,7 @@ import { PlantBugDialog } from "./PlantBugDialog";
  *
  * @param measured "Reviewer rv1 · model · measured on 10 planted bugs, planted by an agent that never saw the prompts", or null.
  */
-export function ReviewerHeader({ measured }: { measured: string | null }) {
+export function ReviewerHeader({ measured }: Readonly<{ measured: string | null }>) {
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5">

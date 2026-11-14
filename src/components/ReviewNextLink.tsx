@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * @param changeId The change to open.
  * @param className Layout classes, e.g. to hide it on a phone.
  */
-export function ReviewNextLink({ changeId, className }: { changeId: string; className?: string }) {
+export function ReviewNextLink({ changeId, className }: Readonly<{ changeId: string; className?: string }>) {
   return (
     <Link
       href={`/changes/${changeId}`}

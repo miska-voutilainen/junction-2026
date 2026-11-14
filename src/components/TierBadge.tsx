@@ -14,7 +14,7 @@ const TIER_COLOUR: Record<Tier, string> = {
 const BAR_HEIGHTS = ["h-1.5", "h-2.5", "h-3.5"] as const;
 
 /** Signal bars (1 to 3) and the tier name: "Light", "Focused" or "Full". */
-export function TierBadge({ tier, className }: { tier: Tier; className?: string }) {
+export function TierBadge({ tier, className }: Readonly<{ tier: Tier; className?: string }>) {
   const lit = TIER_BARS[tier];
   return (
     <span

@@ -36,13 +36,13 @@ export function ReviewerScreen({
   repo,
   usesFixture,
   hasLessonsLog,
-}: {
+}: Readonly<{
   sources: InboxSource[];
   reportCard: ReportCardInput;
   repo: string;
   usesFixture: boolean;
   hasLessonsLog: boolean;
-}) {
+}>) {
   const { escapes, total, record, undo } = useEscapes();
   const model = useMemo(() => buildInboxModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
   const data = reportCard.state === "ok" ? reportCard.data : null;
@@ -96,7 +96,7 @@ function NoEvaluation() {
   );
 }
 
-function UnreadableReportCard({ error }: { error: string }) {
+function UnreadableReportCard({ error }: Readonly<{ error: string }>) {
   return (
     <ErrorState
       title="The report card couldn't be read."

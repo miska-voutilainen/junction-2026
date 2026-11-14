@@ -6,7 +6,7 @@ import type { DashboardFacts } from "./dashboardModel";
  * measured: a receipt records when it was signed but not when review began,
  * so the cell says so instead of showing a made-up figure.
  */
-export function FactsStrip({ facts, className }: { facts: DashboardFacts; className?: string }) {
+export function FactsStrip({ facts, className }: Readonly<{ facts: DashboardFacts; className?: string }>) {
   return (
     <dl className={className}>
       <Fact term="Signed" value={`${facts.signed} of ${facts.changes} changes`} />
@@ -28,7 +28,7 @@ function hunkNote({ reviewedChanges, changes }: DashboardFacts): string {
   return reviewedChanges < changes ? `Across ${reviewedChanges} of ${changes} changes · live` : "Live: follows simulated escapes";
 }
 
-function Fact({ term, value, note, isMuted = false }: { term: string; value: string; note?: string; isMuted?: boolean }) {
+function Fact({ term, value, note, isMuted = false }: Readonly<{ term: string; value: string; note?: string; isMuted?: boolean }>) {
   return (
     <div className="flex min-w-0 flex-col gap-1 bg-surface-panel px-4 py-3.5">
       <dt className="text-sm text-text-muted">{term}</dt>

@@ -39,7 +39,7 @@ function isCurrent(href: string, pathname: string): boolean {
  * @param needsReviewCount The badge on Inbox; hidden at zero.
  * @param onNavigate Called when a link is followed, so a sheet can close.
  */
-export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: number; onNavigate?: () => void }) {
+export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewCount: number; onNavigate?: () => void }>) {
   const pathname = usePathname();
   // Two navs can be mounted (the page's and the sheet's); a group id keeps their highlights apart.
   const groupId = useId();
@@ -112,7 +112,7 @@ export function AppNav({ needsReviewCount, onNavigate }: { needsReviewCount: num
   );
 }
 
-function ShortcutRow({ keys, label }: { keys: readonly string[]; label: string }) {
+function ShortcutRow({ keys, label }: Readonly<{ keys: readonly string[]; label: string }>) {
   return (
     <>
       <dt className="flex gap-1">

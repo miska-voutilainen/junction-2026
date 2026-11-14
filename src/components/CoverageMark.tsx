@@ -22,11 +22,11 @@ export function CoverageMark({
   coverage,
   isLabelHidden = false,
   className,
-}: {
+}: Readonly<{
   coverage: Coverage;
   isLabelHidden?: boolean;
   className?: string;
-}) {
+}>) {
   return (
     <span className={cn("inline-flex items-center gap-2 text-xs text-text-secondary", className)}>
       <span aria-hidden="true" className={cn("h-4 border-l-2", COVERAGE_BAR[coverage])} />

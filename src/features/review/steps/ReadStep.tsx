@@ -29,7 +29,7 @@ interface ReadStepProps {
  * each with its evidence level (idea 6). Opening a claim selects it, and the
  * diff highlights the lines it cites. Spec section 3, S2 Story.
  */
-export function ReadStep({ story, onOpenRefused }: ReadStepProps) {
+export function ReadStep({ story, onOpenRefused }: Readonly<ReadStepProps>) {
   return (
     <div className="flex flex-col gap-5">
       <section aria-label="What and why" className="flex flex-col gap-3">
@@ -54,7 +54,7 @@ export function ReadStep({ story, onOpenRefused }: ReadStepProps) {
   );
 }
 
-function StoryText({ heading, text }: { heading: string; text: string }) {
+function StoryText({ heading, text }: Readonly<{ heading: string; text: string }>) {
   return (
     <div className="flex flex-col gap-0.5">
       <h3 className="text-xs font-medium text-text-muted">{heading}</h3>
@@ -63,7 +63,7 @@ function StoryText({ heading, text }: { heading: string; text: string }) {
   );
 }
 
-function Touches({ touches }: { touches: Story["touches"] }) {
+function Touches({ touches }: Readonly<{ touches: Story["touches"] }>) {
   if (touches.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
@@ -79,7 +79,7 @@ function Touches({ touches }: { touches: Story["touches"] }) {
   );
 }
 
-function ClaimGroupList({ group, onOpenRefused }: { group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">) {
+function ClaimGroupList({ group, onOpenRefused }: Readonly<{ group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">>) {
   return (
     <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
       <h4 className="text-xs font-medium text-text-muted">{group.heading}</h4>
@@ -92,7 +92,7 @@ function ClaimGroupList({ group, onOpenRefused }: { group: ClaimGroup } & Pick<R
   );
 }
 
-function ClaimRow({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">) {
+function ClaimRow({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
   const { claim, retraction } = storyClaim;
   const { selectedClaimId, setSelectedClaimId } = useSelectedClaim();
   const isSelected = selectedClaimId === claim.id;
@@ -129,7 +129,7 @@ function RetractedBadge() {
 }
 
 /** A retracted claim: why it was withdrawn and the output that withdrew it, in place of the evidence it once claimed. */
-function Retraction({ retraction }: { retraction: Review["retractions"][number] }) {
+function Retraction({ retraction }: Readonly<{ retraction: Review["retractions"][number] }>) {
   return (
     <div className="flex flex-col gap-1.5 px-2 pb-2">
       <p data-written-text className="flex flex-wrap items-center gap-2 text-xs text-amber-light">
@@ -143,7 +143,7 @@ function Retraction({ retraction }: { retraction: Review["retractions"][number] 
   );
 }
 
-function ClaimEvidence({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">) {
+function ClaimEvidence({ storyClaim, onOpenRefused }: Readonly<{ storyClaim: StoryClaim } & Pick<ReadStepProps, "onOpenRefused">>) {
   const { claim } = storyClaim;
   return (
     <div className="flex flex-col gap-3 text-sm text-text-secondary">
@@ -167,7 +167,7 @@ function ClaimEvidence({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim }
   );
 }
 
-function Citations({ storyClaim }: { storyClaim: StoryClaim }) {
+function Citations({ storyClaim }: Readonly<{ storyClaim: StoryClaim }>) {
   const { setSelectedClaimId } = useSelectedClaim();
   return (
     <ul className="flex flex-col gap-2">
@@ -193,7 +193,7 @@ function Citations({ storyClaim }: { storyClaim: StoryClaim }) {
 }
 
 /** Verified: the recorded test result on the base commit (it fails) and on the change (it passes), each in its own console. */
-function TestEvidence({ claim }: { claim: Claim }) {
+function TestEvidence({ claim }: Readonly<{ claim: Claim }>) {
   const tests = claim.evidence.filter((item) => item.kind === "differential-test");
   return (
     <>
@@ -222,7 +222,7 @@ function verbOf(result: "fail" | "pass" | "error"): string {
 }
 
 /** Supported: a checked quote, or a test the change ships; the evidence says which. */
-function SupportedBy({ claim }: { claim: Claim }) {
+function SupportedBy({ claim }: Readonly<{ claim: Claim }>) {
   return (
     <>
       {isOwnTestOnly(claim) && <OwnTestNote />}
@@ -244,7 +244,7 @@ function OwnTestNote() {
   );
 }
 
-function SupportedEvidence({ claim }: { claim: Claim }) {
+function SupportedEvidence({ claim }: Readonly<{ claim: Claim }>) {
   return (
     <ul className="flex flex-col gap-1">
       {claim.evidence.map((item) => (
@@ -257,7 +257,7 @@ function SupportedEvidence({ claim }: { claim: Claim }) {
   );
 }
 
-function Defects({ defects }: { defects: Story["defects"] }) {
+function Defects({ defects }: Readonly<{ defects: Story["defects"] }>) {
   return (
     <section aria-labelledby="defects-heading" className="flex flex-col gap-2 border-t border-border-subtle pt-4">
       <h3 id="defects-heading" className="text-base font-semibold text-text-primary">

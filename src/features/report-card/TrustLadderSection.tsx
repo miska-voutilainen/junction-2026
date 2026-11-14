@@ -14,11 +14,11 @@ export function TrustLadderSection({
   cards,
   record,
   undo,
-}: {
+}: Readonly<{
   cards: AreaCardModel[];
   record: (area: Area) => void;
   undo: (area: Area) => void;
-}) {
+}>) {
   return (
     <section aria-labelledby="trust-ladder-heading" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

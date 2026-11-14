@@ -10,7 +10,7 @@ import type { ReviewedRow } from "./inboxModel";
  *
  * @param reviewNext The change the button opens, or null when nothing needs review.
  */
-export function InboxHeader({ reviewNext }: { reviewNext: ReviewedRow | null }) {
+export function InboxHeader({ reviewNext }: Readonly<{ reviewNext: ReviewedRow | null }>) {
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5">

@@ -57,13 +57,13 @@ export function CopyButton({
   variant = "icon",
   describedBy,
   className,
-}: {
+}: Readonly<{
   text: string | (() => string);
   label: string;
   variant?: "icon" | "text";
   describedBy?: string;
   className?: string;
-}) {
+}>) {
   const { status, copy } = useCopy(text);
   const iconSwap = useMotionPreset(crossfade);
   const press = usePress();

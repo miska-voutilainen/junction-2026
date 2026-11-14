@@ -5,7 +5,7 @@ import type { InboxSummary } from "@/features/inbox";
  * tier and how much a person still reads. Recomputed with the simulated
  * escapes, so recording one here moves the numbers.
  */
-export function RoutingSpread({ summary, escapeCount }: { summary: InboxSummary; escapeCount: number }) {
+export function RoutingSpread({ summary, escapeCount }: Readonly<{ summary: InboxSummary; escapeCount: number }>) {
   const { changes, tierCounts, readHunks, totalHunks, readMinutes, fullMinutes } = summary;
   return (
     <section aria-labelledby="routing-spread-heading" className="flex flex-col gap-2">

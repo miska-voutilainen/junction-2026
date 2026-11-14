@@ -34,7 +34,7 @@ const SelectedClaimContext = createContext<SelectedClaim | null>(null);
  * two unrelated things, and the scroll target travels with the selection
  * instead of racing it.
  */
-export function SelectedClaimProvider({ children }: { children: ReactNode }) {
+export function SelectedClaimProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const value = useMemo<SelectedClaim>(
     () => ({

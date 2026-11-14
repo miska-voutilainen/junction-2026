@@ -25,7 +25,7 @@ const EMPTY_FILTER_TEXT: Record<StatusFilter, string> = {
  *
  * @param notice A line shown above the list, e.g. that the report card is unreadable.
  */
-export function InboxView({ model, notice }: { model: InboxModel; notice: string | null }) {
+export function InboxView({ model, notice }: Readonly<{ model: InboxModel; notice: string | null }>) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   useRowNavigation();
 
@@ -52,11 +52,11 @@ function DesktopList({
   rows,
   filter,
   onFilterChange,
-}: {
+}: Readonly<{
   rows: InboxRow[];
   filter: StatusFilter;
   onFilterChange: (filter: StatusFilter) => void;
-}) {
+}>) {
   const counts = filterCounts(rows);
   const matching = filterRows(rows, filter);
   // Under "All" the signed changes fold away below the open ones; under "Signed" they are the list.

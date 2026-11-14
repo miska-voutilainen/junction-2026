@@ -12,7 +12,7 @@ import { useShellChanges } from "./useShellChanges";
  * The page for an id that is not one of the Tieto changes. A not-found file
  * receives no params, so the id comes from the URL's last segment.
  */
-export function ReviewNotFound({ sources, reportCard, repo }: { sources: InboxSource[]; reportCard: ReportCardInput; repo: string }) {
+export function ReviewNotFound({ sources, reportCard, repo }: Readonly<{ sources: InboxSource[]; reportCard: ReportCardInput; repo: string }>) {
   const id = idFromPath(usePathname());
   const changes = useShellChanges(sources, reportCard);
 
