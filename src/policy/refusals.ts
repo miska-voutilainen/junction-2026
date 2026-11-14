@@ -12,6 +12,12 @@ export interface RefusalRule {
   id: string;
   title: string;
   decider: string;
+  /**
+   * Set when only a code rule raises this refusal, never the model: the model
+   * doesn't know the zone map, and leaving the rule out of A3's prompt keeps
+   * the recorded prompts, and so their replays, unchanged.
+   */
+  isRuleOnly?: boolean;
 }
 
 /** R1 to R8, in id order. */
@@ -48,6 +54,7 @@ export const refusalRules: RefusalRule[] = [
     id: "R8",
     title: "Legacy contract: behaviour that old systems depend on",
     decider: "the zone's owner (src/policy/legacy.ts)",
+    isRuleOnly: true,
   },
 ];
 
