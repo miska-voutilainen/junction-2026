@@ -4,7 +4,7 @@
 
 AI reviews. A named human countersigns, on evidence they can check.
 
-Agent-written pull requests now outnumber human ones, and line-by-line review doesn't scale. Countersign is a set of ideas for how AI review can keep pace while a named person stays accountable. Each idea stands on its own, so a product team can adopt one without the others. The app is the reference implementation: it proves the ideas on agent-written changes to Tieto's sample repository.
+Coding agents now produce more code than people do (agent tokens passed human tokens in February 2026, [challenge](docs/challenge.md)), and line-by-line review doesn't scale. Countersign is a set of ideas for how AI review can keep pace while a named person stays accountable. Each idea stands on its own, so a product team can adopt one without the others. The app is the reference implementation: it proves the ideas on agent-written changes to Tieto's sample repository.
 
 ## The ideas
 
