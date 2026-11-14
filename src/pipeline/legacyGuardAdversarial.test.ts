@@ -1,7 +1,8 @@
 /**
  * Inputs chosen to make the legacy guard miss a touch (dangerous: the owner
  * never reads it) or invent one (costs reviewer trust). Each `it` is named for
- * its input. Each case the code once got wrong is fixed; the fix PR names its handoff issue.
+ * its input. A case the code gets wrong is marked `it.fails` and names its
+ * handoff issue to the engine lane, which owns the code.
  */
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
@@ -121,6 +122,10 @@ describe("C# symbols", () => {
 
   it("finds a call to an extension method like any other call", () => {
     expect(addedCalls(added("reader.ReadExtensionPayload();"))).toEqual(["ReadExtensionPayload"]);
+  });
+
+  it("finds a declaration whose type argument is written with global::", () => {
+    expect(changedDeclarations(added("public Foo<global::Bar> Baz(int a)"))).toEqual(["Baz"]);
   });
 
   it("finds a declaration with a generic return type", () => {

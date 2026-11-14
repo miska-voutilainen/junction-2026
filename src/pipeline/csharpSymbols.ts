@@ -72,9 +72,10 @@ const literalPattern = /@"(?:[^"]|"")*"|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)'/g;
 /**
  * Type arguments, nested up to three levels, written only with characters a
  * type can have, so a comparison like `a < b && c > (d)` is not read as one.
- * @example matches "<T>", "<string, int>", "<Dictionary<string, List<int>>>" and "<(int, int)>"
+ * @example matches "<T>", "<global::Bar>", "<string, int>", "<Dictionary<string, List<int>>>" and "<(int, int)>"
  */
-const typeArguments = String.raw`<(?:[\w\s,.?\[\]()]|<(?:[\w\s,.?\[\]()]|<[\w\s,.?\[\]()]*>)*>)*>`;
+const typeChar = String.raw`(?:[\w\s,.?\[\]()]|::)`; // "::" for global::Bar; a lone ":" would let ternaries in
+const typeArguments = String.raw`<(?:${typeChar}|<(?:${typeChar}|<${typeChar}*>)*>)*>`;
 
 /**
  * A return type: a name with optional type arguments, or a tuple.
@@ -91,7 +92,7 @@ const returnType = String.raw`(?:[\w.]+(?:${typeArguments})?|\((?:[^()]|\([^()]*
  */
 const declarationPattern = new RegExp(
   String.raw`\b(?:public|internal|protected|private)\s+(?:(?:static|virtual|override|abstract|sealed|async|partial|readonly|unsafe|new)\s+)*` +
-    String.raw`(?:(?:class|struct|interface|enum|record)\s+(\w+)|${returnType}\s+(\w+)\s*(?:${typeArguments})?\s*\()`,
+    String.raw`(?:(?:class|struct|interface|enum|record)\s+(\w+)|${returnType}\s+(\w+)\s*(?:${typeArguments}\s*)?\()`,
 );
 
 /**
@@ -101,6 +102,6 @@ const declarationPattern = new RegExp(
  * @example "writer.Write(x)" and "writer.WriteExt<T>(x)" yield "Write" and "WriteExt"; "this.Write(x)" and "new Foo()" yield nothing.
  */
 const callPattern = new RegExp(
-  String.raw`(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)\s*(?:${typeArguments})?\s*\(`,
+  String.raw`(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)\s*(?:${typeArguments}\s*)?\(`,
   "g",
 );

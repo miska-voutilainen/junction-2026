@@ -10,7 +10,10 @@ export function LegacyTouchPoints({ rows }: Readonly<{ rows: LegacyTouchRow[] }>
   if (rows.length === 0) return null;
   return (
     <section aria-labelledby="legacy-touch-heading" className="flex flex-col gap-2">
-      <h2 id="legacy-touch-heading" className="flex flex-wrap items-center gap-x-3 text-md font-medium text-text-primary">
+      <h2
+        id="legacy-touch-heading"
+        className="flex flex-wrap items-center gap-x-3 text-md font-medium text-text-primary"
+      >
         Legacy touch points
         <IdeaLabel n={9} />
       </h2>
@@ -24,7 +27,7 @@ export function LegacyTouchPoints({ rows }: Readonly<{ rows: LegacyTouchRow[] }>
               <span className="font-medium text-text-primary">{row.kind}</span>
               <code className="min-w-0 font-mono text-xs break-words">{row.detail}</code>
               <span className="text-text-muted">
-                · {row.hunks} · {row.owner}
+                {row.hunks ? `· ${row.hunks} ` : ""}· {row.owner}
               </span>
             </p>
             <p className="flex flex-wrap items-baseline gap-x-2">

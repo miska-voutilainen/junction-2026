@@ -37,7 +37,8 @@ export function buildLegacyTouchRows(review: Review): LegacyTouchRow[] {
   return (review.legacyTouchPoints ?? []).map((touch) => ({
     kind: legacyTouchKindLabel[touch.kind],
     detail: touch.detail,
-    hunks: countOf(touch.hunkIds.length, "hunk"),
+    // A touch with no hunks (binary, mode change, rename) says so in its detail; "0 hunks" would repeat it.
+    hunks: touch.hunkIds.length === 0 ? "" : countOf(touch.hunkIds.length, "hunk"),
     owner: touch.owner,
     status: touch.guard.status,
     statusLabel: guardStatusLabel[touch.guard.status],

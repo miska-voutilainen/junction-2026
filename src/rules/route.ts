@@ -238,7 +238,9 @@ function legacyGuardReasons(review: RoutedReview): Reason[] {
     const count = touch.hunkIds.length;
     const inHunks = count === 0 ? "" : ` in ${count} ${plural(count, "hunk", "hunks")}`;
     const where = `${legacyTouchKindLabel[touch.kind]}: ${touch.detail}${inHunks}`;
-    if (status === "guarded") return { ruleId: "R-legacy-guard", tier: "light", text: `${where}, guarded: ${evidence}` };
+    // With no hunk there is no R8 to keep the change at Focused, so the guard reason does it.
+    const guardedTier: Tier = count === 0 ? "focused" : "light";
+    if (status === "guarded") return { ruleId: "R-legacy-guard", tier: guardedTier, text: `${where}, guarded: ${evidence}` };
     const tier: Tier = status === "unguarded" ? "full" : "focused";
     return { ruleId: "R-legacy-guard", tier, text: `${where}, ${evidence}; the ${touch.owner} decides` };
   });

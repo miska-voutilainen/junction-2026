@@ -145,6 +145,16 @@ describe("old-platform: a changed line inside a block whose directive is context
     ).toEqual([]);
   });
 
+  it("finds an added #else of #if DEBUG inside an old-only block", async () => {
+    expect(
+      await detailOf(["context", "#if NETFRAMEWORK"], ["context", "#if DEBUG"], ["add", "#else"]),
+    ).toEqual(["#if NETFRAMEWORK"]);
+  });
+
+  it("skips code under #if !NET6_0: net8.0 builds it", async () => {
+    expect(await detailOf(["context", "#if !NET6_0"], ["add", "Current();"])).toEqual([]);
+  });
+
   it("skips an #else that follows an #elif: it also runs when the #elif fails", async () => {
     expect(
       await detailOf(

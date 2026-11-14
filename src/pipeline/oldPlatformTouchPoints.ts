@@ -61,7 +61,7 @@ function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
     if (preprocessor.elseLine.test(line.text)) {
       const opening = openingIf(lines, index);
       if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
-      continue;
+      // Not that kind of #else: it may still sit inside an outer old-only block.
     }
     const block = enclosingOldOnlyBranch(lines, index);
     if (block) return block;
@@ -195,8 +195,9 @@ interface ProjectTargets {
 
 /**
  * The targets a test project builds. A csproj that sets none gets them from
- * the nearest Directory.Build.props above it that does, the file MSBuild
- * imports into every project under its folder; without this, a test project
+ * the nearest Directory.Build.props above it that sets targets. MSBuild
+ * imports only the nearest one, which may import its parent; taking the nearest
+ * that sets targets assumes it does. Without this, a test project
  * that does run net472 would read as unguarded.
  * @example "tests/A.Tests/A.csproj" with no targets, and tests/Directory.Build.props setting net8.0;net472, gives those two, inherited from tests/Directory.Build.props
  */

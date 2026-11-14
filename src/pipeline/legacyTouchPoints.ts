@@ -66,13 +66,15 @@ function zoneSightings(hunks: readonly Hunk[]): Sighting[] {
  * One sighting per zone file the change touches with no hunk: a binary file or
  * a mode change. Detectors read hunks, so without this the zone's owner would
  * never hear of a replaced DLL in the Unity client.
- * @example a file "src/MessagePack.UnityClient/Assets/Plugin.dll" with no hunks gives detail "Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no hunks: binary or mode change)"
+ * @example a file "src/MessagePack.UnityClient/Assets/Plugin.dll" with no hunks gives detail "Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no text hunks: binary, mode change or rename)"
  */
 function hunklessZoneSightings(files: Review["files"], hunks: readonly Hunk[]): Sighting[] {
   const filesWithHunks = new Set(hunks.map((hunk) => hunk.file));
   return files
     .filter((file) => !filesWithHunks.has(file.path))
-    .flatMap((file) => zoneSighting(file.path, null, " (no hunks: binary or mode change)"));
+    .flatMap((file) =>
+      zoneSighting(file.path, null, " (no text hunks: binary, mode change or rename)"),
+    );
 }
 
 /**
