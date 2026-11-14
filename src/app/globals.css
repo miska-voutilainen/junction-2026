@@ -64,9 +64,10 @@
   --text-2xl--line-height: var(--text-2xl-leading);
   --text-display: var(--text-display);
   --text-display--line-height: var(--text-display-leading);
-  /* Shell breakpoints: the nav shows from 900 px, the full top bar from 760 px. */
+  /* Breakpoints: the full top bar from 760 px, the nav from 900 px, two-column card grids from 1100 px. */
   --breakpoint-compact: 760px;
   --breakpoint-nav: 900px;
+  --breakpoint-wide: 1100px;
   --spacing-topbar: var(--layout-topbar);
   --container-nav: var(--layout-nav);
   --container-navigator: var(--layout-navigator);

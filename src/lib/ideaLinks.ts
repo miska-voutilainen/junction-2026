@@ -26,8 +26,10 @@ export const IDEAS: readonly Idea[] = [
 
 // Until the idea pages exist (T25) every label opens the spec's screens section,
 // which describes where each idea appears. Then this moves to docs/ideas/<page>.
-export const IDEA_LINK_BASE =
-  "https://github.com/miska-voutilainen/junction-2026/blob/main/docs/spec.md#3-screens";
+/** Where files of this repository are shown on GitHub, for links to docs. */
+export const REPO_BLOB_URL = "https://github.com/miska-voutilainen/junction-2026/blob/main";
+
+export const IDEA_LINK_BASE = `${REPO_BLOB_URL}/docs/spec.md#3-screens`;
 
 /**
  * The page that explains idea `n`.

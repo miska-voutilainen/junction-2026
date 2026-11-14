@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
-import { DashboardError, DashboardScreen, FALLBACK_REPO, loadDashboardSources } from "@/features/dashboard";
+import { DashboardError, DashboardScreen, loadDashboardSources } from "@/features/dashboard";
+import { FALLBACK_REPO } from "@/lib/data/loadInboxSources";
 
 /**
  * S5 · Dashboard. Reads every review, receipt and the report card on the
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
     <DashboardScreen
       sources={loaded.sources}
       reportCard={loaded.reportCard}
-      repo={loaded.repo}
+      repo={loaded.repo ?? FALLBACK_REPO}
       usesFixture={loaded.usesFixture}
     />
   );

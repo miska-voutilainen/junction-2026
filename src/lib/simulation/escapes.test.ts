@@ -32,6 +32,26 @@ describe("useEscapes", () => {
     expect(result.current.total).toBe(3);
   });
 
+  it("undoes one escape in an area and removes the area at zero", async () => {
+    const useEscapes = await freshUseEscapes();
+    const { result } = renderHook(() => useEscapes());
+    act(() => result.current.record("security"));
+    act(() => result.current.record("security"));
+    act(() => result.current.record("analyzer"));
+    act(() => result.current.undo("security"));
+    expect(result.current.escapes).toEqual({ security: 1, analyzer: 1 });
+    act(() => result.current.undo("security"));
+    expect(result.current.escapes).toEqual({ analyzer: 1 });
+    expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "null")).toEqual({ analyzer: 1 });
+  });
+
+  it("ignores an undo in an area with no escape", async () => {
+    const useEscapes = await freshUseEscapes();
+    const { result } = renderHook(() => useEscapes());
+    act(() => result.current.undo("generator"));
+    expect(result.current.total).toBe(0);
+  });
+
   it("shares one state between components and clears it on reset", async () => {
     const useEscapes = await freshUseEscapes();
     const first = renderHook(() => useEscapes());
