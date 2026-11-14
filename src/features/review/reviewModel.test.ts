@@ -16,6 +16,8 @@ import {
   hunkRange,
   hunkRawText,
   isLineHighlighted,
+  isOwnTestOnly,
+  OWN_TEST_LABEL,
   scrollTargetOf,
   splitCitations,
 } from "./reviewModel";
@@ -39,6 +41,31 @@ async function sectionsOf(review: Review, reportCard: ReportCardInput, escapes =
   const { decision, levels } = decideChange(review, reportCard, escapes);
   return { decision, sections: buildSections(review, decision, levels) };
 }
+
+describe("the PR's own test", () => {
+  const ownTestClaims = { "mp-2283": "c6", "mp-2129": "c2", "mp-2234": "c3", "mp-2297": "c4" };
+
+  it.each(Object.entries(ownTestClaims))("%s: claim %s is backed only by the PR's own test", async (changeId, claimId) => {
+    const review = await load(changeId);
+    const claim = review.claims.find((candidate) => candidate.id === claimId);
+    expect(claim && isOwnTestOnly(claim)).toBe(true);
+  });
+
+  it("is not own-test-only once a differential test backs the claim too", async () => {
+    const claim = structuredClone((await load("mp-2283")).claims.find((candidate) => candidate.id === "c6")!);
+    claim.evidence.push({ ...claim.evidence[0], kind: "differential-test" });
+    expect(isOwnTestOnly(claim)).toBe(false);
+  });
+
+  it("labels the hunk's evidence line and flags it for the idea label", async () => {
+    const review = await load("mp-2283");
+    const { sections } = await sectionsOf(review, await readableCard());
+    const entry = [...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h8");
+    expect(entry?.evidence).toBe(OWN_TEST_LABEL);
+    expect(entry?.isOwnTest).toBe(true);
+    expect([...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h5")?.isOwnTest).toBe(false);
+  });
+});
 
 describe("evidence line", () => {
   it("names the test for a verified hunk, the checked quote for a supported one, the finding for a read one", async () => {

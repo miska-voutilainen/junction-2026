@@ -18,6 +18,8 @@ export interface HunkEntry {
   range: string;
   /** Why this hunk has the coverage it has, in one line. */
   evidence: string;
+  /** True when the only test behind this hunk is the PR's own (idea 8); the view adds the idea label. */
+  isOwnTest: boolean;
 }
 
 /** The hunks split the way the diff shows them. */
@@ -82,6 +84,7 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
       coverage,
       range: hunkRange(hunk),
       evidence: evidenceLine(review, hunk, coverage, file.area ? levels[file.area] : null),
+      isOwnTest: isCoveredByOwnTestOnly(review, hunk, coverage),
     };
     if (coverage === "read") sections.read.push(entry);
     else if (file.kind === "generated") sections.generated.push(entry);
@@ -101,12 +104,39 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
  */
 function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
   if (coverage === "read") return readReason(review, hunk, areaLevel);
-  const claims = review.claims.filter((claim) => claim.hunkIds.includes(hunk.id) && claim.level === coverage);
+  const claims = claimsAtLevel(review, hunk, coverage);
   if (coverage === "verified") return verifiedLine(claims);
+  if (isCoveredByOwnTestOnly(review, hunk, coverage)) return OWN_TEST_LABEL;
   return supportedLine(hunk, claims);
 }
 
 type Claim = Review["claims"][number];
+
+/** How a claim backed only by the PR's own test is named, on the hunk line and in the Read step. */
+export const OWN_TEST_LABEL = "Supported · the PR's own test";
+
+/** Why such a claim stops at Supported (idea 8): shown as the label's description. */
+export const OWN_TEST_NOTE = "The same agent wrote the code and this test, so it can't make the claim Verified.";
+
+/**
+ * Whether a claim's only test evidence is the test the PR ships. Only a
+ * differential test (fails on the base, passes on the change) written by
+ * someone else can make a claim Verified; the author's own test cannot.
+ */
+export function isOwnTestOnly(claim: Claim): boolean {
+  const hasOwnTest = claim.evidence.some((item) => item.kind === "pr-test");
+  return hasOwnTest && !claim.evidence.some((item) => item.kind === "differential-test");
+}
+
+function isCoveredByOwnTestOnly(review: Review, hunk: Hunk, coverage: Coverage): boolean {
+  if (coverage !== "supported") return false;
+  const claims = claimsAtLevel(review, hunk, coverage);
+  return claims.length > 0 && claims.every(isOwnTestOnly);
+}
+
+function claimsAtLevel(review: Review, hunk: Hunk, level: Coverage): Claim[] {
+  return review.claims.filter((claim) => claim.hunkIds.includes(hunk.id) && claim.level === level);
+}
 
 function verifiedLine(claims: Claim[]): string {
   const testName = claims.flatMap((claim) => claim.evidence).find((item) => item.testName !== null)?.testName;

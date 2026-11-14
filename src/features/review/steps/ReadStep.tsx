@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useSelectedClaim } from "../SelectedClaim";
 import { FindingLocations } from "./FindingLocations";
 import { LocationButton } from "./LocationButton";
+import { OWN_TEST_LABEL, OWN_TEST_NOTE, isOwnTestOnly } from "../reviewModel";
 import { citationLabel } from "./stepsModel";
 import type { ClaimGroup, Story, StoryClaim } from "./stepsModel";
 
@@ -222,6 +223,28 @@ function verbOf(result: "fail" | "pass" | "error"): string {
 
 /** Supported: a checked quote, or a test the change ships; the evidence says which. */
 function SupportedBy({ claim }: { claim: Claim }) {
+  return (
+    <>
+      {isOwnTestOnly(claim) && <OwnTestNote />}
+      <SupportedEvidence claim={claim} />
+    </>
+  );
+}
+
+/** Why a claim backed only by the PR's own test stops at Supported (idea 8). */
+function OwnTestNote() {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="flex flex-wrap items-center gap-2 font-medium text-text-primary">
+        {OWN_TEST_LABEL}
+        <IdeaLabel n={8} />
+      </p>
+      <p className="text-xs text-text-muted">{OWN_TEST_NOTE}</p>
+    </div>
+  );
+}
+
+function SupportedEvidence({ claim }: { claim: Claim }) {
   return (
     <ul className="flex flex-col gap-1">
       {claim.evidence.map((item) => (
