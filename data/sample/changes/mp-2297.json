@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change decorates generated code with ExcludeFromCodeCoverage so that it no longer skews coverage reports (issue 2297). The attribute is added in the templates for object formatters, string-key formatters, enum formatters, the generated resolver and the composite resolver. It is wrapped in a preprocessor check, so it is not emitted for netstandard2.0 or .NET Framework, where the attribute is unavailable for these targets. There is no setting to turn it off. Almost all of the changed files are verified snapshots under the generator tests, which now contain the attribute. I added CodeCoverageExclusionTests to check that the attribute appears on each kind of generated type. The README notes the behaviour and the targets it applies to.",
     "synthetic": true,
-    "writtenBy": "Kasanen (evidence lane), written blind"
+    "writtenBy": "engine lane (Miska), drafted by a Claude Sonnet builder without opening prompts, pipeline or review output"
   }
 }
