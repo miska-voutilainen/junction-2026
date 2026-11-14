@@ -35,6 +35,8 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Navigat
   }
 
   return (
+    // The keydown bubbles up from the focusable hunk links; the nav itself takes no focus.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <nav
       aria-label="Hunks"
       onKeyDown={moveFocus}
