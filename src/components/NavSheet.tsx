@@ -24,11 +24,11 @@ export function NavSheet({ needsReviewCount, className }: Readonly<{ needsReview
           type="button"
           aria-label="Open navigation"
           className={cn(
-            "grid size-11 shrink-0 place-items-center rounded-control text-text-secondary hover:bg-surface-hover hover:text-text-primary",
+            "grid size-11 shrink-0 place-items-center rounded-control text-text-primary hover:bg-surface-hover",
             className,
           )}
         >
-          <Menu aria-hidden="true" className="size-4.5" />
+          <Menu aria-hidden="true" strokeWidth={2.25} className="size-5" />
         </button>
       </SheetTrigger>
       <SheetContent side="left" showCloseButton={false} className="w-nav gap-0 bg-surface-raised p-0 sm:max-w-nav">
