@@ -83,6 +83,8 @@ export interface EscapesApi {
   total: number;
   /** Records one more escape in `area`. */
   record: (area: Area) => void;
+  /** Takes back one escape in `area`; does nothing when none is recorded there. */
+  undo: (area: Area) => void;
   /** Clears every recorded escape. */
   reset: () => void;
 }
@@ -97,9 +99,19 @@ export function useEscapes(): EscapesApi {
     const now = getSnapshot();
     set({ ...now, [area]: (now[area] ?? 0) + 1 });
   }, []);
+  const undo = useCallback((area: Area) => {
+    const now = getSnapshot();
+    const remaining = (now[area] ?? 0) - 1;
+    if (remaining < 0) return;
+    // Drop the key at zero: the stored shape only holds positive counts.
+    const next = { ...now };
+    if (remaining === 0) delete next[area];
+    else next[area] = remaining;
+    set(next);
+  }, []);
   const reset = useCallback(() => set(noEscapes), []);
   return useMemo(
-    () => ({ escapes, total: Object.values(escapes).reduce((sum, count) => sum + count, 0), record, reset }),
-    [escapes, record, reset],
+    () => ({ escapes, total: Object.values(escapes).reduce((sum, count) => sum + count, 0), record, undo, reset }),
+    [escapes, record, undo, reset],
   );
 }
