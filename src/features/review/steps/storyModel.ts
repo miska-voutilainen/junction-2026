@@ -7,7 +7,7 @@ import type { Citation, Review } from "@/contracts";
 import { splitCitations } from "../citationHighlights";
 import type { CheckedCitation } from "../citationHighlights";
 import { fileName } from "../reviewModel";
-import { plural } from "./stepsModel";
+import { countOf } from "@/lib/countOf";
 
 type Claim = Review["claims"][number];
 type Finding = Review["findings"][number];
@@ -91,7 +91,7 @@ export function findingViews(review: Review, kind: Finding["kind"]): FindingView
 function quoteCheckLine({ checked, passed, downgraded, dropped }: Review["quoteCheck"]): string | null {
   if (checked === 0) return null;
   const base = `Quote check: ${passed} of ${checked} quotes found in the code`;
-  const outcomes = [downgraded > 0 && plural(downgraded, "claim") + " downgraded", dropped > 0 && plural(dropped, "finding") + " dropped"].filter(Boolean);
+  const outcomes = [downgraded > 0 && countOf(downgraded, "claim") + " downgraded", dropped > 0 && countOf(dropped, "finding") + " dropped"].filter(Boolean);
   return outcomes.length === 0 ? `${base}.` : `${base}, ${outcomes.join(", ")}.`;
 }
 

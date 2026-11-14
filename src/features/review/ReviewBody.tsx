@@ -6,7 +6,7 @@ import { decideChange } from "@/lib/decideChange";
 
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { useEscapes } from "@/lib/simulation/escapes";
-import { isTypingTarget } from "@/lib/useShortcuts";
+import { nextIndex, stepFromKey } from "@/lib/useShortcuts";
 import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
@@ -147,14 +147,11 @@ function useHunkKeys(groups: NavigatorGroup[], activeHunkId: string | null, jump
   useEffect(() => {
     const items = groups.flatMap((group) => group.items);
     function onKeyDown(event: KeyboardEvent) {
-      if (event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
-      const step = event.key === "j" ? 1 : event.key === "k" ? -1 : 0;
+      const step = stepFromKey(event);
       if (step === 0 || items.length === 0) return;
       event.preventDefault();
       const current = items.findIndex((item) => item.hunkId === activeHunkId);
-      // With nothing active yet, j lands on the first hunk and k on the last, as in the inbox.
-      const next = current === -1 ? (step === 1 ? 0 : items.length - 1) : Math.min(items.length - 1, Math.max(0, current + step));
-      jumpTo(items[next].hunkId);
+      jumpTo(items[nextIndex(current, step, items.length)].hunkId);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

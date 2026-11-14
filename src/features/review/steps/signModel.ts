@@ -4,6 +4,7 @@
  * their own machine. Idea 7, signed receipt. Spec section 3, S2 sidebar.
  */
 import type { Receipt, ReceiptRecord, Review } from "@/contracts";
+import { countersignCommand } from "@/lib/countersignCommand";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 
 /** What the Sign step shows: the receipt's status, or "unreadable" when the receipt file exists but fails validation. */
@@ -29,31 +30,14 @@ export type SignView =
  */
 export function buildSignView(review: Review, record: ReceiptRecord | null, signState: SignState): SignView {
   const commands: SignCommands = {
-    draft: `pnpm countersign draft ${review.changeId}`,
-    sign: `pnpm countersign sign ${review.changeId}`,
-    verify: `pnpm countersign verify ${review.changeId}`,
+    draft: countersignCommand("draft", review.changeId),
+    sign: countersignCommand("sign", review.changeId),
+    verify: countersignCommand("verify", review.changeId),
   };
   if (signState === "unreadable") return { status: signState, commands };
   if (record === null || signState === "needs-review") return { status: "needs-review", draft: review.receiptDraft, commands };
   if (signState === "stale") return { status: signState, receipt: record.receipt, reviewDiffSha256: review.diff.diffSha256, commands };
   return { status: signState, receipt: record.receipt, verify: record.verify, commands };
-}
-
-const SIGNED_AT = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "UTC",
-});
-
-/**
- * "13 Nov 2026, 17:22 UTC". UTC is fixed so the server's HTML and the
- * browser's agree; a local zone would flash a different time on hydration.
- */
-export function formatSignedAt(isoTimestamp: string): string {
-  return `${SIGNED_AT.format(new Date(isoTimestamp))} UTC`;
 }
 
 /** The states a person can act on by signing. */

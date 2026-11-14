@@ -1,8 +1,7 @@
+import { checkedByLabel } from "@/contracts";
 import type { Review } from "@/contracts";
 
 type ReceiptBody = Review["receiptDraft"];
-
-const CHECKED_BY_LABEL = { tool: "tool", "ai-supported": "AI, supported", human: "human" } as const;
 
 /**
  * The three parts of a receipt in the signer's words: what was checked and by
@@ -27,7 +26,7 @@ export function ReceiptSections({ body, review, signedRunId }: Readonly<{ body: 
       <Section heading="Checked" emptyText={isSigned ? "The signer listed nothing as checked." : "Nothing listed yet. You add what you checked when you draft the receipt."}>
         {body.checked.map((entry) => (
           <li key={entry.item} className="text-sm text-text-secondary">
-            {entry.item} <span className="text-xs text-text-muted">· {CHECKED_BY_LABEL[entry.by]}</span>
+            {entry.item} <span className="text-xs text-text-muted">· {checkedByLabel[entry.by]}</span>
           </li>
         ))}
       </Section>

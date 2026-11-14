@@ -1,4 +1,5 @@
 import type { InboxSummary } from "@/features/inbox";
+import { countOf } from "@/lib/countOf";
 
 /**
  * What the current levels mean for the four changes: how many land in each
@@ -16,7 +17,7 @@ export function RoutingSpread({ summary, escapeCount }: Readonly<{ summary: Inbo
         Of {changes} changes: {tierCounts.light} Light · {tierCounts.focused} Focused · {tierCounts.full} Full · humans read{" "}
         {readHunks} of {totalHunks} hunks (~{readMinutes} of {fullMinutes} min)
         {escapeCount > 0 && (
-          <span className="text-rose-light"> · with {escapeCount === 1 ? "1 simulated escape" : `${escapeCount} simulated escapes`}</span>
+          <span className="text-rose-light"> · with {countOf(escapeCount, "simulated escape")}</span>
         )}
       </p>
     </section>

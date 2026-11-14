@@ -1,19 +1,21 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Copy, FileDiff, Gauge, Inbox, LayoutDashboard } from "lucide-react";
+import { ArrowRight, Copy, FileDiff } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
+import { countersignCommand } from "@/lib/countersignCommand";
+import { PAGES } from "@/lib/pages";
+import { COPY_ANNOUNCEMENT, useCopy } from "@/lib/useCopy";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./shellChange";
 
-const COPIED_MS = 1500;
 // The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.
 const MENU_MAX_WIDTH_PX = 640;
 const MENU_TOP_FRACTION = 1 / 3;
@@ -81,7 +83,7 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
   // "Copy sign command" targets the change on screen, else the next one to review.
   const changeInView = changes.find((change) => pathname === `/changes/${change.id}`) ?? nextChange;
   const needsReviewCount = changes.filter((change) => change.needsReview).length;
-  const { copiedNote, copy } = useCopyNote();
+  const { status: copyStatus, copy } = useCopy();
   const menuEntrance = useMotionPreset(popover);
 
   // While open, the shortcut closes the menu: re-opening would make the search box the "trigger"
@@ -175,7 +177,7 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
               </span>
               <span className="flex-1" />
               <span role="status" aria-live="polite">
-                {copiedNote}
+                {COPY_ANNOUNCEMENT[copyStatus]}
               </span>
             </div>
           </Command>
@@ -183,23 +185,6 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
       </DialogContent>
     </Dialog>
   );
-}
-
-/** Copies text and keeps a short "Copied" note for the live region; says so when the browser refuses. */
-function useCopyNote() {
-  const [copiedNote, setCopiedNote] = useState("");
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const copy = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedNote("Copied");
-    } catch {
-      setCopiedNote("Copy failed. Select the command and copy it by hand.");
-    }
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopiedNote(""), COPIED_MS);
-  }, []);
-  return { copiedNote, copy };
 }
 
 function buildQuickActions(
@@ -220,18 +205,28 @@ function buildQuickActions(
     });
   }
   if (changeInView) {
-    const command = `pnpm countersign sign ${changeInView.id}`;
+    const command = countersignCommand("sign", changeInView.id);
     rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
   }
   return rows;
 }
 
+/** What each page's menu row says under its title. */
+const PAGE_MENU_NOTE: Record<(typeof PAGES)[number]["id"], (needsReviewCount: number) => string> = {
+  inbox: (needsReviewCount) => `${needsReviewCount} need review`,
+  dashboard: () => "Signed, accepted risk, open decisions",
+  reviewer: () => "Trust by area",
+};
+
 function buildPages(needsReviewCount: number): Row[] {
-  return [
-    { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
-    { id: "go-dashboard", label: "Dashboard", meta: "Signed, accepted risk, open decisions", icon: LayoutDashboard, shortcut: ["g", "d"], href: "/dashboard" },
-    { id: "go-reviewer", label: "Reviewer report card", meta: "Trust by area", icon: Gauge, shortcut: ["g", "r"], href: "/reviewer" },
-  ];
+  return PAGES.map((page) => ({
+    id: `go-${page.id}`,
+    label: page.title,
+    meta: PAGE_MENU_NOTE[page.id](needsReviewCount),
+    icon: page.icon,
+    shortcut: ["g", page.goKey],
+    href: page.href,
+  }));
 }
 
 function MenuRow({ row, index, onChoose }: Readonly<{ row: Row; index: number; onChoose: (row: Row) => void }>) {
