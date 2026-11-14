@@ -196,8 +196,23 @@ function readReason(review: Review, hunk: Hunk, areaLevel: LadderLevel | null): 
   const refusals = review.refusals.filter((refusal) => refusal.hunkIds.includes(hunk.id)).map((refusal) => `Refused under ${refusal.ruleId}`);
   const flagged = [...findings, ...refusals];
   if (flagged.length > 0) return flagged.join(" · ");
-  if (areaLevel === "shadow") return "Area is at Shadow: no track record";
+  if (areaLevel === "shadow") return shadowReason(review, hunk);
   return "No checked evidence";
+}
+
+/**
+ * Why a Shadow-area hunk is read even when a claim covers it: Shadow routes
+ * nothing, so a Verified claim still leaves the hunk on the reading list. Without
+ * naming the claim, "Verified" in the Read step and "Read this" on the hunk look
+ * like a contradiction (mp-2297: 7 claims Verified, 21 of 21 hunks read).
+ * @example "Area is at Shadow: claim c3 is Verified, but evidence here routes nothing yet"
+ */
+function shadowReason(review: Review, hunk: Hunk): string {
+  for (const level of ["verified", "supported"] as const) {
+    const claim = claimsAtLevel(review, hunk, level)[0];
+    if (claim) return `Area is at Shadow: claim ${claim.id} is ${coverageLabel[level]}, but evidence here routes nothing yet`;
+  }
+  return "Area is at Shadow: no track record";
 }
 
 /**
