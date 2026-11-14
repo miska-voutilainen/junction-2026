@@ -58,8 +58,13 @@ export function ghRows(args, env, add) {
     for (const f of bodyFiles) {
       const t = readBody(f);
       const first = t == null ? null : t.replace(/\r/g, "").split("\n")[0];
-      if (first == null || !first.startsWith(expected))
-        add("deny", `agent-written GitHub text starts with [agent:${lane ?? "<lane>"}]${first == null ? ` (body file ${f} not found)` : ""}`);
+      if (first == null || !first.startsWith(expected)) {
+        // `--body-file "$file"` can't be resolved without running the shell; say so instead of "not found".
+        const why = /[$%`]/.test(f)
+          ? ` (body file ${f} is computed, so the guard can't read it: pass a literal path)`
+          : first == null ? ` (body file ${f} not found)` : "";
+        add("deny", `agent-written GitHub text starts with [agent:${lane ?? "<lane>"}]${why}`);
+      }
       if (t != null) trailerTexts.push(t);
     }
   }
