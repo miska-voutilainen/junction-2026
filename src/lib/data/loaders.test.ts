@@ -95,9 +95,10 @@ describe("loaders", () => {
 });
 
 describe("loadReceiptText", () => {
-  it("returns the file's exact text, recorded before fixture", async () => {
+  it("returns the file's exact text, recorded before fixture when the review is recorded too", async () => {
     const fixtureText = await readFile(path.join(root, "fixtures", "receipts", "mp-2283.json"), "utf8");
     expect(await loadReceiptText("mp-2283", root)).toBe(fixtureText);
+    await record("runs/mp-2283/review.json");
     await record("receipts/mp-2283.json", (text) => text.replace("rv1", "rv2"));
     expect(await loadReceiptText("mp-2283", root)).toBe(fixtureText.replace("rv1", "rv2"));
   });
@@ -105,5 +106,24 @@ describe("loadReceiptText", () => {
   it("returns null when there is no receipt or the id could leave data/", async () => {
     expect(await loadReceiptText("mp-2234", root)).toBeNull();
     expect(await loadReceiptText("../secrets", root)).toBeNull();
+  });
+});
+
+describe("receipts follow the source of their review", () => {
+  it("ignores a fixture receipt when the review is recorded", async () => {
+    await record("runs/mp-2283/review.json");
+    expect(await loadReceipt("mp-2283", root)).toEqual({ status: "missing" });
+    expect(await loadReceiptText("mp-2283", root)).toBeNull();
+  });
+
+  it("ignores a recorded receipt when the review is a fixture", async () => {
+    await record("receipts/mp-2283.json");
+    expect(await loadReceipt("mp-2283", root)).toMatchObject({ status: "ok", source: "fixture" });
+  });
+
+  it("reads a recorded receipt next to a recorded review", async () => {
+    await record("runs/mp-2283/review.json");
+    await record("receipts/mp-2283.json");
+    expect(await loadReceipt("mp-2283", root)).toMatchObject({ status: "ok", source: "recorded" });
   });
 });
