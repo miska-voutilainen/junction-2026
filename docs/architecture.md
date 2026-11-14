@@ -67,7 +67,7 @@ One run per change, blind-first. Built so far: A1 to A4 and the quote check; A5 
 - **Model.** `claude-opus-5-5` at effort `high`, behind one client, `src/ai/client.ts`. Backend by `AI_BACKEND`: Claude Code headless on the operator's subscription (default) or the Anthropic API.
 - **Record and replay.** `AI_MODE=record` saves each response to `data/recordings/`; `replay` reads only those and fails on a miss; `live` calls without saving. The recording key is a hash of model, prompt version, system text, rendered prompt, answer schema and run index, so a recorded review reproduces offline.
 - **Validation.** Every model output is parsed with a zod schema; one retry with the validation error appended, then the run fails with no partial review written.
-- **Planted-bug eval.** `pnpm evals` runs the reviewer over ten planted-bug branches and four contradiction plants (`--runs <n>` anchored and blind runs each, 3 by default and staged: recorded runs are reused), scores against the answer keys and writes the report card. The plants are written without sight of the prompts, prompts are frozen as `rv1` before the first eval, and every rate carries its sample size.
+- **Planted-bug eval.** `pnpm evals` runs the reviewer over ten planted-bug branches and four contradiction plants (`--runs <n>` anchored and blind runs each, 2 by default and staged: recorded runs are reused), scores against the answer keys and writes the report card. The plants are written without sight of the prompts, prompts are frozen as `rv1` before the first eval, and every rate carries its sample size.
 
 ## Deployment
 

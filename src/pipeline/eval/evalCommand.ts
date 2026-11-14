@@ -27,7 +27,7 @@ import { planEvalJobs, runEvalJobs, type EvalJob, type EvalStore } from "./runEv
 import { anchoredVsBlindVerdict, scoreReportCard, type ContradictionRuns } from "./scoreEval";
 
 /** Comparison runs per mode and plant when `--runs` is not given (spec section 5). */
-export const DEFAULT_RUNS_PER_MODE = 3;
+export const DEFAULT_RUNS_PER_MODE = 2;
 
 /** The four Tieto changes: re-routed with the measured levels, and counted in the hallucination totals. */
 const TIETO_CHANGE_IDS = ["mp-2129", "mp-2234", "mp-2283", "mp-2297"];

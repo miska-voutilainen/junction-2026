@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · T16: stopped at 2 runs per mode
+
+- **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants. Stage 1 ran 2 per mode.
+- **Decision:** 2 runs per mode is the eval's size: `pnpm evals` defaults to `--runs 2`, and the spec's counts read "of 10" (5 plants x 2 runs). Miska approved the cut.
+- **Why:** Both modes caught 10 of 10 at n = 2. A third run would add about 10 Opus runs and could not separate them.
+- **Rejected:** 3 runs per mode as in the spec (cost with no information gained).
+- **PR:** T16
+
 ## 2026-11-14 · T16 choices: staged contradiction runs, blind runs shared by prompt, the count is the measured n
 
 - **Context:** `pnpm evals` makes about 30 reviews of a 90-minute budget, and the credits are shared.
