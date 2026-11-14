@@ -1,10 +1,33 @@
+/**
+ * Evidence levels: every claim is labelled by what backs it, never by how sure
+ * the model sounds, so the reader knows what to trust and what to read. Model
+ * confidence is not stored in any contract and is never shown (spec section 1,
+ * principle 3). Spec section 6, A5 and the quote check. What each level means:
+ * - Verified: a test A5 wrote from the requirement, without seeing the code,
+ *   fails on the base and passes on the head.
+ * - Supported: the quote check found the claim's cited code in the diff, or the
+ *   PR's own test backs a claim that is already Supported. The PR's own test
+ *   never raises a level, because the author does not check its own work.
+ * - Unverified: no checkable evidence; a person reads it. A passing-on-base,
+ *   failing-on-head A5 test retracts a claim to this level.
+ * - Refused: a refusal rule (or the model's own refusal) hands the decision to
+ *   a named person.
+ * An inconclusive test (build error, no matching test, timeout) changes no level.
+ * Evidence kinds in review.ts: `quote-check` gives Supported, `differential-test`
+ * gives Verified or a retraction, `pr-test` gives no level change.
+ */
 import { z } from "zod";
 
 /** Review area. Used by data/runs/<changeId>/review.json and data/eval/report-card.json (producer: engine). */
 export const AreaSchema = z.enum(["generator", "analyzer", "security", "performance"]);
 export type Area = z.infer<typeof AreaSchema>;
 
-/** How strongly a claim is backed (data/runs/<changeId>/review.json, producer: engine). */
+/**
+ * How strongly a claim is backed, strongest first, with Refused apart: Verified
+ * (A5 test fails on base, passes on head), Supported (quote checked, or the
+ * PR's own test; never more), Unverified (no checkable evidence), Refused (a
+ * rule hands it to a named decider). data/runs/<changeId>/review.json, producer: engine.
+ */
 export const EvidenceLevelSchema = z.enum(["verified", "supported", "unverified", "refused"]);
 export type EvidenceLevel = z.infer<typeof EvidenceLevelSchema>;
 
