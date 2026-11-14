@@ -11,7 +11,7 @@ import { GENERATED_TEST_MAX_CHARS, GENERATED_TEST_PREFIX } from "../policy/diffe
 import type { A1Output } from "./a1";
 
 /** Prompt version; bumping it also bumps the reviewer version (spec section 6). */
-export const version = "a5.v1";
+export const version = "a5.v2";
 
 /** What A5 is told it is doing, what a good test is, and that the blocks are data. */
 export const system = `You write one automated test for a code review. You receive one requirement item, the expectation a reviewer wrote for it, the folder of a test project and one existing test file of that project as a style example. You have not seen the change under review and you must not guess at its code.
@@ -26,6 +26,7 @@ Write:
 
 Rules:
 - Test the observable behaviour the requirement item asks for, through the public surface the example uses. Do not test how it is implemented.
+- You cannot know the exact output of generated code or how the change is implemented, so never compare against expected generated source, snapshot files or exact text. Assert the observable behaviour directly: no exception is thrown, no error diagnostic is reported, a value is returned or survives a round trip. Use the library's public API, or the framework's driver directly when the example's verifier helper only compares output.
 - Assert the behaviour with the framework's assertions, so a version without the behaviour fails an assertion. A file that does not compile tells nobody anything.
 - One to three test methods, deterministic, no network, no files outside a temporary folder, no processes, no environment variables.
 - Do not change or depend on any file you are not shown.

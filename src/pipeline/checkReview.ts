@@ -62,13 +62,16 @@ function checkMp2283VerifiedClaim(review: Review): CheckResult {
           evidence.head?.result === "pass",
       ),
   );
+  const unsaid = (review.inconclusiveTests ?? [])
+    .map((test) => `${test.testNames.join(", ")}: ${test.reason}`)
+    .join("; ");
   return {
     name: "mp-2283: A5 verifies a claim with a test that fails on the base and passes on the head",
     passed: verified.length > 0,
     detail:
       verified.length > 0
         ? `claims: ${verified.map((claim) => claim.id).join(", ")}`
-        : `no Verified claim (A5 prompt version: ${review.reviewer.promptVersions.a5})`,
+        : `no Verified claim; ${unsaid || "A5 left no reason"}`,
   };
 }
 

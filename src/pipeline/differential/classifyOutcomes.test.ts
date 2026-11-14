@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Review } from "../../contracts";
-import { applyOutcomes, classifyVerdict, type TestOutcome } from "./classifyOutcomes";
+import {
+  applyOutcomes,
+  classifyVerdict,
+  inconclusiveReason,
+  type TestOutcome,
+} from "./classifyOutcomes";
 import type { TestRun } from "./dotnetRunner";
 
 type Claim = Review["claims"][number];
@@ -39,7 +44,7 @@ describe("classifyVerdict", () => {
   it.each([
     ["fail", "pass", "tells-apart"],
     ["pass", "pass", "same"],
-    ["fail", "fail", "broken-on-head"],
+    ["fail", "fail", "fails-on-both"],
     ["pass", "fail", "broken-on-head"],
     ["error", "pass", "inconclusive"],
     ["fail", "error", "inconclusive"],
@@ -85,16 +90,17 @@ describe("applyOutcomes", () => {
     expect(claims[0].evidence[0].summary).toContain("the test doesn't tell the versions apart");
   });
 
-  it("retracts the claim when the A5 test fails on the head, with the head output", () => {
+  it("retracts the claim when the A5 test passes on the base and fails on the head, with the head output", () => {
     const { claims, retractions } = applyOutcomes(
       [claim()],
-      [outcome({ head: run("fail", "Assert.Equal failed") })],
+      [outcome({ base: run("pass"), head: run("fail", "Assert.Equal failed") })],
     );
     expect(claims[0].level).toBe("unverified");
     expect(retractions).toEqual([
       {
         claimId: "c1",
-        reason: "A test written from the requirement fails on the head: A5_F1_Counts.",
+        reason:
+          "A test written from the requirement passes on the base and fails on the head: A5_F1_Counts.",
         output: "Assert.Equal failed",
       },
     ]);
@@ -109,6 +115,43 @@ describe("applyOutcomes", () => {
     expect(claims).toEqual([original]);
     expect(retractions).toEqual([]);
     expect(counts.inconclusive).toBe(1);
+  });
+
+  it("says nothing when the test fails on both versions: the claim stays, nothing is retracted, the reason is stored", () => {
+    const original = claim();
+    const { claims, retractions, inconclusiveTests, counts } = applyOutcomes(
+      [original],
+      [outcome({ head: run("fail") })],
+    );
+    expect(claims).toEqual([original]);
+    expect(retractions).toEqual([]);
+    expect(counts["fails-on-both"]).toBe(1);
+    expect(inconclusiveTests).toEqual([
+      {
+        source: "differential-test",
+        requirementItemId: "F1",
+        testNames: ["A5_F1_Counts"],
+        reason: "the test fails on both versions: it doesn't test the change",
+      },
+    ]);
+  });
+
+  it("stores the first build error line as the reason a test could not run", () => {
+    const base = run(
+      "error",
+      ["noise", "A5_F1.cs(3,9): error CS0246: The type 'Foo' was not found", "more"].join(
+        String.fromCharCode(10),
+      ),
+    );
+    expect(inconclusiveReason(base, run("pass"))).toBe(
+      "build error on the base: A5_F1.cs(3,9): error CS0246: The type 'Foo' was not found",
+    );
+    expect(
+      inconclusiveReason(run("pass"), run("error", "No test matches the given testcase filter")),
+    ).toBe("no test matches the filter on the head");
+    expect(inconclusiveReason(run("error", "Timed out after 15 minutes."), run("pass"))).toBe(
+      "the run on the base timed out",
+    );
   });
 
   it("never lifts a claim past Supported on the PR's own test, and notes who wrote it", () => {
@@ -127,6 +170,7 @@ describe("applyOutcomes", () => {
       source: "pr-test",
       requirementItemId: null,
       testNames: ["Counts"],
+      base: run("pass"),
       head: run("fail"),
     });
     const { claims, retractions } = applyOutcomes([claim()], [pr, a5]);

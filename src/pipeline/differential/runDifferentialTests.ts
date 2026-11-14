@@ -49,6 +49,8 @@ export interface DifferentialTestsInput {
 export interface DifferentialTestsResult {
   claims: Claim[];
   retractions: Review["retractions"];
+  /** Tests that said nothing, with the reason. */
+  inconclusiveTests: NonNullable<Review["inconclusiveTests"]>;
   counts: VerdictCounts;
   /** False when there was nowhere to run a test; the step then leaves no trace in the review. */
   didRun: boolean;
@@ -89,8 +91,10 @@ export async function runDifferentialTests(
   const { counts } = result;
   console.error(
     `A5: ${outcomes.length} test runs: ${counts["tells-apart"]} tell the versions apart, ${counts.same} do not, ` +
-      `${counts["broken-on-head"]} fail on the head, ${counts.inconclusive} could not run (build error, no match or timeout).`,
+      `${counts["broken-on-head"]} pass on the base and fail on the head, ${counts["fails-on-both"]} fail on both, ${counts.inconclusive} could not run.`,
   );
+  for (const test of result.inconclusiveTests)
+    console.error(`A5: no verdict from ${test.testNames.join(", ")}: ${test.reason}.`);
   return { ...result, didRun: true };
 }
 

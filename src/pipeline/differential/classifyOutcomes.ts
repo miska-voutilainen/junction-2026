@@ -24,36 +24,74 @@ export interface TestOutcome {
 }
 
 /** What a pair of runs says about the change. */
-export type Verdict = "tells-apart" | "same" | "broken-on-head" | "inconclusive";
+export type Verdict = "tells-apart" | "same" | "broken-on-head" | "fails-on-both" | "inconclusive";
 
-/** How many outcomes ended each way, for the log: the review contract has no field for them. */
+/** A pair of runs that says nothing about the change, with the reason a reader can act on. */
+export type InconclusiveTest = NonNullable<Review["inconclusiveTests"]>[number];
+
+/** How many outcomes ended each way, for the log. */
 export type VerdictCounts = Record<Verdict, number>;
 
 /** The claims after the tests, the retractions they caused and the verdict counts. */
 export interface ClassifiedClaims {
   claims: Claim[];
   retractions: Review["retractions"];
+  /** The tests that could not say anything, also stored in the review. */
+  inconclusiveTests: InconclusiveTest[];
   counts: VerdictCounts;
 }
 
 /**
- * What a pair of runs means. An "error" on either side (build error, no
- * matching test, timeout) is not a verdict: the claim stays as it was.
+ * What a pair of runs means. Only a test that passes on one version and fails on
+ * the other says something. A test that fails on both versions does not test the
+ * change (it asserts something neither version does), and an "error" on either
+ * side (build error, no matching test, timeout) is no verdict: the claim stays
+ * as it was.
  *
  * @example classifyVerdict({ result: "fail", ... }, { result: "pass", ... }) // "tells-apart"
+ * @example classifyVerdict({ result: "pass", ... }, { result: "fail", ... }) // "broken-on-head"
  */
 export function classifyVerdict(base: TestRun, head: TestRun): Verdict {
   if (base.result === "error" || head.result === "error") return "inconclusive";
+  if (base.result === "fail" && head.result === "fail") return "fails-on-both";
   if (head.result === "fail") return "broken-on-head";
   return base.result === "fail" ? "tells-apart" : "same";
 }
+
+/**
+ * Why a pair of runs could not say anything, in words for a reader: the side
+ * and the first build error line, or that nothing matched or the run timed out.
+ */
+export function inconclusiveReason(base: TestRun, head: TestRun): string {
+  if (base.result === "fail" && head.result === "fail")
+    return "the test fails on both versions: it doesn't test the change";
+  const side = base.result === "error" ? "base" : "head";
+  const output = (side === "base" ? base : head).output;
+  if (/Timed out after/.test(output)) return `the run on the ${side} timed out`;
+  if (/No test matches the given testcase filter|No test is available/.test(output))
+    return `no test matches the filter on the ${side}`;
+  const buildError = output.split("\n").find((line) => /error (CS|MSB|NU|NETSDK)\d+/.test(line));
+  if (buildError !== undefined)
+    return `build error on the ${side}: ${buildError.trim().slice(0, MAX_REASON_CHARS)}`;
+  return `no test result in the output on the ${side}`;
+}
+
+/** Longest build error line kept in a reason: enough for the file, code and message start. */
+const MAX_REASON_CHARS = 240;
 
 /** Applies every outcome to the claims it covers, A5's tests first so a PR test never undoes them. */
 export function applyOutcomes(
   claims: readonly Claim[],
   outcomes: readonly TestOutcome[],
 ): ClassifiedClaims {
-  const counts: VerdictCounts = { "tells-apart": 0, same: 0, "broken-on-head": 0, inconclusive: 0 };
+  const counts: VerdictCounts = {
+    "tells-apart": 0,
+    same: 0,
+    "broken-on-head": 0,
+    "fails-on-both": 0,
+    inconclusive: 0,
+  };
+  const inconclusiveTests: InconclusiveTest[] = [];
   const retractions: Review["retractions"] = [];
   let current = [...claims];
   const ordered = [...outcomes].sort(
@@ -62,14 +100,22 @@ export function applyOutcomes(
   for (const outcome of ordered) {
     const verdict = classifyVerdict(outcome.base, outcome.head);
     counts[verdict] += 1;
-    if (verdict === "inconclusive") continue;
+    if (verdict === "inconclusive" || verdict === "fails-on-both") {
+      inconclusiveTests.push({
+        source: outcome.source,
+        requirementItemId: outcome.requirementItemId,
+        testNames: outcome.testNames,
+        reason: inconclusiveReason(outcome.base, outcome.head),
+      });
+      continue;
+    }
     current = current.map((claim) => {
       if (!isCovered(claim, outcome)) return claim;
       const updated = withEvidence(claim, outcome, verdict);
       if (verdict === "broken-on-head" && outcome.source === "differential-test") {
         retractions.push({
           claimId: claim.id,
-          reason: `A test written from the requirement fails on the head: ${outcome.testNames.join(", ")}.`,
+          reason: `A test written from the requirement passes on the base and fails on the head: ${outcome.testNames.join(", ")}.`,
           output: outcome.head.output,
         });
         return { ...updated, level: "unverified" };
@@ -81,7 +127,7 @@ export function applyOutcomes(
         : updated;
     });
   }
-  return { claims: current, retractions, counts };
+  return { claims: current, retractions, inconclusiveTests, counts };
 }
 
 /**
@@ -114,7 +160,8 @@ function summaryFor(outcome: TestOutcome, verdict: Verdict): string {
   const sentence = {
     "tells-apart": `${names} fails on the base and passes on the head`,
     same: `${names} passes on the base and on the head: ${NO_DIFFERENCE_NOTE}`,
-    "broken-on-head": `${names} fails on the head`,
+    "broken-on-head": `${names} passes on the base and fails on the head`,
+    "fails-on-both": "",
     inconclusive: "",
   }[verdict];
   return note === null ? `${sentence}.` : `${sentence}; ${note}.`;

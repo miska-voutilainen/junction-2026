@@ -173,6 +173,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     story: answer.story,
     checkedClaims: tests ? { ...checkedClaims, claims: tests.claims } : checkedClaims,
     retractions: tests?.retractions ?? [],
+    inconclusiveTests: tests?.didRun ? tests.inconclusiveTests : undefined,
     mode,
     findings: [...areaFindings, ...contradictions].map((finding, index) => ({
       ...finding,

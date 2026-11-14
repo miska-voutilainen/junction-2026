@@ -31,6 +31,8 @@ export interface ReviewParts {
   refusals: Review["refusals"];
   /** Claims A5's tests retracted; empty when A5 did not run. */
   retractions?: Review["retractions"];
+  /** Tests A5 ran that said nothing, with the reason; omitted when A5 did not run. */
+  inconclusiveTests?: Review["inconclusiveTests"];
   /** Versions of the steps that ran; the rest are "none". */
   promptVersions: Review["reviewer"]["promptVersions"];
   run: Review["run"];
@@ -74,6 +76,7 @@ export function assembleReview(parts: ReviewParts): Review {
     refusals: parts.refusals,
     quoteCheck: checkedClaims.quoteCheck,
     retractions: parts.retractions ?? [],
+    ...(parts.inconclusiveTests ? { inconclusiveTests: parts.inconclusiveTests } : {}),
   } satisfies Omit<Review, "routing" | "receiptDraft">;
 
   const routing = route(

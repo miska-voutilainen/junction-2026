@@ -14,18 +14,18 @@
       "a2": "a2.v1",
       "a3": "a3.v1",
       "a4": "a4.v1",
-      "a5": "a5.v1"
+      "a5": "a5.v2"
     }
   },
   "run": {
-    "id": "20261114T053335Z",
-    "startedAt": "2026-11-14T05:33:35.443Z",
-    "finishedAt": "2026-11-14T05:34:30.037Z",
-    "durationMs": 54594,
+    "id": "20261114T054544Z",
+    "startedAt": "2026-11-14T05:45:44.329Z",
+    "finishedAt": "2026-11-14T05:46:49.095Z",
+    "durationMs": 64766,
     "usage": {
-      "inputTokens": 152283,
-      "outputTokens": 39997,
-      "costUsd": 2.4782066,
+      "inputTokens": 152523,
+      "outputTokens": 31470,
+      "costUsd": 2.3043500000000003,
       "calls": 6
     }
   },
@@ -2047,7 +2047,7 @@
       "requirementItemId": "F1",
       "text": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing.",
       "kind": "behaviour",
-      "level": "unverified",
+      "level": "verified",
       "hunkIds": [
         "h4",
         "h6"
@@ -2078,15 +2078,28 @@
         },
         {
           "kind": "differential-test",
-          "summary": "A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow fails on the head.",
-          "testName": "A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow",
+          "summary": "A5_F1_GenericStructFromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStructFromReferencedAssembly_DoesNotThrow, A5_F1_MessagePackObjectGenericStructsFromReferencedAssembly_DoesNotThrow fails on the base and passes on the head.",
+          "testName": "A5_F1_GenericStructFromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStructFromReferencedAssembly_DoesNotThrow, A5_F1_MessagePackObjectGenericStructsFromReferencedAssembly_DoesNotThrow",
           "base": {
             "result": "fail",
-            "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+            "output": "Generator\\CodeAnalysis\\TypeCollector.cs:line 363\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.GetObjectInfo(INamedTypeSymbol formattedType, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 1043\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.CollectObject(INamedTypeSymbol type, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 678\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.CollectCore(ITypeSymbol typeSymbol, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 378\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.Collect() in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 292\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.Collect(Compilation compilation, AnalyzerOptions options, ReferenceSymbols referenceSymbols, Action`1 reportAnalyzerDiagnostic, ITypeSymbol targetType, CancellationToken cancellationToken) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 271\n    at MessagePack.SourceGenerator.MessagePackGenerator.<>c__DisplayClass0_0.<Initialize>g__Collect|8(ITypeSymbol typeSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\MessagePackGenerator.cs:line 47\n    at MessagePack.SourceGenerator.MessagePackGenerator.<>c.<Initialize>b__0_4(ValueTuple`2 s, CancellationToken ct) in <worktree>\\src\\MessagePack.SourceGenerator\\MessagePackGenerator.cs:line 55\n    at Microsoft.CodeAnalysis.TransformNode`2.<>c__DisplayClass6_0.<.ctor>b__0(TInput i, CancellationToken token)\n    at Microsoft.CodeAnalysis.TransformNode`2.UpdateStateTable(Builder builder, NodeStateTable`1 previousTable, CancellationToken cancellationToken)\n\n\n\nFailed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
           },
           "head": {
+            "result": "pass",
+            "output": "Test run for <worktree>\\bin\\MessagePack.SourceGenerator.Tests\\Debug\\net8.0\\MessagePack.SourceGenerator.Tests.dll (.NETCoreApp,Version=v8.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild succeeded.\n\n    2 Warning(s)\n    0 Error(s)"
+          }
+        },
+        {
+          "kind": "pr-test",
+          "summary": "Generics_Defined_In_ReferencedProject, ClosedGenericStruct_FromMetadataReference, ClosedGenericRecordStruct_FromMetadataReference, ClosedGenericStruct_FromMetadataReference_UnkeyedMember fails on the base and passes on the head; the PR's own test: the same agent wrote the code and the test.",
+          "testName": "Generics_Defined_In_ReferencedProject, ClosedGenericStruct_FromMetadataReference, ClosedGenericRecordStruct_FromMetadataReference, ClosedGenericStruct_FromMetadataReference_UnkeyedMember",
+          "base": {
             "result": "fail",
-            "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+            "output": "r, NodeStateTable`1 previousTable, CancellationToken cancellationToken)\n-----\n\"),\n\n\n  Stack Trace:\n     at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Equal[T](T expected, T actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs:line 79\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifyDiagnosticResults(IEnumerable`1 actualResults, ImmutableArray`1 analyzers, DiagnosticResult[] expectedResults, IVerifier verifier) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 546\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifyDiagnosticsAsync(EvaluatedProjectState primaryProject, ImmutableArray`1 additionalProjects, DiagnosticResult[] expected, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 449\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 203\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at GenericsFormatterTests.RunWithMetadataReferenceAsync(String defineSource, String usageSource, String expectedResolverHintName, LanguageVersion languageVersion) in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\GenericsFormatterTests.cs:line 648\n   at GenericsFormatterTests.ClosedGenericStruct_FromMetadataReference() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\GenericsFormatterTests.cs:line 540\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+          },
+          "head": {
+            "result": "pass",
+            "output": "All projects are up-to-date for restore.\nTest run for <worktree>\\bin\\MessagePack.SourceGenerator.Tests\\Debug\\net8.0\\MessagePack.SourceGenerator.Tests.dll (.NETCoreApp,Version=v8.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild succeeded.\n\n    2 Warning(s)\n    0 Error(s)"
           }
         }
       ]
@@ -2096,7 +2109,7 @@
       "requirementItemId": "F1",
       "text": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception.",
       "kind": "behaviour",
-      "level": "unverified",
+      "level": "verified",
       "hunkIds": [
         "h5"
       ],
@@ -2119,15 +2132,28 @@
         },
         {
           "kind": "differential-test",
-          "summary": "A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow fails on the head.",
-          "testName": "A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow",
+          "summary": "A5_F1_GenericStructFromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStructFromReferencedAssembly_DoesNotThrow, A5_F1_MessagePackObjectGenericStructsFromReferencedAssembly_DoesNotThrow fails on the base and passes on the head.",
+          "testName": "A5_F1_GenericStructFromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStructFromReferencedAssembly_DoesNotThrow, A5_F1_MessagePackObjectGenericStructsFromReferencedAssembly_DoesNotThrow",
           "base": {
             "result": "fail",
-            "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+            "output": "Generator\\CodeAnalysis\\TypeCollector.cs:line 363\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.GetObjectInfo(INamedTypeSymbol formattedType, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 1043\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.CollectObject(INamedTypeSymbol type, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 678\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.CollectCore(ITypeSymbol typeSymbol, ISymbol callerSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 378\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.Collect() in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 292\n    at MessagePack.SourceGenerator.CodeAnalysis.TypeCollector.Collect(Compilation compilation, AnalyzerOptions options, ReferenceSymbols referenceSymbols, Action`1 reportAnalyzerDiagnostic, ITypeSymbol targetType, CancellationToken cancellationToken) in <worktree>\\src\\MessagePack.SourceGenerator\\CodeAnalysis\\TypeCollector.cs:line 271\n    at MessagePack.SourceGenerator.MessagePackGenerator.<>c__DisplayClass0_0.<Initialize>g__Collect|8(ITypeSymbol typeSymbol) in <worktree>\\src\\MessagePack.SourceGenerator\\MessagePackGenerator.cs:line 47\n    at MessagePack.SourceGenerator.MessagePackGenerator.<>c.<Initialize>b__0_4(ValueTuple`2 s, CancellationToken ct) in <worktree>\\src\\MessagePack.SourceGenerator\\MessagePackGenerator.cs:line 55\n    at Microsoft.CodeAnalysis.TransformNode`2.<>c__DisplayClass6_0.<.ctor>b__0(TInput i, CancellationToken token)\n    at Microsoft.CodeAnalysis.TransformNode`2.UpdateStateTable(Builder builder, NodeStateTable`1 previousTable, CancellationToken cancellationToken)\n\n\n\nFailed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
           },
           "head": {
+            "result": "pass",
+            "output": "Test run for <worktree>\\bin\\MessagePack.SourceGenerator.Tests\\Debug\\net8.0\\MessagePack.SourceGenerator.Tests.dll (.NETCoreApp,Version=v8.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild succeeded.\n\n    2 Warning(s)\n    0 Error(s)"
+          }
+        },
+        {
+          "kind": "pr-test",
+          "summary": "Generics_Defined_In_ReferencedProject, ClosedGenericStruct_FromMetadataReference, ClosedGenericRecordStruct_FromMetadataReference, ClosedGenericStruct_FromMetadataReference_UnkeyedMember fails on the base and passes on the head; the PR's own test: the same agent wrote the code and the test.",
+          "testName": "Generics_Defined_In_ReferencedProject, ClosedGenericStruct_FromMetadataReference, ClosedGenericRecordStruct_FromMetadataReference, ClosedGenericStruct_FromMetadataReference_UnkeyedMember",
+          "base": {
             "result": "fail",
-            "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+            "output": "r, NodeStateTable`1 previousTable, CancellationToken cancellationToken)\n-----\n\"),\n\n\n  Stack Trace:\n     at Microsoft.CodeAnalysis.Testing.DefaultVerifier.Equal[T](T expected, T actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/DefaultVerifier.cs:line 79\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifyDiagnosticResults(IEnumerable`1 actualResults, ImmutableArray`1 analyzers, DiagnosticResult[] expectedResults, IVerifier verifier) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 546\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifyDiagnosticsAsync(EvaluatedProjectState primaryProject, ImmutableArray`1 additionalProjects, DiagnosticResult[] expected, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 449\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 203\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at GenericsFormatterTests.RunWithMetadataReferenceAsync(String defineSource, String usageSource, String expectedResolverHintName, LanguageVersion languageVersion) in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\GenericsFormatterTests.cs:line 648\n   at GenericsFormatterTests.ClosedGenericStruct_FromMetadataReference() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\GenericsFormatterTests.cs:line 540\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+          },
+          "head": {
+            "result": "pass",
+            "output": "All projects are up-to-date for restore.\nTest run for <worktree>\\bin\\MessagePack.SourceGenerator.Tests\\Debug\\net8.0\\MessagePack.SourceGenerator.Tests.dll (.NETCoreApp,Version=v8.0)\nA total of 1 test files matched the specified pattern.\n\nPassed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild succeeded.\n\n    2 Warning(s)\n    0 Error(s)"
           }
         }
       ]
@@ -2447,16 +2473,16 @@
     "dropped": 0,
     "failures": []
   },
-  "retractions": [
+  "retractions": [],
+  "inconclusiveTests": [
     {
-      "claimId": "c3",
-      "reason": "A test written from the requirement fails on the head: A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow.",
-      "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
-    },
-    {
-      "claimId": "c4",
-      "reason": "A test written from the requirement fails on the head: A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow, A5_F1_GenericStruct_FromReferencedAssembly_DoesNotThrow, A5_F1_GenericRecordStruct_FromReferencedAssembly_DoesNotThrow.",
-      "output": "cted, String actual, String message) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/Extensions/IVerifierExtensions.cs:line 67\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.<VerifySourceGeneratorAsync>g__VerifyDocuments|66_0(IVerifier verifier, ImmutableArray`1 actualDocuments, ImmutableArray`1 expectedDocuments, Boolean allowReordering, String defaultFilePathPrefix, Func`3 getNameAndFolders, TimeSpan matchTimeout) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 407\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(String language, ImmutableArray`1 sourceGenerators, SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 313\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.VerifySourceGeneratorAsync(SolutionState testState, IVerifier verifier, CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 268\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunImplAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 202\n   at Microsoft.CodeAnalysis.Testing.AnalyzerTest`1.RunAsync(CancellationToken cancellationToken) in /_/src/Microsoft.CodeAnalysis.Testing/Microsoft.CodeAnalysis.Analyzer.Testing/AnalyzerTest`1.cs:line 172\n   at A5_F1_ReferencedClosedGenericStructTests.A5_F1_GenericStruct_FromReferencedProject_DoesNotThrow() in <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F1_ReferencedClosedGenericStructTests.cs:line 120\n--- End of stack trace from previous location ---\n\nFailed!  - Failed:     3, Passed:     0, Skipped:     0, Total:     3 - MessagePack.SourceGenerator.Tests.dll (net8.0)\n\nBuild FAILED.\n\n    2 Warning(s)\n    0 Error(s)"
+      "source": "differential-test",
+      "requirementItemId": "F2",
+      "testNames": [
+        "A5_F2_Analyzer_DoesNotCrash_OnAnnotatedClosedGenericStructFromMetadata",
+        "A5_F2_Analyzer_DoesNotCrash_OnPlainClosedGenericStructFromMetadata"
+      ],
+      "reason": "build error on the base: <worktree>\\tests\\MessagePack.SourceGenerator.Tests\\A5_F2_AnalyzerClosedGenericStructFromMetadataTests.cs(153,17): error CS0104: 'AnalyzerOptions' is an ambiguous reference between 'MessagePack.SourceGenerator.CodeAnalysis.AnalyzerOptions' a"
     }
   ],
   "receiptDraft": {
@@ -2468,6 +2494,14 @@
       {
         "item": "ReportIfLocatedInCompilation forwards a diagnostic only if its Location.IsInSource is true and the compilation contains the location's SourceTree. Diagnostics located in metadata, in another compilation, or with no location (for example a null location) are silently dropped. (the quoted code is where the claim says)",
         "by": "ai-supported"
+      },
+      {
+        "item": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing. (a test fails on the base and passes on the head)",
+        "by": "tool"
+      },
+      {
+        "item": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception. (a test fails on the base and passes on the head)",
+        "by": "tool"
       },
       {
         "item": "The new RunWithMetadataReferenceAsync helper compiles the defining source into an in-memory assembly image and adds it as a metadata-only reference. It then runs the VerifyCS analyzer/generator test with no expected diagnostics, skipping the generated-sources check. Next it runs the generator directly through CSharpGeneratorDriver and asserts there are no diagnostics at Warning severity or above and that the expected resolver hint name was generated. (the quoted code is where the claim says)",
@@ -2518,14 +2552,6 @@
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h8)",
         "reason": "Finding f4 (missing) names this hunk"
-      },
-      {
-        "item": "The BothStringAndIntKeyAreNull diagnostic for a property now gets its location from the new GetPropertyIdentifierLocation helper. The old code indexed DeclaringSyntaxReferences[0] and cast it to PropertyDeclarationSyntax. The helper uses FirstOrDefault and an 'as' cast, so it returns null for a property declared in metadata instead of throwing.",
-        "reason": "No quote matched the code, so the claim is unverified."
-      },
-      {
-        "item": "The MemberNeedsKey diagnostic for an unkeyed field now builds its location with DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation() instead of indexing [0]. A metadata-only field gives a null location and no exception.",
-        "reason": "No quote matched the code, so the claim is unverified."
       }
     ],
     "residualRisk": {
