@@ -25,7 +25,7 @@ Example, Tieto's MP-2283: the fix stops the generator crashing on types from a r
 
 ## What we measured
 
-MP-2283 was refused under `R7` on its README and MsgPack004 doc hunks. Across 10 planted-bug runs: `R7` in 8, `R2` in 3, `R6` in 1, none in 1; no fixed path rule fired. `R2` fired on exactly the three security plants, the bugs the reviewer missed ([Idea 1](trust-ladder.md)), so those changes still reached the security owner.
+Tieto's changes: `R7` (public contract) in 3 of 4. MP-2283 on its README and MsgPack004 doc hunks, MP-2129 on a new public attribute, MP-2234 on documented analyzer behaviour; MP-2297 had no refusal. Across 10 planted-bug runs: `R7` in 8, `R2` in 3, `R6` in 1, none in 1; no fixed path rule fired. `R2` fired on exactly the three security plants, the bugs the reviewer missed ([Idea 1](trust-ladder.md)), so those changes still reached the security owner.
 
 ## How to adopt it
 
