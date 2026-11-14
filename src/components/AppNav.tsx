@@ -84,7 +84,8 @@ export function AppNav({
                     />
                   )}
                   <Icon aria-hidden="true" className="relative size-4 shrink-0" />
-                  <span className={cn("relative flex-1", isRail && "sr-only")}>{item.label}</span>
+                  {/* Not `cn("relative flex-1", "sr-only")`: `relative` wins over sr-only's `absolute`, the hidden label stays in the flex row and pushes the rail icon off centre. */}
+                  <span className={isRail ? "sr-only" : "relative flex-1"}>{item.label}</span>
                   {item.hasBadge && needsReviewCount > 0 && isRail && (
                     // The count does not fit the rail; a dot says "something waits" and the label carries the number.
                     <>
