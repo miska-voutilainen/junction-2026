@@ -37,7 +37,12 @@ export interface HunkSections {
 export interface NavigatorItem {
   /** The hunk to scroll to; for the generated item, the first generated hunk of the group. */
   hunkId: string;
+  /** The file name without folders (`TypeCollector.cs`); the generated item's own text. */
+  fileName: string;
+  /** The full text, also the dropdown option: `TypeCollector.cs:236-242`. */
   label: string;
+  /** The line range alone (`236-242`), kept whole when the file name truncates; null for the generated item. */
+  lineRange: string | null;
   coverage: Coverage;
   area: Area | null;
   isGenerated: boolean;
@@ -194,7 +199,9 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
     const generated = coverage === "generated" ? sections.generated : [];
     const items: NavigatorItem[] = hunkEntries.map((entry) => ({
       hunkId: entry.hunk.id,
+      fileName: fileName(entry.hunk.file),
       label: `${fileName(entry.hunk.file)}:${entry.range}`,
+      lineRange: entry.range,
       coverage,
       area: entry.file.area,
       isGenerated: false,
@@ -203,7 +210,9 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
       const fileCount = new Set(generated.map((entry) => entry.hunk.file)).size;
       items.push({
         hunkId: generated[0].hunk.id,
+        fileName: `${fileCount} generated snapshot ${fileCount === 1 ? "file" : "files"}`,
         label: `${fileCount} generated snapshot ${fileCount === 1 ? "file" : "files"}`,
+        lineRange: null,
         coverage,
         area: null,
         isGenerated: true,
@@ -219,12 +228,14 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
  * The text after the tier badge: "read 2 of 8 hunks · ~1 min (full read ~3 min)".
  * Like the inbox row, it leaves the reading estimate out when nothing needs reading,
  * and names the generated hunks when the count leaves some out: "read 12 of 423 hunks · 411 generated".
+ * The full-read time is left out when it equals the reading time: two equal numbers compare nothing.
  */
 export function coverageLineText(decision: TierDecision): string {
   const generated = countGenerated(decision.coverage);
   const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
   const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
-  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading} (full read ~${decision.fullMinutes} min)`;
+  const fullRead = decision.fullMinutes === decision.readMinutes ? "" : ` (full read ~${decision.fullMinutes} min)`;
+  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading}${fullRead}`;
 }
 
 /** The line under a collapsed covered section: "4 verified · 5 supported", a zero part left out. */

@@ -1,10 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ErrorState } from "@/components/ErrorState";
 import { ReviewScreen } from "@/features/review";
 import { highlightHunks } from "@/features/review/highlightHunks";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
-import { loadChanges } from "@/lib/data/loaders";
+import { loadChange, loadChanges } from "@/lib/data/loaders";
 
 type Params = Promise<{ id: string }>;
 
@@ -14,6 +15,15 @@ type Params = Promise<{ id: string }>;
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   const changes = await loadChanges();
   return changes.status === "ok" ? changes.data.map((change) => ({ id: change.id })) : [];
+}
+
+/** Tab title "<requirement> · <change title> · Countersign"; plain "Countersign" when the change can't be read. */
+export async function generateMetadata({ params }: Readonly<{ params: Params }>): Promise<Metadata> {
+  const { id } = await params;
+  const change = await loadChange(id);
+  if (change.status === "missing") return { title: `No change with id ${id} · Countersign` };
+  if (change.status !== "ok") return { title: "Countersign" };
+  return { title: `${change.data.requirementId} · ${change.data.title} · Countersign` };
 }
 
 /**

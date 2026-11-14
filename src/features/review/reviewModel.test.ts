@@ -162,9 +162,14 @@ describe("navigator", () => {
 });
 
 describe("coverage line", () => {
+  it("leaves the full-read time out when it equals the reading time", async () => {
+    const { decision } = await sectionsOf(await load("mp-2283"), await readableCard());
+    expect(coverageLineText({ ...decision, readMinutes: 3, fullMinutes: 3 })).not.toContain("full read");
+  });
+
   it("names the generated hunks the count leaves out", async () => {
     const { decision } = await sectionsOf(await load("mp-2297"), await readableCard());
-    expect(coverageLineText(decision)).toBe("read 2 of 5 hunks · 2 generated · ~1 min (full read ~1 min)");
+    expect(coverageLineText(decision)).toBe("read 2 of 5 hunks · 2 generated · ~1 min");
   });
 
   it("reads the numbers of the decision", async () => {

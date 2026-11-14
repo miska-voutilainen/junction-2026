@@ -40,7 +40,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 - "Simulated escapes: n" and "Reset" from the spec, shown only when escapes exist.
 - Cut: notifications, account avatar.
 
-**AppNav** (248 px, ≥ 900 px; below that a menu button in the top bar opens it as a sheet)
+**AppNav** (248 px, ≥ 900 px; below that a menu button in the top bar opens it as a sheet). On S2 it is a 56 px icon rail (names as tooltips, the inbox count as a dot) so the diff gets about 700 px at 1440; the hunk navigator there is 208 px, each item the file name and line range with the area chip below.
 - Review: Inbox, with a badge for the number of changes needing review.
 - Insights: Dashboard, Reviewer.
 - Footer: "Keyboard shortcuts" disclosure, listing only the shortcuts we build.
