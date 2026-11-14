@@ -128,7 +128,13 @@ const inboxRowOf = (page: Page, id: string) => page.getByRole("row").filter({ ha
 
 test("tints the re-routed inbox row after an escape, and not after Undo", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
-  const openInbox = () => page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+  // Wait for the inbox's URL and the Signed fold: under a full parallel run the click
+  // can otherwise land on the fold before the client-side navigation has rendered it.
+  const openInbox = async () => {
+    await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+    await page.waitForURL((url) => url.pathname === "/");
+    await expect(page.getByRole("button", { name: "Signed 1", expanded: false })).toBeVisible();
+  };
 
   await page.goto("/reviewer");
   await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
@@ -138,6 +144,7 @@ test("tints the re-routed inbox row after an escape, and not after Undo", async 
   await expect(inboxRowOf(page, "mp-2283")).toHaveClass(RE_ROUTED_TINT);
 
   await page.getByRole("navigation").getByRole("link", { name: "Reviewer" }).click();
+  await page.waitForURL((url) => url.pathname === "/reviewer");
   await generatorCard(page).getByRole("button", { name: "Undo" }).click();
   await openInbox();
   await page.getByRole("button", { name: "Signed 1", expanded: false }).click();

@@ -133,9 +133,17 @@ export function markRerouted(changeIds: string[]): void {
   pendingReroutedIds = [...new Set([...pendingReroutedIds, ...changeIds])];
 }
 
-/** The ids `markRerouted` stored, once: the next call returns none, so the highlight plays one time. */
-export function takeRerouted(): string[] {
-  const ids = pendingReroutedIds;
+/**
+ * The ids `markRerouted` stored, without clearing them. Read during render, and
+ * cleared by `clearRerouted` only after the inbox has mounted: React may start a
+ * render and throw it away (a navigation transition), and a read that also cleared
+ * would leave the render that does mount with nothing to highlight.
+ */
+export function peekRerouted(): string[] {
+  return pendingReroutedIds;
+}
+
+/** Forgets the stored ids once the inbox has shown them, so the highlight plays one visit. */
+export function clearRerouted(): void {
   pendingReroutedIds = [];
-  return ids;
 }

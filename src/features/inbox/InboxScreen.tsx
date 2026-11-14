@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import { takeRerouted, useEscapes } from "@/lib/simulation/escapes";
+import { clearRerouted, peekRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { InboxView } from "./InboxView";
 import { buildInboxModel, reportCardNotice, toShellChanges } from "./inboxModel";
 import type { InboxSource, ReportCardInput } from "./inboxModel";
@@ -54,21 +54,17 @@ export function InboxScreen({
   );
 }
 
-/** How long the rows re-routed by the last escape stay highlighted; long enough to see after arriving from S3. */
-const HIGHLIGHT_MS = 2400;
-
 /**
- * Ids of the changes the last recorded escape re-routed, for a few seconds after
- * the inbox opens. They exist only after a client-side visit from S3, so the
- * first render never differs from the server's HTML (which has none).
+ * Ids of the changes the last recorded escape re-routed, highlighted for this
+ * visit to the inbox. No timer: a re-routed row can sit in the folded Signed
+ * list, and a highlight that fades after a few seconds would be gone before the
+ * reviewer opens the fold. They exist only after a client-side visit from S3,
+ * so the first render never differs from the server's HTML (which has none).
  */
 function useRecentlyRerouted(): ReadonlySet<string> {
-  // Taken in the initializer, not an effect: StrictMode runs effects twice, and the second run would find nothing.
-  const [ids, setIds] = useState<ReadonlySet<string>>(() => new Set(takeRerouted()));
-  useEffect(() => {
-    if (ids.size === 0) return;
-    const timer = setTimeout(() => setIds(new Set()), HIGHLIGHT_MS);
-    return () => clearTimeout(timer);
-  }, [ids]);
+  // Read in the initializer, cleared after mount: a render React discards must not
+  // use up the ids, and StrictMode's second effect run only clears an empty list.
+  const [ids] = useState<ReadonlySet<string>>(() => new Set(peekRerouted()));
+  useEffect(() => clearRerouted(), []);
   return ids;
 }
