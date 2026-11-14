@@ -5,19 +5,22 @@ import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
 import { REPORT_CARD_NOTICE, buildInboxModel, filterCounts, filterRows, inboxLevels, isReviewed, mobileSections, reportCardNotice } from "./inboxModel";
 import type { InboxSource, ReviewedRow } from "./inboxModel";
 
+// Pinned to the committed fixtures, so recorded data landing under data/ cannot change these counts.
+const fixtureRoot = "data/fixtures";
+
 // The committed fixtures stand in for recorded reviews: four Tieto changes, one signed.
 let sources: InboxSource[];
 let levels: ReturnType<typeof levelsFromReportCard>;
 
 beforeAll(async () => {
-  const changes = await loadChanges();
-  const reportCard = await loadReportCard();
+  const changes = await loadChanges(fixtureRoot);
+  const reportCard = await loadReportCard(fixtureRoot);
   if (changes.status !== "ok" || reportCard.status !== "ok") throw new Error("fixtures are missing");
   levels = levelsFromReportCard(reportCard.data);
   sources = await Promise.all(
     changes.data.map(async (change) => {
-      const review = await loadReview(change.id);
-      const receipt = await loadReceipt(change.id);
+      const review = await loadReview(change.id, fixtureRoot);
+      const receipt = await loadReceipt(change.id, fixtureRoot);
       return {
         change,
         review: review.status === "ok" ? ({ state: "ok", data: review.data } as const) : ({ state: "missing" } as const),
@@ -73,6 +76,7 @@ describe("buildInboxModel", () => {
       if (source.review.state !== "ok") return source;
       const receipt = {
         receipt: { diffSha256: source.review.data.diff.diffSha256, owner: "eliasnorta" },
+        verify: { ok: true },
       } as unknown as ReceiptRecord;
       return { ...source, receipt };
     });
@@ -83,11 +87,28 @@ describe("buildInboxModel", () => {
 
   it("marks a receipt for an older diff as stale and still asks for review", () => {
     const [first, ...rest] = sources;
-    const staleReceipt = { receipt: { diffSha256: "0".repeat(64), owner: "Kasanen" } } as unknown as ReceiptRecord;
+    const staleReceipt = { receipt: { diffSha256: "0".repeat(64), owner: "Kasanen" }, verify: { ok: true } } as unknown as ReceiptRecord;
     const model = buildInboxModel([{ ...first, receipt: staleReceipt }, ...rest], levels);
     const row = model.rows.find((candidate) => candidate.id === first.change.id) as ReviewedRow;
     expect(row.receipt).toBe("stale");
     expect(model.summary.signed).toBeLessThan(model.summary.changes);
+  });
+
+  it("treats a receipt whose check failed as needing review: not signed, and Review next may pick it", () => {
+    const signedAll = sources.map((source) => {
+      if (source.review.state !== "ok") return source;
+      const receipt = {
+        receipt: { diffSha256: source.review.data.diff.diffSha256, owner: "eliasnorta" },
+        verify: { ok: false },
+      } as unknown as ReceiptRecord;
+      return { ...source, receipt };
+    });
+    const model = buildInboxModel(signedAll, levels);
+    expect(model.summary.signed).toBe(0);
+    expect(model.reviewNext).not.toBeNull();
+    expect(model.rows.filter(isReviewed).every((row) => row.receipt === "unverified")).toBe(true);
+    expect(filterRows(model.rows, "needs-review")).toHaveLength(model.rows.filter(isReviewed).length);
+    expect(filterRows(model.rows, "signed")).toHaveLength(0);
   });
 
   it("shows a missing or unreadable review as a row without tier, and leaves it out of the counts", () => {

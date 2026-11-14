@@ -1,9 +1,7 @@
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError, InboxScreen } from "@/features/inbox";
-import { loadInboxData } from "@/lib/data/loadInboxSources";
-
-const FALLBACK_REPO = "No repository";
+import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 
 /**
  * S1 · Inbox. Reads every change with its recorded review and receipt on the

@@ -124,7 +124,8 @@ export function isReviewed(row: InboxRow): row is ReviewedRow {
 export function filterRows(rows: InboxRow[], filter: StatusFilter): InboxRow[] {
   if (filter === "all") return rows;
   const wanted: ReceiptStatusValue = filter === "stale" ? "stale" : filter === "signed" ? "signed" : "needs-review";
-  return rows.filter((row) => isReviewed(row) && row.receipt === wanted);
+  // A receipt that failed verification still needs a person: it sits under "Needs review", not "Signed".
+  return rows.filter((row) => isReviewed(row) && (row.receipt === wanted || (wanted === "needs-review" && row.receipt === "unverified")));
 }
 
 /** How many rows each filter shows, for the counts on the filter buttons. */
@@ -146,15 +147,15 @@ export interface MobileSections {
 
 /**
  * Light changes and stale signatures can be handled on a phone; Focused and
- * Full changes need the reading a desktop gives. Stale wins over the tier:
- * a stale signature is the one thing that is always asking for action.
+ * Full changes need the reading a desktop gives. Stale and unverified win over the tier:
+ * a signature that no longer holds is always asking for action.
  */
 export function mobileSections(rows: InboxRow[]): MobileSections {
   const sections: MobileSections = { signHere: [], needsDesktop: [], signed: [] };
   for (const row of rows) {
     if (!isReviewed(row)) sections.needsDesktop.push(row);
     else if (row.receipt === "signed") sections.signed.push(row);
-    else if (row.receipt === "stale" || row.tier === "light") sections.signHere.push(row);
+    else if (row.receipt === "stale" || row.receipt === "unverified" || row.tier === "light") sections.signHere.push(row);
     else sections.needsDesktop.push(row);
   }
   return sections;
@@ -219,6 +220,7 @@ const STATUS_LABEL: Record<ReceiptStatusValue, string> = {
   "needs-review": "needs review",
   signed: "signed",
   stale: "stale",
+  unverified: "signature failed verification",
 };
 
 /** The rows as the shell wants them (nav badge, command menu), in inbox order. */

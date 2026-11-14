@@ -4,9 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError } from "@/features/inbox";
 import { ReviewerScreen } from "@/features/report-card";
-import { loadInboxData } from "@/lib/data/loadInboxSources";
-
-const FALLBACK_REPO = "No repository";
+import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 
 // The page is static, so this runs at build time: the link appears once the file is committed.
 const hasLessonsLog = existsSync(path.join(process.cwd(), "docs", "lessons.md"));

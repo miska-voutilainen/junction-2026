@@ -49,6 +49,13 @@ describe("AppNav", () => {
     expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
   });
 
+  it("marks Dashboard, not Inbox, on /dashboard", () => {
+    navigation.pathname = "/dashboard";
+    render(<AppNav needsReviewCount={2} />);
+    expect(screen.getByRole("link", { name: /Dashboard/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Inbox/ }).hasAttribute("aria-current")).toBe(false);
+  });
+
   it("marks Reviewer, not Inbox, on the report card", () => {
     navigation.pathname = "/reviewer";
     render(<AppNav needsReviewCount={2} />);
