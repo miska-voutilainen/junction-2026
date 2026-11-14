@@ -38,8 +38,13 @@ function isCurrent(href: string, pathname: string): boolean {
  *
  * @param needsReviewCount The badge on Inbox; hidden at zero.
  * @param onNavigate Called when a link is followed, so a sheet can close.
+ * @param isRail Icons only, for the review screen where the diff needs the width; the names stay as accessible names and tooltips, the shortcut list is left out.
  */
-export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewCount: number; onNavigate?: () => void }>) {
+export function AppNav({
+  needsReviewCount,
+  onNavigate,
+  isRail = false,
+}: Readonly<{ needsReviewCount: number; onNavigate?: () => void; isRail?: boolean }>) {
   const pathname = usePathname();
   // Two navs can be mounted (the page's and the sheet's); a group id keeps their highlights apart.
   const groupId = useId();
@@ -47,11 +52,11 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
   const searchShortcut = useSearchShortcutLabel();
 
   return (
-    <nav aria-label="Main" className="flex h-full flex-col gap-5 px-2.5 pt-4 pb-3 text-sm">
+    <nav aria-label="Main" className={cn("flex h-full flex-col gap-5 pt-4 pb-3 text-sm", isRail ? "px-1.5" : "px-2.5")}>
       <LayoutGroup id={groupId}>
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="flex flex-col gap-0.5">
-            <div className="px-2.5 pb-1.5 text-xs font-semibold text-text-faint">{group.label}</div>
+            <div className={cn("px-2.5 pb-1.5 text-xs font-semibold text-text-faint", isRail && "sr-only")}>{group.label}</div>
             {group.items.map((item) => {
               const isActive = isCurrent(item.href, pathname);
               const Icon = item.icon;
@@ -61,8 +66,10 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
                   onClick={onNavigate}
+                  title={isRail ? item.label : undefined}
                   className={cn(
                     "relative flex items-center gap-2.5 rounded-item px-2.5 py-2 text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary",
+                    isRail && "justify-center px-0",
                     isActive && "text-text-primary",
                   )}
                 >
@@ -75,8 +82,15 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
                     />
                   )}
                   <Icon aria-hidden="true" className="relative size-4 shrink-0" />
-                  <span className="relative flex-1">{item.label}</span>
-                  {item.hasBadge && needsReviewCount > 0 && (
+                  <span className={cn("relative flex-1", isRail && "sr-only")}>{item.label}</span>
+                  {item.hasBadge && needsReviewCount > 0 && isRail && (
+                    // The count does not fit the rail; a dot says "something waits" and the label carries the number.
+                    <>
+                      <span aria-hidden="true" className="absolute top-1 right-1.5 size-2 rounded-full bg-amber" />
+                      <span className="sr-only">{needsReviewCount} need review</span>
+                    </>
+                  )}
+                  {item.hasBadge && needsReviewCount > 0 && !isRail && (
                     <span
                       className="relative rounded-chip bg-surface-control px-1.5 font-mono text-xs text-text-primary"
                       aria-label={`${needsReviewCount} need review`}
@@ -91,6 +105,7 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
         ))}
       </LayoutGroup>
 
+      {!isRail && (
       <div className="mt-auto border-t border-border-subtle pt-3">
         <Disclosure
           title={
@@ -108,6 +123,7 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
           </dl>
         </Disclosure>
       </div>
+      )}
     </nav>
   );
 }

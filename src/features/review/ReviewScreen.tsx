@@ -56,11 +56,12 @@ export function ReviewScreen({
       backHref="/"
       breadcrumb={[{ label: "Inbox", href: "/" }, { label: change.id }]}
       escapeSlot={<EscapeCounter />}
+      isNavRail
     >
       {usesFixture && <MockDataBanner />}
       <SelectedClaimProvider>
         <ReviewStepProvider>
-        <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7">
+        <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7 wide:max-w-none">
           <ReviewHeader
             change={change}
             review={review.state === "ok" ? review.data : undefined}
