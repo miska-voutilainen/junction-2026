@@ -49,7 +49,7 @@ describe("planEvalJobs", () => {
       changeInputId: "cp1",
       mode: "anchored",
       steps: ["a2", "a4"],
-      comparison: { mode: "anchored", k: 2 },
+      comparison: { mode: "anchored", runNumber: 2 },
     });
   });
 

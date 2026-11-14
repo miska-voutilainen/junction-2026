@@ -125,6 +125,18 @@ describe("checkContradictions", () => {
     });
   });
 
+  it("routes a contradiction cited on the old side to the hunk that removed those lines", async () => {
+    const removing = { ...hunk, id: "h2", oldStart: 1, oldLines: 3, newStart: 50, newLines: 0 };
+    const [finding] = await checkContradictions(
+      [statement({ citations: [{ ...cite("src/MessagePack/Reader.cs", "line one", 1, 1), side: "old" }] })],
+      [],
+      [hunk, removing],
+      readSide,
+      freshCheck(),
+    );
+    expect(finding.hunkIds).toEqual(["h2"]);
+  });
+
   it("keeps an unsupported statement at medium severity even with no citation", async () => {
     const [finding] = await checkContradictions(
       [statement({ verdict: "unsupported", citations: [] })],

@@ -163,6 +163,11 @@ export const ReviewSchema = z.strictObject({
     dropped: nonNegInt,
     failures: z.array(
       z.strictObject({
+        // The model's item the failure belongs to: a claim's id ("c1"), or the position
+        // in the step's answer for A3 and A4 output: "a3-f<n>" the n-th finding,
+        // "a3-r<n>" the n-th refusal, "a4-s<n>" the n-th statement. A finding or
+        // refusal dropped by the check is absent from the review, so this is not
+        // the id of an item in `findings` or `refusals`.
         itemId: z.string(),
         // null when there was no code to check, e.g. a refusal naming an unknown rule id.
         citation: CitationSchema.nullable(),

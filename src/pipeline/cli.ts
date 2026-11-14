@@ -48,18 +48,17 @@ async function main(argv: string[]): Promise<void> {
     return printChecks(review, await loadContradictionKey(changeId));
   }
 
-  if (values["no-tests"])
-    console.error("--no-tests has no effect until T14: no run includes tests yet.");
-  const k = values.run === undefined ? undefined : Number(values.run);
-  if (k !== undefined && (!Number.isInteger(k) || k < 1))
+  if (values["no-tests"]) console.error("--no-tests has no effect until T14: no run includes tests yet.");
+  const runNumber = values.run === undefined ? undefined : Number(values.run);
+  if (runNumber !== undefined && (!Number.isInteger(runNumber) || runNumber < 1))
     fail(`--run takes a whole number from 1, got "${values.run}".`);
-  return recordReview(changeId, { isAnchored: values.anchored === true, k });
+  return recordReview(changeId, { isAnchored: values.anchored === true, runNumber });
 }
 
 /** How a run is recorded: the plain run is the change's review; --anchored or --run <k> is a comparison run. */
 interface RunOptions {
   isAnchored: boolean;
-  k: number | undefined;
+  runNumber: number | undefined;
 }
 
 async function recordReview(changeId: string, options: RunOptions): Promise<void> {
@@ -72,9 +71,9 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
 
   const { change, requirement } = await loadChangeAndRequirement(changeId);
   const tally = createUsageTally();
-  const isComparison = options.isAnchored || options.k !== undefined;
+  const isComparison = options.isAnchored || options.runNumber !== undefined;
   // Comparison runs number from 1; the recorded review is run index 0.
-  const k = options.k ?? 1;
+  const runNumber = options.runNumber ?? 1;
   const review = await runReview({
     change,
     requirement,
@@ -85,12 +84,10 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     mode: options.isAnchored ? "anchored" : "blind-first",
     // Comparison runs are A1, A2 and A4: A3 is most of a run's cost and not what they compare.
     steps: isComparison && !options.isAnchored ? ["a1", "a2", "a4"] : undefined,
-    runIndex: isComparison ? k : 0,
+    runIndex: isComparison ? runNumber : 0,
   });
-  await writeRecordedReview(
-    review,
-    isComparison ? { mode: options.isAnchored ? "anchored" : "blind", k } : undefined,
-  );
+  const comparisonMode = options.isAnchored ? "anchored" : "blind";
+  await writeRecordedReview(review, isComparison ? { mode: comparisonMode, runNumber } : undefined);
   console.log(summaryLine(review));
 }
 
@@ -112,9 +109,8 @@ function summaryLine(review: Review): string {
 /** A miss is a measurement, not a failure: the exit code stays 0. */
 function printChecks(review: Review, contradictionKey: AnswerKey | null): void {
   for (const result of checkReview(review, contradictionKey)) {
-    console.log(
-      `${result.passed ? "PASS" : "MISS"}  ${result.name}${result.detail ? ` (${result.detail})` : ""}`,
-    );
+    const detail = result.detail ? ` (${result.detail})` : "";
+    console.log(`${result.passed ? "PASS" : "MISS"}  ${result.name}${detail}`);
   }
   // A missing key is not a miss: say the case did not run, so a pass count is not read as complete.
   if (review.changeId === "mp-2283" && contradictionKey === null)
@@ -128,7 +124,9 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-main(process.argv.slice(2)).catch((error: unknown) => {
+try {
+  await main(process.argv.slice(2));
+} catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
-});
+}

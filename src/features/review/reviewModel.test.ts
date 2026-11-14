@@ -34,7 +34,7 @@ async function load(changeId: string): Promise<Review> {
 async function readableCard(): Promise<ReportCardInput> {
   const reportCard = await loadReportCard(fixtureRoot);
   if (reportCard.status !== "ok") throw new Error("report card fixture did not load");
-  return { state: "ok", data: reportCard.data };
+  return { state: "ok", data: reportCard.data, source: reportCard.source };
 }
 
 async function sectionsOf(review: Review, reportCard: ReportCardInput, escapes = {}) {
@@ -276,7 +276,8 @@ describe("selection highlights", () => {
   it("leaves out a citation whose quote the quote check did not find", async () => {
     const review = structuredClone(await load("mp-2283"));
     const finding = review.findings[0];
-    review.quoteCheck.failures = [{ itemId: finding.id, citation: finding.citations[0], reason: "Quote is not in the cited lines." }];
+    // A3 numbered this finding 2 before the check dropped its first one, so its id (f1) differs from the item id.
+    review.quoteCheck.failures = [{ itemId: "a3-f2", citation: finding.citations[0], reason: "Quote is not in the cited lines." }];
     expect(splitCitations(review, finding.id, finding.citations)[0].isQuoteFound).toBe(false);
     expect(highlightedLinesOfSelection(review, { kind: "finding", id: finding.id })).toEqual([]);
   });
@@ -284,7 +285,7 @@ describe("selection highlights", () => {
   it("treats a failure without a citation as matching no citation", async () => {
     const review = structuredClone(await load("mp-2283"));
     const finding = review.findings[0];
-    review.quoteCheck.failures = [{ itemId: finding.id, citation: null, reason: 'unknown rule id "R8"' }];
+    review.quoteCheck.failures = [{ itemId: "a3-r1", citation: null, reason: 'unknown rule id "R8"' }];
     expect(splitCitations(review, finding.id, finding.citations).every((entry) => entry.isQuoteFound)).toBe(true);
   });
 

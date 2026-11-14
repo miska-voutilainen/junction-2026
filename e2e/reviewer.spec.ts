@@ -29,20 +29,38 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("shows the four areas in order with their sample sizes and no horizontal scroll", async ({ page }, testInfo) => {
+test("shows the four areas in order with their sample sizes and no horizontal scroll", async ({
+  page,
+}, testInfo) => {
   const problems = watchConsole(page);
   await page.goto("/reviewer");
 
-  await expect(page.getByRole("heading", { level: 1, name: "Reviewer Report Card" })).toBeAttached();
-  await expect(page.getByRole("heading", { level: 3 }).filter({ hasText: /^(Generator|Analyzer|Security|Performance)$/ })).toHaveText(
-    AREA_ORDER,
-  );
-  await expect(generatorCard(page).getByText("3 of 4 planted bugs caught · planted blind to the prompts")).toBeVisible();
-  await expect(generatorCard(page).getByText("Trusted needs 5 clean spot checks: 0 recorded")).toBeVisible();
-  await expect(page.getByRole("article", { name: "Performance" }).getByText("No track record")).toBeVisible();
-  await expect(page.getByRole("article", { name: "Performance" }).getByRole("button", { name: "Record escape" })).toBeDisabled();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Reviewer Report Card" }),
+  ).toBeAttached();
+  await expect(
+    page
+      .getByRole("heading", { level: 3 })
+      .filter({ hasText: /^(Generator|Analyzer|Security|Performance)$/ }),
+  ).toHaveText(AREA_ORDER);
+  await expect(
+    generatorCard(page).getByText("3 of 4 planted bugs caught · planted blind to the prompts"),
+  ).toBeVisible();
+  await expect(
+    generatorCard(page).getByText("Trusted needs 5 clean spot checks: 0 recorded"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article", { name: "Performance" }).getByText("No track record"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("article", { name: "Performance" })
+      .getByRole("button", { name: "Record escape" }),
+  ).toBeDisabled();
 
-  const hasHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  const hasHorizontalScroll = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   expect(hasHorizontalScroll).toBe(false);
 
   const width = testInfo.project.name === "mobile" ? 375 : 1440;
@@ -50,7 +68,9 @@ test("shows the four areas in order with their sample sizes and no horizontal sc
   expect(problems).toEqual([]);
 });
 
-test("records an escape with a notice and a toast, and undo restores the level", async ({ page }) => {
+test("records an escape with a notice and a toast, and undo restores the level", async ({
+  page,
+}) => {
   await page.goto("/reviewer");
   const card = generatorCard(page);
   await expect(card.getByText("Calibrated", { exact: true }).first()).toBeVisible();
@@ -85,11 +105,17 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
 
   await page.evaluate(() => window.localStorage.clear());
   await page.reload();
-  const readBefore = Number(((await page.getByText(/^Humans read \d+ of \d+ hunks/).innerText()).match(/^Humans read (\d+)/) ?? [])[1]);
+  const readBefore = Number(
+    ((await page.getByText(/^Humans read \d+ of \d+ hunks/).innerText()).match(
+      /^Humans read (\d+)/,
+    ) ?? [])[1],
+  );
   expect(readAfter).toBeGreaterThan(readBefore);
 });
 
-test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, each linking to its page", async ({ page }) => {
+test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, each linking to its page", async ({
+  page,
+}) => {
   await page.goto("/reviewer");
   const ladderLabel = page.getByRole("link", { name: "Idea 1: Trust ladder, opens the idea page" });
   await expect(ladderLabel).toHaveAttribute("href", /docs\/ideas\/trust-ladder\.md$/);
@@ -97,13 +123,26 @@ test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, e
 
   // The idea 4 label sits inside the disclosure, so open it the way a reviewer does.
   await page.getByRole("button", { name: /^Hallucinations caught/ }).click();
-  const quoteCheckLabel = page.getByRole("link", { name: "Idea 4: Quote check, opens the idea page" });
+  const quoteCheckLabel = page.getByRole("link", {
+    name: "Idea 4: Quote check, opens the idea page",
+  });
   await expect(quoteCheckLabel).toBeVisible();
   await expect(quoteCheckLabel).toHaveAttribute("href", /docs\/ideas\/quote-check\.md$/);
   await expect(quoteCheckLabel).toHaveAttribute("target", "_blank");
 });
 
-test("opens the plant-a-bug dialog with the real steps and closes it on Escape", async ({ page }) => {
+test("lists missed planted bugs without variant links while the report card is a fixture", async ({
+  page,
+}) => {
+  await page.goto("/reviewer");
+  // The fixture's planted bugs are invented, so a link would open a commit the fork doesn't have.
+  await expect(page.getByText(/^Of \d+ planted bugs in the eval: \d+ missed$/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /^View variant/ })).toHaveCount(0);
+});
+
+test("opens the plant-a-bug dialog with the real steps and closes it on Escape", async ({
+  page,
+}) => {
   await page.goto("/reviewer");
   await page.getByRole("button", { name: "Plant a synthetic bug" }).click();
   const dialog = page.getByRole("dialog", { name: "Plant a synthetic bug" });

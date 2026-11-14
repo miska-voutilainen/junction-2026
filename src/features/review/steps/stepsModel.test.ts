@@ -22,7 +22,7 @@ async function loadFixtureReceipt(changeId: string): Promise<ReceiptRecord | nul
 async function readableCard(): Promise<ReportCardInput> {
   const reportCard = await loadReportCard(fixtureRoot);
   if (reportCard.status !== "ok") throw new Error("report card fixture did not load");
-  return { state: "ok", data: reportCard.data };
+  return { state: "ok", data: reportCard.data, source: reportCard.source };
 }
 
 describe("story", () => {
@@ -40,13 +40,13 @@ describe("story", () => {
     const claims = buildStory(await loadFixtureReview("mp-2283")).groups.flatMap((group) => group.claims);
     const retracted = claims.filter((entry) => entry.retraction !== null);
     expect(retracted.map((entry) => entry.claim.id)).toEqual(["c8"]);
-    expect(claims.length).toBe(8);
+    expect(claims).toHaveLength(8);
   });
 
   it("never turns a quote-check failure into a claim", async () => {
     const review = await loadFixtureReview("mp-2283");
     const story = buildStory(review);
-    expect(story.groups.flatMap((group) => group.claims).length).toBe(review.claims.length);
+    expect(story.groups.flatMap((group) => group.claims)).toHaveLength(review.claims.length);
     expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code, 1 claim downgraded.");
   });
 });

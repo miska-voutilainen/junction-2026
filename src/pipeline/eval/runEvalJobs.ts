@@ -19,7 +19,7 @@ export interface EvalJob {
   mode: Review["mode"];
   steps: readonly ModelStep[];
   /** Set for contradiction runs, which land in data/runs/<change>/<mode>/<k>.json. */
-  comparison?: { mode: "anchored" | "blind"; k: number };
+  comparison?: { mode: "anchored" | "blind"; runNumber: number };
 }
 
 /** What happened to one job. */
@@ -81,14 +81,14 @@ export function planEvalJobs(
         changeInputId: changeInputIdOf(key),
         mode: "blind-first",
         steps: blindComparisonSteps,
-        comparison: { mode: "blind", k },
+        comparison: { mode: "blind", runNumber: k },
       });
       add(`${key.plantId}/anchored/${k}`, {
         label: `${key.plantId} anchored ${k}`,
         changeInputId: changeInputIdOf(key),
         mode: "anchored",
         steps: anchoredComparisonSteps,
-        comparison: { mode: "anchored", k },
+        comparison: { mode: "anchored", runNumber: k },
       });
     }
   }

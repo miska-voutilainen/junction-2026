@@ -1,5 +1,10 @@
 import type { Citation } from "../contracts";
-import { MAX_CITATION_LINES } from "./a2";
+
+/**
+ * Longest cited range. Quotes are one to three lines, so a wide range only lets
+ * any quote pass by sitting somewhere inside it, and would highlight a whole file.
+ */
+export const MAX_CITATION_LINES = 12;
 
 /**
  * The reason a citation's line range is unusable, or null when it is fine. Shared

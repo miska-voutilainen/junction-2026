@@ -105,7 +105,7 @@ function modelStore(repoDir: string, levels: ReturnType<typeof levelsFromReportC
         mode: job.mode,
         steps: job.steps,
         // Comparison runs number from 1; the planted-bug run is run index 0.
-        runIndex: job.comparison?.k ?? 0,
+        runIndex: job.comparison?.runNumber ?? 0,
       });
       await writeRecordedReview(review, job.comparison);
       return review;
@@ -121,7 +121,7 @@ async function measuredRunsPerMode(keys: readonly AnswerKey[]): Promise<number> 
     const runs = await Promise.all(
       contradictionKeys.flatMap((key) =>
         (["anchored", "blind"] as const).map((mode) =>
-          loadRecordedRun(changeInputIdOf(key), { mode, k }),
+          loadRecordedRun(changeInputIdOf(key), { mode, runNumber: k }),
         ),
       ),
     );
@@ -182,7 +182,7 @@ function loadRuns(
 ): Promise<(Review | null)[]> {
   return Promise.all(
     Array.from({ length: count }, (_, index) =>
-      loadRecordedRun(changeInputId, { mode, k: index + 1 }),
+      loadRecordedRun(changeInputId, { mode, runNumber: index + 1 }),
     ),
   );
 }

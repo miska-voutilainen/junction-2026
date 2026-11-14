@@ -21,9 +21,12 @@ export interface InboxSource {
   receipt: ReceiptRecord | "unreadable" | null;
 }
 
-/** The report card as the server found it; `error` is the validation message when it is unreadable. */
+/**
+ * The report card as the server found it; `error` is the validation message when it is unreadable.
+ * `source` is "fixture" while no eval has run: its planted bugs are invented and link to nothing.
+ */
 export type ReportCardInput =
-  | { state: "ok"; data: ReportCard }
+  | { state: "ok"; data: ReportCard; source: "recorded" | "fixture" }
   | { state: "missing" }
   | { state: "unreadable"; error?: string };
 
