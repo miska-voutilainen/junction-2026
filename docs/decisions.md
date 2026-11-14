@@ -237,6 +237,7 @@
 - **Why:** A short code is enough to keep casual visitors out; what matters is that it is clearly temporary and easy to delete.
 - **Rejected:** Vercel Password Protection (a paid-plan feature that treats custom domains differently). Basic Auth (the browser prompt would be the first thing a judge sees).
 - **PR:** #38
+- **Removed:** 2026-11-15, after the submission (#73). `ACCESS_CODE` was deleted from Vercel first, then the code; the site is public.
 
 ## 2026-11-14 · App lane moves to Miska for the UI build
 

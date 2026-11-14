@@ -63,8 +63,6 @@
   --text-xl--line-height: var(--text-xl-leading);
   --text-2xl: var(--text-2xl);
   --text-2xl--line-height: var(--text-2xl-leading);
-  --text-display: var(--text-display);
-  --text-display--line-height: var(--text-display-leading);
   /* Breakpoints: the full top bar from 760 px, the nav from 900 px, two-column card grids and the review page's three columns from 1100 px (navigator 224 px, steps panel 340 px), the full-width navigator (264 px) and steps panel (392 px) from 1600 px. */
   --breakpoint-compact: 760px;
   --breakpoint-nav: 900px;
@@ -196,7 +194,7 @@
   }
 }
 
-@keyframes unlock-pulse {
+@keyframes seal-pulse {
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent);
   }

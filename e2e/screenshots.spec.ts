@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { unlock } from "./unlock";
+import { bypassVercelAuth } from "./bypassVercelAuth";
 
 // Run by `pnpm screenshots` only; the output in .review/ is read by the ux-reviewer.
 const PAGES = [
@@ -18,7 +18,7 @@ for (const viewport of VIEWPORTS) {
       await page.setViewportSize(viewport);
       // Reduced motion shows rows at rest, so no screenshot catches a half-faded element.
       await page.emulateMedia({ reducedMotion: "reduce" });
-      await unlock(page);
+      await bypassVercelAuth(page);
       await page.goto(path);
       await page.evaluate(() => document.fonts.ready);
       // Skeletons carry aria-busy; wait until none is left.

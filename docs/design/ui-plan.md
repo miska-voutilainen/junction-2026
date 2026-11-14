@@ -30,7 +30,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 
 ## 3. App shell
 
-`src/components/AppShell.tsx`: top bar, nav and content. Every page except `/unlock` uses it.
+`src/components/AppShell.tsx`: top bar, nav and content. Every page uses it.
 
 **TopBar** (56 px, `raised`)
 - Wordmark, linking to `/`.
