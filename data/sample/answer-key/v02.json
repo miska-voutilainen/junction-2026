@@ -1,0 +1,13 @@
+{
+  "plantId": "v02",
+  "changeId": "v02",
+  "kind": "planted-bug",
+  "area": "analyzer",
+  "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+  "startLine": 429,
+  "endLine": 429,
+  "defect": "The symbol switch collects [MessagePackObject] types only when they are classes (case TypeKind.Class); structs, including record structs, are no longer analysed.",
+  "why": "The analyzer must analyse closed generic structs and record structs as members (F2); with structs dropped from the switch none of their diagnostics are ever reported.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
+  "writtenAt": "2026-11-14T03:03:11.000Z"
+}

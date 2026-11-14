@@ -1,0 +1,13 @@
+{
+  "plantId": "v08",
+  "changeId": "v08",
+  "kind": "planted-bug",
+  "area": "generator",
+  "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+  "startLine": 1213,
+  "endLine": 1213,
+  "defect": "The deserializing constructor is picked by ascending parameter count (ThenBy) instead of descending (ThenByDescending), so with several equally accessible constructors the one with the fewest parameters wins.",
+  "why": "The collector is meant to prefer the most complete constructor; binding the smallest one leaves members out of the constructor call and attaches constructor diagnostics to the wrong constructor.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
+  "writtenAt": "2026-11-14T03:03:29.000Z"
+}

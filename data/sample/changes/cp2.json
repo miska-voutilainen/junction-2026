@@ -1,0 +1,17 @@
+{
+  "id": "cp2",
+  "kind": "contradiction-plant",
+  "title": "Fix crash on closed generic structs from referenced assemblies",
+  "requirementId": "MP-2283",
+  "parentChangeId": "mp-2283",
+  "repo": "miska-voutilainen/junction26-messagepack-csharp",
+  "branch": "ju26-issue-2283",
+  "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+  "headSha": "9df83c38409c8bfad0517aebffe48211eda4a5b4",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "authorDescription": {
+    "text": "This change fixes the IndexOutOfRangeException that the generator and the analyzer threw for a closed generic struct defined in a referenced assembly (issue 2283). The type collector read DeclaringSyntaxReferences[0] when reporting a diagnostic, and that list is empty for types loaded from metadata. It now uses FirstOrDefault through a new helper, GetPropertyIdentifierLocation, and the MemberNeedsKey diagnostic does the same. Diagnostics whose location is outside the compilation being analysed are now reported with no location instead of being dropped, so the consuming project still sees them. I added three tests to GenericsFormatterTests.cs: a closed generic struct, a closed generic record struct and a closed generic struct with an unkeyed member, all taken from a metadata reference. The README gains a short section on closed generic types from referenced assemblies.",
+    "synthetic": true,
+    "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants"
+  }
+}

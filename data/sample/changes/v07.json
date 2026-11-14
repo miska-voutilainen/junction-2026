@@ -1,0 +1,17 @@
+{
+  "id": "v07",
+  "kind": "planted-bug",
+  "title": "Keep the analyzer working when source generation is suppressed",
+  "requirementId": "MP-2234",
+  "parentChangeId": "mp-2234",
+  "repo": "miska-voutilainen/junction26-messagepack-csharp",
+  "branch": "variant/v07",
+  "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+  "headSha": "dbee4cc8ff96bbbd3220fadeec92fb2c2000dc30",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "authorDescription": {
+    "text": "This change fixes analyzer failures on types marked with SuppressSourceGeneration = true (issue 2234). Those types are still serialized at run time, so they still need a valid contract. The cause was in the type collector: duplicate integer or string keys, and members whose key kind differed from the rest, made it throw while building its member tables. It now adds a key only if it is not already present, and skips a member with a mismatched key kind after the diagnostic has been reported. The analyzer therefore reports the problem instead of failing. I added analyzer tests for missing keys, AllowPrivate, duplicate keys and mixed key kinds, plus two execution tests: no formatter is generated for a suppressed type, and it round-trips through the dynamic resolver. The README gains a section on opting out of source generation and lists which diagnostics still apply.",
+    "synthetic": true,
+    "writtenBy": "engine lane (Miska), drafted by a Claude Sonnet builder without opening prompts, pipeline or review output"
+  }
+}
