@@ -10,7 +10,9 @@ export const ReceiptSchema = z.strictObject({
   repo: z.string(),
   commit: ShaSchema, // headSha
   baseCommit: ShaSchema,
+  /** Tree SHA of the base commit; binds content, not history. */
   baseTree: ShaSchema,
+  /** Tree SHA of the head commit; binds content, not history. */
   headTree: ShaSchema,
   diffSha256: z.string().regex(/^[0-9a-f]{64}$/),
   reviewerVersion: z.string(),

@@ -102,7 +102,9 @@ export const ReviewSchema = z.strictObject({
   diff: z.strictObject({
     baseSha: ShaSchema,
     headSha: ShaSchema,
+    /** Tree SHA of the base commit; binds content, not history. */
     baseTree: ShaSchema,
+    /** Tree SHA of the head commit; binds content, not history. */
     headTree: ShaSchema,
     diffSha256: z.string().regex(/^[0-9a-f]{64}$/),
     filesChanged: nonNegInt,
