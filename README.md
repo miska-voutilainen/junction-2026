@@ -1,6 +1,6 @@
 # Countersign
 
-**Eight ideas for reviewing agent-written code, each shown working on Tieto's real repository.**
+**Nine ideas for reviewing agent-written code, each shown working on Tieto's real repository.**
 
 AI reviews. A named human countersigns, on evidence they can check.
 
@@ -16,6 +16,7 @@ Coding agents now produce more code than people do (agent tokens passed human to
 6. **[Evidence levels instead of confidence scores](docs/ideas/evidence-levels.md).** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
 7. **[The signed receipt in git](docs/ideas/signed-receipt.md).** The owner signs what was checked, what wasn't and the risk they accept, tied to the exact diff, so the receipt can gate the merge.
 8. **[The author never checks its own work](docs/ideas/separation-of-duties.md).** An agent's own test makes a claim Supported at most, the AI drafts the receipt but only a named person signs it, and whoever plants the bugs never sees the prompts.
+9. **[The legacy guard](docs/ideas/legacy-guard.md).** Nothing passes that breaks old code: every touch on what old systems rely on goes to its named owner with the evidence that covers it, and an unguarded touch raises the tier. On Tieto's `mp-2297` it finds an old-platform branch that no test project runs.
 
 Each idea has its own page in [`docs/ideas/`](docs/ideas/): the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
 

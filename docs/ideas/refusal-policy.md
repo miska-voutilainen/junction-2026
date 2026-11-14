@@ -17,7 +17,7 @@ An AI reviewer gives an opinion on anything. Some questions aren't its to answer
    - `R6` changes it can't trace to the requirement. Change owner.
    - `R7` public contract: new or changed public API, diagnostic IDs, documented behaviour. API owner (the maintainers).
 2. **The reviewer reads the policy.** The area review (A3) gets rule ids, titles and deciders. For a hunk under a rule it outputs a refusal (rule id, reason, hunks) with `source: "ai"`. The quote check strikes a refusal whose rule id isn't in the policy ([Idea 4](quote-check.md)).
-3. **Some refusals don't depend on the model.** Fixed rules match paths and produce `source: "rule"` refusals. `R7` is fixed for `**/PublicAPI.Unshipped.txt` and `src/MessagePack.Annotations/**`: those changes reach a human whatever the model says.
+3. **Some refusals don't depend on the model.** Fixed rules match paths and produce `source: "rule"` refusals. `R7` is fixed for `**/PublicAPI.Unshipped.txt` and `src/MessagePack.Annotations/**`: those changes reach a human whatever the model says. `R8` (legacy contract: behaviour old systems depend on) is raised only by code, from the legacy touch points ([Idea 9](legacy-guard.md)); the model never sees it.
 4. **A refusal routes to a person.** It sends the change to at least Focused review (`R-refusal`, [Idea 3](coverage-map.md)) and marks its hunks Read this.
 5. **The owner accepts it in writing.** The draft receipt lists each refusal as residual risk ([Idea 7](signed-receipt.md)), so removing one is a visible edit the owner signs.
 
@@ -25,7 +25,7 @@ Example, Tieto's MP-2283: the fix stops the generator crashing on types from a r
 
 ## What we measured
 
-Tieto's changes: `R7` (public contract) in 3 of 4. MP-2283 on its README and MsgPack004 doc hunks, MP-2129 on a new public attribute, MP-2234 on documented analyzer behaviour; MP-2297 had no refusal. Across 10 planted-bug runs: `R7` in 8, `R2` in 3, `R6` in 1, none in 1; no fixed path rule fired. `R2` fired on exactly the three security plants, the bugs the reviewer missed ([Idea 1](trust-ladder.md)), so those changes still reached the security owner.
+Tieto's changes: `R7` (public contract) in 3 of 4. MP-2283 on its README and MsgPack004 doc hunks, MP-2129 on a new public attribute, MP-2234 on documented analyzer behaviour; MP-2297 had no refusal from the model; the legacy guard adds a rule `R8` for its 11 old-platform hunks, and MP-2129 one for its 4 consumer-contract hunks. Across 10 planted-bug runs: `R7` in 8, `R2` in 3, `R6` in 1, none in 1; no fixed path rule fired. `R2` fired on exactly the three security plants, the bugs the reviewer missed ([Idea 1](trust-ladder.md)), so those changes still reached the security owner.
 
 ## How to adopt it
 
@@ -42,6 +42,7 @@ Tieto's changes: `R7` (public contract) in 3 of 4. MP-2283 on its README and Msg
 
 ## In the code
 
-- [`src/policy/refusals.ts`](../../src/policy/refusals.ts): the seven rules, `refusalPolicyVersion = "v1"`
+- [`src/policy/refusals.ts`](../../src/policy/refusals.ts): the seven rules the model reads
+- [`src/policy/refusalPolicy.ts`](../../src/policy/refusalPolicy.ts): those plus the rule-only `R8`, policy v2
 - [`src/prompts/a3.ts`](../../src/prompts/a3.ts): the area review that outputs refusals
 - Shown on S2, the Refused tab: rule, reason, decider, hunks, source

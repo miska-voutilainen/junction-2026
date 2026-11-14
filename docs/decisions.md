@@ -2,6 +2,23 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Legacy guard (idea 9) and a trust-first order
+
+- **Context:** Tieto's engineer told us they run old infrastructure, that new agent code breaking old code is the main risk ("nothing passes that breaks old code"), that tests on legacy code matter most, that the SSH signing key has no value to them, and that "you could do these better than we do them ourselves".
+- **Decision (Miska):** Add idea 9, the legacy guard: legacy zones with owners, touch kinds (legacy code, old platform, consumer contract, build), a guard per touch, rule R8 and the routing rules `R-legacy` and `R-legacy-guard`. Present the ideas trust-first: 9, then evidence levels and separation of duties (6, 8), the trust ladder (1), the coverage map and refusals (3, 5), then the quote check and blind-first review (4, 2) as guards on the AI's own words. Idea numbers stay; only the order of presentation changes. Signing stays built but is described as optional: the receipt's value is a named owner accepting a record tied to the diff, not the key.
+- **Why:** The guard answers the one risk Tieto named, and it needs no model. On the four changes it found one unguarded touch: `mp-2297` edits `#if !NETSTANDARD2_0 && !NETFRAMEWORK` code in 11 hunks, and the three source-generator test projects target net8.0 only while the library ships netstandard2.0, netstandard2.1, net8.0 and net472.
+- **Rejected:** A `legacy` review area on the ladder (areas are one per file, and a legacy zone must never climb to a lighter read as the catch rate rises); a code-owners file alone (it says who, not why the touch matters or what covers it).
+- **Limit:** Four changes, one unguarded touch. Reach-in by name found nothing real; the guard tests are not run on base and head yet.
+- **PR:** docs/legacy-guard
+
+## 2026-11-14 · R8 stays out of the rules the model reads
+
+- **Context:** Rule R8 (legacy contract) is raised by code, not by A3. Adding it to `src/policy/refusals.ts` would change the A3 prompt, which makes a new reviewer version and stales the planted-bug report card.
+- **Decision:** R8 lives in `src/policy/legacy.ts` and is joined to R1 to R7 in `src/policy/refusalPolicy.ts` (`allRefusalRules`, policy v2). `refusals.ts` is unchanged, a test pins R8 out of it, and reviewer `rv2`, its recordings and its scores stay valid.
+- **Why:** The model has no zone map, so asking it to raise R8 would be a guess; a path rule is exact and costs no credits or re-measuring before the freeze.
+- **Rejected:** Adding R8 to the prompt's rules and re-running the eval (credits, time, and the new scores would measure a different reviewer).
+- **PR:** docs/legacy-guard
+
 ## 2026-11-14 · The ideas that were manual now run in CI, opt-in
 
 - **Context:** Three ideas needed a person at a laptop with nothing in the repo saying so: the receipt as a merge gate and the pipeline on an agent PR (both "pitch only"), and the trust ladder re-levelling after a prompt change (a manual `pnpm evals`). The grade rewards the depth of the idea, and a feature that exists only in a pitch is not alive.
