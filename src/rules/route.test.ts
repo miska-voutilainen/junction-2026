@@ -154,7 +154,7 @@ describe("generated hunks", () => {
       {
         ruleId: "R-generated",
         tier: "light",
-        text: "3 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)",
+        text: "3 are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught",
       },
     ]);
   });
@@ -177,7 +177,7 @@ describe("generated hunks", () => {
 
   it("keeps the reason singular for one snapshot", () => {
     const decision = route(makeReview({ hunks: snapshots(1) }), trustedEverywhere);
-    expect(decision.reasons[0].text).toMatch(/^1 is a generated snapshot: read the template change that produces it /);
+    expect(decision.reasons[0].text).toMatch(/^1 is a generated snapshot: read the template that produces it, /);
   });
 
   it("adds no reason and no generated coverage to a change without generated hunks", () => {
