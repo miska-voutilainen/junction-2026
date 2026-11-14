@@ -1,28 +1,24 @@
 import { runGit } from "./runGit";
 
 /**
- * Reads a file as it is at a commit with `git show`, without touching the
- * working tree. A5 and the quote check read the base and head versions this way.
+ * Reads a file as it is at a commit, without touching the working tree. A5 and
+ * the quote check read the base and head versions this way.
  *
  * @param path repo-relative, forward slashes
  * @returns the file text, or null when the file doesn't exist at that commit
  *   (added by the change, or deleted by it)
- * @throws Error for any other git failure, such as an unknown SHA.
+ * @throws Error when the commit is unknown or the path is a folder, not a file.
  */
 export async function readFileAtCommit(repoDir: string, sha: string, path: string): Promise<string | null> {
-  try {
-    const content = await runGit(repoDir, ["show", `${sha}:${path}`], { isolated: true });
-    return content.toString("utf8");
-  } catch (error) {
-    if (!isMissingPathError(error)) throw error;
-    // git words an unknown commit the same way when the file exists on disk, so
-    // confirm the commit is real before reading "missing" as "not in this commit".
-    await runGit(repoDir, ["cat-file", "-e", `${sha}^{commit}`], { isolated: true });
-    return null;
+  // Fails on an unknown commit, so an empty listing below can only mean a missing path.
+  await runGit(repoDir, ["cat-file", "-e", `${sha}^{commit}`], { isolated: true });
+  const entry = (await runGit(repoDir, ["ls-tree", sha, "--", path], { isolated: true })).toString().trim();
+  if (entry === "") return null;
+  // "<mode> <type> <sha>\t<path>": a folder is listed as a tree.
+  const objectType = entry.split(/\s/)[1];
+  if (objectType !== "blob") {
+    throw new Error(`${path} at ${sha} is a ${objectType}, not a file. Pass the path of a file.`);
   }
-}
-
-// git words it "path 'x' does not exist in <sha>" or "exists on disk, but not in <sha>".
-function isMissingPathError(error: unknown): boolean {
-  return error instanceof Error && /does not exist in|exists on disk, but not in/.test(error.message);
+  const content = await runGit(repoDir, ["cat-file", "blob", `${sha}:${path}`], { isolated: true });
+  return content.toString("utf8");
 }

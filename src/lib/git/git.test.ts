@@ -4,13 +4,21 @@
  * has no clone.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ChangeInputSchema } from "../../contracts";
 import { computeDiffIdentity } from "./diffIdentity";
 import { loadDiff } from "./loadDiff";
 import { readFileAtCommit } from "./readFileAtCommit";
+
+function writeTempConfig(content: string): string {
+  const path = join(mkdtempSync(join(tmpdir(), "countersign-test-")), "gitconfig");
+  writeFileSync(path, content);
+  return path;
+}
 
 const repoDir = process.env.SAMPLE_REPO_DIR;
 const describeWithClone = repoDir ? describe : describe.skip;
@@ -30,8 +38,10 @@ describeWithClone("against the fork clone, mp-2283", () => {
     // git's own numstat is the oracle for the added and removed line counts.
     const numstat = execFileSync("git", ["diff", "--no-renames", "--numstat", baseSha, headSha], { cwd: repoDir, encoding: "utf8" })
       .trim().split("\n").map((row) => row.split("\t"));
-    expect(diff.linesAdded).toBe(numstat.reduce((sum, [added]) => sum + Number(added), 0));
-    expect(diff.linesRemoved).toBe(numstat.reduce((sum, [, removed]) => sum + Number(removed), 0));
+    // numstat prints "-" for a binary file, which has no counted lines.
+    const count = (value: string | undefined) => (value === "-" ? 0 : Number(value));
+    expect(diff.linesAdded).toBe(numstat.reduce((sum, [added]) => sum + count(added), 0));
+    expect(diff.linesRemoved).toBe(numstat.reduce((sum, [, removed]) => sum + count(removed), 0));
     for (const hunk of hunks) {
       expect(hunk.lines.filter((line) => line.kind !== "add")).toHaveLength(hunk.oldLines);
       expect(hunk.lines.filter((line) => line.kind !== "del")).toHaveLength(hunk.newLines);
@@ -47,6 +57,35 @@ describeWithClone("against the fork clone, mp-2283", () => {
     expect(empty.headTree).toBe(empty.baseTree);
   });
 
+  it("hashes exactly what the spec's command prints, run by hand", async () => {
+    const emptyConfig = writeTempConfig("");
+    const rawDiff = execFileSync(
+      "git",
+      ["-c", "core.quotepath=false", "-c", "diff.algorithm=myers", "diff", "--binary", "--no-ext-diff", "--no-color",
+        "--no-renames", "--full-index", "--src-prefix=a/", "--dst-prefix=b/", baseSha, headSha],
+      { cwd: repoDir, maxBuffer: 256 * 1024 * 1024, env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: emptyConfig } },
+    );
+    const identity = await computeDiffIdentity(repoDir!, baseSha, headSha);
+    expect(identity.diffSha256).toBe(createHash("sha256").update(rawDiff).digest("hex"));
+  });
+
+  it("ignores the machine's global git config", async () => {
+    const before = await computeDiffIdentity(repoDir!, baseSha, headSha);
+    const noPrefixConfig = writeTempConfig("[diff]\n\tnoprefix = true\n");
+    const previous = process.env.GIT_CONFIG_GLOBAL;
+    process.env.GIT_CONFIG_GLOBAL = noPrefixConfig;
+    try {
+      expect(await computeDiffIdentity(repoDir!, baseSha, headSha)).toEqual(before);
+    } finally {
+      if (previous === undefined) delete process.env.GIT_CONFIG_GLOBAL;
+      else process.env.GIT_CONFIG_GLOBAL = previous;
+    }
+  });
+
+  it("rejects a value that is not a full SHA before it can reach git as an option", async () => {
+    await expect(computeDiffIdentity(repoDir!, "--output=x", headSha)).rejects.toThrow();
+  });
+
   it("reads a file at both commits, and null where it doesn't exist", async () => {
     const { files } = await loadDiff(repoDir!, baseSha, headSha);
     const edited = files.find((file) => file.removed > 0)!;
@@ -54,6 +93,10 @@ describeWithClone("against the fork clone, mp-2283", () => {
     expect(atBase).toContain("\n");
     expect(await readFileAtCommit(repoDir!, headSha, edited.path)).not.toBe(atBase);
     expect(await readFileAtCommit(repoDir!, baseSha, "no/such/file.cs")).toBeNull();
+  });
+
+  it("throws for a folder instead of returning text", async () => {
+    await expect(readFileAtCommit(repoDir!, baseSha, "src")).rejects.toThrow(/not a file/);
   });
 
   it("fails loudly when the commit is unknown, not as a missing file", async () => {

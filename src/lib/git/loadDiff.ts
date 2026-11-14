@@ -7,7 +7,7 @@
 import parseDiff, { type Change } from "parse-diff";
 import type { Review } from "../../contracts";
 import { classifyFile } from "../../policy/areas";
-import { computeDiffIdentity } from "./diffIdentity";
+import { computeDiffIdentity, pinnedDiffArgs } from "./diffIdentity";
 import { runGit } from "./runGit";
 
 /** The `diff`, `files` and `hunks` parts of a Review. */
@@ -28,13 +28,9 @@ const contextLines = 3;
 export async function loadDiff(repoDir: string, baseSha: string, headSha: string): Promise<LoadedDiff> {
   const [identity, rawDiff] = await Promise.all([
     computeDiffIdentity(repoDir, baseSha, headSha),
-    runGit(
-      repoDir,
-      ["-c", "core.quotepath=false", "diff", "--no-ext-diff", "--no-color", "--no-renames", `-U${contextLines}`, baseSha, headSha],
-      { isolated: true },
-    ),
+    runGit(repoDir, pinnedDiffArgs(baseSha, headSha, [`-U${contextLines}`]), { isolated: true }),
   ]);
-  const { files, hunks } = parseUnifiedDiff(rawDiff.toString("utf8"));
+  const { files, hunks } = parseUnifiedDiff(rawDiff.toString("utf8"), `${baseSha}..${headSha}`);
   return {
     diff: {
       baseSha,
@@ -53,15 +49,23 @@ export async function loadDiff(repoDir: string, baseSha: string, headSha: string
  * Parses unified diff text (git diff output without renames) into files and
  * hunks. Pure, so tests can run it on committed .diff fixtures without a clone.
  * Binary files appear as files with no hunks.
+ *
+ * @param range only used in the error message, e.g. "<base>..<head>"
+ * @throws Error when an entry has no file path, rather than dropping it and
+ *   showing less than the hashed diff.
  */
-export function parseUnifiedDiff(diffText: string): Pick<LoadedDiff, "files" | "hunks"> {
+export function parseUnifiedDiff(diffText: string, range = "the diff"): Pick<LoadedDiff, "files" | "hunks"> {
   const files: Review["files"] = [];
   const hunks: Review["hunks"] = [];
 
-  for (const parsedFile of parseDiff(diffText)) {
+  for (const [index, parsedFile] of parseDiff(diffText).entries()) {
     // A deleted file's `to` is /dev/null; its path is the old name.
     const path = parsedFile.deleted ? parsedFile.from : parsedFile.to;
-    if (!path) continue;
+    if (!path || path === "/dev/null") {
+      throw new Error(
+        `No file path in diff entry ${index + 1} (from=${parsedFile.from}, to=${parsedFile.to}) for ${range}; check the clone's diff config.`,
+      );
+    }
     const hunkIds: string[] = [];
 
     for (const chunk of parsedFile.chunks) {
@@ -75,6 +79,7 @@ export function parseUnifiedDiff(diffText: string): Pick<LoadedDiff, "files" | "
         oldLines: chunk.oldLines,
         newStart: chunk.newStart,
         newLines: chunk.newLines,
+        // "\ No newline at end of file" is a note about the line before it, not a line.
         lines: chunk.changes.filter((change) => !change.content.startsWith("\\")).map(toHunkLine),
       });
     }
@@ -92,7 +97,6 @@ export function parseUnifiedDiff(diffText: string): Pick<LoadedDiff, "files" | "
 
 type HunkLine = Review["hunks"][number]["lines"][number];
 
-// Lines starting with a backslash ("\ No newline at end of file") are notes about the line before, filtered out above.
 function toHunkLine(change: Change): HunkLine {
   const text = change.content.slice(1);
   if (change.type === "add") return { kind: "add", oldLine: null, newLine: change.ln, text };

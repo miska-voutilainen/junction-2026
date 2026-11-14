@@ -138,9 +138,10 @@ function realIo(root) {
       }
     },
     fileExists: (p) => existsSync(p),
-    currentBranch: () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"], root),
-    ghUser: () => run("gh", ["api", "user", "--jq", ".login"], root, 3000),
-    prAuthor: (n) => run("gh", ["pr", "view", ...(n ? [n] : []), "--json", "author", "--jq", ".author.login"], root, 3000),
+    // Lookups run where the command runs: a worktree has its own branch.
+    currentBranch: (cwd = root) => run("git", ["rev-parse", "--abbrev-ref", "HEAD"], cwd),
+    ghUser: (cwd = root) => run("gh", ["api", "user", "--jq", ".login"], cwd, 3000),
+    prAuthor: (n, cwd = root, repo = null) => run("gh", ["pr", "view", ...(n ? [n] : []), ...(repo ? ["-R", repo] : []),"--json", "author", "--jq", ".author.login"], cwd, 3000),
   };
 }
 

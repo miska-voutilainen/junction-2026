@@ -34,10 +34,11 @@ function makeFork(): void {
   mkdirSync(forkDir);
   git(forkDir, "init", "-q", "-b", "main");
   git(forkDir, "commit", "-q", "--allow-empty", "-m", "base");
+  const baseSha = git(forkDir, "rev-parse", "HEAD");
   changes = BRANCHES.map((branch) => {
     git(forkDir, "checkout", "-q", "-b", branch, "main");
     git(forkDir, "commit", "-q", "--allow-empty", "-m", branch);
-    return { id: branch, headSha: git(forkDir, "rev-parse", "HEAD") };
+    return { id: branch, baseSha, headSha: git(forkDir, "rev-parse", "HEAD") };
   });
   git(forkDir, "checkout", "-q", "main");
 }
@@ -62,7 +63,10 @@ beforeEach(() => {
 
 afterEach(() => rmSync(workDir, { recursive: true, force: true }));
 
-describe("seed", () => {
+// Each test runs several real git processes; Windows under a parallel test run needs more than the 5 s default.
+const GIT_TEST_TIMEOUT_MS = 30_000;
+
+describe("seed", { timeout: GIT_TEST_TIMEOUT_MS }, () => {
   it("exits 1 and says how to fix it when SAMPLE_REPO_DIR is not set", () => {
     expect(run(undefined)).toBe(1);
     expect(errors[0]).toContain("SAMPLE_REPO_DIR is not set");
@@ -92,6 +96,15 @@ describe("seed", () => {
       "receipt",
     );
     expect(logged).not.toContain("No receipts yet");
+  });
+
+  it("writes core.longpaths into the clone's own config", () => {
+    makeFork();
+    const clone = join(workDir, "clone");
+
+    expect(run(clone)).toBe(0);
+
+    expect(git(clone, "config", "--local", "core.longpaths")).toBe("true");
   });
 
   it("clones into an existing empty folder", () => {
@@ -131,10 +144,15 @@ describe("seed", () => {
 
   it("exits 1 and names the changes whose head commit is missing", () => {
     makeFork();
-    const missing = { id: "mp-9999", headSha: "0".repeat(40) };
+    const missing = {
+      id: "mp-9999",
+      baseSha: "0".repeat(40),
+      headSha: "1".repeat(40),
+    };
     changes.push(missing);
 
     expect(run(join(workDir, "clone"))).toBe(1);
+    expect(errors[0]).toContain(`mp-9999 (${missing.baseSha})`);
     expect(errors[0]).toContain(`mp-9999 (${missing.headSha})`);
   });
 });
