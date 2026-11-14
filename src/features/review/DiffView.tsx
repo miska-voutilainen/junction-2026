@@ -153,7 +153,7 @@ function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<
       className="rounded-control border border-dashed border-border-default px-2 py-1"
       title={`${fileCount} ${noun} · not in the reading count · ${reveal.isGeneratedOpen ? "Hide" : "Show"}`}
     >
-      <p className="px-1 pb-2 text-xs text-text-muted">{"Generated files aren't read, so code hidden in one wouldn't be caught. Read the template change that produces them."}</p>
+      <p className="px-1 pb-2 text-xs text-text-muted">{"Generated files aren't read, so code hidden in one wouldn't be caught. Read the template that produces them."}</p>
       <CoveredList entries={entries} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
     </Disclosure>
   );
