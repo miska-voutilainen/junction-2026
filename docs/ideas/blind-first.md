@@ -2,8 +2,6 @@
 
 The reviewer writes down what the requirement should produce before it reads the code or the author's description, and we count how much reading the description first costs.
 
-> Draft. The anchored-versus-blind count comes from T16 and is "not measured yet" until it runs.
-
 ## The problem
 
 An agent-written pull request arrives with the agent's own story. A reviewer who reads it first, human or AI, checks the code against the story instead of the requirement. If the story says "adds a null check" and the code adds one, the review passes, even when the requirement asked for something else.
@@ -19,15 +17,15 @@ An agent-written pull request arrives with the agent's own story. A reviewer who
 2. **Then the code (A2).** It reads the hunks with A1's expectation beside them and writes the story and claims, each citing code.
 3. **The description last (A4).** It checks each sentence against the claims: `supported`, `contradicted` or `unsupported`. The last two become findings.
 4. **Tests are blind-first too (A5).** One test per functional item, written from the requirement, never from the diff ([Idea 6](evidence-levels.md)).
-5. **We measure the effect.** The evidence lane plants false sentences in 5 PR descriptions. The reviewer runs 3 times per mode on each:
+5. **We measure the effect.** The evidence lane plants false sentences in 5 PR descriptions. The reviewer runs 2 times per mode on each:
    - **Anchored:** A2 reads the description first; A1 is skipped.
    - **Blind-first:** A1, A2, A4 in order (A3 and A5 skipped).
 
-   A plant is caught when A4 marks it `contradicted` or `unsupported`. The result is "anchored caught x of 15, blind-first caught y of 15", with the spread across the 3 runs so a lucky run shows.
+   A plant is caught when A4 marks it `contradicted` or `unsupported`. The result is "anchored caught x of 10, blind-first caught y of 10", with each plant's count per run so a lucky run shows.
 
 ## What we measured
 
-Not measured yet. The report card will show both counts with n, the spread and the per-plant breakdown. If blind-first doesn't catch more, it says so. These are our own recorded runs, not a preregistered study.
+From the report card: 5 planted false sentences (`cp0`–`cp2` on MP-2283, `cp3` on MP-2234, `cp4` on MP-2129), 2 runs per mode. Anchored caught 10 of 10; blind-first caught 10 of 10. Every plant was caught in both runs of both modes, so these plants show no anchoring effect. Our reading: each false sentence contradicts code the reviewer reads anyway, so subtler plants are the next test. These are our own recorded runs, not a preregistered study.
 
 ## How to adopt it
 

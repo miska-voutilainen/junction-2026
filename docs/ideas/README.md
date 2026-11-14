@@ -27,6 +27,6 @@ No screen shows these; they are recommendations in the concept card.
 - **Round-trip property tests for serializers:** for a serializer, test that deserialising what was serialised gives the original.
 - **Post-merge reverts as the live source of escapes:** a revert of a merged change feeds the trust ladder as an escape.
 
-These pages are drafts. Numbers come from the planted-bug eval and the recorded runs, and say "not measured yet" until those have run.
+Numbers come from the report card (`data/eval/report-card.json`) and the recorded runs in `data/runs/`, each with its sample size. What isn't measured says "not measured yet" and why.
 
 The diagrams in `img/` come in a light and a dark version, and each page shows the one that matches the reader's theme. They are drawn by `pnpm tsx scripts/idea-diagrams/draw.ts`: change the diagram's file there and re-run it, never edit the SVGs by hand.

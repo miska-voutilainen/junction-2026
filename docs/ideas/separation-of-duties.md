@@ -2,8 +2,6 @@
 
 Whoever writes the code, the test, the receipt or the planted bugs never also judges them: an agent's own test makes a claim Supported at most, the AI drafts the receipt but only a named person signs it, and whoever plants the bugs never sees the prompts.
 
-> Draft. Rates come from the planted-bug eval and are "not measured yet".
-
 ## The problem
 
 An agent that writes both the code and its test can encode one mistake in both. The test passes, and a reviewer who counts it as proof has been told the same thing twice; the failure-mode research calls it "double confirmation". The same trap appears elsewhere: an AI that drafts and signs its own receipt leaves no one accountable, and a planter who reads the reviewer's prompts grades their own homework.
@@ -24,7 +22,7 @@ Three roles on every change, never the same one twice:
 
 ## What we measured
 
-Not measured yet. Two numbers will show it: how many claims the PR's own tests would have raised from Supported to Verified, and the planted-bug catch rate with blind plants, with its sample size. We claim no effect size.
+On MP-2283 the PR's 3 own tests fail on the base and pass on the head, and back 4 of its 8 claims. Counted as proof, they would have raised all 4 to Verified; capped, 2 stayed Supported, and the other 2 reached Verified only through A5's tests written from the requirement. With blind plants the reviewer caught 7 of 10 planted bugs ([Idea 1](trust-ladder.md)). We claim no effect size: we have no non-blind plants to compare with.
 
 ## How to adopt it
 

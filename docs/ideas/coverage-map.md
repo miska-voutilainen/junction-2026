@@ -2,8 +2,6 @@
 
 Every hunk of a change gets exactly one state, Verified, Supported, Read this or Generated, from rules a person can read, so the human reads only what no checked evidence covers.
 
-> Draft. The routing spread over Tieto's four changes is "not measured yet".
-
 ## The problem
 
 "The AI reviewed it" doesn't say what a person still has to read, so they read everything or skim and approve. They need a reading list: these hunks, and here is what covers the rest. If a model builds that list, nobody can explain why a hunk was skipped.
@@ -28,7 +26,7 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 
 ## What we measured
 
-Not measured yet. The report card will show how many of Tieto's four changes went Light, Focused and Full, and the hunks and minutes read against a full read. "2 of 8" is the shape of the line, not a result.
+MP-2283: **Full · Read 7 of 8 hunks · ~10 min (full read ~10 min)**, from `R-read-share`. All 10 planted-bug runs also went Full, reading 7 to 9 of 9 or 10 hunks. So far the map saves almost no reading: the reviewer finds something on nearly every hunk. Tieto's other three changes are not measured yet: they aren't recorded.
 
 ## How to adopt it
 

@@ -2,8 +2,6 @@
 
 A short, versioned list of what the AI reviewer never decides, each item naming the person who decides instead.
 
-> Draft. How often each rule fires on Tieto's changes is "not measured yet".
-
 ## The problem
 
 An AI reviewer gives an opinion on anything. Some questions aren't its to answer: whether the requested behaviour is right, whether a public API change is acceptable, whether a dependency's licence is fine. When it answers, a human approves without noticing a decision was made. The fix isn't a smarter model; it's writing down where its authority ends.
@@ -27,7 +25,7 @@ Example, Tieto's MP-2283: the fix stops the generator crashing on types from a r
 
 ## What we measured
 
-Not measured yet. MP-2283 is expected to be refused under `R7` or `R1`; the recorded run will show whether it was.
+MP-2283 was refused under `R7` on its README and MsgPack004 doc hunks. Across 10 planted-bug runs: `R7` in 8, `R2` in 3, `R6` in 1, none in 1; no fixed path rule fired. `R2` fired on exactly the three security plants, the bugs the reviewer missed ([Idea 1](trust-ladder.md)), so those changes still reached the security owner.
 
 ## How to adopt it
 
