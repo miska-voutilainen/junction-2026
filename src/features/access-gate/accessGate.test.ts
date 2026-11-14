@@ -43,7 +43,7 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/reviewer?x=1")).toBe("/reviewer?x=1");
   });
 
-  it.each(["//evil.com", "/\\evil", "/\t/evil.com", "/\n/evil.com", "/\r/evil.com", "https://x", "/unlock", "/unlock?next=%2F", "", null, undefined])(
+  it.each(["//evil.com", "/.//evil.com", "/a/..//evil.com", "/%2e//evil.com","/\\evil", "/\t/evil.com", "/\n/evil.com", "/\r/evil.com", "https://x", "/unlock", "/unlock?next=%2F", "", null, undefined])(
     "falls back to / for %s",
     (value) => {
       expect(safeNextPath(value)).toBe("/");
@@ -92,8 +92,10 @@ describe("accessGate", () => {
     vi.stubEnv("ACCESS_CODE", "");
     const bare = await accessGate(requestFor("/unlock"));
     const offSite = await accessGate(requestFor("/unlock?next=%2F%2Fevil.com"));
+    const dotSegments = await accessGate(requestFor("/unlock?next=%2F.%2F%2Fevil.com"));
     expect(bare.headers.get("location")).toBe("http://localhost:3000/");
     expect(offSite.headers.get("location")).toBe("http://localhost:3000/");
+    expect(dotSegments.headers.get("location")).toBe("http://localhost:3000/");
   });
 
   it("lets /unlock load without the cookie when the gate is on", async () => {
