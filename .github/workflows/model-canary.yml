@@ -19,6 +19,8 @@ concurrency:
 jobs:
   canary:
     runs-on: ubuntu-latest
+    # The key is an Environment secret of "ci", which a job reads only when it names the environment.
+    environment: ci
     timeout-minutes: 5
     steps:
       # Without the secret the call cannot be made, so the run says so and ends green:
@@ -26,10 +28,10 @@ jobs:
       - name: Check the secret this job needs
         id: gate
         env:
-          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_SECRET_KEY }}
         run: |
           if [ -z "$KIMI_API_KEY" ]; then
-            echo "::notice::Skipped: add the KIMI_API_KEY repository secret (a Verda inference key)."
+            echo "::notice::Skipped: add the KIMI_SECRET_KEY secret to the ci environment (a Verda inference key)."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
@@ -53,5 +55,5 @@ jobs:
       - name: Kimi canary
         if: steps.gate.outputs.run == 'true'
         env:
-          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_SECRET_KEY }}
         run: pnpm ai:canary

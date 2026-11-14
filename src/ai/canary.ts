@@ -4,6 +4,7 @@
  * id or schema-valid output stops working, which a replayed run can't notice. It scores
  * nothing: it is not an eval, and costs a fraction of a cent.
  */
+import { existsSync } from "node:fs";
 import { z } from "zod";
 import { createModelClient } from "./client";
 import { kimiTransport } from "./kimiTransport";
@@ -11,6 +12,9 @@ import { kimiTransport } from "./kimiTransport";
 const answerSchema = z.object({ ok: z.literal(true), word: z.string().min(1) });
 
 async function main(): Promise<void> {
+  // pnpm doesn't load .env, so without this a local run reports "KIMI_API_KEY is not
+  // set" even when the key is there. In CI the secret arrives as an env var instead.
+  if (existsSync(".env")) process.loadEnvFile(".env");
   const client = createModelClient({ mode: "live", transport: kimiTransport });
   const answer = await client.call({
     promptVersion: "canary.v1",
