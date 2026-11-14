@@ -81,6 +81,7 @@ describe("report card lists", () => {
     const missed = missedPlants(reportCard);
     expect(missed.map((plant) => plant.plantId)).toEqual(["v07", "v09", "v05", "v10"]);
     expect(missed[0]).toMatchObject({ area: "generator", variantUrl: expect.stringContaining("/commit/") });
+    expect(missed[0].runsLine).toMatch(/^caught in \d+ of \d+ runs$/);
   });
 
   it("words the hallucination counts as the spec does", () => {

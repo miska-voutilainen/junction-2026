@@ -67,15 +67,24 @@ describe("planEvalJobs", () => {
     ).toHaveLength(12);
   });
 
-  it("plans runs 2..n of a planted bug as blind comparison runs in the plant's own group", () => {
+  it("plans runs 2..n of a planted bug as blind comparison runs, grouped by change and run number", () => {
     const groups = planEvalJobs(keys, 1, 3, inputOf);
-    const plant = groups.find((group) => group.some((job) => job.label === "v01"));
-    expect(plant?.map((job) => [job.label, job.comparison])).toEqual([
-      ["v01", undefined],
-      ["v01 run 2", { mode: "blind", runNumber: 2 }],
-      ["v01 run 3", { mode: "blind", runNumber: 3 }],
-    ]);
-    expect(plant?.[2]).toMatchObject({ mode: "blind-first", steps: ["a1", "a2", "a3"] });
+    const groupOf = (label: string) =>
+      groups.find((group) => group.some((job) => job.label === label));
+    expect(groupOf("v01")?.map((job) => job.label)).toEqual(["v01"]);
+    expect(groupOf("v01 run 2")?.[0].comparison).toEqual({ mode: "blind", runNumber: 2 });
+    expect(groupOf("v01 run 3")?.[0]).toMatchObject({
+      mode: "blind-first",
+      steps: ["a1", "a2", "a3"],
+      comparison: { mode: "blind", runNumber: 3 },
+    });
+  });
+
+  it("puts two plants of one change at the same run number in one group, so they share A1 in turn", () => {
+    const sameChange = [key("v01", "planted-bug"), key("v02", "planted-bug")];
+    const groups = planEvalJobs(sameChange, 1, 2, inputOf);
+    const second = groups.find((group) => group.some((job) => job.label === "v01 run 2"));
+    expect(second?.map((job) => job.label)).toEqual(["v01 run 2", "v02 run 2"]);
   });
 });
 

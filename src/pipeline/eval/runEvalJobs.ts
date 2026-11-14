@@ -57,8 +57,10 @@ const plantedBugSteps: readonly ModelStep[] = ["a1", "a2", "a3"];
  * identical across the plants of one Tieto change; those runs sit in one group
  * so the first records and the rest reuse the recording instead of racing it.
  *
- * A planted bug's runs stay in one group too: they share A1 and A2 recordings
- * the same way, and run k only differs from run 1 by its recording key.
+ * The run index is part of every recording key, so runs 1..n of one plant share
+ * no recordings. Planted run k is grouped by change and k: A1's prompt is only
+ * the requirement, so the plants of one change at the same k share their A1
+ * recording and must not race to write it.
  *
  * @param plantRuns blind runs per planted bug; run k >= 2 is stored as blind/<k>.json
  * @param changeInputIdOf the change input a plant's runs review
@@ -74,14 +76,14 @@ export function planEvalJobs(
     groups.set(groupId, [...(groups.get(groupId) ?? []), job]);
 
   for (const key of keys.filter((candidate) => candidate.kind === "planted-bug")) {
-    add(key.plantId, {
+    add(`${key.changeId}/plant/1`, {
       label: key.plantId,
       changeInputId: changeInputIdOf(key),
       mode: "blind-first",
       steps: plantedBugSteps,
     });
     for (let k = 2; k <= plantRuns; k++) {
-      add(key.plantId, {
+      add(`${key.changeId}/plant/${k}`, {
         label: `${key.plantId} run ${k}`,
         changeInputId: changeInputIdOf(key),
         mode: "blind-first",

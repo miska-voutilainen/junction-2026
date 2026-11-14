@@ -1,4 +1,4 @@
-/** Model and limits shared by both backends (spec section 6, "Model and client"). */
+/** Model and limits shared by both backends (spec section 6, "Model and client", and 9.1, T10). */
 
 /** The one model every call uses. */
 export const MODEL = "claude-opus-5-5";
@@ -7,19 +7,22 @@ export const MODEL = "claude-opus-5-5";
 export const EFFORT = "high";
 
 /**
- * Latency budget for one model request (spec section 6): a request over it logs a
+ * Latency budget for one model request (spec 9.1, T10): a request over it logs a
  * warning but keeps going, since a slow answer on a large change is still a good answer.
  */
 export const CALL_LATENCY_BUDGET_MS = 120_000;
 
 /**
- * Hard stop for one model request (spec section 6: warn at 120 s, fail at 180 s). A call
+ * Hard stop for one model request (spec 9.1, T10: warn at 120 s, fail at 180 s). A call
  * that retries after a validation failure makes two requests, so it can take twice this long.
  */
 export const CALL_TIMEOUT_MS = 180_000;
 
-/** Request timeout inside the SDK (spec: 180 s). Longer than the call budget, so the budget decides. */
-export const API_REQUEST_TIMEOUT_MS = 180_000;
+/**
+ * Request timeout inside the SDK, equal to the hard stop. The client's own abort
+ * signal fires first, so a slow request surfaces as ModelTimeoutError, not an SDK error.
+ */
+export const API_REQUEST_TIMEOUT_MS = CALL_TIMEOUT_MS;
 
 /** SDK-level retries for network errors and 5xx; validation retries are ours and happen once. */
 export const API_MAX_RETRIES = 2;

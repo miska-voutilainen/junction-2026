@@ -133,7 +133,7 @@ export interface MissedPlant {
   area: Area;
   defect: string;
   variantUrl: string;
-  /** "1 of 3 runs": how many of the plant's runs caught it, though not a majority. */
+  /** "caught in 1 of 3 runs": how many of the plant's runs caught it, though not a majority. */
   runsLine: string;
 }
 
@@ -147,7 +147,7 @@ export function missedPlants(reportCard: ReportCard): MissedPlant[] {
         area,
         defect: plant.defect,
         variantUrl: plant.variantUrl,
-        runsLine: `${plant.caughtRuns} of ${plant.runs} runs`,
+        runsLine: `caught in ${plant.caughtRuns} of ${plant.runs} runs`,
       })),
   );
 }
