@@ -38,12 +38,12 @@
 
 ## How trust is measured
 
-| Tieto's measure                                       | What we measure now                                                            | What a real deployment tracks                                           |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Reverts and incidents don't rise as review time falls | Planted-bug catch rate per area, with n; simulated escapes on the report card  | Reverts and incidents of merged changes against reading time per change |
-| AI findings are real and accepted                     | Findings checked against answer keys; hallucinations caught by the quote check | Share of findings the owner accepts, and the share that were wrong      |
-| Time to merge                                         | Not measured yet                                                               | Time from open to signed receipt, by tier                               |
-| Share routed to humans                                | Hunks per tier across the four sample changes (read 55 of 473; `mp-2283` 6 of 8) | Share of hunks and changes at Light, Focused and Full, per area         |
+| Tieto's measure                                       | What we measure now                                                                                                                                 | What a real deployment tracks                                           |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Reverts and incidents don't rise as review time falls | Planted-bug catch rate per area, with n; simulated escapes on the report card                                                                       | Reverts and incidents of merged changes against reading time per change |
+| AI findings are real and accepted                     | Findings checked against answer keys; hallucinations caught by the quote check                                                                      | Share of findings the owner accepts, and the share that were wrong      |
+| Time to merge                                         | Not measured yet                                                                                                                                    | Time from open to signed receipt, by tier                               |
+| Share routed to humans                                | Hunks per tier across the four sample changes (read 55 of 473, of which 402 are generated snapshots: 55 of 71 hand-written hunks; `mp-2283` 6 of 8) | Share of hunks and changes at Light, Focused and Full, per area         |
 
 ## The eight ideas
 
