@@ -123,7 +123,7 @@ describe("withoutTimings", () => {
       "[xUnit.net 00:00:00.47]   Discovering: Tests",
     ].join("\n");
     expect(withoutTimings(output)).toBe(
-      "  Failed A5_F1_X\n  Passed A5_F1_Y\n  Passed A5_F1_Z\n  Passed A5_F1_W\nFailed!  - Failed:     1, Passed:     0, Total:     1 - Tests.dll (net8.0)\n\n\n[xUnit.net]   Discovering: Tests",
+      "  Failed A5_F1_X\n  Passed A5_F1_Y\n  Passed A5_F1_Z\n  Passed A5_F1_W\nFailed!  - Failed:     1, Passed:     0, Total:     1 - Tests.dll (net8.0)\n\n[xUnit.net]   Discovering: Tests",
     );
   });
 });
