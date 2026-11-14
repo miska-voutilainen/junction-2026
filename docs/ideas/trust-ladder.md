@@ -14,7 +14,7 @@ Teams trust an AI reviewer everywhere or nowhere, and both are guesses. A review
 </picture>
 
 1. **Areas come from paths.** For Tieto's MessagePack-CSharp: `generator`, `analyzer`, `security`, `performance`. The first matching path rule wins (`src/MessagePack.SourceGenerator/Analyzers/**` → `analyzer`).
-2. **Someone else plants the bugs.** A teammate who never opens the prompts writes small, realistic bugs into the real code, each with an answer key (file, line range, area). The reviewer runs on each blind.
+2. **Someone else plants the bugs.** An isolated agent that never opens the prompts, the pipeline or any review output writes small, realistic bugs into the real code, each with an answer key (file, line range, area). The reviewer runs on each blind.
 3. **A catch is scored mechanically:** a `defect` or `missing` finding cites the key's file on the head side, within ±3 lines of the planted range, in the same area.
 4. **The catch rate sets a level:**
    - **Shadow:** fewer than 3 planted bugs, or catch rate below 60%. The reviewer runs but routes nothing; a human reads every hunk in the area.
