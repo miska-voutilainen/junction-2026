@@ -3,6 +3,10 @@ import type { ReceiptDocumentView } from "./receiptModel";
 
 const NOTHING_LISTED = "Nothing listed.";
 
+// Signed lines quote file paths ("src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs")
+// with no space to break at; without this they push a 375 px page 200 px sideways.
+const SIGNED_TEXT = "text-md text-text-primary [overflow-wrap:anywhere]";
+
 /**
  * The signer's three sections: Checked, Not checked and Residual risk. The
  * text is what a person signed, so it is set in sans; only rule ids are mono.
@@ -19,7 +23,7 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
           <ul className="flex flex-col gap-2">
             {checked.map(({ item, by }) => (
               <li key={item} className="flex flex-col gap-0.5 compact:flex-row compact:justify-between compact:gap-6">
-                <span className="min-w-0 text-md text-text-primary">{item}</span>
+                <span className={`min-w-0 ${SIGNED_TEXT}`}>{item}</span>
                 <span className="shrink-0 text-sm text-text-muted">{by}</span>
               </li>
             ))}
@@ -33,7 +37,7 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
           <ul className="flex flex-col gap-2">
             {notChecked.map(({ item, reason }) => (
               <li key={item} className="flex flex-col gap-0.5">
-                <span className="text-md text-text-primary">{item}</span>
+                <span className={SIGNED_TEXT}>{item}</span>
                 <span className="text-sm text-text-muted">{reason}</span>
               </li>
             ))}
@@ -41,7 +45,7 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
         )}
       </Section>
       <Section title="Residual risk">
-        <p data-written-text className="text-md text-text-primary">{residualRisk.text}</p>
+        <p data-written-text className={SIGNED_TEXT}>{residualRisk.text}</p>
         {residualRisk.accepted.length > 0 && (
           <ul aria-label="Accepted refusals" className="flex flex-col gap-1 text-sm text-text-secondary">
             {residualRisk.accepted.map(({ refusalId, rule, runId }) => (
