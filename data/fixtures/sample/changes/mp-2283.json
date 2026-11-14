@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change stops the source generator and the MsgPack00x analyzer from crashing when a [MessagePackObject] type has a member whose type is a closed generic struct from a referenced assembly. Both read DeclaringSyntaxReferences[0] on a metadata symbol, which has no syntax and so threw IndexOutOfRangeException. The lookups now use FirstOrDefault and fall back to the caller's location. I added regression tests in GenerationTests and AnalyzerTests that compile a small library and reference it from the app project. The change only touches type collection and the analyzer entry point. The analyzer's diagnostics are unchanged: it reports exactly the same set of diagnostics as before and adds none. Generated output for types that were already supported is byte-for-byte identical.",
     "synthetic": true,
-    "writtenBy": "Kasanen (evidence lane), written blind"
+    "writtenBy": "engine lane (Miska), synthetic, drafted without opening prompts, pipeline or review output"
   }
 }

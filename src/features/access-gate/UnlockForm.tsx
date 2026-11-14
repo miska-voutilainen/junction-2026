@@ -16,7 +16,8 @@ const IDLE: UnlockState = { status: "idle" };
  *
  * A four-digit code is one real input drawn as four boxes: the boxes sit
  * behind a transparent input, so screen readers, paste and autofill all see a
- * single field. Any other length gets a plain text field.
+ * single field. Any other length gets a plain text field. The form submits by
+ * itself once the code is complete; the button stays for anyone who prefers it.
  *
  * @param codeLength Number of characters in the code, from the server.
  * @param next Same-site path to open once unlocked.
@@ -26,6 +27,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
   const [code, setCode] = useState("");
   const [lastSeenState, setLastSeenState] = useState(state);
   const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // A wrong code clears the field. Done while rendering rather than in an
   // effect so the old digits never flash after the error appears.
@@ -38,6 +40,14 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
     if (state.status === "error") inputRef.current?.focus();
   }, [state]);
 
+  // The last character submits the form: the visitor never has to find the
+  // button, and a pasted or autofilled code goes straight through. It can't
+  // loop on a wrong code, because the error clears the field, and the code
+  // can't change while a check is pending, so it submits once per attempt.
+  useEffect(() => {
+    if (code.length === codeLength) formRef.current?.requestSubmit();
+  }, [code, codeLength]);
+
   if (state.status === "unlocked") return <UnlockedNotice next={state.next} />;
 
   const isBoxed = codeLength === BOXED_CODE_LENGTH;
@@ -47,7 +57,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
   const label = isBoxed ? "4-digit code" : "Access code";
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-3">
       <input type="hidden" name="next" value={next} />
       <label htmlFor="access-code" className="text-lg font-semibold text-text-primary">
         {label}
@@ -72,6 +82,8 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
           pattern={isBoxed ? "[0-9]*" : undefined}
           aria-invalid={hasError}
           aria-describedby="access-code-status"
+          // The unlock page has one field and nothing else to do, so focusing it is the expected start.
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           className={
             isBoxed
@@ -101,7 +113,7 @@ export function UnlockForm({ codeLength, next }: { codeLength: number; next: str
 function statusMessage(hasError: boolean, isPending: boolean): string {
   if (isPending) return "Checking…";
   if (hasError) return "That code doesn't match. Try again.";
-  return "Type or paste the code.";
+  return "Type or paste the code. It's checked as soon as it's complete.";
 }
 
 /**

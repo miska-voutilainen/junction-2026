@@ -13,7 +13,7 @@
 1. Clone the repository.
 2. Install dependencies: `pnpm install --frozen-lockfile`
 3. Copy `.env.example` to `.env` and fill in the values (never commit `.env`). The names are `AI_BACKEND`, `ANTHROPIC_API_KEY`, `SAMPLE_REPO_DIR`, `AI_MODE` and `ACCESS_CODE`; the table below says what each is for. The app alone (`pnpm dev`) needs none of them: it reads the committed files under `data/`.
-4. Clone the fork: set `SAMPLE_REPO_DIR` in `.env` to an absolute path, then run `pnpm seed`. It clones `miska-voutilainen/junction26-messagepack-csharp` (our fork of Tieto's repository) into that folder, fetches every branch and the receipt notes, and checks that the branches of the four sample changes are there. Only the pipeline and the receipt CLI read the clone.
+4. Clone the fork: set `SAMPLE_REPO_DIR` in `.env` to an absolute path, then run `pnpm seed`. It clones `miska-voutilainen/junction26-messagepack-csharp` (our fork of Tieto's repository) into that folder, fetches every branch and the receipt notes, and checks that the head commit of each sample change is there. Only the pipeline and the receipt CLI read the clone.
 5. Start: `pnpm dev`, then open <http://localhost:3000> (`PORT` overrides).
 
 ## Environment variables
@@ -28,19 +28,20 @@
 
 ## Commands
 
-| Command                                           | What it does                                                                                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                                        | Run locally                                                                                                                                                   |
-| `pnpm build`, `pnpm start`                        | Production build and server                                                                                                                                   |
-| `pnpm lint`, `pnpm lint:fix`                      | ESLint, with autofix                                                                                                                                          |
-| `pnpm format`                                     | Prettier write                                                                                                                                                |
-| `pnpm typecheck`                                  | `next typegen`, then `tsc --noEmit`                                                                                                                           |
-| `pnpm test`                                       | Unit tests, Vitest                                                                                                                                            |
-| `pnpm test:hooks`                                 | Harness hook tests, `node --test`                                                                                                                             |
-| `pnpm e2e`                                        | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                         |
-| `pnpm screenshots`                                | Runs Playwright with `--project=screenshots`, meant to save PNGs into `.review/`; `playwright.config.ts` defines no such project yet                          |
-| `pnpm seed`                                       | Clone the fork and fetch notes                                                                                                                                |
-| `pnpm pipeline`, `pnpm evals`, `pnpm countersign` | Defined in `package.json` for the review pipeline, the planted-bug eval and the receipt CLI; `src/pipeline/` and `src/receipt/` are not in the repository yet |
+| Command                                                   | What it does                                                                                                                                                                                       |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                | Run locally                                                                                                                                                                                        |
+| `pnpm build`, `pnpm start`                                | Production build and server                                                                                                                                                                        |
+| `pnpm lint`, `pnpm lint:fix`                              | ESLint, with autofix                                                                                                                                                                               |
+| `pnpm format`                                             | Prettier write                                                                                                                                                                                     |
+| `pnpm typecheck`                                          | `next typegen`, then `tsc --noEmit`                                                                                                                                                                |
+| `pnpm test`                                               | Unit tests, Vitest                                                                                                                                                                                 |
+| `pnpm test:hooks`                                         | Harness hook tests, `node --test`                                                                                                                                                                  |
+| `pnpm e2e`                                                | Playwright at 1440 and 375 px; builds and serves the app unless `E2E_BASE_URL` is set                                                                                                              |
+| `pnpm screenshots`                                        | Runs Playwright with `--project=screenshots`, meant to save PNGs into `.review/`; `playwright.config.ts` defines no such project yet                                                               |
+| `pnpm seed`                                               | Clone the fork and fetch notes                                                                                                                                                                     |
+| `pnpm pipeline`, `pnpm evals`                             | Defined in `package.json` for the review pipeline and the planted-bug eval; `src/pipeline/cli.ts` is not in the repository yet                                                                     |
+| `pnpm countersign draft\|sign\|verify\|export <changeId>` | The receipt CLI (`src/receipt/`); needs `SAMPLE_REPO_DIR` and an unencrypted ed25519 key (default `~/.ssh/countersign_ed25519`, or `--key`). Commands and exit codes: [api.md](api.md#receipt-cli) |
 
 ## Testing
 
