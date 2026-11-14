@@ -7,7 +7,7 @@
   "kind": "contradiction-plant",
   "mode": "anchored",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "none",
@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T055809Z",
-    "startedAt": "2026-11-14T05:58:09.782Z",
-    "finishedAt": "2026-11-14T05:59:54.445Z",
-    "durationMs": 104663,
+    "id": "20261114T122915Z",
+    "startedAt": "2026-11-14T12:29:15.935Z",
+    "finishedAt": "2026-11-14T12:29:20.542Z",
+    "durationMs": 4607,
     "usage": {
       "inputTokens": 112215,
       "outputTokens": 12980,
@@ -8570,7 +8570,17 @@
       ]
     }
   ],
-  "refusals": [],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "source": "rule",
+      "reason": "Changes the public attributes",
+      "hunkIds": [
+        "h7"
+      ]
+    }
+  ],
   "quoteCheck": {
     "checked": 51,
     "passed": 51,
@@ -8661,27 +8671,27 @@
       },
       {
         "item": "doc/analyzers/MsgPack019.md:1 (h2)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "No Verified or Supported claim covers it"
       },
       {
         "item": "doc/analyzers/MsgPack020.md:1 (h3)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "No Verified or Supported claim covers it"
       },
       {
         "item": "doc/analyzers/MsgPack021.md:1 (h4)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "No Verified or Supported claim covers it"
       },
       {
         "item": "doc/analyzers/MsgPack022.md:1 (h5)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "No Verified or Supported claim covers it"
       },
       {
         "item": "doc/analyzers/index.md:23 (h6)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "No Verified or Supported claim covers it"
       },
       {
         "item": "src/MessagePack.Annotations/Attributes.cs:139 (h7)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md:23 (h8)",
@@ -8704,30 +8714,6 @@
         "reason": "Finding f1 (contradiction) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterRequest.cs:1 (h13)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/ObjectSerializationInfo.cs:10 (h14)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/ObjectSerializationInfo.cs:165 (h15)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/GeneratorUtilities.cs:32 (h16)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:26 (h17)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:57 (h18)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/MessagePackGenerator.cs:112 (h19)",
         "reason": "Finding f1 (contradiction) names this hunk"
       },
@@ -8746,14 +8732,10 @@
       {
         "item": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt:15 (h23)",
         "reason": "Security is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/Utils/Constants.cs:14 (h24)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
       }
     ],
     "residualRisk": {
-      "text": "",
+      "text": "r1 (R7): Changes the public attributes",
       "acceptedRefusalIds": []
     }
   },
@@ -8764,6 +8746,11 @@
         "ruleId": "R-size",
         "text": "1043 changed lines outside generated files (limit 400)",
         "tier": "full"
+      },
+      {
+        "ruleId": "R-refusal",
+        "text": "1 item refused: a human decides",
+        "tier": "focused"
       },
       {
         "ruleId": "R-contradiction",
@@ -8777,12 +8764,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
@@ -8804,18 +8791,18 @@
       "h10": "read",
       "h11": "read",
       "h12": "read",
-      "h13": "read",
-      "h14": "read",
-      "h15": "read",
-      "h16": "read",
-      "h17": "read",
-      "h18": "read",
+      "h13": "supported",
+      "h14": "supported",
+      "h15": "supported",
+      "h16": "supported",
+      "h17": "supported",
+      "h18": "supported",
       "h19": "read",
       "h20": "read",
       "h21": "read",
       "h22": "read",
       "h23": "read",
-      "h24": "read",
+      "h24": "supported",
       "h25": "supported",
       "h26": "supported",
       "h27": "supported",
@@ -8826,11 +8813,11 @@
       "h32": "supported",
       "h33": "supported"
     },
-    "readHunks": 24,
+    "readHunks": 17,
     "totalHunks": 33,
-    "readLines": 621,
+    "readLines": 575,
     "totalLines": 1043,
-    "readMinutes": 25,
+    "readMinutes": 23,
     "fullMinutes": 42
   }
 }

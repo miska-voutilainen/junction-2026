@@ -7,25 +7,25 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T055003Z",
-    "startedAt": "2026-11-14T05:50:03.053Z",
-    "finishedAt": "2026-11-14T05:52:01.199Z",
-    "durationMs": 118146,
+    "id": "20261114T122844Z",
+    "startedAt": "2026-11-14T12:28:44.159Z",
+    "finishedAt": "2026-11-14T12:31:26.444Z",
+    "durationMs": 162285,
     "usage": {
-      "inputTokens": 194749,
-      "outputTokens": 14865,
-      "costUsd": 2.0939058,
+      "inputTokens": 265931,
+      "outputTokens": 19932,
+      "costUsd": 1.7849922,
       "calls": 4
     }
   },
@@ -2139,232 +2139,105 @@
       {
         "requirementItemId": "F1",
         "expectedBehaviours": [
-          "Compiling a project that has a [MessagePackObject(SuppressSourceGeneration = true)] type with an analyzer-detectable problem, such as a public member missing a [Key] attribute, reports the matching MsgPack diagnostic.",
-          "The diagnostic points at the offending member or type in the suppressed type and has the same id and severity as it would for a type that does not suppress generation.",
-          "No formatter source is generated for the suppressed type, even though diagnostics are still reported for it."
+          "Compiling a project with a [MessagePackObject(SuppressSourceGeneration = true)] type that breaks a rule, such as a public member without a [Key] attribute, produces the matching MsgPack diagnostic in the build output.",
+          "The diagnostic appears in the IDE and in command-line builds even though the generator emits no formatter for that type.",
+          "Diagnostics point at the right location (member or type) in the suppressed type."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "An analyzer test with a SuppressSourceGeneration = true type that has a member without a Key attribute expects the corresponding MsgPack diagnostic at that member.",
-          "A generator test confirms that no formatter is emitted for the suppressed type while the diagnostic is still reported."
+          "An analyzer test with a suppressed [MessagePackObject] type that has a member missing [Key] expects the corresponding MsgPack diagnostic.",
+          "An analyzer test with a suppressed type that has duplicate or mixed key styles expects the matching diagnostic."
         ]
       },
       {
         "requirementItemId": "F2",
         "expectedBehaviours": [
-          "For suppressed types, the set of diagnostics (ids, locations, severities) matches what version 3.1.0 reported for the same input.",
-          "The 3.1.1 regression, where suppressed types got no diagnostics at all, no longer occurs.",
-          "Code that was valid under 3.1.0 gets no new diagnostics for suppressed types."
+          "For suppressed types, the set of diagnostic IDs, severities and locations matches what version 3.1.0 reported for the same source.",
+          "Rules that applied to suppressed types in 3.1.0 apply again. Rules that 3.1.0 skipped for suppressed types are not newly reported.",
+          "A suppressed type still gets no generated formatter, as in 3.1.0, and no formatter appears in the resolver."
         ],
         "likelyAreas": [
-          "analyzer"
+          "analyzer",
+          "generator"
         ],
         "expectedTests": [
-          "A regression test reproducing the MP-2234 scenario expects the same diagnostics that 3.1.0 produced.",
-          "A test with a valid suppressed type expects no diagnostics."
+          "A regression test reproducing the issue's sample source expects exactly the diagnostics that 3.1.0 produced.",
+          "A generator snapshot test confirms no formatter is emitted for a suppressed type while diagnostics are still reported."
         ]
       },
       {
         "requirementItemId": "N1",
         "expectedBehaviours": [
-          "A suppressed type with invalid input, such as duplicate keys, conflicting attributes or an unsupported member type, gets a diagnostic and does not throw an exception from the analyzer or generator.",
-          "The build output contains no AD0001 or CS8785 analyzer or generator failure warning for such input.",
-          "The rest of the compilation's diagnostics are still reported when one suppressed type is invalid."
+          "A suppressed type with invalid content, such as conflicting keys, unsupported member types or malformed attribute arguments, makes the analyzer report a diagnostic instead of throwing.",
+          "The build shows no AD0001 analyzer exception or generator crash warning (CS8785) for such input.",
+          "Diagnostics for other types in the same compilation are still reported when one suppressed type is invalid."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "An analyzer test with a suppressed type that has duplicate key indexes expects the duplicate-key diagnostic and no analyzer exception diagnostic.",
-          "A test with a suppressed type whose member has an unresolvable or unsupported type expects a reported diagnostic and no crash."
+          "An analyzer test with a suppressed type that has malformed or conflicting key attributes asserts the expected diagnostic and no analyzer exception diagnostic.",
+          "A test that runs the generator on invalid suppressed input asserts it finishes without exceptions."
         ]
       },
       {
         "requirementItemId": "N2",
         "expectedBehaviours": [
-          "Types without SuppressSourceGeneration, or with it set to false, report exactly the same diagnostics as before the change.",
-          "Existing generator snapshot outputs under Resources stay unchanged for non-suppressed types.",
-          "Diagnostics are not reported twice for any type."
+          "Types without SuppressSourceGeneration, or with it set to false, report the same diagnostics as before the change.",
+          "Generated formatter and resolver output for non-suppressed types does not change.",
+          "No new false positives appear for valid non-suppressed types."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "The existing analyzer and generator snapshot test suites pass unchanged.",
-          "A test with a mix of suppressed and non-suppressed types expects each diagnostic exactly once, at its expected location."
+          "The existing analyzer tests for non-suppressed types pass without changes.",
+          "The existing generator snapshot tests under Resources pass without changes to the expected files."
         ]
       }
     ]
   },
   "story": {
-    "what": "The change stops TypeCollector.GetObjectInfo from throwing on duplicate or mixed keys. Members whose key kind conflicts with the others are now skipped with continue. intMembers and stringMembers entries are added only when the key is not already present, so the key-uniqueness diagnostic is reported instead of Dictionary.Add throwing. The condition that reports a formatter's InaccessibleDescriptor in MsgPack00xMessagePackAnalyzer.AnalyzeSymbol is inverted: it now fires only when the formatter is excluded from the source-generated resolver. The README gains a section on opting out of source generation, and new analyzer and execution tests cover SuppressSourceGeneration = true types.",
-    "why": "Requirement MP-2234 says the analyzer stopped reporting diagnostics for [MessagePackObject(SuppressSourceGeneration = true)] types in 3.1.1, and it must report them again as it did in 3.1.0. Invalid input in such types must produce diagnostics rather than crash the analyzer. In the analyzer path, duplicate keys made GetObjectInfo throw from Dictionary.Add, which hid the type's diagnostics. The guards and continue statements let validation finish and report diagnostics.",
+    "what": "TypeCollector.GetObjectInfo now checks whether a key is already in the int or string member dictionary before adding it. This applies to both the property loop and the field loop, so a duplicate key gets a diagnostic instead of an exception. A member whose key kind differs from the earlier members is skipped once the mixed-key diagnostic is reported. In MsgPack00xMessagePackAnalyzer.AnalyzeSymbol, the check before reporting a formatter's inaccessible descriptor is inverted. The change also adds analyzer and execution tests for SuppressSourceGeneration types, plus a README section on opting out.",
+    "why": "Since 3.1.1 the analyzer has not worked for [MessagePackObject(SuppressSourceGeneration = true)] types (MP-2234). The change makes the analyzer collect these types without throwing on invalid key layouts, so their contract diagnostics are reported again. Diagnostics that only matter for generated formatters stay suppressed.",
     "touches": [
-      {
-        "symbol": "TypeCollector.GetObjectInfo",
-        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "Skips members with a conflicting key kind and guards the intMembers/stringMembers adds against duplicate keys, for both properties and fields."
-      },
       {
         "symbol": "MsgPack00xMessagePackAnalyzer.AnalyzeSymbol",
         "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
-        "note": "The inaccessible-formatter diagnostic condition now requires ExcludeFromSourceGeneratedResolver to be true instead of false."
+        "note": "The inaccessible-formatter diagnostic is now reported only when the formatter is excluded from the source-generated resolver."
       },
       {
-        "symbol": "SuppressSourceGenerationAnalyzerTests",
-        "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
-        "note": "New analyzer tests for diagnostics on suppressed types and on duplicate or mixed keys."
+        "symbol": "TypeCollector.GetObjectInfo",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "Skips members with a mismatched key kind and guards dictionary Add calls against duplicate int and string keys."
       },
       {
         "symbol": "SuppressedSourceGenerationTests",
         "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
-        "note": "New execution tests: no generated formatter for a suppressed type, and a round trip through the dynamic resolver."
+        "note": "New execution tests: no generated formatter, and a round trip through the dynamic resolver."
+      },
+      {
+        "symbol": "SuppressSourceGenerationAnalyzerTests",
+        "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+        "note": "New analyzer tests for diagnostics on suppressed types and on one generated type."
       },
       {
         "symbol": "Opting out of source generation",
         "file": "README.md",
-        "note": "New README section listing which analyzer checks still apply to suppressed types."
+        "note": "New docs section listing which analyzer rules apply to suppressed types."
       }
     ]
   },
   "claims": [
     {
       "id": "c1",
-      "requirementItemId": "N1",
-      "text": "In the property loop of the key-attribute path, a member whose key kind (int vs string) does not match the earlier members is reported with DoNotMixStringAndIntKeys and then skipped via continue. It is not added to the member dictionaries or collected further.",
-      "kind": "behaviour",
-      "level": "supported",
-      "hunkIds": [
-        "h3"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1005,
-          "endLine": 1009,
-          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005–1009",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c2",
-      "requirementItemId": "N1",
-      "text": "The field loop gets the same handling: a field whose key kind conflicts with earlier members is reported with DoNotMixStringAndIntKeys and skipped via continue.",
-      "kind": "behaviour",
-      "level": "supported",
-      "hunkIds": [
-        "h6"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1145,
-          "endLine": 1149,
-          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1145–1149",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c3",
-      "requirementItemId": "N1",
-      "text": "For properties with int or string keys, a duplicate key no longer calls Dictionary.Add a second time. The entry is added only if the key is not already present. The earlier KeysMustBeUnique report still runs, so a duplicate key produces a diagnostic instead of an exception, and the first member with the key is kept.",
-      "kind": "behaviour",
-      "level": "supported",
-      "hunkIds": [
-        "h4",
-        "h5"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1023,
-          "endLine": 1026,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1039,
-          "endLine": 1042,
-          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1023–1026",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c4",
-      "requirementItemId": "N1",
-      "text": "For fields with int or string keys, the add to intMembers or stringMembers is guarded by ContainsKey in the same way, so a duplicate field key is reported by KeysMustBeUnique and does not throw.",
-      "kind": "behaviour",
-      "level": "supported",
-      "hunkIds": [
-        "h7",
-        "h8"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1163,
-          "endLine": 1166,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1179,
-          "endLine": 1182,
-          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1163–1166",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c5",
       "requirementItemId": null,
-      "text": "In AnalyzeSymbol, the negation on ExcludeFromSourceGeneratedResolver is removed. The formatter's InaccessibleDescriptor diagnostic is now reported only for formatters excluded from the source-generated resolver, where before it was reported only for formatters that were not excluded.",
+      "text": "The condition for reporting a known formatter's InaccessibleDescriptor is inverted. The diagnostic is now reported only when formatter.ExcludeFromSourceGeneratedResolver is true, where before it was reported only when that flag was false.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
@@ -2390,9 +2263,152 @@
       ]
     },
     {
+      "id": "c2",
+      "requirementItemId": "N1",
+      "text": "In both the property loop and the field loop of GetObjectInfo, a member whose key kind (int or string) differs from the first keyed member gets the DoNotMixStringAndIntKeys diagnostic and is then skipped with continue. It is not added to the member dictionaries and its type is not collected.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h3",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1005,
+          "endLine": 1009,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1145,
+          "endLine": 1149,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005–1009",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "N1",
+      "text": "For properties and fields with int keys, the member is added to intMembers only if that key is not already present. A duplicate int key no longer throws from Dictionary.Add: the KeysMustBeUnique diagnostic is still reported and the first member with that key is kept.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h4",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1163,
+          "endLine": 1166,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1023–1026",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "requirementItemId": "N1",
+      "text": "For properties and fields with string keys, the member is added to stringMembers only if that key is not already present. A duplicate string key no longer throws from Dictionary.Add, and the first member is kept.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h5",
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1039,
+          "endLine": 1042,
+          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1179,
+          "endLine": 1182,
+          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1039–1042",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "requirementItemId": "F2",
+      "text": "New execution tests check that GeneratedMessagePackResolver returns no formatter for a SuppressSourceGeneration type, and that the type round-trips through MessagePackSerializer with the standard options.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 20,
+          "endLine": 24,
+          "quote": "Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 29,
+          "endLine": 35,
+          "quote": "byte[] bytes = MessagePackSerializer.Serialize(value, MessagePackSerializerOptions.Standard);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs:20–24",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
       "id": "c6",
       "requirementItemId": "F1",
-      "text": "New analyzer tests expect three diagnostics on SuppressSourceGeneration = true types: MsgPack004 for a public member without a Key, MsgPack015 for a private keyed member without AllowPrivate, and MsgPack003 for a keyed member of a non-MessagePackObject type.",
+      "text": "New analyzer tests expect MsgPack004 (member without a key), MsgPack015 (AllowPrivate required) and MsgPack003 (member type not a MessagePackObject) on types marked SuppressSourceGeneration = true.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2434,7 +2450,7 @@
     {
       "id": "c7",
       "requirementItemId": "N1",
-      "text": "New analyzer tests expect a MsgPack005 diagnostic, and no analyzer failure, for duplicate int keys, duplicate string keys and mixed key kinds on suppressed types. One more test covers duplicate int keys on a non-suppressed [MessagePackObject] type.",
+      "text": "New analyzer tests expect MsgPack005 for duplicate int keys, duplicate string keys and mixed key kinds on suppressed types. Each test uses the standard verifier, so any additional unexpected diagnostic would fail it.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2444,29 +2460,29 @@
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 81,
-          "endLine": 91,
-          "quote": "public async Task DuplicateIntKeysAreReportedWithoutAnalyzerFailure()"
+          "startLine": 84,
+          "endLine": 92,
+          "quote": "{|MsgPack005:[Key(0)]"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 125,
-          "endLine": 135,
-          "quote": "public async Task MixedKeyKindsAreReportedWithoutAnalyzerFailure()"
+          "startLine": 106,
+          "endLine": 114,
+          "quote": "{|MsgPack005:[Key(\"\"a\"\")]"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 147,
-          "endLine": 157,
-          "quote": "public async Task DuplicateKeysAreReportedWithoutAnalyzerFailureForGeneratedTypes()"
+          "startLine": 128,
+          "endLine": 136,
+          "quote": "{|MsgPack005:[Key(\"\"Member2\"\")]"
         }
       ],
       "evidence": [
         {
           "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:81–91",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:84–92",
           "testName": null,
           "base": null,
           "head": null
@@ -2475,8 +2491,8 @@
     },
     {
       "id": "c8",
-      "requirementItemId": "F2",
-      "text": "An analyzer test expects no diagnostics for a suppressed type with AllowPrivate that has a private keyed field and an init property with an initializer. This means the partial-type and AOT init-property diagnostics are not reported for suppressed types.",
+      "requirementItemId": "N2",
+      "text": "One new test checks that a non-suppressed [MessagePackObject] type with duplicate int keys reports MsgPack005.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2486,15 +2502,15 @@
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 174,
-          "endLine": 181,
-          "quote": "[MessagePackObject(AllowPrivate = true, SuppressSourceGeneration = true)]"
+          "startLine": 147,
+          "endLine": 158,
+          "quote": "public async Task DuplicateKeysAreReportedWithoutAnalyzerFailureForGeneratedTypes()"
         }
       ],
       "evidence": [
         {
           "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:174–181",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:147–158",
           "testName": null,
           "base": null,
           "head": null
@@ -2503,33 +2519,26 @@
     },
     {
       "id": "c9",
-      "requirementItemId": "F1",
-      "text": "New execution tests check two things for a SuppressSourceGeneration = true type: GeneratedMessagePackResolver returns no formatter for it, and it still round-trips through MessagePackSerializer with the standard options.",
+      "requirementItemId": "F2",
+      "text": "One new test expects no diagnostics for a suppressed, non-partial type that has a private keyed field and an init property with an initializer. This means MsgPack011, MsgPack016 and MsgPack017 are not reported when generation is suppressed.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
-        "h9"
+        "h10"
       ],
       "citations": [
         {
-          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 21,
-          "endLine": 24,
-          "quote": "Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
-          "side": "new",
-          "startLine": 29,
-          "endLine": 35,
-          "quote": "byte[] bytes = MessagePackSerializer.Serialize(value, MessagePackSerializerOptions.Standard);"
+          "startLine": 171,
+          "endLine": 181,
+          "quote": "[MessagePackObject(AllowPrivate = true, SuppressSourceGeneration = true)]"
         }
       ],
       "evidence": [
         {
           "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs:21–24",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:171–181",
           "testName": null,
           "base": null,
           "head": null
@@ -2539,7 +2548,7 @@
     {
       "id": "c10",
       "requirementItemId": "F1",
-      "text": "The README documents that SuppressSourceGeneration types are still validated: MsgPack004, MsgPack005, MsgPack015, MsgPack003 and MsgPack012 still apply. MsgPack011, MsgPack016 and MsgPack017 are not reported for these types.",
+      "text": "The README documents that suppressed types are serialized by the dynamic resolvers and are still validated for MsgPack004, MsgPack005, MsgPack015, MsgPack003 and MsgPack012. It also states that MsgPack011, MsgPack016 and MsgPack017 are not reported for these types.",
       "kind": "docs",
       "level": "supported",
       "hunkIds": [
@@ -2571,8 +2580,8 @@
       "kind": "defect",
       "area": "analyzer",
       "severity": "medium",
-      "title": "Inaccessible-formatter warning condition inverted, unrelated to suppression",
-      "detail": "In AnalyzeSymbol the negation on formatter.ExcludeFromSourceGeneratedResolver was removed. MsgPack010 and MsgPack013 warn that the generated resolver cannot reach a formatter and will leave it out. They now fire only for formatters that are already deliberately excluded from that resolver, where the warning says nothing useful. Formatters that the resolver should include but cannot reach are now left out with no warning. This has nothing to do with SuppressSourceGeneration on [MessagePackObject] types. It breaks N2, because non-suppressed code gets different diagnostics, and no test covers the new behaviour.",
+      "title": "Inaccessible formatter diagnostic condition inverted for all formatters",
+      "detail": "In AnalyzeSymbol the negation was removed from the check on formatter.ExcludeFromSourceGeneratedResolver. MsgPack010 and MsgPack013 are now reported only for formatters already excluded from the generated resolver. Inaccessible formatters that the resolver would include are no longer reported. This changes diagnostics for every project, including types that do not suppress source generation, so it breaks N2. Excluded formatters now get false positives. The requirement does not ask for this change, it has nothing to do with SuppressSourceGeneration, and no test covers it.",
       "statement": null,
       "hunkIds": [
         "h2"
@@ -2587,10 +2596,10 @@
         },
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
-          "side": "new",
-          "startLine": 257,
-          "endLine": 265,
-          "quote": "description: \"The auto-generated resolver cannot access this formatter. It will be omitted from the resolver.\","
+          "side": "old",
+          "startLine": 420,
+          "endLine": 423,
+          "quote": "if (!formatter.ExcludeFromSourceGeneratedResolver && formatter.InaccessibleDescriptor is { } inaccessible)"
         }
       ]
     },
@@ -2599,62 +2608,98 @@
       "kind": "missing",
       "area": "generator",
       "severity": "medium",
-      "title": "Field with null string key still crashes the analyzer",
-      "detail": "In the field loop, the string-key branch is a plain else and is not guarded by 'stringKey is not null' as the property loop is. Suppose the first keyed member of a type is a field with [Key((string)null)]. BothStringAndIntKeyAreNull is reported, isIntKey becomes false, and then stringMembers.ContainsKey(stringKey!) is called with null, which throws ArgumentNullException. The analyzer fails with AD0001 and the type's other diagnostics are lost. That is the crash class N1 asks to remove, and the change leaves it in place.",
+      "title": "Field with null key as first keyed member still crashes",
+      "detail": "N1 says invalid input must be reported, not thrown. If the first keyed member is a field whose key is null, for example [Key((string)null)], then isIntKey becomes false. The field loop then goes to the string branch and calls stringMembers.ContainsKey(null) and Add(null), which throw ArgumentNullException. That surfaces as AD0001 in the analyzer or as a generator crash, even though BothStringAndIntKeyAreNull was already reported. The property loop avoids this with 'else if (stringKey is not null)', but the field loop has a plain else. The new continue only handles the members after the first one.",
       "statement": null,
       "hunkIds": [
+        "h6",
         "h8"
       ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1168,
-          "endLine": 1173,
-          "quote": "if (stringMembers.ContainsKey(stringKey!))"
+          "startLine": 1131,
+          "endLine": 1142,
+          "quote": "isIntKey = intKey != null;"
         },
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1028,
-          "endLine": 1030,
-          "quote": "else if (stringKey is not null)"
+          "startLine": 1168,
+          "endLine": 1173,
+          "quote": "if (stringMembers.ContainsKey(stringKey!))"
         }
       ]
     },
     {
       "id": "f3",
-      "kind": "missing",
+      "kind": "defect",
       "area": "generator",
       "severity": "low",
-      "title": "No test for unsupported member type or mixed suppressed types",
-      "detail": "The new tests cover duplicate and mixed keys on suppressed types. No test covers a suppressed type whose member type is unresolvable or unsupported, expecting a diagnostic and no crash. No test mixes suppressed and non-suppressed types in one compilation to check that each diagnostic is reported exactly once.",
+      "title": "Mixed-key members skip recursive type collection and its diagnostics",
+      "detail": "The new continue after DoNotMixStringAndIntKeys also skips the CollectCore call for that member's type. If the member's type is not serializable, MsgPack003 or other nested diagnostics are no longer reported for it. Before this change they were reported, for example when a string-keyed type had an int-keyed property. The user sees the remaining errors only after fixing the key kind.",
       "statement": null,
       "hunkIds": [
-        "h10"
+        "h3",
+        "h6"
       ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1045,
-          "endLine": 1051,
-          "quote": "this.CollectCore(item.Type, item);"
+          "startLine": 1005,
+          "endLine": 1009,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
         },
         {
-          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 57,
-          "endLine": 58,
-          "quote": "public async Task MemberTypeMustBeMessagePackObjectIsReported()"
+          "startLine": 1145,
+          "endLine": 1149,
+          "quote": "continue; // The key kind does not match the other members; the diagnostic is reported, so skip this member."
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "low",
+      "title": "No test runs the generator on invalid suppressed input",
+      "detail": "The Dictionary.Add and continue fixes also run in the source generator path, where reportDiagnostic is null. Only analyzer tests and one execution test with a valid type were added. No generator test checks that duplicate or mixed keys in a suppressed type finish without a CS8785 generator failure, which N1 expects.",
+      "statement": null,
+      "hunkIds": [
+        "h4",
+        "h5",
+        "h7",
+        "h8"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
         }
       ]
     }
   ],
-  "refusals": [],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "source": "ai",
+      "reason": "The new README section sets which analyzer diagnostics are documented as reported for suppressed types and which are not (MsgPack011, MsgPack016 and MsgPack017), and that documented behaviour is for the API owner to decide.",
+      "hunkIds": [
+        "h1"
+      ]
+    }
+  ],
   "quoteCheck": {
-    "checked": 23,
-    "passed": 23,
+    "checked": 25,
+    "passed": 25,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2663,82 +2708,82 @@
   "receiptDraft": {
     "checked": [
       {
-        "item": "In the property loop of the key-attribute path, a member whose key kind (int vs string) does not match the earlier members is reported with DoNotMixStringAndIntKeys and then skipped via continue. It is not added to the member dictionaries or collected further. (the quoted code is where the claim says)",
+        "item": "The condition for reporting a known formatter's InaccessibleDescriptor is inverted. The diagnostic is now reported only when formatter.ExcludeFromSourceGeneratedResolver is true, where before it was reported only when that flag was false. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The field loop gets the same handling: a field whose key kind conflicts with earlier members is reported with DoNotMixStringAndIntKeys and skipped via continue. (the quoted code is where the claim says)",
+        "item": "In both the property loop and the field loop of GetObjectInfo, a member whose key kind (int or string) differs from the first keyed member gets the DoNotMixStringAndIntKeys diagnostic and is then skipped with continue. It is not added to the member dictionaries and its type is not collected. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "For properties with int or string keys, a duplicate key no longer calls Dictionary.Add a second time. The entry is added only if the key is not already present. The earlier KeysMustBeUnique report still runs, so a duplicate key produces a diagnostic instead of an exception, and the first member with the key is kept. (the quoted code is where the claim says)",
+        "item": "For properties and fields with int keys, the member is added to intMembers only if that key is not already present. A duplicate int key no longer throws from Dictionary.Add: the KeysMustBeUnique diagnostic is still reported and the first member with that key is kept. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "For fields with int or string keys, the add to intMembers or stringMembers is guarded by ContainsKey in the same way, so a duplicate field key is reported by KeysMustBeUnique and does not throw. (the quoted code is where the claim says)",
+        "item": "For properties and fields with string keys, the member is added to stringMembers only if that key is not already present. A duplicate string key no longer throws from Dictionary.Add, and the first member is kept. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "In AnalyzeSymbol, the negation on ExcludeFromSourceGeneratedResolver is removed. The formatter's InaccessibleDescriptor diagnostic is now reported only for formatters excluded from the source-generated resolver, where before it was reported only for formatters that were not excluded. (the quoted code is where the claim says)",
+        "item": "New execution tests check that GeneratedMessagePackResolver returns no formatter for a SuppressSourceGeneration type, and that the type round-trips through MessagePackSerializer with the standard options. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "New analyzer tests expect three diagnostics on SuppressSourceGeneration = true types: MsgPack004 for a public member without a Key, MsgPack015 for a private keyed member without AllowPrivate, and MsgPack003 for a keyed member of a non-MessagePackObject type. (the quoted code is where the claim says)",
+        "item": "New analyzer tests expect MsgPack004 (member without a key), MsgPack015 (AllowPrivate required) and MsgPack003 (member type not a MessagePackObject) on types marked SuppressSourceGeneration = true. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "New analyzer tests expect a MsgPack005 diagnostic, and no analyzer failure, for duplicate int keys, duplicate string keys and mixed key kinds on suppressed types. One more test covers duplicate int keys on a non-suppressed [MessagePackObject] type. (the quoted code is where the claim says)",
+        "item": "New analyzer tests expect MsgPack005 for duplicate int keys, duplicate string keys and mixed key kinds on suppressed types. Each test uses the standard verifier, so any additional unexpected diagnostic would fail it. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "An analyzer test expects no diagnostics for a suppressed type with AllowPrivate that has a private keyed field and an init property with an initializer. This means the partial-type and AOT init-property diagnostics are not reported for suppressed types. (the quoted code is where the claim says)",
+        "item": "One new test checks that a non-suppressed [MessagePackObject] type with duplicate int keys reports MsgPack005. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "New execution tests check two things for a SuppressSourceGeneration = true type: GeneratedMessagePackResolver returns no formatter for it, and it still round-trips through MessagePackSerializer with the standard options. (the quoted code is where the claim says)",
+        "item": "One new test expects no diagnostics for a suppressed, non-partial type that has a private keyed field and an init property with an initializer. This means MsgPack011, MsgPack016 and MsgPack017 are not reported when generation is suppressed. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The README documents that SuppressSourceGeneration types are still validated: MsgPack004, MsgPack005, MsgPack015, MsgPack003 and MsgPack012 still apply. MsgPack011, MsgPack016 and MsgPack017 are not reported for these types. (the quoted code is where the claim says)",
+        "item": "The README documents that suppressed types are serialized by the dynamic resolvers and are still validated for MsgPack004, MsgPack005, MsgPack015, MsgPack003 and MsgPack012. It also states that MsgPack011, MsgPack016 and MsgPack017 are not reported for these types. (the quoted code is where the claim says)",
         "by": "ai-supported"
       }
     ],
     "notChecked": [
+      {
+        "item": "README.md:1617 (h1)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
       {
         "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:417 (h2)",
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005 (h3)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f3 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1020 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f4 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1036 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f4 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1145 (h6)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f2 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1160 (h7)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f4 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1176 (h8)",
         "reason": "Finding f2 (missing) names this hunk"
-      },
-      {
-        "item": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:1 (h10)",
-        "reason": "Finding f3 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "",
+      "text": "r1 (R7): The new README section sets which analyzer diagnostics are documented as reported for suppressed types and which are not (MsgPack011, MsgPack016 and MsgPack017), and that documented behaviour is for the API owner to decide.",
       "acceptedRefusalIds": []
     }
   },
@@ -2751,23 +2796,28 @@
         "tier": "full"
       },
       {
+        "ruleId": "R-refusal",
+        "text": "1 item refused: a human decides",
+        "tier": "focused"
+      },
+      {
         "ruleId": "R-defect",
-        "text": "1 defect found",
+        "text": "2 defects found",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
     "coverage": {
-      "h1": "supported",
+      "h1": "read",
       "h2": "read",
       "h3": "read",
       "h4": "read",
@@ -2776,13 +2826,13 @@
       "h7": "read",
       "h8": "read",
       "h9": "supported",
-      "h10": "read"
+      "h10": "supported"
     },
     "readHunks": 8,
     "totalHunks": 10,
-    "readLines": 217,
+    "readLines": 38,
     "totalLines": 268,
-    "readMinutes": 9,
+    "readMinutes": 2,
     "fullMinutes": 11
   }
 }

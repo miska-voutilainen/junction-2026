@@ -7,25 +7,25 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T054918Z",
-    "startedAt": "2026-11-14T05:49:18.921Z",
-    "finishedAt": "2026-11-14T05:53:29.793Z",
-    "durationMs": 250872,
+    "id": "20261114T122644Z",
+    "startedAt": "2026-11-14T12:26:44.396Z",
+    "finishedAt": "2026-11-14T12:30:29.996Z",
+    "durationMs": 225600,
     "usage": {
-      "inputTokens": 321714,
-      "outputTokens": 30736,
-      "costUsd": 3.592177,
+      "inputTokens": 255563,
+      "outputTokens": 24393,
+      "costUsd": 3.4186744,
       "calls": 5
     }
   },
@@ -2139,81 +2139,87 @@
       {
         "requirementItemId": "F1",
         "expectedBehaviours": [
-          "Compiling a project that has a [MessagePackObject(SuppressSourceGeneration = true)] type with an analyzer-detectable problem, such as a public member missing a [Key] attribute, reports the matching MsgPack diagnostic.",
-          "The diagnostic points at the offending member or type in the suppressed type and has the same id and severity as it would for a type that does not suppress generation.",
-          "No formatter source is generated for the suppressed type, even though diagnostics are still reported for it."
+          "Compiling a project with a [MessagePackObject(SuppressSourceGeneration = true)] type that breaks a rule, such as a public member without a [Key] attribute, produces the matching MsgPack diagnostic in the build output.",
+          "The diagnostic appears in the IDE and in command-line builds even though the generator emits no formatter for that type.",
+          "Diagnostics point at the right location (member or type) in the suppressed type."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "An analyzer test with a SuppressSourceGeneration = true type that has a member without a Key attribute expects the corresponding MsgPack diagnostic at that member.",
-          "A generator test confirms that no formatter is emitted for the suppressed type while the diagnostic is still reported."
+          "An analyzer test with a suppressed [MessagePackObject] type that has a member missing [Key] expects the corresponding MsgPack diagnostic.",
+          "An analyzer test with a suppressed type that has duplicate or mixed key styles expects the matching diagnostic."
         ]
       },
       {
         "requirementItemId": "F2",
         "expectedBehaviours": [
-          "For suppressed types, the set of diagnostics (ids, locations, severities) matches what version 3.1.0 reported for the same input.",
-          "The 3.1.1 regression, where suppressed types got no diagnostics at all, no longer occurs.",
-          "Code that was valid under 3.1.0 gets no new diagnostics for suppressed types."
+          "For suppressed types, the set of diagnostic IDs, severities and locations matches what version 3.1.0 reported for the same source.",
+          "Rules that applied to suppressed types in 3.1.0 apply again. Rules that 3.1.0 skipped for suppressed types are not newly reported.",
+          "A suppressed type still gets no generated formatter, as in 3.1.0, and no formatter appears in the resolver."
         ],
         "likelyAreas": [
-          "analyzer"
+          "analyzer",
+          "generator"
         ],
         "expectedTests": [
-          "A regression test reproducing the MP-2234 scenario expects the same diagnostics that 3.1.0 produced.",
-          "A test with a valid suppressed type expects no diagnostics."
+          "A regression test reproducing the issue's sample source expects exactly the diagnostics that 3.1.0 produced.",
+          "A generator snapshot test confirms no formatter is emitted for a suppressed type while diagnostics are still reported."
         ]
       },
       {
         "requirementItemId": "N1",
         "expectedBehaviours": [
-          "A suppressed type with invalid input, such as duplicate keys, conflicting attributes or an unsupported member type, gets a diagnostic and does not throw an exception from the analyzer or generator.",
-          "The build output contains no AD0001 or CS8785 analyzer or generator failure warning for such input.",
-          "The rest of the compilation's diagnostics are still reported when one suppressed type is invalid."
+          "A suppressed type with invalid content, such as conflicting keys, unsupported member types or malformed attribute arguments, makes the analyzer report a diagnostic instead of throwing.",
+          "The build shows no AD0001 analyzer exception or generator crash warning (CS8785) for such input.",
+          "Diagnostics for other types in the same compilation are still reported when one suppressed type is invalid."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "An analyzer test with a suppressed type that has duplicate key indexes expects the duplicate-key diagnostic and no analyzer exception diagnostic.",
-          "A test with a suppressed type whose member has an unresolvable or unsupported type expects a reported diagnostic and no crash."
+          "An analyzer test with a suppressed type that has malformed or conflicting key attributes asserts the expected diagnostic and no analyzer exception diagnostic.",
+          "A test that runs the generator on invalid suppressed input asserts it finishes without exceptions."
         ]
       },
       {
         "requirementItemId": "N2",
         "expectedBehaviours": [
-          "Types without SuppressSourceGeneration, or with it set to false, report exactly the same diagnostics as before the change.",
-          "Existing generator snapshot outputs under Resources stay unchanged for non-suppressed types.",
-          "Diagnostics are not reported twice for any type."
+          "Types without SuppressSourceGeneration, or with it set to false, report the same diagnostics as before the change.",
+          "Generated formatter and resolver output for non-suppressed types does not change.",
+          "No new false positives appear for valid non-suppressed types."
         ],
         "likelyAreas": [
           "analyzer",
           "generator"
         ],
         "expectedTests": [
-          "The existing analyzer and generator snapshot test suites pass unchanged.",
-          "A test with a mix of suppressed and non-suppressed types expects each diagnostic exactly once, at its expected location."
+          "The existing analyzer tests for non-suppressed types pass without changes.",
+          "The existing generator snapshot tests under Resources pass without changes to the expected files."
         ]
       }
     ]
   },
   "story": {
-    "what": "In both the property and field loops of TypeCollector.GetObjectInfo, the change stops adding a member to intMembers or stringMembers when that key is already there. It also skips a member with continue right after reporting the DoNotMixStringAndIntKeys diagnostic. Before, a duplicate key reached Dictionary.Add, which can throw. Now the KeysMustBeUnique or mixed-key diagnostic is reported and collection carries on. The change also loosens the depth check in MessagePackSecurity.DepthStep, documents SuppressSourceGeneration in the README, and adds analyzer and execution tests for suppressed types.",
-    "why": "MP-2234 says the analyzer stopped reporting diagnostics for [MessagePackObject(SuppressSourceGeneration = true)] types. The code shows invalid key input (duplicate or mixed keys) could throw while members were being collected. The diff does not show that this is the whole cause of the regression. The fix keeps reporting the problem and stops the crash. Generation is still skipped for suppressed types through the existing early return.",
+    "what": "The change hardens TypeCollector.GetObjectInfo so that types with duplicate keys or mixed int/string keys no longer make the analyzer throw. Members whose key is already taken are no longer added to the intMembers and stringMembers dictionaries a second time. Members whose key kind does not match are skipped once DoNotMixStringAndIntKeys has been reported. The change also adds analyzer tests and execution tests for types with SuppressSourceGeneration = true, a README section on opting out of source generation, and changes the depth check in MessagePackSecurity.DepthStep from >= to >.",
+    "why": "Issue 2234 reports that the analyzer stopped working for [MessagePackObject(SuppressSourceGeneration = true)] types after 3.1.0. Before this change, a duplicate key reached Dictionary.Add, which throws on a key that is already present, and that exception stopped the analyzer. Now the analyzer reports the diagnostic and keeps going. The tests check which diagnostics suppressed types get, and that such types still serialize at run time without a generated formatter.",
     "touches": [
       {
         "symbol": "TypeCollector.GetObjectInfo",
         "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-        "note": "Skips members whose key kind does not match the others, and guards dictionary adds against duplicate int or string keys in the property and field loops."
+        "note": "Adds a member only if its key is not already in the dictionary, and skips members whose key kind does not match after reporting it. Applies to both the property loop and the field loop."
       },
       {
         "symbol": "MessagePackSecurity.DepthStep",
         "file": "src/MessagePack/MessagePackSecurity.cs",
-        "note": "Depth check changed from >= to >, so a reader at exactly MaximumObjectGraphDepth no longer throws."
+        "note": "Depth check changed from >= to >, so the exception is thrown only when the depth is strictly above MaximumObjectGraphDepth."
+      },
+      {
+        "symbol": "SuppressSourceGenerationAnalyzerTests",
+        "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
+        "note": "New analyzer tests for the diagnostics reported, and not reported, on suppressed types, plus duplicate-key handling."
       },
       {
         "symbol": "SuppressedSourceGenerationTests",
@@ -2221,9 +2227,9 @@
         "note": "New execution tests: no generated formatter for a suppressed type, and a round trip through the dynamic resolver."
       },
       {
-        "symbol": "SuppressSourceGenerationAnalyzerTests",
-        "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
-        "note": "New analyzer tests for diagnostics on suppressed types, including duplicate and mixed keys."
+        "symbol": "Opting out of source generation",
+        "file": "README.md",
+        "note": "New docs section listing which analyzer rules apply to suppressed types."
       }
     ]
   },
@@ -2231,7 +2237,79 @@
     {
       "id": "c1",
       "requirementItemId": "N1",
-      "text": "After reporting DoNotMixStringAndIntKeys for a property or field whose key kind differs from the first keyed member, GetObjectInfo now skips that member with continue. The member is not collected as an int-keyed or string-keyed member.",
+      "text": "When a property or field uses an int key that another member already uses, GetObjectInfo still reports KeysMustBeUnique but no longer calls intMembers.Add again. A duplicate key therefore no longer throws from Dictionary.Add.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h3",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1163,
+          "endLine": 1166,
+          "quote": "intMembers.Add(member.IntKey, (member, item.Type));"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1023–1026",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "N1",
+      "text": "When a property or field uses a string key that another member already uses, GetObjectInfo now skips stringMembers.Add. The first member with that key is kept and no exception is thrown.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h4",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1039,
+          "endLine": 1042,
+          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1179,
+          "endLine": 1182,
+          "quote": "stringMembers.Add(member.StringKey, (member, item.Type));"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1039–1042",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "N1",
+      "text": "When a member's key kind (int or string) does not match the kind set by the first keyed member, GetObjectInfo reports DoNotMixStringAndIntKeys and then skips the member with continue. The member is no longer added under the wrong key kind, for both properties and fields.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
@@ -2265,61 +2343,9 @@
       ]
     },
     {
-      "id": "c2",
-      "requirementItemId": "N1",
-      "text": "In the property and field loops, a member is added to intMembers or stringMembers only if its key is not already present. A duplicate key no longer reaches Dictionary.Add, which can throw. The KeysMustBeUnique diagnostic is still reported just before, and the first member with that key is kept.",
-      "kind": "behaviour",
-      "level": "supported",
-      "hunkIds": [
-        "h3",
-        "h4",
-        "h6",
-        "h7"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1023,
-          "endLine": 1026,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1039,
-          "endLine": 1042,
-          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1163,
-          "endLine": 1166,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1179,
-          "endLine": 1182,
-          "quote": "if (!stringMembers.ContainsKey(member.StringKey))"
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1023–1026",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c3",
+      "id": "c4",
       "requirementItemId": null,
-      "text": "MessagePackSecurity.DepthStep now throws InsufficientExecutionStackException only when reader.Depth is greater than MaximumObjectGraphDepth. Before, it also threw when the depth was equal, so one more level of nesting is now allowed.",
+      "text": "MessagePackSecurity.DepthStep now throws InsufficientExecutionStackException only when reader.Depth is strictly greater than MaximumObjectGraphDepth. Before, it also threw when the depth was equal to the maximum, so one more level of nesting is now allowed.",
       "kind": "behaviour",
       "level": "supported",
       "hunkIds": [
@@ -2330,7 +2356,7 @@
           "file": "src/MessagePack/MessagePackSecurity.cs",
           "side": "new",
           "startLine": 233,
-          "endLine": 236,
+          "endLine": 233,
           "quote": "if (reader.Depth > this.MaximumObjectGraphDepth)"
         },
         {
@@ -2344,42 +2370,7 @@
       "evidence": [
         {
           "kind": "quote-check",
-          "summary": "Quote checked against the code at src/MessagePack/MessagePackSecurity.cs:233–236",
-          "testName": null,
-          "base": null,
-          "head": null
-        }
-      ]
-    },
-    {
-      "id": "c4",
-      "requirementItemId": "F1",
-      "text": "The new execution tests check two things for a SuppressSourceGeneration = true type: GeneratedMessagePackResolver returns no formatter for it, and it round-trips through MessagePackSerializer with standard options.",
-      "kind": "test",
-      "level": "supported",
-      "hunkIds": [
-        "h9"
-      ],
-      "citations": [
-        {
-          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
-          "side": "new",
-          "startLine": 20,
-          "endLine": 24,
-          "quote": "Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
-          "side": "new",
-          "startLine": 29,
-          "endLine": 35,
-          "quote": "byte[] bytes = MessagePackSerializer.Serialize(value, MessagePackSerializerOptions.Standard);"
-        }
-      ],
-      "evidence": [
-        {
-          "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs:20–24",
+          "summary": "Quote checked against the code at src/MessagePack/MessagePackSecurity.cs:233–233",
           "testName": null,
           "base": null,
           "head": null
@@ -2389,7 +2380,7 @@
     {
       "id": "c5",
       "requirementItemId": "F1",
-      "text": "The new analyzer tests expect MsgPack004 (member without a key), MsgPack015 (AllowPrivate required) and MsgPack003 (member type not serializable) on types marked SuppressSourceGeneration = true.",
+      "text": "New analyzer tests expect MsgPack004 (member without a key), MsgPack015 (private member without AllowPrivate) and MsgPack003 (member type is not serializable) on [MessagePackObject(SuppressSourceGeneration = true)] types.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2431,7 +2422,7 @@
     {
       "id": "c6",
       "requirementItemId": "N1",
-      "text": "The new analyzer tests expect a single MsgPack005 diagnostic, and nothing else, for duplicate int keys, duplicate string keys and mixed int/string keys on suppressed types. This means the analyzer reports the problem without failing.",
+      "text": "New analyzer tests give a suppressed type duplicate int keys, duplicate string keys, or mixed key kinds. Each test expects a single MsgPack005 diagnostic on the second member, which means the analyzer finishes without failing.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2473,7 +2464,7 @@
     {
       "id": "c7",
       "requirementItemId": "N2",
-      "text": "A new analyzer test expects MsgPack005 for duplicate int keys on a plain [MessagePackObject] type that does not suppress generation, so the duplicate-key path is covered for generated types too.",
+      "text": "A test with a non-suppressed [MessagePackObject] type that has duplicate int keys expects MsgPack005. This checks that the duplicate-key handling also works for types that do get a generated formatter.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2501,7 +2492,7 @@
     {
       "id": "c8",
       "requirementItemId": "F2",
-      "text": "A new analyzer test expects no diagnostics for a suppressed type that has AllowPrivate = true, a private keyed field on a non-partial class and an init property with an initializer. MsgPack011, MsgPack016 and MsgPack017 are therefore not reported when source generation is suppressed.",
+      "text": "A test expects no diagnostics at all for a suppressed, non-partial type with AllowPrivate = true, a private keyed field, and an init-only property with an initializer. MsgPack011, MsgPack016 and MsgPack017 are therefore not reported for suppressed types.",
       "kind": "test",
       "level": "supported",
       "hunkIds": [
@@ -2511,22 +2502,22 @@
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 171,
-          "endLine": 178,
+          "startLine": 174,
+          "endLine": 181,
           "quote": "[MessagePackObject(AllowPrivate = true, SuppressSourceGeneration = true)]"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
           "side": "new",
-          "startLine": 180,
+          "startLine": 188,
           "endLine": 191,
-          "quote": "public string Prop1 { get; init; } = \"\"some default\"\";"
+          "quote": "TestCode = input,"
         }
       ],
       "evidence": [
         {
           "kind": "quote-check",
-          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:171–178",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:174–181",
           "testName": null,
           "base": null,
           "head": null
@@ -2535,8 +2526,43 @@
     },
     {
       "id": "c9",
+      "requirementItemId": "F2",
+      "text": "New execution tests check that GeneratedMessagePackResolver returns no formatter for a suppressed type, and that the type round-trips through MessagePackSerializerOptions.Standard.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 20,
+          "endLine": 24,
+          "quote": "Assert.Null(GeneratedMessagePackResolver.Instance.GetFormatter<SuppressedSourceGenerationType>());"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs",
+          "side": "new",
+          "startLine": 29,
+          "endLine": 35,
+          "quote": "SuppressedSourceGenerationType result = MessagePackSerializer.Deserialize<SuppressedSourceGenerationType>(bytes, MessagePackSerializerOptions.Standard);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.ExecutionTests/SuppressedSourceGenerationTests.cs:20–24",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c10",
       "requirementItemId": "F1",
-      "text": "The README gains a section on opting out of source generation. It lists the analyzer checks that still apply to suppressed types (MsgPack004, 005, 015, 003, 012) and the ones that do not (MsgPack011, 016, 017).",
+      "text": "The README gains an 'Opting out of source generation' section. It says suppressed types are serialized by the dynamic resolvers, lists the analyzer rules that still apply (MsgPack004, 005, 015, 003, 012), and says MsgPack011, 016 and 017 are not reported.",
       "kind": "docs",
       "level": "supported",
       "hunkIds": [
@@ -2553,7 +2579,7 @@
         {
           "file": "README.md",
           "side": "new",
-          "startLine": 1632,
+          "startLine": 1630,
           "endLine": 1632,
           "quote": "The analyzer does not report the partial-class requirement ([MsgPack011](doc/analyzers/MsgPack011.md)) or the AOT-only checks ([MsgPack016](doc/analyzers/MsgPack016.md) and [MsgPack017](doc/analyzers/MsgPack017.md)) for these types, because they only apply when a formatter is generated."
         }
@@ -2572,22 +2598,27 @@
   "findings": [
     {
       "id": "f1",
-      "kind": "scope-creep",
-      "area": "security",
-      "severity": "high",
-      "title": "Unrelated change to the deserialization depth limit",
-      "detail": "MessagePackSecurity.DepthStep now throws only when reader.Depth is greater than MaximumObjectGraphDepth, not when it is equal. This allows one more level of nesting when reading untrusted payloads. MP-2234 is only about analyzer diagnostics for SuppressSourceGeneration types and does not cover this runtime limit. The doc comment just above still says the exception is thrown when the depth 'is already at or exceeds' the maximum, so it now disagrees with the code. No test in the change covers the new boundary.",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Analyzer entry point not changed; regression root cause unclear",
+      "detail": "The requirement is that the analyzer reports diagnostics for SuppressSourceGeneration = true types again, as it did in 3.1.0. The change only edits GetObjectInfo in TypeCollector: it guards the dictionary adds and skips members whose key kind does not match. It does not touch MsgPack00xMessagePackAnalyzer or the way target types are chosen. GetObjectInfo already reported diagnostics before its early return for suppressed types. So the change does not show what broke in 3.1.1 or that it is fixed for suppressed types that have no duplicate or mixed keys. Nothing checks that the set of diagnostics (IDs, severities, locations) matches 3.1.0.",
       "statement": null,
       "hunkIds": [
-        "h8"
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "h7"
       ],
       "citations": [
         {
-          "file": "src/MessagePack/MessagePackSecurity.cs",
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 225,
-          "endLine": 236,
-          "quote": "if (reader.Depth > this.MaximumObjectGraphDepth)"
+          "startLine": 1382,
+          "endLine": 1387,
+          "quote": "if (suppressSourceGeneration is true)"
         }
       ]
     },
@@ -2596,11 +2627,10 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Field with Key(null) as first key still crashes analyzer",
-      "detail": "N1 says the analyzer must not crash on invalid input. Take a field whose [Key((string)null)] is the first keyed member, with no keyed property before it. BothStringAndIntKeyAreNull is reported and isIntKey becomes false. The mismatch check does not fire for the first member, so the code reaches the string branch and calls stringMembers.ContainsKey(stringKey!) with a null key. Dictionary throws ArgumentNullException, which shows up as AD0001 and hides the rest of the type's diagnostics. The property loop guards this with 'else if (stringKey is not null)', but the field loop does not. The new continue and ContainsKey guards leave this path open.",
+      "title": "A null string key on the first keyed field still throws",
+      "detail": "Say a type has no keyed properties and its first keyed field uses [Key(null)]. intKey and stringKey are both null. MsgPack002 (BothStringAndIntKeyAreNull) is reported, and then searchFirst sets isIntKey to false. Execution reaches the field else-branch, where stringMembers.ContainsKey(stringKey!) is called with null and throws ArgumentNullException. The property branch avoids this with 'else if (stringKey is not null)', but the field branch has no such guard. The analyzer therefore still fails with AD0001 on this invalid input, contrary to N1, in suppressed and non-suppressed types alike.",
       "statement": null,
       "hunkIds": [
-        "h5",
         "h7"
       ],
       "citations": [
@@ -2614,9 +2644,9 @@
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1131,
-          "endLine": 1136,
-          "quote": "if (intKey == null && stringKey == null)"
+          "startLine": 1133,
+          "endLine": 1142,
+          "quote": "isIntKey = intKey != null;"
         }
       ]
     },
@@ -2625,8 +2655,8 @@
       "kind": "defect",
       "area": "generator",
       "severity": "low",
-      "title": "Skipping mixed-key members also drops their member-type diagnostics",
-      "detail": "After DoNotMixStringAndIntKeys is reported, the new continue skips the rest of the loop body. That includes the recursive CollectCore(item.Type, item) call. Diagnostics about the member's own type, such as MsgPack003 when the type is not serializable, are therefore no longer reported for that member until the key kind is fixed. This affects suppressed and non-suppressed types alike, so the diagnostic set changes slightly for non-suppressed types (N2).",
+      "title": "Skipping mismatched-key members also skips checks on their types",
+      "detail": "The new 'continue' after DoNotMixStringAndIntKeys exits the loop iteration before the recursive CollectCore(item.Type, item) call at the end. Diagnostics for the member's type, such as MsgPack003 when it is not a MessagePackObject, are therefore no longer reported for that member. This applies to all types, not only suppressed ones, so diagnostics for non-suppressed types drop out, which goes against N2. Once the key kind is fixed, the user gets new diagnostics they could have seen at the same time.",
       "statement": null,
       "hunkIds": [
         "h2",
@@ -2654,8 +2684,8 @@
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "No test for duplicate or mixed keys on fields",
-      "detail": "The change adds the same continue and ContainsKey guards to the field loop as to the property loop. All of the new MsgPack005 tests use properties only, so the field paths for duplicate int keys, duplicate string keys and mixed key kinds are not exercised. A regression there would bring back the analyzer crash.",
+      "title": "No tests for duplicate or mixed keys on fields",
+      "detail": "Hunks h5, h6 and h7 change the field path of GetObjectInfo: the mixed-key continue and the guarded intMembers and stringMembers adds. Every new analyzer test uses properties only, so none of them runs the field branch. The null-key crash in that branch went unnoticed for this reason.",
       "statement": null,
       "hunkIds": [
         "h5",
@@ -2669,14 +2699,7 @@
           "side": "new",
           "startLine": 1152,
           "endLine": 1163,
-          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
-          "side": "new",
-          "startLine": 80,
-          "endLine": 91,
-          "quote": "public async Task DuplicateIntKeysAreReportedWithoutAnalyzerFailure()"
+          "quote": "if (intMembers.ContainsKey(intKey!.Value))"
         }
       ]
     },
@@ -2685,26 +2708,22 @@
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "No test mixing suppressed and generated types in one compilation",
-      "detail": "N2 expects each diagnostic to be reported exactly once when suppressed and non-suppressed types appear together. Every new test has a single type, so there is no check against duplicated or missing diagnostics when both kinds of type are in the same compilation.",
+      "title": "No generator test on invalid input or regression sample",
+      "detail": "The expectation asks for a test that runs the source generator on invalid suppressed input and checks that it finishes without exceptions (no CS8785). It also asks for a generator snapshot or regression test built from the issue's sample. The generator runs TypeCollector with reportDiagnostic set to null, and for non-suppressed types with duplicate keys it now quietly emits a formatter without the second member. None of the new tests covers the generator path; only the analyzer and run-time execution are tested.",
       "statement": null,
       "hunkIds": [
-        "h10"
+        "h3",
+        "h4",
+        "h6",
+        "h7"
       ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 1382,
-          "endLine": 1387,
-          "quote": "if (suppressSourceGeneration is true)"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs",
-          "side": "new",
-          "startLine": 146,
-          "endLine": 157,
-          "quote": "public async Task DuplicateKeysAreReportedWithoutAnalyzerFailureForGeneratedTypes()"
+          "startLine": 1023,
+          "endLine": 1026,
+          "quote": "if (!intMembers.ContainsKey(member.IntKey))"
         }
       ]
     }
@@ -2714,15 +2733,33 @@
       "id": "r1",
       "ruleId": "R2",
       "source": "ai",
-      "reason": "The change loosens the MaximumObjectGraphDepth check used when reading untrusted payloads, which is a security design decision.",
+      "reason": "The change loosens the MaximumObjectGraphDepth check in MessagePackSecurity.DepthStep from >= to >, so untrusted payloads may nest one level deeper; that is a decision about handling untrusted input.",
       "hunkIds": [
         "h8"
+      ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R6",
+      "source": "ai",
+      "reason": "The change to the depth limit in the run-time deserializer cannot be traced to the analyzer requirement MP-2234.",
+      "hunkIds": [
+        "h8"
+      ]
+    },
+    {
+      "id": "r3",
+      "ruleId": "R7",
+      "source": "ai",
+      "reason": "The README adds documented behaviour stating which analyzer rules apply to suppressed types (MsgPack003, 004, 005, 012, 015) and which do not (MsgPack011, 016, 017).",
+      "hunkIds": [
+        "h1"
       ]
     }
   ],
   "quoteCheck": {
-    "checked": 30,
-    "passed": 30,
+    "checked": 28,
+    "passed": 28,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2731,70 +2768,78 @@
   "receiptDraft": {
     "checked": [
       {
-        "item": "After reporting DoNotMixStringAndIntKeys for a property or field whose key kind differs from the first keyed member, GetObjectInfo now skips that member with continue. The member is not collected as an int-keyed or string-keyed member. (the quoted code is where the claim says)",
+        "item": "When a property or field uses an int key that another member already uses, GetObjectInfo still reports KeysMustBeUnique but no longer calls intMembers.Add again. A duplicate key therefore no longer throws from Dictionary.Add. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "In the property and field loops, a member is added to intMembers or stringMembers only if its key is not already present. A duplicate key no longer reaches Dictionary.Add, which can throw. The KeysMustBeUnique diagnostic is still reported just before, and the first member with that key is kept. (the quoted code is where the claim says)",
+        "item": "When a property or field uses a string key that another member already uses, GetObjectInfo now skips stringMembers.Add. The first member with that key is kept and no exception is thrown. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "MessagePackSecurity.DepthStep now throws InsufficientExecutionStackException only when reader.Depth is greater than MaximumObjectGraphDepth. Before, it also threw when the depth was equal, so one more level of nesting is now allowed. (the quoted code is where the claim says)",
+        "item": "When a member's key kind (int or string) does not match the kind set by the first keyed member, GetObjectInfo reports DoNotMixStringAndIntKeys and then skips the member with continue. The member is no longer added under the wrong key kind, for both properties and fields. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The new execution tests check two things for a SuppressSourceGeneration = true type: GeneratedMessagePackResolver returns no formatter for it, and it round-trips through MessagePackSerializer with standard options. (the quoted code is where the claim says)",
+        "item": "MessagePackSecurity.DepthStep now throws InsufficientExecutionStackException only when reader.Depth is strictly greater than MaximumObjectGraphDepth. Before, it also threw when the depth was equal to the maximum, so one more level of nesting is now allowed. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The new analyzer tests expect MsgPack004 (member without a key), MsgPack015 (AllowPrivate required) and MsgPack003 (member type not serializable) on types marked SuppressSourceGeneration = true. (the quoted code is where the claim says)",
+        "item": "New analyzer tests expect MsgPack004 (member without a key), MsgPack015 (private member without AllowPrivate) and MsgPack003 (member type is not serializable) on [MessagePackObject(SuppressSourceGeneration = true)] types. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The new analyzer tests expect a single MsgPack005 diagnostic, and nothing else, for duplicate int keys, duplicate string keys and mixed int/string keys on suppressed types. This means the analyzer reports the problem without failing. (the quoted code is where the claim says)",
+        "item": "New analyzer tests give a suppressed type duplicate int keys, duplicate string keys, or mixed key kinds. Each test expects a single MsgPack005 diagnostic on the second member, which means the analyzer finishes without failing. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "A new analyzer test expects MsgPack005 for duplicate int keys on a plain [MessagePackObject] type that does not suppress generation, so the duplicate-key path is covered for generated types too. (the quoted code is where the claim says)",
+        "item": "A test with a non-suppressed [MessagePackObject] type that has duplicate int keys expects MsgPack005. This checks that the duplicate-key handling also works for types that do get a generated formatter. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "A new analyzer test expects no diagnostics for a suppressed type that has AllowPrivate = true, a private keyed field on a non-partial class and an init property with an initializer. MsgPack011, MsgPack016 and MsgPack017 are therefore not reported when source generation is suppressed. (the quoted code is where the claim says)",
+        "item": "A test expects no diagnostics at all for a suppressed, non-partial type with AllowPrivate = true, a private keyed field, and an init-only property with an initializer. MsgPack011, MsgPack016 and MsgPack017 are therefore not reported for suppressed types. (the quoted code is where the claim says)",
         "by": "ai-supported"
       },
       {
-        "item": "The README gains a section on opting out of source generation. It lists the analyzer checks that still apply to suppressed types (MsgPack004, 005, 015, 003, 012) and the ones that do not (MsgPack011, 016, 017). (the quoted code is where the claim says)",
+        "item": "New execution tests check that GeneratedMessagePackResolver returns no formatter for a suppressed type, and that the type round-trips through MessagePackSerializerOptions.Standard. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The README gains an 'Opting out of source generation' section. It says suppressed types are serialized by the dynamic resolvers, lists the analyzer rules that still apply (MsgPack004, 005, 015, 003, 012), and says MsgPack011, 016 and 017 are not reported. (the quoted code is where the claim says)",
         "by": "ai-supported"
       }
     ],
     "notChecked": [
       {
+        "item": "README.md:1617 (h1)",
+        "reason": "Refusal r3 (R7) names this hunk: a person decides"
+      },
+      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1005 (h2)",
-        "reason": "Finding f3 (defect) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1020 (h3)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1036 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1145 (h5)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1160 (h6)",
-        "reason": "Finding f4 (missing) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1176 (h7)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack/MessagePackSecurity.cs:230 (h8)",
-        "reason": "Finding f1 (scope-creep) names this hunk"
+        "reason": "Refusal r1 (R2) names this hunk: a person decides"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/SuppressSourceGenerationAnalyzerTests.cs:1 (h10)",
@@ -2802,7 +2847,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R2): The change loosens the MaximumObjectGraphDepth check used when reading untrusted payloads, which is a security design decision.",
+      "text": "r1 (R2): The change loosens the MaximumObjectGraphDepth check in MessagePackSecurity.DepthStep from >= to >, so untrusted payloads may nest one level deeper; that is a decision about handling untrusted input. r2 (R6): The change to the depth limit in the run-time deserializer cannot be traced to the analyzer requirement MP-2234. r3 (R7): The README adds documented behaviour stating which analyzer rules apply to suppressed types (MsgPack003, 004, 005, 012, 015) and which do not (MsgPack011, 016, 017).",
       "acceptedRefusalIds": []
     }
   },
@@ -2811,12 +2856,12 @@
     "reasons": [
       {
         "ruleId": "R-read-share",
-        "text": "Read 8 of 10 hunks: most of the change needs a human",
+        "text": "Read 9 of 10 hunks: most of the change needs a human",
         "tier": "full"
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "3 items refused: a human decides",
         "tier": "focused"
       },
       {
@@ -2831,7 +2876,7 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
@@ -2841,7 +2886,7 @@
       }
     ],
     "coverage": {
-      "h1": "supported",
+      "h1": "read",
       "h2": "read",
       "h3": "read",
       "h4": "read",
@@ -2852,11 +2897,11 @@
       "h9": "supported",
       "h10": "read"
     },
-    "readHunks": 8,
+    "readHunks": 9,
     "totalHunks": 10,
-    "readLines": 217,
+    "readLines": 231,
     "totalLines": 268,
-    "readMinutes": 9,
+    "readMinutes": 10,
     "fullMinutes": 11
   }
 }

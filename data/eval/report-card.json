@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-14T09:38:56.871Z",
+  "generatedAt": "2026-11-14T12:31:26.603Z",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5"
   },
   "areas": [
     {
       "area": "generator",
       "planted": 4,
-      "caught": 4,
+      "caught": 3,
       "spotChecksClean": 0,
       "level": "calibrated",
       "plants": [
@@ -32,8 +32,8 @@
         {
           "plantId": "v07",
           "changeId": "v07",
-          "caught": true,
-          "findingId": "f1",
+          "caught": false,
+          "findingId": null,
           "defect": "Deferred diagnostics for non-public members are reported only when both nonPublicMembersAreSerialized and AllowPrivate hold (&&), instead of when either does.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/dbee4cc8ff96bbbd3220fadeec92fb2c2000dc30"
         },
@@ -83,7 +83,7 @@
     {
       "area": "security",
       "planted": 3,
-      "caught": 0,
+      "caught": 1,
       "spotChecksClean": 0,
       "level": "shadow",
       "plants": [
@@ -98,8 +98,8 @@
         {
           "plantId": "v06",
           "changeId": "v06",
-          "caught": false,
-          "findingId": null,
+          "caught": true,
+          "findingId": "f1",
           "defect": "GetEqualityComparer<T> uses the collision-resistant comparer only for types other than string (&& typeof(T) != typeof(string)), so string keys fall back to the default equality comparer even when HashCollisionResistant is on.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/d043c9bb5a698b773426a6d52fe034ead5090afe"
         },
@@ -177,14 +177,14 @@
     ]
   },
   "hallucinations": {
-    "quotesChecked": 917,
+    "quotesChecked": 878,
     "quoteFailures": 0,
     "claimsRetracted": 0,
     "findingsDropped": 0
   },
   "findingsOnPlants": {
-    "total": 40,
-    "matchedPlant": 8
+    "total": 35,
+    "matchedPlant": 7
   },
   "routingSpread": {
     "changes": 4,

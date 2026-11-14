@@ -7,25 +7,25 @@
   "kind": "tieto",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "a4.v1",
       "a5": "a5.v2"
     }
   },
   "run": {
-    "id": "20261114T074451Z",
-    "startedAt": "2026-11-14T07:44:51.301Z",
-    "finishedAt": "2026-11-14T07:51:00.553Z",
-    "durationMs": 369252,
+    "id": "20261114T122418Z",
+    "startedAt": "2026-11-14T12:24:18.808Z",
+    "finishedAt": "2026-11-14T12:36:48.942Z",
+    "durationMs": 750134,
     "usage": {
-      "inputTokens": 152521,
-      "outputTokens": 30993,
-      "costUsd": 2.2568416,
+      "inputTokens": 152611,
+      "outputTokens": 31026,
+      "costUsd": 2.2582216,
       "calls": 6
     }
   },
@@ -2305,46 +2305,9 @@
       "id": "f1",
       "kind": "defect",
       "area": "generator",
-      "severity": "medium",
-      "title": "Positional record property diagnostic now silently dropped",
-      "detail": "GetPropertyIdentifierLocation only accepts PropertyDeclarationSyntax. A positional record property declared in the project (for example [property: Key(...)] on a primary constructor parameter) has a ParameterSyntax as its declaring syntax, so the helper returns null. The BothStringAndIntKeyAreNull diagnostic is then created with Location.None, and the new ReportIfLocatedInCompilation filter drops it because the location is not in source. The old code threw an InvalidCastException here (an AD0001), and the new code reports nothing at all, so a real error in the user's own project goes unreported. The MemberNeedsKey path a few lines above already handles ParameterSyntax and shows the expected pattern.",
-      "statement": null,
-      "hunkIds": [
-        "h4",
-        "h6",
-        "h3"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1434,
-          "endLine": 1434,
-          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 985,
-          "endLine": 985,
-          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, GetPropertyIdentifierLocation(item), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 925,
-          "endLine": 926,
-          "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
-        }
-      ]
-    },
-    {
-      "id": "f2",
-      "kind": "defect",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Filter drops every location-less diagnostic, not only metadata ones",
-      "detail": "ReportIfLocatedInCompilation forwards a diagnostic only when Location.IsInSource is true. Every analyzer diagnostic built with a null location becomes Location.None and is discarded, even when it concerns a type declared in the compilation and the location lookup simply failed. Examples are MessageFormatterMustBeMessagePackFormatter when the attribute argument syntax cannot be resolved, PartialTypeRequired with a null primary location, and the record parameter case above. The analyzer used to report these, so N2 (no change for same-project types) is broken, and real problems are hidden instead of surfaced, which runs against N1. The filter is also applied unevenly: InaccessibleDataType still calls the unwrapped callback. A safer filter would drop only diagnostics whose location is in metadata or in a syntax tree outside the compilation.",
+      "severity": "low",
+      "title": "Report filter drops every location-less diagnostic, not only metadata ones",
+      "detail": "The new wrapper installed in the TypeCollector constructor forwards a diagnostic only when Location.IsInSource and the compilation contains its tree. Every diagnostic built with a null location becomes Location.None and is silently dropped, including diagnostics about types the compilation owns. Examples: CollidingMemberNamesInForceMapMode falls back to a null location when the previously claimed member has no syntax (for example, it comes from a metadata base class), and PartialTypeRequired or MessageFormatterMustBeMessagePackFormatter may compute a null location. These problems used to be reported without a location and now produce nothing. The requirement does not ask for this; only diagnostics about members of referenced types needed to be skipped. N2 expects existing analyzer behaviour to stay the same.",
       "statement": null,
       "hunkIds": [
         "h3",
@@ -2361,48 +2324,26 @@
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 239,
-          "endLine": 239,
-          "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
+          "startLine": 780,
+          "endLine": 789,
+          "quote": "_ => null,"
         },
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 693,
-          "endLine": 695,
-          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MessageFormatterMustBeMessagePackFormatter, location, typeInfo));"
+          "startLine": 239,
+          "endLine": 239,
+          "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
         }
       ]
     },
     {
-      "id": "f3",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Generator or analyzer failures still surface only as warnings",
-      "detail": "N1 asks that a generator or analyzer failure must not pass as a build warning while the assembly is left without a resolver. The change fixes the specific crash and adds checks in the tests, but nothing in the product changes. An unexpected exception in TypeCollector still becomes a CS8785 or AD0001 warning, and the build still succeeds without the generated resolver. No error-level diagnostic and no build failure is added.",
-      "statement": null,
-      "hunkIds": [
-        "h3",
-        "h6"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 263,
-          "endLine": 273,
-          "quote": "public static FullModel? Collect(Compilation compilation, AnalyzerOptions options, ReferenceSymbols referenceSymbols, Action<Diagnostic>? reportAnalyzerDiagnostic, ITypeSymbol targetType, CancellationToken cancellationToken)"
-        }
-      ]
-    },
-    {
-      "id": "f4",
+      "id": "f2",
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "No snapshot or round-trip test of the generated resolver",
-      "detail": "F3 expects the consuming assembly to get a correct resolver and formatter for the cross-assembly generic struct. The new tests set SkipGeneratedSourcesCheck and only assert that a source with the expected hint name was produced. Nothing snapshots the generated formatter for the closed generic struct or record struct, and no test serializes and deserializes an instance through the generated resolver. Wrong generated output for these types would go unnoticed.",
+      "title": "No snapshot or round-trip test of generated cross-assembly formatter",
+      "detail": "F3 expects the consuming assembly to get a working resolver and formatter, and expects a snapshot of the generated output plus a runtime round trip. The new tests set SkipGeneratedSourcesCheck and only check that a hint name exists. Nothing checks the emitted resolver and formatter content for the closed generic struct from metadata, which is collected through GetObjectInfo on the constructed type and CollectCore on the metadata OriginalDefinition. Nothing serializes and deserializes an instance either, so a wrong but compiling formatter would pass.",
       "statement": null,
       "hunkIds": [
         "h8"
@@ -2413,26 +2354,38 @@
           "side": "new",
           "startLine": 646,
           "endLine": 655,
-          "quote": "this.CollectCore(type.OriginalDefinition, callerSymbol);"
+          "quote": "this.GetObjectInfo(type, callerSymbol);"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
           "side": "new",
           "startLine": 638,
-          "endLine": 641,
+          "endLine": 648,
           "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
-        },
-        {
-          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
-          "side": "new",
-          "startLine": 657,
-          "endLine": 658,
-          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
         }
       ]
     },
     {
-      "id": "f5",
+      "id": "f3",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Generator exceptions still surface only as CS8785/AD0001 warnings",
+      "detail": "N1 asks that a generator or analyzer failure not pass as a build warning that leaves the assembly without a resolver. The change removes the known IndexOutOfRangeException sites but adds no handling around collection. Any other unexpected exception in TypeCollector.Collect still ends up as a CS8785 or AD0001 warning, and the build succeeds without the generated resolver. The new tests guard against this in the test suite, but user builds are not protected.",
+      "statement": null,
+      "hunkIds": [],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 263,
+          "endLine": 273,
+          "quote": "FullModel model = collector.Collect();"
+        }
+      ]
+    },
+    {
+      "id": "f4",
       "kind": "contradiction",
       "area": null,
       "severity": "high",
@@ -2459,7 +2412,7 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "ai",
-      "reason": "The README and MsgPack004 changes document new analyzer behaviour: diagnostics about members of types from referenced assemblies are reported only by the defining project. That changes the documented contract and is for the maintainers to decide.",
+      "reason": "The README and MsgPack004 doc edits add new documented behaviour: diagnostics about members of types from referenced assemblies are no longer reported by the consuming project and must be fixed in the defining project.",
       "hunkIds": [
         "h1",
         "h2"
@@ -2467,8 +2420,8 @@
     }
   ],
   "quoteCheck": {
-    "checked": 24,
-    "passed": 24,
+    "checked": 20,
+    "passed": 20,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2541,24 +2494,20 @@
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Finding f1 (defect) names this hunk"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:1 (h7)",
-        "reason": "Finding f5 (contradiction) names this hunk"
+        "reason": "Finding f4 (contradiction) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h8)",
-        "reason": "Finding f4 (missing) names this hunk"
+        "reason": "Finding f2 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and MsgPack004 changes document new analyzer behaviour: diagnostics about members of types from referenced assemblies are reported only by the defining project. That changes the documented contract and is for the maintainers to decide.",
+      "text": "r1 (R7): The README and MsgPack004 doc edits add new documented behaviour: diagnostics about members of types from referenced assemblies are no longer reported by the consuming project and must be fixed in the defining project.",
       "acceptedRefusalIds": []
     }
   },
@@ -2567,7 +2516,7 @@
     "reasons": [
       {
         "ruleId": "R-read-share",
-        "text": "Read 7 of 8 hunks: most of the change needs a human",
+        "text": "Read 6 of 8 hunks: most of the change needs a human",
         "tier": "full"
       },
       {
@@ -2582,7 +2531,7 @@
       },
       {
         "ruleId": "R-defect",
-        "text": "2 defects found",
+        "text": "1 defect found",
         "tier": "focused"
       },
       {
@@ -2600,17 +2549,17 @@
       "h1": "read",
       "h2": "read",
       "h3": "read",
-      "h4": "read",
+      "h4": "verified",
       "h5": "verified",
       "h6": "read",
       "h7": "read",
       "h8": "read"
     },
-    "readHunks": 7,
+    "readHunks": 6,
     "totalHunks": 8,
-    "readLines": 226,
+    "readLines": 224,
     "totalLines": 228,
-    "readMinutes": 10,
+    "readMinutes": 9,
     "fullMinutes": 10
   }
 }
