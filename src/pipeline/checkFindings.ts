@@ -214,13 +214,16 @@ export function legacyTouchRefusalsFor(
   touchPoints: readonly LegacyTouchPoint[],
   refusals: readonly Pick<UnnumberedRefusal, "ruleId" | "source" | "hunkIds">[],
 ): UnnumberedRefusal[] {
-  const namedBy = (isCounted: (refusal: (typeof refusals)[number]) => boolean) =>
-    new Set(refusals.filter(isCounted).flatMap((refusal) => refusal.hunkIds));
-  const namedByRule = namedBy((refusal) => refusal.source === "rule");
-  const namedByR7 = namedBy((refusal) => refusal.ruleId === "R7");
+  const namedByRule = new Set(
+    refusals.filter((refusal) => refusal.source === "rule").flatMap((refusal) => refusal.hunkIds),
+  );
+  const namedByR7 = new Set(
+    refusals.filter((refusal) => refusal.ruleId === "R7").flatMap((refusal) => refusal.hunkIds),
+  );
   return touchPoints.flatMap((touch) => {
-    const named = touch.kind === "consumer-contract" ? new Set([...namedByRule, ...namedByR7]) : namedByRule;
-    const hunkIds = touch.hunkIds.filter((id) => !named.has(id));
+    const isDecidedAlready = (hunkId: string) =>
+      namedByRule.has(hunkId) || (touch.kind === "consumer-contract" && namedByR7.has(hunkId));
+    const hunkIds = touch.hunkIds.filter((hunkId) => !isDecidedAlready(hunkId));
     if (hunkIds.length === 0) return [];
     return [
       {

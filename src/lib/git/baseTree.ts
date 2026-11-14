@@ -2,7 +2,7 @@
  * The repository at the base commit, as the legacy guard reads it: what a path
  * mentions, which files exist and what a csproj says. Everything here predates
  * the change under review, so the agent that wrote the change did not write it.
- * Read through git only; nothing is checked out.
+ * Read through git only; nothing is checked out. Spec section 5, Policy.
  */
 import { readFileAtCommit } from "./readFileAtCommit";
 import { runGit } from "./runGit";

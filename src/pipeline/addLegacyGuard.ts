@@ -15,6 +15,9 @@ import { legacyTouchRefusalsFor } from "./checkFindings";
 import { findLegacyTouchPoints } from "./legacyTouchPoints";
 
 /**
+ * The review with its legacy touch points, their R8 refusals, and routing and
+ * the receipt draft recomputed. `pnpm review legacy <changeId>` writes it back.
+ * @param repoDir the fork's clone (SAMPLE_REPO_DIR); read at the review's base commit
  * @param levels the current report card's trust levels: routing is recomputed
  *   with today's ladder, not the one at record time
  * @throws if the augmented review breaks the Review contract.

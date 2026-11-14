@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
 import { legacyTouchRefusalsFor } from "./checkFindings";
 import type { BaseTree } from "../lib/git/baseTree";
-import { findLegacyTouchPoints, parseTargets } from "./legacyTouchPoints";
+import { findLegacyTouchPoints } from "./legacyTouchPoints";
+import { parseTargets } from "./oldPlatformTouchPoints";
 
 type Hunk = Review["hunks"][number];
 

@@ -21,9 +21,13 @@ export const legacyRefusalRule: RefusalRule = {
 
 /** A part of the codebase that deployed systems rely on, with who decides changes to it. */
 export interface LegacyZone {
+  /** Stable id, e.g. "wire-format". */
   id: string;
+  /** Shown in reasons and refusals, e.g. "Wire format". */
   label: string;
+  /** Repo-relative path globs; a file in any of them is in the zone. */
   globs: string[];
+  /** The role that decides a change here; the R8 refusal names it. */
   owner: string;
   /** What old systems rely on, in one sentence. */
   contract: string;
@@ -63,10 +67,10 @@ export const legacyZones: LegacyZone[] = [
 ];
 
 /**
- * Legacy touch points in one change at or above which the legacy rule asks for
- * a Full read. 5 is a judgement, not something we measured: a handful of touches
- * is a focused read of the boundary; past that the change is reworking the
- * boundary and needs a full read.
+ * Hunks in legacy zones, across all zones of one change, at or above which rule
+ * R-legacy asks for a Full read instead of Focused. 5 is a judgement, not a
+ * measurement: a handful of hunks is a focused read of the boundary; past that
+ * the change is reworking the boundary and needs a full read.
  */
 export const legacyTouchFull = 5;
 

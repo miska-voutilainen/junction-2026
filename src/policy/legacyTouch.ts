@@ -1,10 +1,12 @@
 /**
  * Legacy guard, touch points: every place a change reaches what old systems
- * rely on, beyond the zones in legacy.ts. CODEOWNERS-style path ownership says
- * who reviews a path; a touch point also says why the touch matters and what
- * evidence covers it (its guard), and notices what path rules can't, such as no
- * test running a legacy target. Git plus path and text rules, no model. Our
- * example for this repository; Tieto writes its own. Spec section 5, Policy.
+ * rely on, beyond the zones in legacy.ts. Path ownership (a CODEOWNERS file)
+ * says who reviews a path; a touch point also says why the touch matters and
+ * what evidence covers it (its guard), and notices what a path rule can't,
+ * such as no test running an old target. This file holds what counts as each
+ * touch kind; src/pipeline/legacyTouchPoints.ts applies it, with git and text
+ * rules and no model. Our example for this repository; Tieto writes its own.
+ * Spec section 5, Policy.
  */
 import type { LegacyTouchKind } from "../contracts";
 
@@ -23,6 +25,40 @@ export const maintainersOwner = {
   build: "build owner (the maintainers)",
 };
 
+/** Most files listed as evidence on one touch point, so a card stays readable. */
+export const maxListedFiles = 5;
+
+// --- Legacy code: a reach into a zone by name ---
+
+/**
+ * Names every type has, and C# keywords that look like calls; neither is a reach
+ * into a legacy zone. Run on the recorded diffs, a first version of the detector
+ * found only these false positives. `Write` stays out on purpose: it is the
+ * writer's own method (`this.Write` is skipped by the receiver rule instead).
+ */
+export const ignoredSymbolNames = new Set([
+  "Equals",
+  "ToString",
+  "GetHashCode",
+  "GetType",
+  "Dispose",
+  "if",
+  "for",
+  "foreach",
+  "while",
+  "switch",
+  "catch",
+  "using",
+  "lock",
+  "return",
+  "nameof",
+  "typeof",
+  "sizeof",
+  "checked",
+]);
+
+// --- Old platform: code only old targets compile, and whether a test runs it ---
+
 /**
  * A preprocessor line that only some old targets compile.
  * @example "#if !NETSTANDARD2_0 && !NETFRAMEWORK" matches; "#if DEBUG" does not.
@@ -36,9 +72,22 @@ export const oldPlatformDirective =
  */
 export const legacyTargetFramework = /^(?:net4\d+|netstandard\d.*)$/i;
 
+// --- Consumer contract: what consumers compile against or depend on ---
+
+/** Paths of the public surface consumers compile against; a change here reaches every consumer. */
+export const consumerContractGlobs = [
+  "src/MessagePack.Annotations/**",
+  "**/PublicAPI.*.txt",
+  "src/MessagePack.SourceGenerator/Analyzers/**",
+];
+
 /**
  * A declaration consumers compile against: a public or protected type or member.
- * Anchored at the line start so a comment that mentions `public` does not match.
+ * Read left to right: the access modifier, any other modifiers (`static`,
+ * `sealed`...), then either a type keyword (`class`, `record`...) or a member,
+ * written as a return type, a name, optional generic parameters, and the `(`,
+ * `{`, `=>`, `=` or `;` that starts its body. Anchored at the line start, so a
+ * comment that mentions `public` does not match.
  * @example "    public static int Foo(" and "public sealed class Bar" match; "private int Foo(" and "// public API" do not.
  */
 export const publicSurfaceLine =
@@ -84,15 +133,10 @@ export const contractShapes: ReadonlyArray<{
   { label: "diagnostic ids", pattern: diagnosticIdLiteral, appliesInAnalyzer: true },
 ];
 
-/** Paths of the public surface consumers compile against; a change here reaches every consumer. */
-export const consumerContractGlobs = [
-  "src/MessagePack.Annotations/**",
-  "**/PublicAPI.*.txt",
-  "src/MessagePack.SourceGenerator/Analyzers/**",
-];
-
 /** What tells consumers about a contract change; any of these in the same change guards it. */
 export const consumerNoteGlobs = ["**/AnalyzerReleases.*.md", "doc/**", "**/CHANGELOG*"];
+
+// --- Build: inputs that change what ships, with no guard a rule can check ---
 
 /** Build inputs whose effect no test shows; tests/** is excluded on purpose. */
 export const buildGlobs = [
@@ -103,33 +147,3 @@ export const buildGlobs = [
   "Directory.Packages.props",
   "global.json",
 ];
-
-/**
- * Names every type has, and C# keywords that look like calls; neither is a reach
- * into a legacy zone. The first prototype on the recorded diffs produced only
- * these false positives. `Write` stays out on purpose: it is the writer's own
- * method (`this.Write` is skipped by the receiver rule instead).
- */
-export const ignoredSymbolNames = new Set([
-  "Equals",
-  "ToString",
-  "GetHashCode",
-  "GetType",
-  "Dispose",
-  "if",
-  "for",
-  "foreach",
-  "while",
-  "switch",
-  "catch",
-  "using",
-  "lock",
-  "return",
-  "nameof",
-  "typeof",
-  "sizeof",
-  "checked",
-]);
-
-/** Most files listed as evidence on one touch point, so a card stays readable. */
-export const maxListedFiles = 5;
