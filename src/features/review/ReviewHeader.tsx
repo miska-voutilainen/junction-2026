@@ -10,11 +10,12 @@ import { countOf } from "@/lib/countOf";
 const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 /**
- * The change at a glance: title, ids, the receipt state when it needs action,
+ * The change at a glance: title, ids, the receipt state when it needs action (stale, failed verification, reopened by an escape),
  * and the branch, size, the roles line (who wrote, reviewed and signed) and the
  * model and date of the review. Everything the AI
  * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
  *
+ * @param isReopened The receipt is signed and holds, but a simulated escape now sends hunks the signer didn't read to a person.
  * @param signer Who signed, for the roles line: a verified receipt's owner, or why nobody is named.
  * @param receiptHref Where the full receipt page is; set whenever a receipt file exists, whatever its status.
  * @param isReceiptUnreadable The receipt file exists but fails validation, so there is nothing to sign against.
@@ -24,6 +25,7 @@ export function ReviewHeader({
   change,
   review,
   receiptStatus,
+  isReopened = false,
   signer,
   receiptHref,
   isReceiptUnreadable = false,
@@ -31,6 +33,7 @@ export function ReviewHeader({
   change: ChangeInput;
   review?: Review;
   receiptStatus?: ReceiptStatusValue;
+  isReopened?: boolean;
   signer: SignerState;
   receiptHref?: string;
   isReceiptUnreadable?: boolean;
@@ -47,6 +50,7 @@ export function ReviewHeader({
         </span>
         {change.authorDescription.synthetic && <SyntheticTag />}
         {/* "Signed by" lives in the roles line below; this keeps only the states that ask for action. */}
+        {isReopened && <ReceiptStatus status="reopened" />}
         {(receiptStatus === "stale" || receiptStatus === "unverified") && <ReceiptStatus status={receiptStatus} />}
         {receiptHref && (
           <Link href={receiptHref} className="rounded-item text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring">

@@ -7,6 +7,8 @@ import { decideChange } from "@/lib/decideChange";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import { useEscapes } from "@/lib/simulation/escapes";
 import { nextIndex, stepFromKey } from "@/lib/useShortcuts";
+import { ReopenedNotice } from "@/components/ReopenedNotice";
+import type { ReceiptUnderEscapes } from "@/lib/receiptUnderEscapes";
 import { CoverageLine } from "./CoverageLine";
 import { DiffView } from "./DiffView";
 import { HunkDropdown, HunkNavigator } from "./HunkNavigator";
@@ -46,6 +48,7 @@ export function ReviewBody({
   review,
   reportCard,
   record,
+  reopened,
   isReceiptUnreadable,
   tokens,
 }: Readonly<{
@@ -54,6 +57,8 @@ export function ReviewBody({
   reportCard: ReportCardInput;
   /** The change's receipt, or null when it has none or the file is unreadable. */
   record: ReceiptRecord | null;
+  /** The receipt's state under the current escapes; the notice shows when an escape reopened it. */
+  reopened: ReceiptUnderEscapes | null;
   /** The receipt file exists but fails validation; the Sign step says so instead of offering to sign. */
   isReceiptUnreadable: boolean;
   tokens: HighlightedHunks;
@@ -78,6 +83,7 @@ export function ReviewBody({
   return (
     <>
       <CoverageLine decision={decision} />
+      {reopened?.status === "reopened" && <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />}
       {reportCard.state !== "ok" && !isEvidenceAvailable && <EvidenceUnavailable alert={evidenceAlert(reportCard.state, decision)} />}
       <div className="flex flex-col gap-6 wide:flex-row wide:items-start">
         <HunkNavigator groups={groups} activeHunkId={reveal.activeHunkId} readIds={readIds} onJump={reveal.jumpTo} />

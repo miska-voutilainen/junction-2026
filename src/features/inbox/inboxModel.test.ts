@@ -180,3 +180,15 @@ describe("unreadable data", () => {
     expect(row.receipt).toBe("needs-review");
   });
 });
+
+describe("reopened receipts", () => {
+  it("a Generator escape turns the signed change into 'reopened', counted under Needs review, not Signed", () => {
+    const before = buildInboxModel(sources, card, {});
+    const after = buildInboxModel(sources, card, { generator: 1 });
+    const reopened = after.rows.filter(isReviewed).filter((row) => row.receipt === "reopened");
+    expect(reopened.map((row) => row.id)).toEqual(["mp-2283"]);
+    expect(filterCounts(after.rows).signed).toBe(filterCounts(before.rows).signed - 1);
+    expect(filterCounts(after.rows)["needs-review"]).toBe(filterCounts(before.rows)["needs-review"] + 1);
+    expect(after.reviewNext).not.toBeNull();
+  });
+});

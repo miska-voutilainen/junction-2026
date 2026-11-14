@@ -13,6 +13,7 @@ import { SelectedClaimProvider } from "./SelectedClaim";
 import { ReviewStepProvider } from "./steps/ReviewStep";
 import type { HighlightedHunks } from "./highlightHunks";
 import { useShellChanges } from "@/components/useShellChanges";
+import { useReceiptUnderEscapes } from "@/lib/useReceiptUnderEscapes";
 
 /**
  * S2 · Review inside its shell. The page (in `ReviewBody`) and the shell's
@@ -48,6 +49,7 @@ export function ReviewScreen({
   const { change, review, receipt } = current;
   const record = receipt === "unreadable" ? null : receipt;
   const isReceiptUnreadable = receipt === "unreadable";
+  const reopened = useReceiptUnderEscapes(review.state === "ok" ? review.data : null, record, reportCard);
 
   return (
     <AppShell
@@ -67,13 +69,14 @@ export function ReviewScreen({
             change={change}
             review={review.state === "ok" ? review.data : undefined}
             receiptStatus={review.state === "ok" ? receiptStatus(review.data, record) : undefined}
+            isReopened={reopened?.status === "reopened"}
             signer={signerOf(receipt)}
             receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
             isReceiptUnreadable={isReceiptUnreadable}
           />
           {review.state === "missing" && <ReviewMissing changeId={change.id} />}
           {review.state === "unreadable" && <ReviewUnreadable changeId={change.id} details={reviewError} />}
-          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} isReceiptUnreadable={isReceiptUnreadable} tokens={tokens} />}
+          {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} reopened={reopened} isReceiptUnreadable={isReceiptUnreadable} tokens={tokens} />}
         </div>
         </ReviewStepProvider>
       </SelectedClaimProvider>

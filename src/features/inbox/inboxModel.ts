@@ -5,9 +5,9 @@
  * (spec section 3, S1 "Live re-routing"). Pure functions, no React.
  */
 import type { Area, ChangeInput, Coverage, ReceiptRecord, Review, Tier } from "@/contracts";
-import { receiptStatus } from "@/lib/data/receiptStatus";
-import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { decideChange } from "@/lib/decideChange";
+import { receiptUnderEscapes } from "@/lib/receiptUnderEscapes";
+import type { ReceiptState } from "@/lib/receiptUnderEscapes";
 import type { ReportCardInput } from "@/lib/decideChange";
 
 /** What the server hands over for one change: its input, the state of its review, and its receipt if any. */
@@ -38,7 +38,7 @@ export interface ReviewedRow extends RowBase {
   coverage: Coverage[];
   contradictions: number;
   refusals: number;
-  receipt: ReceiptStatusValue;
+  receipt: ReceiptState;
   /** The receipt file exists but could not be read; `receipt` then says "needs-review". */
   isReceiptUnreadable: boolean;
   /** GitHub login of the signer; set only when `receipt` is "signed". */
@@ -53,7 +53,7 @@ export interface UnreviewedRow extends RowBase {
 /** One line of the inbox: a routed change, or one whose review is missing or unreadable. */
 export type InboxRow = ReviewedRow | UnreviewedRow;
 
-/** The status filter above the list; "needs-review" and "stale" match the receipt status. */
+/** The status filter above the list; "needs-review" and "stale" match the receipt status, and "needs-review" also holds failed and reopened receipts. */
 export type StatusFilter = "all" | "needs-review" | "stale" | "signed";
 
 /** Totals for the summary bar; hunks and minutes count reviewed changes only. */
@@ -102,7 +102,7 @@ export function isReviewed(row: InboxRow): row is ReviewedRow {
   return row.state === "reviewed";
 }
 
-const RECEIPT_STATUS_OF_FILTER: Record<Exclude<StatusFilter, "all">, ReceiptStatusValue> = {
+const RECEIPT_STATUS_OF_FILTER: Record<Exclude<StatusFilter, "all">, ReceiptState> = {
   "needs-review": "needs-review",
   stale: "stale",
   signed: "signed",
@@ -112,11 +112,12 @@ const RECEIPT_STATUS_OF_FILTER: Record<Exclude<StatusFilter, "all">, ReceiptStat
 export function filterRows(rows: InboxRow[], filter: StatusFilter): InboxRow[] {
   if (filter === "all") return rows;
   const wanted = RECEIPT_STATUS_OF_FILTER[filter];
-  // A receipt that failed verification still needs a person: it sits under "Needs review", not "Signed".
+  // A receipt that failed verification, or that an escape reopened, still needs a person: it sits under "Needs review", not "Signed".
   return rows.filter(
     (row) =>
       isReviewed(row) &&
-      (row.receipt === wanted || (wanted === "needs-review" && row.receipt === "unverified")),
+      (row.receipt === wanted ||
+        (wanted === "needs-review" && (row.receipt === "unverified" || row.receipt === "reopened"))),
   );
 }
 
@@ -171,7 +172,7 @@ function buildRow(
   const { decision } = decideChange(review.data, reportCard, escapes);
   const isReceiptUnreadable = receipt === "unreadable";
   const record = isReceiptUnreadable ? null : receipt;
-  const status = receiptStatus(review.data, record);
+  const { status } = receiptUnderEscapes(review.data, record, decision, escapes);
   return {
     ...base,
     state: "reviewed",
