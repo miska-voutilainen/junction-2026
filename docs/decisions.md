@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · T16 choices: staged contradiction runs, blind runs shared by prompt, the count is the measured n
+
+- **Context:** `pnpm evals` makes about 30 reviews of a 90-minute budget, and the credits are shared.
+- **Decision:** `pnpm evals --runs <n>` (default 3) runs comparison runs k = 1..n per mode and plant, and reuses any run already in `data/runs/` for the current reviewer version, so stage 1 can be `--runs 2` and a later `--runs 3` records only the third. The report card counts the runs that exist ("of 10" after two, "of 15" after three) and the S3 copy reads that n. A blind run never sees the author description, so its A1 and A2 prompts are identical across the plants of one Tieto change; those runs go through one job group in turn and the later ones reuse the recording. After scoring, the four Tieto reviews are routed again with the measured levels and their receipt drafts rebuilt, so "not checked" matches the routing.
+- **Why:** Credits, and a result sooner: two runs per mode already show a direction. Sharing A1 and A2 saves a third of the blind calls.
+- **Rejected:** A hard-coded 15; one group per plant (identical blind calls would race instead of reuse).
+- **PR:** T16
+
 ## 2026-11-14 · T13 choices: area by path, AI refusals only, nullable failure citation
 
 - **Context:** A3 and A4 needed rules the spec left open or split between section 6 and 9.1.
