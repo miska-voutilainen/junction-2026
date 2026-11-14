@@ -29,7 +29,7 @@ Decided at kickoff (`.claude/rules/lanes.md`). Every code path belongs to exactl
 | Lane | Owner (GitHub login) | Owns (paths) | Responsible for |
 | --- | --- | --- | --- |
 | engine | `miska-voutilainen` | `src/ai/**`, `src/prompts/**`, `src/pipeline/**`, `src/rules/**`, `src/policy/**`, `src/lib/git/**`, `data/runs/**`, `data/eval/**`, `data/recordings/**` | The review pipeline (A1–A5, quote check, .NET differential tests), routing rules and trust ladder, the planted-bug eval and report card, the AI client and prompts, CI and the harness; the critical path of the demo (heaviest) |
-| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots |
+| app | `miska-voutilainen` | `src/app/**`, `src/proxy.ts`, `src/features/access-gate/**`, `src/features/inbox/**`, `src/features/review/**`, `src/features/report-card/**`, `src/features/receipt-view/**`, `src/features/dashboard/**`, `src/components/**`, `src/lib/data/**`, `src/lib/simulation/**`, `src/lib/*.ts` (top-level helpers: utils, motion, shortcuts, idea links), `data/fixtures/**`, `e2e/**`, `public/**` | The review app: design system and shell, every screen (S1 inbox, S2 review, S3 report card, S4 receipt, S5 dashboard), data loaders, fixtures, the simulated-escape store, e2e and screenshots |
 | evidence | `Kasanen` | `src/receipt/**`, `data/sample/**`, `data/receipts/**`, `scripts/**` | The sample data (fork, change inputs, requirements), planted bugs and contradiction plants written blind, the receipt CLI (SSH-signed git notes), the report card's data with the engine lane, quality hooks, the concept card (lightest) |
 | _Shared_ | the affected owners | `src/contracts/**`, `src/styles/tokens.css`, root configs (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig.json`, `*.config.*`, `components.json`, `vercel.json`, `.prettierrc.json`, `.env.example`, `.gitignore`, `.gitattributes`, `LICENSE`), `docs/spec.md`, `.github/`, `.claude/` | changed only with the owners' agreement; dependencies in their own `chore(deps)` PR |
 
@@ -86,7 +86,7 @@ The canonical layout (`.claude/rules/structure.md`); new top-level folders or ro
 │   ├── features/inbox/         S1 components
 │   ├── features/review/        S2 components: navigator, diff viewer, sidebar tabs
 │   ├── features/report-card/   S3 components
-│   ├── features/receipt/       S4 full receipt components
+│   ├── features/receipt-view/  S4 full receipt components
 │   ├── features/dashboard/     S5 components
 │   ├── components/ui/          shadcn/ui primitives (generated)
 │   ├── components/             shared app components: shell, states, badges

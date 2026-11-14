@@ -1,29 +1,5 @@
 # API
 
-<!-- Every endpoint. Kept current by docs-keeper. Or link the generated OpenAPI docs here instead. -->
+Countersign has no API. The site is statically generated and reads committed files under `data/`; there are no `/api` routes and no server state.
 
-Base URL: `<production URL>/api`. Errors share one shape: `{ "error": { "code": "...", "message": "..." } }`.
-
-## `<METHOD> /path`
-
-<!-- One line: what it does. -->
-
-**Request**
-
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| --- | --- | --- | --- |
-
-**Response `200`**
-
-```json
-{}
-```
-
-**Errors:** `400` invalid input · `404` not found · `429` rate limited · `502` upstream (model or partner API) failed
-
-**Example**
-
-```bash
-curl -X <METHOD> "<base>/path" -H "Content-Type: application/json" -d '{}'
-```
+The only server-side code is the temporary access gate (`src/proxy.ts`, `src/features/access-gate/`): it redirects visitors without the code cookie to `/unlock`. See its [README](../src/features/access-gate/README.md). The command-line tools (`pnpm pipeline`, `pnpm countersign`) are listed in [development.md](development.md).

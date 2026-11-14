@@ -21,7 +21,7 @@
         "src/proxy.ts",
         "src/features/access-gate/**",
         "src/features/report-card/**",
-        "src/features/receipt/**",
+        "src/features/receipt-view/**",
         "src/features/dashboard/**",
         "src/features/inbox/**",
         "src/features/review/**",

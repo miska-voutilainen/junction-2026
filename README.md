@@ -128,7 +128,7 @@ Miska (`miska-voutilainen`) made this environment together with Claude Opus 5.5,
 
 **Miska decided:**
 
-- The goal and the scope: a project-agnostic kit for a three-person, 48-hour team. It stays Markdown only, with nothing installed or coded before the event.
+- The goal and the scope: a project-agnostic kit for a three-person, 48-hour team. It stays Markdown only (plus two plain-text config files, `.gitignore` and `.gitattributes`), with nothing installed or coded before the event.
 - The team, the roles and the backup: Miska runs kickoff and owns the repo, and Elias takes over if Miska's laptop or account fails.
 - The Claude plans and how usage is split: Max 5x for Miska, and Pro in budget mode for Elias and Veijo.
 - The tools on every machine (Lightfoot, Graphify, Obsidian), and the rule that experimental or unsupported add-ons stay out.
