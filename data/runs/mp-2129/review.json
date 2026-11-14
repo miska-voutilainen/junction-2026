@@ -9153,7 +9153,7 @@
         "h10",
         "h11"
       ],
-      "detail": "Attributes.cs, MsgPack00xMessagePackAnalyzer.cs",
+      "detail": "contract paths, public surface, diagnostic ids",
       "owner": "API owner (the maintainers)",
       "guard": {
         "status": "guarded",
@@ -9183,7 +9183,7 @@
       },
       {
         "ruleId": "R-legacy-guard",
-        "text": "Consumer contract: Attributes.cs, MsgPack00xMessagePackAnalyzer.cs in 4 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "text": "Consumer contract: contract paths, public surface, diagnostic ids in 4 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
         "tier": "light"
       },
       {

@@ -36,7 +36,55 @@ export const oldPlatformDirective =
  */
 export const legacyTargetFramework = /^(?:net4\d+|netstandard\d.*)$/i;
 
-/** Public surface consumers compile against; a change here reaches every consumer. */
+/**
+ * A declaration consumers compile against: a public or protected type or member.
+ * Anchored at the line start so a comment that mentions `public` does not match.
+ * @example "    public static int Foo(" and "public sealed class Bar" match; "private int Foo(" and "// public API" do not.
+ */
+export const publicSurfaceLine =
+  /^\s*(?:public|protected)\s+(?:(?:static|virtual|override|abstract|sealed|async|partial|readonly|unsafe|new|extern)\s+)*(?:(?:class|struct|interface|enum|record|delegate)\b|[\w.]+(?:<[^>]*>)?(?:\[\])*\??\s+\w+\s*(?:<[^>]*>)?\s*(?:\(|\{|=>|=|;))/;
+
+/**
+ * A serialization attribute. A changed `[Key]` index makes readers built against
+ * the old index decode the same bytes into the wrong field, with no compile error.
+ * @example "[Key(3)]" and "[MessagePackObject(true)]" match; "[Obsolete]" does not.
+ */
+export const wireAttributeLine =
+  /\[(?:Key\(|MessagePackObject\b|Union\(|IgnoreMember\b|SerializationConstructor\b)/;
+
+/**
+ * A diagnostic id string. Consumers suppress and document analyzer diagnostics by id.
+ * @example 'DiagnosticId = "MsgPack019"' matches; "MsgPackWriter" does not.
+ */
+export const diagnosticIdLiteral = /"MsgPack\d{3}"/;
+
+/**
+ * The source generator ships as an analyzer: consumers load it but never compile
+ * against its types, so `public` and `[Key]` there are not consumer surface.
+ * Its diagnostic ids still are: consumers suppress and document them.
+ */
+export const analyzerOnlyGlob = "src/MessagePack.SourceGenerator/**";
+
+/**
+ * A comment line: `//`, `///` (XML docs), `/*` or a continuation `*`. Docs that
+ * say "public" or `[Key]` describe a contract; they do not change it.
+ * @example "/// every public property" and "* [Key(0)]" match; "public int A;" does not.
+ */
+export const commentLine = /^\s*(?:\/\/|\/\*|\*)/;
+
+/** Contract shapes a changed line can have, named as the touch point's detail lists them. */
+export const contractShapes: ReadonlyArray<{
+  label: string;
+  pattern: RegExp;
+  /** False for shapes that mean nothing inside the analyzer-only source generator. */
+  appliesInAnalyzer: boolean;
+}> = [
+  { label: "public surface", pattern: publicSurfaceLine, appliesInAnalyzer: false },
+  { label: "wire attributes", pattern: wireAttributeLine, appliesInAnalyzer: false },
+  { label: "diagnostic ids", pattern: diagnosticIdLiteral, appliesInAnalyzer: true },
+];
+
+/** Paths of the public surface consumers compile against; a change here reaches every consumer. */
 export const consumerContractGlobs = [
   "src/MessagePack.Annotations/**",
   "**/PublicAPI.*.txt",

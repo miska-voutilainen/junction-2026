@@ -93,7 +93,9 @@ describe("legacy-code", () => {
       ["del", "public static int Helper(int a)"],
     ]);
     const tree = fakeTree({ zoneMentions: { Helper: ["src/MessagePack/MessagePackReader.cs"] } });
-    const points = await find([declares, inTest], tree);
+    const points = (await find([declares, inTest], tree)).filter(
+      (point) => point.kind === "legacy-code",
+    );
     expect(points).toHaveLength(1);
     expect(points[0]).toMatchObject({ detail: "Helper: called from Wire format", hunkIds: ["h3"] });
   });
@@ -138,7 +140,9 @@ describe("old-platform", () => {
   });
 
   it("does not give a source project the test projects of a longer-named one", async () => {
-    const generatorTests = fakeTree({ files: testProject("<TargetFramework>net472</TargetFramework>") });
+    const generatorTests = fakeTree({
+      files: testProject("<TargetFramework>net472</TargetFramework>"),
+    });
     const core = hunk("h9", "src/MessagePack/Core.cs", [["add", directive]]);
     const [point] = await find([core], generatorTests);
     expect(point.guard.status).toBe("unguarded");
@@ -161,7 +165,11 @@ describe("old-platform", () => {
     const csproj =
       "<PropertyGroup><TargetFrameworks>$(X);net8.0</TargetFrameworks></PropertyGroup>" +
       '<PropertyGroup Condition="a"><TargetFramework>net472</TargetFramework></PropertyGroup>';
-    expect(parseTargets("<PropertyGroup><TargetFrameworks>net8.0; net472</TargetFrameworks></PropertyGroup>").map((target) => target.framework)).toEqual(["net8.0", "net472"]);
+    expect(
+      parseTargets(
+        "<PropertyGroup><TargetFrameworks>net8.0; net472</TargetFrameworks></PropertyGroup>",
+      ).map((target) => target.framework),
+    ).toEqual(["net8.0", "net472"]);
     expect(parseTargets(csproj)).toEqual([
       { framework: "net8.0", isConditional: false },
       { framework: "net472", isConditional: true },
@@ -184,6 +192,61 @@ describe("consumer-contract and build", () => {
       guard: { status: "guarded" },
     });
     expect(point.guard.files).toEqual(notes);
+  });
+
+  describe("contract shapes outside the contract paths", () => {
+    const file = "src/MessagePack/Formatters/Thing.cs";
+    const notes = ["src/MessagePack.SourceGenerator/AnalyzerReleases.Unshipped.md"];
+    const touchFor = async (line: string, kind: "add" | "del" = "add") =>
+      (await find([hunk("h1", file, [[kind, line]])], fakeTree(), [file])).filter(
+        (point) => point.kind === "consumer-contract",
+      );
+
+    it("finds a public method added outside the globs", async () => {
+      const [point] = await touchFor("    public static int Parse(string text)");
+      expect(point).toMatchObject({ hunkIds: ["h1"], detail: "public surface" });
+    });
+
+    it("finds a changed [Key] index", async () => {
+      const points = [...(await touchFor("[Key(3)]", "del")), ...(await touchFor("[Key(4)]"))];
+      expect(points.map((point) => point.detail)).toEqual(["wire attributes", "wire attributes"]);
+    });
+
+    it("finds a diagnostic id literal", async () => {
+      const [point] = await touchFor('    DiagnosticId = "MsgPack019";');
+      expect(point.detail).toBe("diagnostic ids");
+    });
+
+    it("ignores a private method and a comment that mentions public", async () => {
+      expect(await touchFor("    private int Parse(string text)")).toEqual([]);
+      expect(await touchFor("    // public API stays as it is")).toEqual([]);
+    });
+
+    it("ignores a doc comment that mentions public and [Key]", async () => {
+      expect(await touchFor("    /// every public property, <c>[Key]</c> index")).toEqual([]);
+      expect(await touchFor("     * public [Key(0)]")).toEqual([]);
+    });
+
+    it("reads diagnostic ids but not public members inside the source generator", async () => {
+      const generator = "src/MessagePack.SourceGenerator/CodeAnalysis/Info.cs";
+      const analyzer = "src/MessagePack.SourceGenerator/Analyzers/Foo.cs";
+      const record = hunk("h5", generator, [["add", "public record Info(int Id);"]]);
+      const id = hunk("h6", analyzer, [["add", 'Id = "MsgPack019";']]);
+      const points = await find([record, id], fakeTree(), [generator, analyzer]);
+      const contract = points.filter((point) => point.kind === "consumer-contract");
+      expect(contract.map((point) => point.hunkIds)).toEqual([["h6"]]);
+    });
+
+    it("ignores a public declaration in tests", async () => {
+      const inTests = hunk("h2", "tests/Foo/FooTests.cs", [["add", "public void Works()"]]);
+      expect(await find([inTests], fakeTree(), [])).toEqual([]);
+    });
+
+    it("stays guarded when an AnalyzerReleases note is in the change", async () => {
+      const changed = hunk("h1", file, [["add", 'Id = "MsgPack019";']]);
+      const [point] = await find([changed], fakeTree(), [file, ...notes]);
+      expect(point.guard.status).toBe("guarded");
+    });
   });
 
   it("is unguarded when nothing tells consumers", async () => {
@@ -216,7 +279,10 @@ describe("legacyTouchRefusalsFor", () => {
   };
 
   it("adds one R8 rule refusal for hunks no rule refusal names yet", () => {
-    const [refusal] = legacyTouchRefusalsFor([point], [{ ruleId: "R8", source: "rule", hunkIds: ["h1"] }]);
+    const [refusal] = legacyTouchRefusalsFor(
+      [point],
+      [{ ruleId: "R8", source: "rule", hunkIds: ["h1"] }],
+    );
     expect(refusal).toMatchObject({ ruleId: "R8", source: "rule", hunkIds: ["h2"] });
     expect(refusal.reason).toBe(
       "Old platform: #if NETFRAMEWORK (unguarded: no test runs it); the platform owner (the maintainers) decides",

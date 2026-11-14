@@ -13,9 +13,12 @@ import { gitBaseTree, type BaseTree } from "../lib/git/baseTree";
 import { matchesGlob } from "../policy/globMatch";
 import { legacyZoneOf, legacyZones } from "../policy/legacy";
 import {
+  analyzerOnlyGlob,
   buildGlobs,
+  commentLine,
   consumerContractGlobs,
   consumerNoteGlobs,
+  contractShapes,
   legacyTargetFramework,
   maintainersOwner,
   maxListedFiles,
@@ -25,7 +28,6 @@ import { addedCalls, changedDeclarations, declaredName } from "./csharpSymbols";
 
 type Hunk = Review["hunks"][number];
 type Guard = LegacyTouchPoint["guard"];
-
 
 /** One place in one hunk that touches something legacy, before hunks are grouped. */
 interface Sighting {
@@ -255,14 +257,22 @@ async function guardByTestTargets(sourceProjects: string[], tree: BaseTree): Pro
   };
 }
 
-// --- consumer-contract and build: decided by path ---
+// --- consumer-contract (by path or by what the hunk changes) and build (by path) ---
 
+/**
+ * A hunk is a consumer-contract touch when it sits in a contract path or changes
+ * a contract shape: a public declaration, a wire attribute or a diagnostic id.
+ * The shapes find contract changes the paths miss; the detail says which fired.
+ */
 function consumerContractTouchPoints(
   files: Review["files"],
   hunks: readonly Hunk[],
 ): LegacyTouchPoint[] {
-  const touched = hunks.filter((hunk) => matchesAny(consumerContractGlobs, hunk.file));
-  if (touched.length === 0) return [];
+  const found = hunks.flatMap((hunk) => {
+    const reasons = contractReasons(hunk);
+    return reasons.length > 0 ? [{ hunk, reasons }] : [];
+  });
+  if (found.length === 0) return [];
   const notes = files
     .map((file) => file.path)
     .filter((path) => matchesAny(consumerNoteGlobs, path));
@@ -274,7 +284,26 @@ function consumerContractTouchPoints(
           files: notes.slice(0, maxListedFiles),
         }
       : { status: "unguarded", evidence: "no release note or doc tells old consumers", files: [] };
-  return [touchPoint("consumer-contract", touched, maintainersOwner.api, guard)];
+  const detail = [...new Set(found.flatMap(({ reasons }) => reasons))].join(", ");
+  const hunkIds = found.map(({ hunk }) => hunk.id);
+  return [{ kind: "consumer-contract", hunkIds, detail, owner: maintainersOwner.api, guard }];
+}
+
+/** Why a hunk counts as a contract change, in the labels the touch point's detail lists. */
+function contractReasons(hunk: Hunk): string[] {
+  const reasons: string[] = [];
+  if (matchesAny(consumerContractGlobs, hunk.file)) reasons.push("contract paths");
+  // Only src/: a test that declares or calls public members changes no consumer's contract.
+  if (!/^src\/.*\.cs$/.test(hunk.file)) return reasons;
+  const changed = hunk.lines.filter(
+    (line) => line.kind !== "context" && !commentLine.test(line.text),
+  );
+  const isAnalyzer = matchesGlob(analyzerOnlyGlob, hunk.file);
+  for (const { label, pattern, appliesInAnalyzer } of contractShapes) {
+    if (isAnalyzer && !appliesInAnalyzer) continue;
+    if (changed.some((line) => pattern.test(line.text))) reasons.push(label);
+  }
+  return reasons;
 }
 
 function buildTouchPoints(hunks: readonly Hunk[]): LegacyTouchPoint[] {
