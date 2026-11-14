@@ -58,7 +58,10 @@ function compareOrdinal(a: string, b: string): number {
   return a > b ? 1 : 0;
 }
 
+/** A line that starts a test method: the attribute of xUnit, NUnit or MSTest. Matches "    [Fact]" and "[Theory(Skip = "x")]". */
 const testAttribute = /^\s*\[(Fact|Theory|Test|TestMethod)\b/;
+
+/** A method declaration, capturing its name. Matches "public async Task Reads_Nothing(" and "void Check (". */
 const methodDeclaration = /\b(?:async\s+)?(?:Task|ValueTask|void)\s+(\w+)\s*\(/;
 
 /**
@@ -119,6 +122,17 @@ function methodName(region: readonly string[]): string | null {
     if (match !== null) return match[1];
   }
   return null;
+}
+
+/**
+ * Whether C# code declares a method with this name, returning void, Task or
+ * ValueTask as a test method does. The name goes into a regex, so it must be a
+ * plain identifier; A5's output schema checks that before it asks.
+ *
+ * @example declaresTestMethod("public async Task Test_F1_Works() {}", "Test_F1_Works") // true
+ */
+export function declaresTestMethod(code: string, name: string): boolean {
+  return new RegExp(String.raw`\b(?:async\s+)?(?:Task|ValueTask|void)\s+${name}\s*\(`).test(code);
 }
 
 /** The names of all PR test methods, without repeats and capped, ready for a `--filter`. */
