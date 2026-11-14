@@ -21,7 +21,7 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 2. **A tier for the change.** Each rule that fires adds one reason with its id; the tier is the highest asked for, and none means Light.
    - **Full:** `R-size` (over 400 changed lines outside generated files), `R-read-share` (75% or more of the non-generated hunks Read this), `R-escape` (a bug escaped in a touched area, so that area's next changes go to Full).
    - **Focused:** `R-refusal` (the AI refused something), `R-contradiction` (description contradicts code), `R-defect`, `R-sensitive-path` (public attributes, diagnostic IDs, the runtime serializer), `R-area-level` (a touched area isn't Trusted), `R-unread` (some hunks Read this and nothing else fired).
-3. **One honest line on top:** "Focused · Read 2 of 8 hunks · ~3 min (full read ~9 min)", then one line per reason with its id. Reading time assumes 25 changed lines a minute, and the page says so.
+3. **One honest line on top:** "Full · Read 7 of 8 hunks · ~10 min (full read ~10 min)" (the recorded MP-2283 review), then one line per reason with its id. Reading time assumes 25 changed lines a minute, and the page says so.
 4. **No model in the routing.** `route()` is pure: the same review and ladder levels give the same tier. It runs in the pipeline and in the browser, so a simulated escape re-routes the page live.
 
 ## What we measured

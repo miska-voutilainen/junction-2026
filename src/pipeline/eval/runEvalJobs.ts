@@ -8,7 +8,7 @@
  */
 import type { AnswerKey, Review } from "../../contracts";
 import { reviewerVersion } from "../assembleReview";
-import type { ModelStep } from "../runReview";
+import { anchoredSteps, blindComparisonSteps, type ModelStep } from "../runReview";
 
 /** One review to record. */
 export interface EvalJob {
@@ -46,8 +46,6 @@ export const EVAL_CONCURRENCY = 4;
 const MAX_ATTEMPTS = 2;
 
 const plantedBugSteps: readonly ModelStep[] = ["a1", "a2", "a3"];
-const blindComparisonSteps: readonly ModelStep[] = ["a1", "a2", "a4"];
-const anchoredComparisonSteps: readonly ModelStep[] = ["a2", "a4"];
 
 /**
  * Groups of jobs; a group runs one job at a time and groups run side by side.
@@ -87,7 +85,7 @@ export function planEvalJobs(
         label: `${key.plantId} anchored ${k}`,
         changeInputId: changeInputIdOf(key),
         mode: "anchored",
-        steps: anchoredComparisonSteps,
+        steps: anchoredSteps,
         comparison: { mode: "anchored", runNumber: k },
       });
     }

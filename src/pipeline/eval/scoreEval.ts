@@ -98,7 +98,7 @@ function scoreArea(area: Area, plantedBugs: readonly PlantedBugRun[]): ReportCar
   const caught = plants.filter((plant) => plant.caught).length;
   // Spot checks are a person's work and never run in the eval; the simulated escape shows their effect.
   const spotChecksClean = 0;
-  const level = ladderLevel({ planted: plants.length, caught, spotChecksClean, escapes: 0 });
+  const level = ladderLevel({ planted: plants.length, caught, spotChecksClean });
   return { area, planted: plants.length, caught, spotChecksClean, level, plants };
 }
 
