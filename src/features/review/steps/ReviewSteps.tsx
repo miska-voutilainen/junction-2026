@@ -106,6 +106,9 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
       </div>
       {STEP_IDS.map((id) => (
         // All four panels exist so every tab's aria-controls resolves; only the open one has content.
+        // wrap-anywhere: the model's prose quotes C# names with no break in them
+        // (System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute), which ran past
+        // the edge at 375 px. Code blocks keep their own horizontal scroll (white-space: pre).
         <div
           key={id}
           id={panelId(id)}
@@ -113,7 +116,7 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
           aria-labelledby={tabId(id)}
           hidden={id !== step}
           tabIndex={0}
-          className="p-4 wide:min-h-0 wide:overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
+          className="p-4 wrap-anywhere wide:min-h-0 wide:overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
         >
           {id === step && <ActiveStep {...{ review, reportCard, record, signState, step, onStepChange, onShowHunk }} />}
         </div>

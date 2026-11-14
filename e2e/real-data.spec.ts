@@ -67,6 +67,24 @@ for (const id of changeIds) {
     if (expectsMockDataBanner(changeIds)) await expect(mockDataBanner(page)).toBeVisible();
     else await expect(mockDataBanner(page)).toHaveCount(0);
   });
+
+  // The recorded prose quotes C# names with no break in them; the fixtures don't, so only real data shows a cut-off line.
+  test(`no step text of ${id} runs past its panel at 375 px`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/changes/${id}`);
+    for (const step of [/^Read/, /^Blind check/, /^Refused/, /^Sign/]) {
+      await page.getByRole("tab", { name: step }).click();
+      const overflowing = await page
+        .getByRole("tabpanel")
+        .locator("p, li, dd")
+        .evaluateAll((elements) =>
+          elements
+            .filter((element) => element.scrollWidth > element.clientWidth)
+            .map((element) => element.textContent?.slice(0, 60)),
+        );
+      expect(overflowing, `${id}, step ${step.source}`).toEqual([]);
+    }
+  });
 }
 
 test("planted inputs are not reviewable changes", async ({ page }) => {
