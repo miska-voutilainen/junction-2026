@@ -16,11 +16,11 @@ export function MobileHunks({
   sections,
   tokens,
   highlightedLines,
-}: {
+}: Readonly<{
   sections: HunkSections;
   tokens: HighlightedHunks;
   highlightedLines: HighlightedLines[];
-}) {
+}>) {
   const covered = [...sections.covered, ...sections.generated];
   return (
     <div className="flex flex-col gap-3 compact:hidden">
@@ -43,7 +43,7 @@ export function MobileHunks({
   );
 }
 
-function ReadOnlyHunk({ entry, tokens, highlightedLines }: { entry: HunkEntry; tokens: HighlightedHunks; highlightedLines: HighlightedLines[] }) {
+function ReadOnlyHunk({ entry, tokens, highlightedLines }: Readonly<{ entry: HunkEntry; tokens: HighlightedHunks; highlightedLines: HighlightedLines[] }>) {
   const { hunk, coverage } = entry;
   const label = `${fileName(hunk.file)} ${hunk.header}`;
   return (

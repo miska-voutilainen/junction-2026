@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "AI reviews. A named human countersigns, on evidence they can check.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<LayoutProps<"/">>) {
   return (
     <html
       lang="en"

@@ -27,7 +27,7 @@ export function ReceiptScreen({
   usesFixture,
   receiptError,
   receiptText,
-}: {
+}: Readonly<{
   changeId: string;
   sources: InboxSource[];
   reportCard: ReportCardInput;
@@ -35,7 +35,7 @@ export function ReceiptScreen({
   usesFixture: boolean;
   receiptError: string | null;
   receiptText: string | null;
-}) {
+}>) {
   const changes = useShellChanges(sources, reportCard);
   const source = sources.find((candidate) => candidate.change.id === changeId);
   const view = useMemo(() => (source ? buildReceiptView(source, receiptError, receiptText) : null), [source, receiptError, receiptText]);

@@ -32,7 +32,7 @@ export function ReviewScreen({
   usesFixture,
   reviewError,
   tokens,
-}: {
+}: Readonly<{
   sources: InboxSource[];
   currentId: string;
   reportCard: ReportCardInput;
@@ -40,7 +40,7 @@ export function ReviewScreen({
   usesFixture: boolean;
   reviewError: string | null;
   tokens: HighlightedHunks;
-}) {
+}>) {
   const shellChanges = useShellChanges(sources, reportCard);
   const current = sources.find((source) => source.change.id === currentId);
   if (!current) throw new Error(`No change with id ${currentId} among the loaded sources.`);

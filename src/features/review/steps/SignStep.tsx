@@ -25,7 +25,7 @@ interface SignStepProps {
  * stale one the two diff hashes that no longer match, and one whose signature
  * failed the recorded check says so with the output. Spec section 3, S2 Receipt.
  */
-export function SignStep({ view, review }: SignStepProps) {
+export function SignStep({ view, review }: Readonly<SignStepProps>) {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex flex-wrap items-center gap-2">
@@ -41,7 +41,7 @@ export function SignStep({ view, review }: SignStepProps) {
   );
 }
 
-function Unsigned({ view, review }: { view: Extract<SignView, { status: "needs-review" }>; review: Review }) {
+function Unsigned({ view, review }: Readonly<{ view: Extract<SignView, { status: "needs-review" }>; review: Review }>) {
   return (
     <>
       <p className="text-sm text-text-secondary">Drafted by the AI. Only a named human can sign it.</p>
@@ -52,7 +52,7 @@ function Unsigned({ view, review }: { view: Extract<SignView, { status: "needs-r
 }
 
 /** The draft and sign commands, and the primary Sign button that copies the sign command. */
-function SignCommandsBlock({ commands, heading }: { commands: SignCommands; heading: string }) {
+function SignCommandsBlock({ commands, heading }: Readonly<{ commands: SignCommands; heading: string }>) {
   const hintId = "sign-hint";
   return (
     <section aria-label={heading} className="flex flex-col gap-3 border-t border-border-subtle pt-4">
@@ -75,12 +75,12 @@ function SignCommandsBlock({ commands, heading }: { commands: SignCommands; head
   );
 }
 
-function CommandHeading({ note }: { note: string }) {
+function CommandHeading({ note }: Readonly<{ note: string }>) {
   return <span className="truncate text-xs text-text-muted">{note}</span>;
 }
 
 /** The receipt file is there but fails validation: nothing to sign against, so no Sign button, only the way to re-export it. */
-function Unreadable({ changeId }: { changeId: string }) {
+function Unreadable({ changeId }: Readonly<{ changeId: string }>) {
   return (
     <>
       <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title="The receipt file couldn't be read.">
@@ -92,7 +92,7 @@ function Unreadable({ changeId }: { changeId: string }) {
   );
 }
 
-function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }>; review: Review }) {
+function Signed({ view, review }: Readonly<{ view: Extract<SignView, { status: "signed" }>; review: Review }>) {
   return (
     <>
       <div className="flex items-center gap-4">
@@ -112,7 +112,7 @@ function Signed({ view, review }: { view: Extract<SignView, { status: "signed" }
   );
 }
 
-function VerifyConsole({ verify }: { verify: Extract<SignView, { status: "signed" }>["verify"] }) {
+function VerifyConsole({ verify }: Readonly<{ verify: Extract<SignView, { status: "signed" }>["verify"] }>) {
   return (
     <Console
       label="Verify output"
@@ -123,7 +123,7 @@ function VerifyConsole({ verify }: { verify: Extract<SignView, { status: "signed
   );
 }
 
-function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }>; changeId: string }) {
+function Stale({ view, changeId }: Readonly<{ view: Extract<SignView, { status: "stale" }>; changeId: string }>) {
   const hashes = `signed   ${view.receipt.diffSha256}\ncurrent  ${view.reviewDiffSha256}`;
   return (
     <>
@@ -137,7 +137,7 @@ function Stale({ view, changeId }: { view: Extract<SignView, { status: "stale" }
   );
 }
 
-function Unverified({ view, changeId }: { view: Extract<SignView, { status: "unverified" }>; changeId: string }) {
+function Unverified({ view, changeId }: Readonly<{ view: Extract<SignView, { status: "unverified" }>; changeId: string }>) {
   return (
     <>
       <Notice tone="rose" icon={<ShieldX aria-hidden="true" className="size-4 shrink-0" />} title={verifyLine("unverified")}>
@@ -150,7 +150,7 @@ function Unverified({ view, changeId }: { view: Extract<SignView, { status: "unv
   );
 }
 
-function ReceiptLink({ changeId, label }: { changeId: string; label: string }) {
+function ReceiptLink({ changeId, label }: Readonly<{ changeId: string; label: string }>) {
   return (
     <Link
       href={`/changes/${changeId}/receipt`}
@@ -162,7 +162,7 @@ function ReceiptLink({ changeId, label }: { changeId: string; label: string }) {
 }
 
 /** An amber or rose notice. The icon and the title carry the meaning, so colour is never alone. */
-function Notice({ tone, icon, title, children }: { tone: "amber" | "rose"; icon: ReactNode; title: string; children: ReactNode }) {
+function Notice({ tone, icon, title, children }: Readonly<{ tone: "amber" | "rose"; icon: ReactNode; title: string; children: ReactNode }>) {
   const colour = tone === "amber" ? "border-amber/40 text-amber-light" : "border-rose/40 text-rose-light";
   return (
     <div className={`flex flex-col gap-1 rounded-item border bg-surface-raised p-3 ${colour}`}>

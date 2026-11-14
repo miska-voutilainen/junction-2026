@@ -18,14 +18,23 @@ const SAMPLE_CHANGES = path.join("data", "sample", "changes");
 const SAMPLE_REQUIREMENTS = path.join("data", "sample", "requirements");
 const RUNS = path.join("data", "runs");
 const REPORT_CARD = path.join("data", "eval", "report-card.json");
+const DATA_ROOT = path.resolve("data");
+
+// Ids come from the command line and from data files and are joined into
+// paths. "mp-2283" and "R-2283" pass; "../../.ssh/id_ed25519" does not, so a
+// mistyped or hostile id can't make the CLI read or write outside data/.
+const ID_PATTERN = /^[A-Za-z0-9-]+$/;
 
 /** The change input and its requirement. @throws with the file path when one is missing or invalid. */
 export async function loadChangeAndRequirement(
   changeId: string,
 ): Promise<{ change: ChangeInput; requirement: Requirement }> {
-  const change = await readJson(path.join(SAMPLE_CHANGES, `${changeId}.json`), ChangeInputSchema);
+  const change = await readJson(
+    path.join(SAMPLE_CHANGES, `${checkedId(changeId)}.json`),
+    ChangeInputSchema,
+  );
   const requirement = await readJson(
-    path.join(SAMPLE_REQUIREMENTS, `${change.requirementId}.json`),
+    path.join(SAMPLE_REQUIREMENTS, `${checkedId(change.requirementId)}.json`),
     RequirementSchema,
   );
   return { change, requirement };
@@ -63,18 +72,34 @@ export async function writeRecordedReview(
     ? path.join(RUNS, review.changeId, comparison.mode, `${comparison.k}.json`)
     : reviewPath(review.changeId);
   await mkdir(path.dirname(file), { recursive: true });
-  await writeFile(file, `${JSON.stringify(review, null, 2)}\n`);
+  await writeFile(insideData(file), `${JSON.stringify(review, null, 2)}\n`);
   return file;
 }
 
 function reviewPath(changeId: string): string {
-  return path.join(RUNS, changeId, "review.json");
+  return path.join(RUNS, checkedId(changeId), "review.json");
+}
+
+/** @throws when `id` could name anything but a file inside its data folder. */
+function checkedId(id: string): string {
+  if (!ID_PATTERN.test(id))
+    throw new Error(`"${id}" is not a valid id: use letters, digits and dashes only, e.g. mp-2283.`);
+  return id;
+}
+
+/** The file's absolute path. @throws when it resolves outside data/, whatever built it. */
+function insideData(file: string): string {
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(DATA_ROOT + path.sep))
+    throw new Error(`${file} is outside data/. The pipeline only reads and writes there.`);
+  return resolved;
 }
 
 async function readJson<T>(file: string, schema: ZodType<T>): Promise<T> {
+  const resolved = insideData(file);
   let text: string;
   try {
-    text = await readFile(file, "utf8");
+    text = await readFile(resolved, "utf8");
   } catch {
     throw new Error(`Cannot read ${file}. Check the change id; sample data lives in data/sample/.`);
   }

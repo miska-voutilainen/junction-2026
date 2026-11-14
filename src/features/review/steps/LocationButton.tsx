@@ -5,7 +5,7 @@
  * brings those lines into view in the diff. A button, not a link, because it
  * changes what the page shows instead of going anywhere.
  */
-export function LocationButton({ label, onShow }: { label: string; onShow: () => void }) {
+export function LocationButton({ label, onShow }: Readonly<{ label: string; onShow: () => void }>) {
   return (
     <button
       type="button"

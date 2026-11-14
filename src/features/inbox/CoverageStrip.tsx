@@ -12,7 +12,7 @@ const CELL: Record<Coverage, string> = {
  * Supported, a dim fill for Verified. The row's text already says the numbers,
  * so the strip is for the eye and hidden from assistive tech.
  */
-export function CoverageStrip({ coverage, className }: { coverage: Coverage[]; className?: string }) {
+export function CoverageStrip({ coverage, className }: Readonly<{ coverage: Coverage[]; className?: string }>) {
   return (
     <span aria-hidden="true" className={cn("flex flex-wrap gap-0.5", className)}>
       {coverage.map((state, index) => (

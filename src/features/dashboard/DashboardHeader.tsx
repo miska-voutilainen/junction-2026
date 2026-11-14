@@ -5,7 +5,7 @@ import type { ReviewedRow } from "@/features/inbox";
  * Title, what the page answers, and "Review next" (the same pick as the inbox).
  * The link is hidden when every change is signed.
  */
-export function DashboardHeader({ reviewNext }: { reviewNext: ReviewedRow | null }) {
+export function DashboardHeader({ reviewNext }: Readonly<{ reviewNext: ReviewedRow | null }>) {
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5">

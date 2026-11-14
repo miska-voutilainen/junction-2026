@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
  * @param needsReviewCount The badge on Inbox in the sheet.
  * @param className Placement in the header; the button itself is a 44 px touch target.
  */
-export function NavSheet({ needsReviewCount, className }: { needsReviewCount: number; className?: string }) {
+export function NavSheet({ needsReviewCount, className }: Readonly<{ needsReviewCount: number; className?: string }>) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>

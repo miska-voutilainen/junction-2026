@@ -23,12 +23,12 @@ export function RolesLine({
   reviewerVersion,
   signer,
   className,
-}: {
+}: Readonly<{
   authorAgent: string;
   reviewerVersion: string | null;
   signer: SignerState;
   className?: string;
-}) {
+}>) {
   return (
     <span className={cn("block [clip-path:inset(-4px_-4px_-4px_0)]", className)}>
       <span className="flex min-w-0 flex-col gap-y-0.5 compact:-ml-4 compact:flex-row compact:flex-wrap compact:items-center compact:gap-y-1">
@@ -65,7 +65,7 @@ function signerText(signer: SignerState): ReactNode {
 }
 
 /** One "role name" pair; the separator before it is decoration, drawn only when the roles share a line. */
-function Role({ children }: { children: ReactNode }) {
+function Role({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <span className="relative min-w-0 [overflow-wrap:anywhere] compact:max-w-full compact:pl-4 compact:before:absolute compact:before:left-1.5 compact:before:content-['·']">
       {children}

@@ -24,12 +24,12 @@ export function MobileHeader({
   backHref,
   escapeSlot,
   needsReviewCount,
-}: {
+}: Readonly<{
   title: string;
   backHref?: string;
   escapeSlot?: ReactNode;
   needsReviewCount: number;
-}) {
+}>) {
   const { open } = useCommandMenu();
   const searchRef = useRef<HTMLButtonElement>(null);
 

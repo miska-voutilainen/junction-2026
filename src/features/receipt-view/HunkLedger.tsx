@@ -17,7 +17,7 @@ import type { LedgerRow, ReceiptDocumentStatus } from "./receiptModel";
  * @param owner The signer's login, named in the note.
  * @param status The receipt's state; "unverified" changes the heading and the note.
  */
-export function HunkLedger({ rows, owner, status }: { rows: LedgerRow[]; owner: string; status: ReceiptDocumentStatus }) {
+export function HunkLedger({ rows, owner, status }: Readonly<{ rows: LedgerRow[]; owner: string; status: ReceiptDocumentStatus }>) {
   const isUnverified = status === "unverified";
   const lines = ledgerLines(rows);
   return (

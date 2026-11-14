@@ -12,7 +12,7 @@ import type { ReviewOfChange } from "./reportCardModel";
  * list says which it covers: the eval's planted bugs and totals, or only the
  * recorded reviews of the four changes. A badge counts the items its card lists.
  */
-export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; reviews: ReviewOfChange[] }) {
+export function ReportLists({ reportCard, reviews }: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[] }>) {
   const missed = missedPlants(reportCard);
   const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
   const quotes = failedQuotes(reviews);
@@ -122,7 +122,7 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
   );
 }
 
-function Scope({ children }: { children: ReactNode }) {
+function Scope({ children }: Readonly<{ children: ReactNode }>) {
   return <p className="mb-2 text-xs text-text-muted">{children}</p>;
 }
 
@@ -132,14 +132,14 @@ function ListCard({
   idea = false,
   defaultOpen = false,
   children,
-}: {
+}: Readonly<{
   title: string;
   count: number;
   /** Shows the "Idea 4 · Quote check" label at the top of the open card (a link can't sit inside the disclosure button, and the column is too narrow to fit it beside the heading). */
   idea?: boolean;
   defaultOpen?: boolean;
   children: ReactNode;
-}) {
+}>) {
   return (
     <section className="rounded-page border border-border-subtle bg-surface-panel p-3 pb-4">
       <Disclosure

@@ -7,12 +7,12 @@ export function DashboardSection({
   subtitle,
   children,
   className,
-}: {
+}: Readonly<{
   title: string;
   subtitle: string;
   children: ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <section className={cn("flex min-w-0 flex-col gap-3", className)}>
       <div className="flex flex-col gap-0.5">

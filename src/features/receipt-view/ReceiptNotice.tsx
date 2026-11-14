@@ -11,13 +11,13 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * check failed on export, so it shows that recorded output. Each carries an
  * icon so the state is never colour alone.
  */
-export function ReceiptNotice({ view }: { view: ReceiptDocumentView }) {
+export function ReceiptNotice({ view }: Readonly<{ view: ReceiptDocumentView }>) {
   if (view.status === "stale" && view.staleHashes) return <StaleNotice view={view} hashes={view.staleHashes} />;
   if (view.status === "unverified") return <UnverifiedNotice view={view} />;
   return null;
 }
 
-function StaleNotice({ view, hashes }: { view: ReceiptDocumentView; hashes: { signedDiff: string; reviewedDiff: string } }) {
+function StaleNotice({ view, hashes }: Readonly<{ view: ReceiptDocumentView; hashes: { signedDiff: string; reviewedDiff: string } }>) {
   // Labels first and padded to one width, so the hashes line up and nothing wraps at 320 px.
   const hashLines = `Signed diff    ${hashes.signedDiff}\nReviewed diff  ${hashes.reviewedDiff}`;
   return (
@@ -33,7 +33,7 @@ function StaleNotice({ view, hashes }: { view: ReceiptDocumentView; hashes: { si
   );
 }
 
-function UnverifiedNotice({ view }: { view: ReceiptDocumentView }) {
+function UnverifiedNotice({ view }: Readonly<{ view: ReceiptDocumentView }>) {
   return (
     <section aria-labelledby="unverified-title" className="flex flex-col gap-3 rounded-page border border-rose/50 bg-surface-panel p-4 compact:p-5">
       <h2 id="unverified-title" className="flex items-start gap-2 text-md font-semibold text-rose-light">

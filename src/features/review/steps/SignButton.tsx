@@ -11,7 +11,7 @@ import type { SignState } from "./stepsModel";
  * only when there is something to sign; a signed change has the "View full
  * receipt" link instead, and an unreadable receipt file has nothing to sign.
  */
-export function SignButton({ signState }: { signState: SignState }) {
+export function SignButton({ signState }: Readonly<{ signState: SignState }>) {
   const { openStep } = useReviewStep();
   if (!isSignable(signState)) return null;
   return (

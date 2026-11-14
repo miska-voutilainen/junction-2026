@@ -10,7 +10,7 @@ import type { AreaTrust } from "./dashboardModel";
  * come from the planted-bug eval, so the list links to the report card that
  * earned them. Without a report card every area is Shadow, and the section says why.
  */
-export function TrustByArea({ trust, reportCard }: { trust: AreaTrust[]; reportCard: ReportCardInput }) {
+export function TrustByArea({ trust, reportCard }: Readonly<{ trust: AreaTrust[]; reportCard: ReportCardInput }>) {
   return (
     <Disclosure
       title={

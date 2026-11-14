@@ -8,7 +8,7 @@ const NOTHING_LISTED = "Nothing listed.";
  * text is what a person signed, so it is set in sans; only rule ids are mono.
  * Accepted refusals read "<rule id> · <rule title>" from the refusal policy.
  */
-export function SignedSections({ view }: { view: ReceiptDocumentView }) {
+export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>) {
   const { checked, notChecked, residualRisk } = view;
   return (
     <>
@@ -64,7 +64,7 @@ export function SignedSections({ view }: { view: ReceiptDocumentView }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-sm font-medium text-text-muted">{title}</h2>

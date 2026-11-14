@@ -23,7 +23,7 @@ const ReviewStepContext = createContext<ReviewStep | null>(null);
  * header's Sign button and the phone's Sign bar. Sits inside
  * `SelectedClaimProvider` because changing step clears a finding's highlight.
  */
-export function ReviewStepProvider({ children }: { children: ReactNode }) {
+export function ReviewStepProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [step, setStepState] = useState<StepId>("read");
   const { selection, setSelectedFindingId } = useSelectedClaim();
   const isFindingSelected = selection?.kind === "finding";

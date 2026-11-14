@@ -22,7 +22,7 @@ const IDLE: UnlockState = { status: "idle" };
  * @param codeLength Number of characters in the code, from the server.
  * @param next Same-site path to open once unlocked.
  */
-export function UnlockForm({ codeLength, next }: { codeLength: number; next: string }) {
+export function UnlockForm({ codeLength, next }: Readonly<{ codeLength: number; next: string }>) {
   const [state, formAction, isPending] = useActionState(unlock, IDLE);
   const [code, setCode] = useState("");
   const [lastSeenState, setLastSeenState] = useState(state);
@@ -121,7 +121,7 @@ function statusMessage(hasError: boolean, isPending: boolean): string {
  * border. Focus comes from CSS (`group-focus-within`), not an onFocus handler:
  * the input autofocuses before hydration, so a handler would miss that focus.
  */
-function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean; length: number }) {
+function CodeBoxes({ code, hasError, length }: Readonly<{ code: string; hasError: boolean; length: number }>) {
   const cursorIndex = Math.min(code.length, length - 1);
   return (
     <div aria-hidden="true" className="flex gap-2.5">
@@ -145,7 +145,7 @@ function CodeBoxes({ code, hasError, length }: { code: string; hasError: boolean
 }
 
 /** Shown after a right code: confirms, then moves on by itself. */
-function UnlockedNotice({ next }: { next: string }) {
+function UnlockedNotice({ next }: Readonly<{ next: string }>) {
   const router = useRouter();
 
   useEffect(() => {

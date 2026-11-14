@@ -8,7 +8,7 @@ import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
  * state is not carried by colour alone) are the two that ask for action.
  * `owner` is the receipt's GitHub login and is shown only when signed.
  */
-export function ReceiptStatus({ status, owner }: { status: ReceiptStatusValue; owner?: string }) {
+export function ReceiptStatus({ status, owner }: Readonly<{ status: ReceiptStatusValue; owner?: string }>) {
   if (status === "unverified") {
     return (
       <span className="inline-flex items-center gap-1 text-rose-light">

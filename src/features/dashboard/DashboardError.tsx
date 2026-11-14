@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/ErrorState";
  * none are shown rather than a partial count that reads as complete. The
  * details name each failing file and its validation error.
  */
-export function DashboardError({ details }: { details: string }) {
+export function DashboardError({ details }: Readonly<{ details: string }>) {
   return (
     <ErrorState
       title="Couldn't read the recorded data"

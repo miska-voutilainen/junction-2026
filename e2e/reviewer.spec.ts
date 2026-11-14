@@ -89,6 +89,20 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
   expect(readAfter).toBeGreaterThan(readBefore);
 });
 
+test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, each linking to its page", async ({ page }) => {
+  await page.goto("/reviewer");
+  const ladderLabel = page.getByRole("link", { name: "Idea 1: Trust ladder, opens the idea page" });
+  await expect(ladderLabel).toHaveAttribute("href", /docs\/ideas\/trust-ladder\.md$/);
+  await expect(ladderLabel).toHaveAttribute("target", "_blank");
+
+  // The idea 4 label sits inside the disclosure, so open it the way a reviewer does.
+  await page.getByRole("button", { name: /^Hallucinations caught/ }).click();
+  const quoteCheckLabel = page.getByRole("link", { name: "Idea 4: Quote check, opens the idea page" });
+  await expect(quoteCheckLabel).toBeVisible();
+  await expect(quoteCheckLabel).toHaveAttribute("href", /docs\/ideas\/quote-check\.md$/);
+  await expect(quoteCheckLabel).toHaveAttribute("target", "_blank");
+});
+
 test("opens the plant-a-bug dialog with the real steps and closes it on Escape", async ({ page }) => {
   await page.goto("/reviewer");
   await page.getByRole("button", { name: "Plant a synthetic bug" }).click();

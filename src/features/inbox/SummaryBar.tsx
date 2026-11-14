@@ -5,7 +5,7 @@ import type { InboxSummary } from "./inboxModel";
  * and what a human has to read across all changes. The reading figure is the
  * routing idea in one line: "Humans read 14 of 290 hunks".
  */
-export function SummaryBar({ summary }: { summary: InboxSummary }) {
+export function SummaryBar({ summary }: Readonly<{ summary: InboxSummary }>) {
   const { changes, tierCounts, signed } = summary;
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border-subtle bg-surface-panel px-4 py-2.5 text-sm text-text-secondary">
