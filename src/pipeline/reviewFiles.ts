@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ZodType } from "zod";
 import {
+  AnswerKeySchema,
   ChangeInputSchema,
   RequirementSchema,
   ReportCardSchema,
   ReviewSchema,
+  type AnswerKey,
   type ChangeInput,
   type ReportCard,
   type Requirement,
@@ -17,6 +19,7 @@ import {
 const SAMPLE_CHANGES = path.join("data", "sample", "changes");
 const SAMPLE_REQUIREMENTS = path.join("data", "sample", "requirements");
 const RUNS = path.join("data", "runs");
+const ANSWER_KEYS = path.join("data", "sample", "answer-key");
 const REPORT_CARD = path.join("data", "eval", "report-card.json");
 const DATA_ROOT = path.resolve("data");
 
@@ -38,6 +41,57 @@ export async function loadChangeAndRequirement(
     RequirementSchema,
   );
   return { change, requirement };
+}
+
+/** One change input. @throws with the file path when it is missing or invalid. */
+export async function loadChangeInput(changeId: string): Promise<ChangeInput> {
+  return readJson(path.join(SAMPLE_CHANGES, `${checkedId(changeId)}.json`), ChangeInputSchema);
+}
+
+/** Whether a change input file exists (the contradiction plant cp0 has none: it is mp-2283's own description). */
+export function hasChangeInput(changeId: string): boolean {
+  return existsSync(path.join(SAMPLE_CHANGES, `${checkedId(changeId)}.json`));
+}
+
+/**
+ * Every answer key, sorted by plant id. Scoring reads these; no prompt ever does.
+ * @throws with the file path when a key is invalid.
+ */
+export async function loadAnswerKeys(): Promise<AnswerKey[]> {
+  const names = (await readdir(insideData(ANSWER_KEYS)))
+    .filter((name) => name.endsWith(".json"))
+    .sort();
+  return Promise.all(names.map((name) => readJson(path.join(ANSWER_KEYS, name), AnswerKeySchema)));
+}
+
+/**
+ * A recorded run, or null when the file is missing or no longer matches the
+ * contract. Eval reuse and scoring treat both the same way: no usable run.
+ */
+export async function loadRecordedRun(
+  changeId: string,
+  comparison?: ComparisonRun,
+): Promise<Review | null> {
+  const file = comparison
+    ? path.join(RUNS, checkedId(changeId), comparison.mode, `${comparison.k}.json`)
+    : reviewPath(changeId);
+  if (!existsSync(file)) return null;
+  try {
+    return await readJson(file, ReviewSchema);
+  } catch {
+    return null;
+  }
+}
+
+/** Writes data/eval/report-card.json (2-space JSON, trailing newline). */
+export async function writeReportCard(card: ReportCard): Promise<string> {
+  await mkdir(path.dirname(REPORT_CARD), { recursive: true });
+  await writeFile(
+    insideData(REPORT_CARD),
+    `${JSON.stringify(ReportCardSchema.parse(card), null, 2)}
+`,
+  );
+  return REPORT_CARD;
 }
 
 /** The report card the routing uses, or null before `pnpm evals` has written one. */
@@ -83,7 +137,9 @@ function reviewPath(changeId: string): string {
 /** @throws when `id` could name anything but a file inside its data folder. */
 function checkedId(id: string): string {
   if (!ID_PATTERN.test(id))
-    throw new Error(`"${id}" is not a valid id: use letters, digits and dashes only, e.g. mp-2283.`);
+    throw new Error(
+      `"${id}" is not a valid id: use letters, digits and dashes only, e.g. mp-2283.`,
+    );
   return id;
 }
 

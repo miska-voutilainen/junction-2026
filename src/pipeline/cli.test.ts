@@ -20,6 +20,14 @@ describe("pipeline CLI", () => {
     }
   });
 
+  it("rejects an evals --runs that is not a whole number from 1, before reading any data", () => {
+    for (const value of ["0", "x", "2.5"]) {
+      const result = runCli("eval", "--runs", value);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("--runs takes a whole number from 1");
+    }
+  });
+
   it("prints usage for an unknown command", () => {
     const result = runCli("frobnicate", "mp-2283");
     expect(result.status).toBe(1);
