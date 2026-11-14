@@ -2,3 +2,5 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+overrides:
+  "minimatch@10": "11.0.8"
