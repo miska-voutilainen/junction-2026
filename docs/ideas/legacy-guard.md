@@ -16,7 +16,7 @@ An agent-written change can be correct, pass its tests and still break a system 
    | --- | --- | --- | --- |
    | Legacy code | the hunk is in a legacy zone (reflection resolvers, wire format, Unity client), or reaches into one: it changes a symbol zone code calls, or calls a symbol a zone declares | runtime or Unity owner | a test that existed before the change references it |
    | Old platform | an `#if` on `NETFRAMEWORK`, `NETSTANDARD*` or `UNITY*` | platform owner | a test project for that code runs on that target |
-   | Consumer contract | public declarations, wire attributes and diagnostic ids changed in a hunk, or the contract paths | API owner | the same change adds release notes or docs for consumers |
+   | Consumer contract | public declarations, wire attributes and diagnostic ids changed in a hunk (not in comments; not the analyzer-only source generator, except ids), or the contract paths | API owner | the same change adds release notes or docs for consumers |
    | Build and dependencies | project files, `Directory.*.props`, package versions, `global.json` | build owner | none a rule can check: the owner always reads it |
 
 2. **Every touch stays on the reading list.** Each hunk in a legacy zone gets refusal R8 "Legacy contract: behaviour that old systems depend on" from code, not from the model. A refusal is the coverage map's first row ([Idea 3](coverage-map.md)), so no Verified claim and no ladder level ([Idea 1](trust-ladder.md)) can move it off.

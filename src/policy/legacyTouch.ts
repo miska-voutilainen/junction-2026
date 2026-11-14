@@ -58,11 +58,30 @@ export const wireAttributeLine =
  */
 export const diagnosticIdLiteral = /"MsgPack\d{3}"/;
 
+/**
+ * The source generator ships as an analyzer: consumers load it but never compile
+ * against its types, so `public` and `[Key]` there are not consumer surface.
+ * Its diagnostic ids still are: consumers suppress and document them.
+ */
+export const analyzerOnlyGlob = "src/MessagePack.SourceGenerator/**";
+
+/**
+ * A comment line: `//`, `///` (XML docs), `/*` or a continuation `*`. Docs that
+ * say "public" or `[Key]` describe a contract; they do not change it.
+ * @example "/// every public property" and "* [Key(0)]" match; "public int A;" does not.
+ */
+export const commentLine = /^\s*(?:\/\/|\/\*|\*)/;
+
 /** Contract shapes a changed line can have, named as the touch point's detail lists them. */
-export const contractShapes: ReadonlyArray<{ label: string; pattern: RegExp }> = [
-  { label: "public surface", pattern: publicSurfaceLine },
-  { label: "wire attributes", pattern: wireAttributeLine },
-  { label: "diagnostic ids", pattern: diagnosticIdLiteral },
+export const contractShapes: ReadonlyArray<{
+  label: string;
+  pattern: RegExp;
+  /** False for shapes that mean nothing inside the analyzer-only source generator. */
+  appliesInAnalyzer: boolean;
+}> = [
+  { label: "public surface", pattern: publicSurfaceLine, appliesInAnalyzer: false },
+  { label: "wire attributes", pattern: wireAttributeLine, appliesInAnalyzer: false },
+  { label: "diagnostic ids", pattern: diagnosticIdLiteral, appliesInAnalyzer: true },
 ];
 
 /** Paths of the public surface consumers compile against; a change here reaches every consumer. */

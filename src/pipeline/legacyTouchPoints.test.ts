@@ -222,6 +222,21 @@ describe("consumer-contract and build", () => {
       expect(await touchFor("    // public API stays as it is")).toEqual([]);
     });
 
+    it("ignores a doc comment that mentions public and [Key]", async () => {
+      expect(await touchFor("    /// every public property, <c>[Key]</c> index")).toEqual([]);
+      expect(await touchFor("     * public [Key(0)]")).toEqual([]);
+    });
+
+    it("reads diagnostic ids but not public members inside the source generator", async () => {
+      const generator = "src/MessagePack.SourceGenerator/CodeAnalysis/Info.cs";
+      const analyzer = "src/MessagePack.SourceGenerator/Analyzers/Foo.cs";
+      const record = hunk("h5", generator, [["add", "public record Info(int Id);"]]);
+      const id = hunk("h6", analyzer, [["add", 'Id = "MsgPack019";']]);
+      const points = await find([record, id], fakeTree(), [generator, analyzer]);
+      const contract = points.filter((point) => point.kind === "consumer-contract");
+      expect(contract.map((point) => point.hunkIds)).toEqual([["h6"]]);
+    });
+
     it("ignores a public declaration in tests", async () => {
       const inTests = hunk("h2", "tests/Foo/FooTests.cs", [["add", "public void Works()"]]);
       expect(await find([inTests], fakeTree(), [])).toEqual([]);

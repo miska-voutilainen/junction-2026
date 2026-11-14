@@ -13,7 +13,9 @@ import { gitBaseTree, type BaseTree } from "../lib/git/baseTree";
 import { matchesGlob } from "../policy/globMatch";
 import { legacyZoneOf, legacyZones } from "../policy/legacy";
 import {
+  analyzerOnlyGlob,
   buildGlobs,
+  commentLine,
   consumerContractGlobs,
   consumerNoteGlobs,
   contractShapes,
@@ -293,8 +295,12 @@ function contractReasons(hunk: Hunk): string[] {
   if (matchesAny(consumerContractGlobs, hunk.file)) reasons.push("contract paths");
   // Only src/: a test that declares or calls public members changes no consumer's contract.
   if (!/^src\/.*\.cs$/.test(hunk.file)) return reasons;
-  const changed = hunk.lines.filter((line) => line.kind !== "context");
-  for (const { label, pattern } of contractShapes) {
+  const changed = hunk.lines.filter(
+    (line) => line.kind !== "context" && !commentLine.test(line.text),
+  );
+  const isAnalyzer = matchesGlob(analyzerOnlyGlob, hunk.file);
+  for (const { label, pattern, appliesInAnalyzer } of contractShapes) {
+    if (isAnalyzer && !appliesInAnalyzer) continue;
     if (changed.some((line) => pattern.test(line.text))) reasons.push(label);
   }
   return reasons;
