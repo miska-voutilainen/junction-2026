@@ -45,6 +45,6 @@ The admissibility of expert evidence (Daubert v. Merrell Dow, 1993; Federal Rule
 
 ## In the code
 
-- The quote check in `src/pipeline/`, between A2 and A3: checks every quoted line against the diff
+- [`src/pipeline/quoteCheck.ts`](../../src/pipeline/quoteCheck.ts): the quote check, between A2 and A3: checks every quoted line against the diff
 - [`src/contracts/common.ts`](../../src/contracts/common.ts): citation and evidence-level types
 - Shown on S2, the Story tab, and on S3 under hallucinations

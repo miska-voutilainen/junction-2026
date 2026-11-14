@@ -177,3 +177,26 @@ export function fixedRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
     return [{ ruleId: fixed.ruleId, source: "rule" as const, reason: fixed.reason, hunkIds: matched.map((hunk) => hunk.id) }];
   });
 }
+
+/**
+ * The AI's refusals plus the fixed ones, without counting one decision twice:
+ * a rule refusal is added only for the matched hunks no AI refusal with the
+ * same rule id already lists (spec section 5, Policy). An AI R7 on the hunk a
+ * fixed R7 matches already makes the person decide it.
+ */
+export function mergeFixedRefusals(
+  aiRefusals: readonly UnnumberedRefusal[],
+  fixedRefusals: readonly UnnumberedRefusal[],
+): UnnumberedRefusal[] {
+  const addedFixed = fixedRefusals.flatMap((fixed) => {
+    const listed = new Set(
+      aiRefusals
+        .filter((refusal) => refusal.ruleId === fixed.ruleId)
+        .flatMap((refusal) => refusal.hunkIds),
+    );
+    const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
+    return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];
+  });
+  return [...aiRefusals, ...addedFixed];
+}
+

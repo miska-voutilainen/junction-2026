@@ -79,30 +79,7 @@ export function assembleReview(parts: ReviewParts): Review {
     ...(parts.inconclusiveTests ? { inconclusiveTests: parts.inconclusiveTests } : {}),
   } satisfies Omit<Review, "routing" | "receiptDraft">;
 
-  const routing = route(
-    { ...unrouted, receiptDraft: emptyReceiptDraft, routing: emptyRouting } as Review,
-    parts.levels,
-  );
+  const routing = route(unrouted, parts.levels);
   const routed = { ...unrouted, routing };
   return ReviewSchema.parse({ ...routed, receiptDraft: buildReceiptDraft(routed, parts.levels) });
 }
-
-const emptyReceiptDraft: Review["receiptDraft"] = {
-  checked: [],
-  notChecked: [],
-  residualRisk: { text: "", acceptedRefusalIds: [] },
-};
-
-// route() reads only the review's hunks, claims, findings and refusals; this
-// placeholder satisfies the type until the real decision replaces it.
-const emptyRouting: Review["routing"] = {
-  tier: "light",
-  reasons: [],
-  coverage: {},
-  readHunks: 0,
-  totalHunks: 0,
-  readLines: 0,
-  totalLines: 0,
-  readMinutes: 0,
-  fullMinutes: 0,
-};

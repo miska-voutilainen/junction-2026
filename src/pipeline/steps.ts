@@ -2,9 +2,9 @@
  * The model steps of a review, in the order that makes it blind-first: A1 writes
  * the expectation from the requirement alone, then A2 reads the code with that
  * expectation in hand, A3 reviews the area checklists against the claims and A4
- * tests the author description last. Each step is one client call; A5 runs
- * outside the client (T14). `runIndex` keys repeated eval runs apart in the
- * recordings. Spec section 6.
+ * tests the author description last. Each step is one client call; A5's calls
+ * live in `differential/runDifferentialTests.ts`, because it runs .NET between
+ * them. `runIndex` keys repeated eval runs apart in the recordings. Spec section 6.
  */
 import type { ModelClient } from "../ai/client";
 import type { Requirement, Review } from "../contracts";
@@ -15,6 +15,7 @@ import * as a4 from "../prompts/a4";
 import type { PromptContext } from "./promptContext";
 
 type Hunk = Review["hunks"][number];
+type Claim = Review["claims"][number];
 
 /** A1: what a correct change must do, from the requirement alone. */
 export async function writeBlindExpectation(
@@ -62,8 +63,6 @@ export async function writeChangeStory(
     runIndex,
   });
 }
-
-type Claim = Review["claims"][number];
 
 /** What A3 reads besides the requirement: the code, A1's expectation and A2's checked claims. */
 export interface AreaReviewInput {

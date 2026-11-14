@@ -12,9 +12,20 @@ export interface SensitivePath {
 
 /** The limits route() applies. */
 export interface RoutingPolicy {
-  /** Changed lines outside generated files above which the tier is Full: past this, a person skims. */
+  /**
+   * Changed lines outside generated files above which the tier is Full: past
+   * this, a person skims. 400 is a judgement (spec section 5), not something
+   * we measured. Higher, big changes get a Focused read they cannot give; lower,
+   * ordinary changes read Full and the tier stops telling changes apart.
+   */
   sizeLimit: number;
-  /** Share of hunks that need reading at or above which the tier is Full: the AI covered too little to save effort. */
+  /**
+   * Share of hunks that need reading at or above which the tier is Full: the AI
+   * covered too little to save effort. 0.75 is a judgement (spec section 5),
+   * not something we measured. Lower, changes where the AI covered over a quarter
+   * of the hunks read Full anyway; higher, a change the AI barely covered still
+   * gets a Focused read.
+   */
   readShareFull: number;
   /** Review pace used for the time estimate; a careful read of code runs near 25 lines a minute. */
   linesPerMinute: number;
