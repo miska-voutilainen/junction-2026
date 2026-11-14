@@ -23,7 +23,7 @@ import {
   fixedRefusalsFor,
   type UnnumberedRefusal,
 } from "./checkFindings";
-import { runDotnetTest, type DotnetRunner } from "./differential/dotnetRunner";
+import { dockerDotnetRunner, type DotnetRunner } from "./differential/dotnetRunner";
 import { runDifferentialTests } from "./differential/runDifferentialTests";
 import { buildPromptContext } from "./promptContext";
 import { checkClaims, type SideReader } from "./quoteCheck";
@@ -65,7 +65,7 @@ export interface RunReviewInput {
   steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
   runIndex?: number;
-  /** Runs `dotnet test` for A5; defaults to the real SDK. Tests pass a fake. */
+  /** Runs `dotnet` for A5; defaults to Docker. Tests pass a fake. */
   testRunner?: DotnetRunner;
 }
 
@@ -160,7 +160,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
           hunks: loadedDiff.hunks,
           client,
           runIndex,
-          runner: input.testRunner ?? runDotnetTest,
+          runner: input.testRunner ?? dockerDotnetRunner,
         })
       : null;
 

@@ -39,6 +39,9 @@ async function removeWorktrees(repoDir: string, root: string, dirs: string[]): P
     // Fails when the worktree was never added; the folder is deleted below either way.
     await runGit(repoDir, ["worktree", "remove", "--force", dir]).catch(() => undefined);
   }
-  await rm(root, { recursive: true, force: true, maxRetries: 3 });
+  // A leftover temp folder must not hide the result of the run, so a failure here is logged, not thrown.
+  await rm(root, { recursive: true, force: true, maxRetries: 3 }).catch((error: unknown) =>
+    console.error(`A5: could not remove ${root}: ${String(error)}`),
+  );
   await runGit(repoDir, ["worktree", "prune"]).catch(() => undefined);
 }

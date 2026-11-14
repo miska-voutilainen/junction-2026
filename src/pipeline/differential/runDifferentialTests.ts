@@ -8,7 +8,7 @@
  * only confirm. Spec section 6, A5.
  */
 import { existsSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import type { ModelClient } from "../../ai/client";
 import type { ChangeInput, Requirement, Review } from "../../contracts";
@@ -23,6 +23,7 @@ import { withTestWorktrees, type TestWorktrees } from "./testWorktrees";
 import {
   changedTestMethods,
   chooseStyleExample,
+  firstTestMethod,
   limitTestNames,
   prTestFiles,
   testProjectDir,
@@ -82,16 +83,28 @@ export async function runDifferentialTests(
     return unchanged;
   }
 
+  // Before any model call: a missing Docker should cost nothing.
+  await input.runner.ensureReady();
   const generated = await writeTests(input, projectDir);
   if (generated === null) return unchanged;
-  const outcomes = await withTestWorktrees(input.repoDir, input.change, (worktrees) =>
-    runAllTests(input, projectDir, generated, worktrees),
+  const { outcomes, notRun } = await withTestWorktrees(
+    input.repoDir,
+    input.change,
+    async (worktrees) => {
+      // Restore with the network now, while no model-written file is in either worktree.
+      const warmupTestName = generated.warmupTestName ?? undefined;
+      await input.runner.restore({ worktreeDir: worktrees.baseDir, projectDir, warmupTestName });
+      await input.runner.restore({ worktreeDir: worktrees.headDir, projectDir, warmupTestName });
+      return runAllTests(input, projectDir, generated.tests, worktrees);
+    },
   );
-  const result = applyOutcomes(input.claims, outcomes);
+  const applied = applyOutcomes(input.claims, outcomes);
+  const result = { ...applied, inconclusiveTests: [...notRun, ...applied.inconclusiveTests] };
   const { counts } = result;
   console.error(
-    `A5: ${outcomes.length} test runs: ${counts["tells-apart"]} tell the versions apart, ${counts.same} do not, ` +
-      `${counts["broken-on-head"]} pass on the base and fail on the head, ${counts["fails-on-both"]} fail on both, ${counts.inconclusive} could not run.`,
+    `A5: ${counts["tells-apart"]} test methods tell the versions apart, ${counts.same} pass on both, ` +
+      `${counts["broken-on-head"]} pass on the base and fail on the head, ${counts["fails-on-both"]} fail on both, ` +
+      `${counts.inconclusive + notRun.length} could not run.`,
   );
   for (const test of result.inconclusiveTests)
     console.error(`A5: no verdict from ${test.testNames.join(", ")}: ${test.reason}.`);
@@ -102,7 +115,7 @@ export async function runDifferentialTests(
 async function writeTests(
   input: DifferentialTestsInput,
   projectDir: string,
-): Promise<GeneratedTest[] | null> {
+): Promise<{ tests: GeneratedTest[]; warmupTestName: string | null } | null> {
   const styleExample = await readStyleExample(input, projectDir);
   if (styleExample === null) {
     console.error(`A5 skipped: ${projectDir} has no test file on the base to show the style.`);
@@ -133,7 +146,7 @@ async function writeTests(
     });
     tests.push(answer);
   }
-  return tests;
+  return { tests, warmupTestName: firstTestMethod(styleExample.text) };
 }
 
 async function readStyleExample(
@@ -158,20 +171,26 @@ async function readStyleExample(
   return text === null ? null : { path, text: text.slice(0, STYLE_EXAMPLE_MAX_CHARS) };
 }
 
+/** Tests that were not run, with the reason; they end up in the review's `inconclusiveTests`. */
+type NotRun = NonNullable<Review["inconclusiveTests"]>;
+
 /** A5's tests first on clean worktrees, then the PR's own tests, which need the base to hold the PR's test files. */
 async function runAllTests(
   input: DifferentialTestsInput,
   projectDir: string,
   generated: readonly GeneratedTest[],
   worktrees: TestWorktrees,
-): Promise<TestOutcome[]> {
+): Promise<{ outcomes: TestOutcome[]; notRun: NotRun }> {
   const outcomes: TestOutcome[] = [];
+  const notRun: NotRun = [];
   for (const test of generated) {
-    const outcome = await runGeneratedTest(input, projectDir, test, worktrees);
-    if (outcome !== null) outcomes.push(outcome);
+    const result = await runGeneratedTest(input, projectDir, test, worktrees);
+    if ("reason" in result) notRun.push(result);
+    else outcomes.push(result);
   }
-  const prOutcome = await runPrTests(input, projectDir, worktrees);
-  return prOutcome === null ? outcomes : [...outcomes, prOutcome];
+  const prTests = await runPrTests(input, projectDir, worktrees);
+  if (prTests.outcome !== null) outcomes.push(prTests.outcome);
+  return { outcomes, notRun: [...notRun, ...prTests.notRun] };
 }
 
 /** Adds A5's file to both worktrees, runs its tests on each, and removes the file again so the next test builds on a clean tree. */
@@ -180,21 +199,22 @@ async function runGeneratedTest(
   projectDir: string,
   test: GeneratedTest,
   { baseDir, headDir }: TestWorktrees,
-): Promise<TestOutcome | null> {
+): Promise<TestOutcome | NotRun[number]> {
   const basePath = pathInside(baseDir, test.testFile);
   const headPath = pathInside(headDir, test.testFile);
-  if (existsSync(basePath) || existsSync(headPath)) {
-    console.error(
-      `A5: ${test.testFile} already exists in the repository; the test for ${test.requirementItemId} was not run.`,
-    );
-    return null;
-  }
-  await writeNewFile(basePath, test.code);
-  await writeNewFile(headPath, test.code);
+  if (existsSync(basePath) || existsSync(headPath))
+    return {
+      source: "differential-test",
+      requirementItemId: test.requirementItemId,
+      testNames: test.testNames,
+      reason: `${test.testFile} already exists in the repository`,
+    };
+  await writeGeneratedFile(baseDir, projectDir, test.testFile, test.code);
+  await writeGeneratedFile(headDir, projectDir, test.testFile, test.code);
   try {
     const request = { projectDir, testNames: test.testNames };
-    const base = await input.runner({ ...request, worktreeDir: baseDir });
-    const head = await input.runner({ ...request, worktreeDir: headDir });
+    const base = await input.runner.test({ ...request, worktreeDir: baseDir });
+    const head = await input.runner.test({ ...request, worktreeDir: headDir });
     return {
       source: "differential-test",
       requirementItemId: test.requirementItemId,
@@ -208,14 +228,27 @@ async function runGeneratedTest(
   }
 }
 
-/** The PR's new or changed test methods: the base gets the PR's test files and nothing else of the change. */
+/**
+ * The PR's new or changed test methods in the touched test project: the base
+ * gets the PR's test files and nothing else of the change. Test files of another
+ * project would need that project's own build, so they are reported, not run.
+ */
 async function runPrTests(
   input: DifferentialTestsInput,
   projectDir: string,
   { baseDir, headDir }: TestWorktrees,
-): Promise<TestOutcome | null> {
+): Promise<{ outcome: TestOutcome | null; notRun: NotRun }> {
   const testNames: string[] = [];
-  for (const file of prTestFiles(input.files)) {
+  const files = prTestFiles(input.files);
+  const notRun: NotRun = files
+    .filter((file) => !file.path.startsWith(`${projectDir}/`))
+    .map((file) => ({
+      source: "pr-test",
+      requirementItemId: null,
+      testNames: [file.path],
+      reason: "in another test project, not run",
+    }));
+  for (const file of files.filter((candidate) => candidate.path.startsWith(`${projectDir}/`))) {
     const headFile = pathInside(headDir, file.path);
     if (!existsSync(headFile)) continue;
     const text = await readFile(headFile, "utf8");
@@ -223,10 +256,13 @@ async function runPrTests(
     await writeNewFile(pathInside(baseDir, file.path), text);
   }
   const names = limitTestNames(testNames);
-  if (names.length === 0) return null;
-  const base = await input.runner({ worktreeDir: baseDir, projectDir, testNames: names });
-  const head = await input.runner({ worktreeDir: headDir, projectDir, testNames: names });
-  return { source: "pr-test", requirementItemId: null, testNames: names, base, head };
+  if (names.length === 0) return { outcome: null, notRun };
+  const base = await input.runner.test({ worktreeDir: baseDir, projectDir, testNames: names });
+  const head = await input.runner.test({ worktreeDir: headDir, projectDir, testNames: names });
+  return {
+    outcome: { source: "pr-test", requirementItemId: null, testNames: names, base, head },
+    notRun,
+  };
 }
 
 /**
@@ -242,6 +278,27 @@ function pathInside(worktreeDir: string, repoPath: string): string {
   if (outside.startsWith("..") || isAbsolute(outside))
     throw new Error(`Test file path "${repoPath}" leaves the worktree. Nothing was written.`);
   return full;
+}
+
+/**
+ * Writes model-written code into the test project, after resolving symlinks: a
+ * link inside the checkout must not lead the write out of the project folder.
+ *
+ * @throws Error when the real folder is outside the project.
+ */
+async function writeGeneratedFile(
+  worktreeDir: string,
+  projectDir: string,
+  repoPath: string,
+  text: string,
+): Promise<void> {
+  const path = pathInside(worktreeDir, repoPath);
+  await mkdir(dirname(path), { recursive: true });
+  const projectRoot = await realpath(join(worktreeDir, projectDir));
+  const outside = relative(projectRoot, await realpath(dirname(path)));
+  if (outside.startsWith("..") || isAbsolute(outside))
+    throw new Error(`Test file path "${repoPath}" leaves the test project. Nothing was written.`);
+  await writeFile(path, text, "utf8");
 }
 
 async function writeNewFile(path: string, text: string): Promise<void> {

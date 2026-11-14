@@ -27,3 +27,18 @@ export const PR_TEST_NOTE = "the PR's own test: the same agent wrote the code an
 
 /** Note on a test that passes on both versions (spec section 6). */
 export const NO_DIFFERENCE_NOTE = "the test doesn't tell the versions apart";
+
+/**
+ * The container image A5's tests run in, pinned by digest. A moving tag would
+ * change the SDK under a recorded review: the same test could build differently
+ * next month. Digest of the multi-platform index of `mcr.microsoft.com/dotnet/sdk:8.0`
+ * as of 2026-11-14; bump it deliberately and re-record.
+ */
+export const DOTNET_SDK_IMAGE =
+  "mcr.microsoft.com/dotnet/sdk:8.0@sha256:1b955f179b02df4f0eb5fadedaa898cbe44d620a64aab52eec72c8e91d1355b5";
+
+/** Docker volume that holds the NuGet cache, so the host's own cache and profile never reach the container. */
+export const NUGET_VOLUME = "countersign-a5-nuget";
+
+/** User inside the container: the `app` user the .NET 8 images define (uid 1654), so model-written code does not run as root. */
+export const CONTAINER_USER = "1654:1654";

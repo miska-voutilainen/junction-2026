@@ -58,7 +58,9 @@ const methodDeclaration = /\b(?:async\s+)?(?:Task|ValueTask|void)\s+(\w+)\s*\(/;
 /**
  * Names of the test methods of a head-side file that have an added line: a new
  * test, or a test whose body the PR changed. A method's region runs from its
- * `[Fact]` or `[Theory]` line to the next one.
+ * `[Fact]` or `[Theory]` line to its closing brace (or to the next test when the
+ * braces do not balance), so a helper added after an unchanged test does not
+ * count that test as changed.
  */
 export function changedTestMethods(
   headText: string,
@@ -75,11 +77,34 @@ export function changedTestMethods(
   const lines = headText.replace(/\r\n/g, "\n").split("\n");
   const starts = lines.flatMap((line, index) => (testAttribute.test(line) ? [index] : []));
   return starts.flatMap((start, position) => {
-    const end = starts[position + 1] ?? lines.length;
+    const end = methodEnd(lines, start, starts[position + 1] ?? lines.length);
     const isChanged = [...addedLines].some((number) => number - 1 >= start && number - 1 < end);
     const name = isChanged ? methodName(lines.slice(start, end)) : null;
     return name === null ? [] : [name];
   });
+}
+
+/** The name of the first test method of a file, or null: one of the repository's own tests. */
+export function firstTestMethod(text: string): string | null {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const start = lines.findIndex((line) => testAttribute.test(line));
+  return start === -1 ? null : methodName(lines.slice(start));
+}
+
+/** The line after the method's closing brace, or `limit` when the braces never balance before it. */
+function methodEnd(lines: readonly string[], start: number, limit: number): number {
+  let depth = 0;
+  let hasOpened = false;
+  for (let index = start; index < limit; index++) {
+    for (const character of lines[index]) {
+      if (character === "{") {
+        depth += 1;
+        hasOpened = true;
+      } else if (character === "}") depth -= 1;
+    }
+    if (hasOpened && depth <= 0) return index + 1;
+  }
+  return limit;
 }
 
 function methodName(region: readonly string[]): string | null {

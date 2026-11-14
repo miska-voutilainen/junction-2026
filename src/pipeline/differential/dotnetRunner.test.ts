@@ -1,113 +1,83 @@
 import { describe, expect, it } from "vitest";
-import {
-  classifyTestOutput,
-  withoutTimings,
-  withoutWorktreePath,
-  dotnetEnvironment,
-  dotnetTestArguments,
-  trimOutput,
-} from "./dotnetRunner";
+import { DOTNET_SDK_IMAGE, NUGET_VOLUME } from "../../policy/differentialTests";
+import { restoreArguments, testArguments, warmupArguments } from "./dotnetRunner";
 
-describe("classifyTestOutput", () => {
-  it("passes a green run", () => {
-    const output =
-      "Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s";
-    expect(classifyTestOutput(output, 0)).toBe("pass");
+const request = { worktreeDir: "C:\\Temp\\cs-a5-x\\base", projectDir: "tests/X" };
+
+describe("restoreArguments", () => {
+  const args = restoreArguments("name-1", request);
+
+  it("runs the pinned image as a non-root user with only the worktree and the NuGet volume mounted", () => {
+    expect(args).toContain(DOTNET_SDK_IMAGE);
+    expect(args[args.indexOf("--user") + 1]).toBe("1654:1654");
+    const mounts = args.flatMap((arg, index) => (args[index - 1] === "-v" ? [arg] : []));
+    expect(mounts).toEqual(["C:/Temp/cs-a5-x/base:/work", `${NUGET_VOLUME}:/nuget:rw`]);
   });
 
-  it("fails a run with a failed test", () => {
-    const output =
-      "  Failed A5_F1_Counts [4 ms]\nFailed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1";
-    expect(classifyTestOutput(output, 1)).toBe("fail");
-  });
-
-  it("counts a failure on any target framework", () => {
-    const output =
-      "Passed!  - Failed:     0, Passed:     1, Total: 1\nFailed!  - Failed:     1, Passed:     0, Total: 1";
-    expect(classifyTestOutput(output, 1)).toBe("fail");
-  });
-
-  it("does not read dotnet's Build FAILED after a failed test as a build error", () => {
-    const output =
-      "Failed!  - Failed:     1, Passed:     0, Total:     1\n\nBuild FAILED.\n    0 Error(s)";
-    expect(classifyTestOutput(output, 1)).toBe("fail");
-  });
-
-  it("is not a verdict when the code does not build, even with failures listed", () => {
-    const output = "A.cs(3,1): error CS0246: The type 'Foo' could not be found\nBuild FAILED.";
-    expect(classifyTestOutput(output, 1)).toBe("error");
-  });
-
-  it("is not a verdict when no test matches the filter", () => {
-    expect(classifyTestOutput("No test matches the given testcase filter", 0)).toBe("error");
-  });
-
-  it("is not a verdict when there is no summary at all", () => {
-    expect(classifyTestOutput("", null)).toBe("error");
+  it("restores the project with the network on", () => {
+    expect(args).not.toContain("--network");
+    expect(args.slice(args.indexOf(DOTNET_SDK_IMAGE) + 1)).toEqual([
+      "dotnet",
+      "restore",
+      "tests/X",
+      "--nologo",
+    ]);
   });
 });
 
-describe("dotnetTestArguments", () => {
-  it("joins the names into one OR filter and passes the project as its own argument", () => {
-    expect(
-      dotnetTestArguments({ worktreeDir: "w", projectDir: "tests/X", testNames: ["A", "B"] }),
-    ).toEqual([
+describe("testArguments", () => {
+  const args = testArguments("name-2", { ...request, testNames: ["A", "B"] });
+
+  it("turns the network off, drops all capabilities and mounts the NuGet cache read-only", () => {
+    expect(args[args.indexOf("--network") + 1]).toBe("none");
+    expect(args[args.indexOf("--cap-drop") + 1]).toBe("ALL");
+    expect(args).toContain(`${NUGET_VOLUME}:/nuget:ro`);
+    expect(args).toContain("--rm");
+  });
+
+  it("passes no host environment: only the dotnet settings", () => {
+    const variables = args.flatMap((arg, index) => (args[index - 1] === "-e" ? [arg] : []));
+    expect(variables.map((variable) => variable.split("=")[0]).sort()).toEqual([
+      "DOTNET_CLI_HOME",
+      "DOTNET_CLI_TELEMETRY_OPTOUT",
+      "DOTNET_NOLOGO",
+      "HOME",
+      "NUGET_PACKAGES",
+    ]);
+  });
+
+  it("runs one OR filter without restoring, with the project as its own argument", () => {
+    const command = args.slice(args.indexOf(DOTNET_SDK_IMAGE) + 1);
+    // The script is fixed text; everything variable is a separate argument after it.
+    expect(command.slice(0, 2)).toEqual(["sh", "-c"]);
+    expect(command[2]).toContain('exec dotnet "$@"');
+    expect(command.slice(3)).toEqual([
+      "sh",
       "test",
       "tests/X",
+      "--no-restore",
       "--nologo",
+      "--disable-build-servers",
+      "--logger",
+      "console;verbosity=normal",
       "--filter",
       "FullyQualifiedName~A|FullyQualifiedName~B",
     ]);
   });
 });
 
-describe("dotnetEnvironment", () => {
-  it("passes the build's variables and leaves secrets out", () => {
-    const env = dotnetEnvironment({ PATH: "/bin", ANTHROPIC_API_KEY: "secret", HOME: "/h" });
-    expect(env.ANTHROPIC_API_KEY).toBeUndefined();
-    expect(env.HOME).toBe("/h");
-    expect(env.DOTNET_CLI_TELEMETRY_OPTOUT).toBe("1");
-  });
-});
+describe("warmupArguments", () => {
+  const args = warmupArguments("name-3", { ...request, warmupTestName: "Existing_Test; rm -rf /" });
+  const command = args.slice(args.indexOf(DOTNET_SDK_IMAGE) + 1);
 
-describe("trimOutput", () => {
-  it("drops build progress and warnings so the test result stays in the kept tail", () => {
-    const noise = [
-      "  Restored C:/x.csproj (in 4 ms).",
-      "A.cs(1,1): warning CS0105: dup",
-      "  Lib -> C:/bin/Lib.dll",
-      "",
-    ].join("\n");
-    const result = "Failed A5_F1_Counts [4 ms]\nFailed!  - Failed: 1, Passed: 0";
-    expect(trimOutput(`${noise.repeat(300)}${result}`)).toBe(result);
+  it("keeps the project and the test name out of the shell script", () => {
+    expect(command.slice(0, 2)).toEqual(["sh", "-c"]);
+    expect(command[2]).not.toContain("tests/X");
+    expect(command[2]).not.toContain("Existing_Test");
+    expect(command.slice(3)).toEqual(["tests/X", "FullyQualifiedName~Existing_Test; rm -rf /"]);
   });
 
-  it("keeps the last 2,000 characters", () => {
-    const trimmed = trimOutput(`${"x".repeat(5000)}END`);
-    expect(trimmed).toHaveLength(2000);
-    expect(trimmed.endsWith("END")).toBe(true);
-  });
-});
-
-describe("withoutWorktreePath", () => {
-  it("hides the random temp folder in both slash styles", () => {
-    const dir = ["C:", "Temp", "cs-a5-x", "base"].join(String.fromCharCode(92));
-    const output = `at ${dir}${String.fromCharCode(92)}A.cs and C:/Temp/cs-a5-x/base/B.cs`;
-    expect(withoutWorktreePath(output, dir)).toBe(
-      `at <worktree>${String.fromCharCode(92)}A.cs and <worktree>/B.cs`,
-    );
-  });
-});
-
-describe("withoutTimings", () => {
-  it("removes the durations of a run", () => {
-    const output = [
-      "  Failed A5_F1_X [6 ms]",
-      "Failed!  - Failed:     1, Passed:     0, Total:     1, Duration: 376 ms - Tests.dll (net8.0)",
-      "Time Elapsed 00:00:35.79",
-    ].join("\n");
-    expect(withoutTimings(output)).toBe(
-      "  Failed A5_F1_X\nFailed!  - Failed:     1, Passed:     0, Total:     1 - Tests.dll (net8.0)\n",
-    );
+  it("is the only phase with a model-free repository test and the network on", () => {
+    expect(args).not.toContain("--network");
   });
 });

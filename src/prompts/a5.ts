@@ -86,8 +86,8 @@ export interface A5Reference {
 /**
  * Output schema. The path check keeps model-written code inside the test project
  * (a `..` or an absolute path would write elsewhere on this machine). Names are
- * plain identifiers that appear in the code, so the `--filter` built from them
- * cannot carry filter syntax and always matches a method that exists.
+ * plain identifiers declared as methods in the code, so the `--filter` built from
+ * them cannot carry filter syntax and names a method that exists.
  *
  * @example testFile "tests/X.Tests/A5_F1.cs" fits projectDir "tests/X.Tests"; "tests/X.Tests/../A5.cs" does not.
  */
@@ -98,7 +98,7 @@ export function outputSchema({ requirementItemId, projectDir }: A5Reference): z.
     .object({
       testFile: z.string().min(1),
       code: z.string().min(1).max(GENERATED_TEST_MAX_CHARS),
-      testNames: z.array(z.string()).min(1).max(5),
+      testNames: z.array(z.string()).min(1).max(3),
       requirementItemId: z.string(),
     })
     .superRefine((output, context) => {
@@ -114,7 +114,7 @@ export function outputSchema({ requirementItemId, projectDir }: A5Reference): z.
             "testNames",
             `"${name}" must start with "${namePrefix}" and use only letters, digits and underscores`,
           );
-        else if (!new RegExp(`\\b${name}\\s*\\(`).test(output.code))
+        else if (!new RegExp(`\\b(?:void|Task|ValueTask)\\s+${name}\\s*\\(`).test(output.code))
           problem("testNames", `"${name}" is not a method in code`);
       }
     });
@@ -122,8 +122,8 @@ export function outputSchema({ requirementItemId, projectDir }: A5Reference): z.
 
 /** Why a test file path is unusable, or null when it is a new .cs file inside the project folder. */
 function testFilePathProblem(testFile: string, projectDir: string): string | null {
-  if (testFile.includes("\\") || testFile.startsWith("/") || /^[A-Za-z]:/.test(testFile))
-    return "use a repository-relative path with forward slashes";
+  if (!/^[A-Za-z0-9_./-]+$/.test(testFile) || testFile.startsWith("/"))
+    return "use a repository-relative path of letters, digits, underscores, dots, dashes and forward slashes";
   const segments = testFile.split("/");
   if (segments.includes("..") || segments.includes("."))
     return 'the path must not contain "." or ".." segments';

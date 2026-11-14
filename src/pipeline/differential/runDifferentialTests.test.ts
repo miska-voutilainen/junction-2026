@@ -39,6 +39,7 @@ let repoDir: string;
 let input: DifferentialTestsInput;
 let seenRequests: TestRunRequest[];
 let prompts: string[];
+const restoredWithA5File: boolean[] = [];
 
 function git(...args: string[]): string {
   return execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", ...args], {
@@ -94,12 +95,19 @@ beforeAll(async () => {
     },
   };
   // The fake dotnet "passes" the PR's test everywhere and A5's test only where the resolver counts from zero.
-  const runner: DotnetRunner = async (request) => {
-    seenRequests.push(request);
-    const source = readFileSync(join(request.worktreeDir, "src/Resolver.cs"), "utf8");
-    const hasA5File = existsSync(join(request.worktreeDir, "tests/X.Tests/A5_F1.cs"));
-    const result = hasA5File && !source.includes("Count = 0") ? "fail" : "pass";
-    return { result, output: `${result} in ${request.testNames.join(",")}` };
+  const runner: DotnetRunner = {
+    ensureReady: async () => undefined,
+    restore: async (request) => {
+      // Restore must run before a model-written file is in the worktree.
+      restoredWithA5File.push(existsSync(join(request.worktreeDir, "tests/X.Tests/A5_F1.cs")));
+    },
+    test: async (request) => {
+      seenRequests.push(request);
+      const source = readFileSync(join(request.worktreeDir, "src/Resolver.cs"), "utf8");
+      const hasA5File = existsSync(join(request.worktreeDir, "tests/X.Tests/A5_F1.cs"));
+      const result = hasA5File && !source.includes("Count = 0") ? "fail" : "pass";
+      return { result, output: `${result} in ${request.testNames.join(",")}` };
+    },
   };
   input = {
     repoDir,
@@ -156,13 +164,57 @@ describe("runDifferentialTests", () => {
   });
 
   it("removes the worktrees when a run throws", async () => {
-    const failing: DotnetRunner = async () => {
-      throw new Error("runner broke");
+    const failing: DotnetRunner = {
+      ...input.runner,
+      test: async () => {
+        throw new Error("runner broke");
+      },
     };
     await expect(runDifferentialTests({ ...input, runner: failing })).rejects.toThrow(
       "runner broke",
     );
     expect(git("worktree", "list").split("\n")).toHaveLength(1);
+  });
+
+  it("restores both worktrees before any model-written file is added", async () => {
+    restoredWithA5File.length = 0;
+    await runDifferentialTests(input);
+    expect(restoredWithA5File).toEqual([false, false]);
+  });
+
+  it("stops before any model call when the runner is not ready", async () => {
+    prompts.length = 0;
+    const notReady: DotnetRunner = {
+      ...input.runner,
+      ensureReady: async () => {
+        throw new Error("Docker is not running. Start Docker Desktop, or run with --no-tests.");
+      },
+    };
+    await expect(runDifferentialTests({ ...input, runner: notReady })).rejects.toThrow(
+      "Docker is not running",
+    );
+    expect(prompts).toEqual([]);
+  });
+
+  it("reports a PR test file of another test project as not run", async () => {
+    const files = [
+      ...input.files,
+      {
+        path: "tests/Other.Tests/B.cs",
+        kind: "test" as const,
+        area: null,
+        added: 1,
+        removed: 0,
+        hunkIds: [],
+      },
+    ];
+    const result = await runDifferentialTests({ ...input, files });
+    expect(result.inconclusiveTests).toContainEqual({
+      source: "pr-test",
+      requirementItemId: null,
+      testNames: ["tests/Other.Tests/B.cs"],
+      reason: "in another test project, not run",
+    });
   });
 
   it("changes nothing when the change touches no test project", async () => {

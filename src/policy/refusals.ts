@@ -16,13 +16,34 @@ export interface RefusalRule {
 
 /** R1 to R7, in id order. */
 export const refusalRules: RefusalRule[] = [
-  { id: "R1", title: "Requirement intent: whether the requested behaviour is right", decider: "product owner (the library maintainers)" },
-  { id: "R2", title: "Security design: trust boundaries, untrusted-input handling, crypto, secrets", decider: "security owner" },
-  { id: "R3", title: "Data handling: retention, personal data, legal", decider: "data protection owner" },
-  { id: "R4", title: "Irreversible changes: wire-format or persisted-data changes old readers can't read, destructive migrations, data deletion", decider: "change owner" },
+  {
+    id: "R1",
+    title: "Requirement intent: whether the requested behaviour is right",
+    decider: "product owner (the library maintainers)",
+  },
+  {
+    id: "R2",
+    title: "Security design: trust boundaries, untrusted-input handling, crypto, secrets",
+    decider: "security owner",
+  },
+  {
+    id: "R3",
+    title: "Data handling: retention, personal data, legal",
+    decider: "data protection owner",
+  },
+  {
+    id: "R4",
+    title:
+      "Irreversible changes: wire-format or persisted-data changes old readers can't read, destructive migrations, data deletion",
+    decider: "change owner",
+  },
   { id: "R5", title: "New third-party dependencies and licences", decider: "tech lead" },
   { id: "R6", title: "Changes it can't trace to the requirement", decider: "change owner" },
-  { id: "R7", title: "Public contract: new or changed public API, diagnostic IDs or documented behaviour", decider: "API owner (the maintainers)" },
+  {
+    id: "R7",
+    title: "Public contract: new or changed public API, diagnostic IDs or documented behaviour",
+    decider: "API owner (the maintainers)",
+  },
 ];
 
 /** A path that always needs a human, whatever the model says. */
