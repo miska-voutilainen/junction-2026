@@ -1,7 +1,20 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ReviewSchema } from "../contracts";
-import { COMMENT_MARKER, renderReviewComment } from "./prComment";
+import { COMMENT_MARKER, receiptExitFrom, renderReviewComment } from "./prComment";
+
+describe("receiptExitFrom", () => {
+  it("reads an exit code", () => {
+    expect(receiptExitFrom("2")).toBe(2);
+    expect(receiptExitFrom("0")).toBe(0);
+  });
+
+  it("is NaN for a missing or empty flag, never 0, so an unverified diff never reads as signed", () => {
+    expect(receiptExitFrom(undefined)).toBeNaN();
+    expect(receiptExitFrom("")).toBeNaN();
+    expect(receiptExitFrom("  ")).toBeNaN();
+  });
+});
 
 const review = ReviewSchema.parse(
   JSON.parse(readFileSync("data/runs/mp-2283/review.json", "utf8")),

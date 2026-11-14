@@ -138,7 +138,13 @@ jobs:
       - name: Review
         env:
           AI_MODE: ${{ steps.mode.outputs.mode }}
-        run: pnpm review run "$CHANGE_ID"
+        # A5 mounts each git worktree into a container that runs as uid 1654, not the runner's user.
+        # Docker Desktop's mounts are writable by anyone; a Linux runner's keep their 755 owner bits, so
+        # dotnet restore could not write obj/. umask 0000 makes git create the worktrees writable; the
+        # runner is thrown away after the job and the container's lockdown is unchanged.
+        run: |
+          umask 0000
+          pnpm review run "$CHANGE_ID"
 
       - name: Comment
         env:

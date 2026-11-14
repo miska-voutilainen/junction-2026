@@ -12,7 +12,7 @@ import { MODEL } from "../ai/limits";
 import { levelsForReviewer } from "../rules/ladder";
 import { countGenerated } from "../rules/route";
 import { MP2283_CHANGE_ID, checkReview, loadContradictionKey } from "./checkReview";
-import { renderReviewComment } from "./prComment";
+import { receiptExitFrom, renderReviewComment } from "./prComment";
 import {
   loadChangeAndRequirement,
   loadRecordedReview,
@@ -51,7 +51,7 @@ async function main(argv: string[]): Promise<void> {
   if (!changeId || (command !== "run" && command !== "check" && command !== "comment")) fail(usage);
 
   if (command === "comment") {
-    const receiptExit = Number(values["receipt-exit"] ?? NaN);
+    const receiptExit = receiptExitFrom(values["receipt-exit"]);
     const measuredModel = (await loadReportCard())?.reviewer.model ?? null;
     console.log(
       renderReviewComment(await loadRecordedReview(changeId), receiptExit, measuredModel),

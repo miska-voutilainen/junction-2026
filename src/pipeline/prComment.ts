@@ -63,6 +63,18 @@ export function renderReviewComment(
   ].join("\n");
 }
 
+/**
+ * The `--receipt-exit` flag as a number, or NaN when it says nothing. CI passes an empty
+ * string when the receipt job stopped before `verify` ran, and `Number("")` is 0, which
+ * would read as "Signed" for a diff nobody verified.
+ * @example receiptExitFrom("2") // 2
+ * @example receiptExitFrom("") // NaN, so the comment says "Not checked"
+ */
+export function receiptExitFrom(flag: string | undefined): number {
+  if (flag === undefined || flag.trim() === "") return Number.NaN;
+  return Number(flag);
+}
+
 function countCoverage(coverage: Review["routing"]["coverage"]) {
   const counts = { verified: 0, supported: 0, read: 0, generated: 0 };
   for (const state of Object.values(coverage)) counts[state] += 1;
