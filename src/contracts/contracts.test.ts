@@ -171,6 +171,7 @@ describe("contracts", () => {
         checked: [{ item: "i", by: "tool" }],
         notChecked: [],
         residualRisk: { text: "", acceptedRefusalIds: [] },
+        hunks: [{ hunkId: "h1", file: "src/A.cs", coverage: "read", readBy: "owner" }],
       },
       signature: "-----BEGIN SSH SIGNATURE-----",
       notesRef: "refs/notes/countersign",

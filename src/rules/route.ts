@@ -4,6 +4,9 @@
  * only what no checked evidence covers ("Read 2 of 8 hunks"). The tier is the
  * highest any fired rule asks for. Pure rules, no model call, no I/O, so the
  * routing is explainable line by line and runs in Node and the browser.
+ * After a bug escapes in an area, R-escape sends the next changes there back to
+ * a full read: the cluster arrest of continuous sampling plans, where a defect
+ * that gets through returns inspection to 100% until trust is earned again.
  * Spec section 5, route().
  */
 import { areaLabel, ladderLevelLabel } from "../contracts";
@@ -20,11 +23,13 @@ const tierRank: Record<Tier, number> = { light: 0, focused: 1, full: 2 };
  * @param review the recorded review (hunks, claims, findings, refusals)
  * @param levels trust-ladder level per area, from the report card and any simulated escapes
  * @param policy thresholds; defaults to the committed routing policy
+ * @param escapes simulated escapes per area; any area with one or more triggers R-escape
  */
 export function route(
   review: Review,
   levels: Record<Area, LadderLevel>,
   policy: RoutingPolicy = routingPolicy,
+  escapes: Partial<Record<Area, number>> = {},
 ): TierDecision {
   const areaOf = new Map(review.files.map((file) => [file.path, file.area]));
   const coverage = coverHunks(review, levels, areaOf);
@@ -35,7 +40,7 @@ export function route(
   const totalLines = sumChangedLines(review.hunks);
   const readLines = sumChangedLines(readHunkList);
 
-  const reasons = collectReasons({ review, levels, policy, areaOf, readHunks, totalHunks });
+  const reasons = collectReasons({ review, levels, policy, areaOf, escapes, readHunks, totalHunks });
   const tier = reasons.reduce<Tier>((highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest), "light");
 
   return {
@@ -75,11 +80,12 @@ interface RuleInput {
   levels: Record<Area, LadderLevel>;
   policy: RoutingPolicy;
   areaOf: Map<string, Area | null>;
+  escapes: Partial<Record<Area, number>>;
   readHunks: number;
   totalHunks: number;
 }
 
-/** Rules 2 to 9 in the spec's order; each that fires adds one reason (rule 8 adds one per area). */
+/** Rules 2 to 10 in the spec's order; each that fires adds one reason (R-escape and R-area-level add one per area). */
 function collectReasons(input: RuleInput): Reason[] {
   const { review, policy, readHunks, totalHunks } = input;
   const reasons: Reason[] = [];
@@ -92,6 +98,8 @@ function collectReasons(input: RuleInput): Reason[] {
   if (totalHunks > 0 && readHunks / totalHunks >= policy.readShareFull) {
     reasons.push({ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${totalHunks} hunks: most of the change needs a human` });
   }
+
+  reasons.push(...escapeReasons(input));
 
   const refusals = review.refusals.length;
   if (refusals > 0) {
@@ -131,14 +139,31 @@ function sensitiveLabelsTouched(hunks: Hunk[], policy: RoutingPolicy): string[] 
     .map(({ label }) => label);
 }
 
-/** Rule 8: one reason per area the change touches whose level is below Trusted. */
-function areaLevelReasons({ review, levels, areaOf }: RuleInput): Reason[] {
+/** The areas the change's hunks fall in, in order of first appearance. */
+function touchedAreas({ review, areaOf }: RuleInput): Area[] {
   const touched = new Set<Area>();
   for (const hunk of review.hunks) {
     const area = areaOf.get(hunk.file);
     if (area) touched.add(area);
   }
-  return [...touched]
+  return [...touched];
+}
+
+/** Rule 4: one Full reason per touched area where a bug has escaped. */
+function escapeReasons(input: RuleInput): Reason[] {
+  return touchedAreas(input)
+    .filter((area) => (input.escapes[area] ?? 0) > 0)
+    .map((area): Reason => ({
+      ruleId: "R-escape",
+      tier: "full",
+      text: `${areaLabel[area]}: a bug escaped here, the next changes get a full read`,
+    }));
+}
+
+/** Rule 9: one reason per area the change touches whose level is below Trusted. */
+function areaLevelReasons(input: RuleInput): Reason[] {
+  const { levels } = input;
+  return touchedAreas(input)
     .filter((area) => levels[area] !== "trusted")
     .map((area): Reason => ({
       ruleId: "R-area-level",

@@ -28,7 +28,7 @@ function finding(kind: Review["findings"][number]["kind"], hunkIds: string[]): R
 }
 
 function refusal(hunkIds: string[]): Review["refusals"][number] {
-  return { id: "r1", ruleId: "R7", reason: "r", hunkIds };
+  return { id: "r1", ruleId: "R7", source: "ai", reason: "r", hunkIds };
 }
 
 /** A schema-shaped Review with only the parts route() reads filled in meaningfully. */
@@ -235,6 +235,39 @@ describe("rules", () => {
   it("does not fire R-unread when another rule fired", () => {
     const review = makeReview({ hunks: [{ id: "h1" }, { id: "h2" }, { id: "h3" }], claims: verifiedOn("h1", "h2"), refusals: [refusal(["h3"])] });
     expect(ruleIds(review)).toEqual(["R-refusal"]);
+  });
+});
+
+describe("R-escape", () => {
+  const securityHunk = { id: "h1", file: "src/Runtime/A.cs", area: "security" as const };
+  const analyzerHunk = { id: "h2", file: "src/Analyzers/B.cs", area: "analyzer" as const };
+  const covered = (...hunks: HunkSpec[]) => makeReview({ hunks, claims: verifiedOn(...hunks.map((hunk) => hunk.id)) });
+  const escapeReasons = (review: Review, escapes: Partial<Record<Area, number>>) =>
+    route(review, trustedEverywhere, undefined, escapes).reasons.filter((reason) => reason.ruleId === "R-escape");
+
+  it("sends the change to a full read when an area it touches has an escape", () => {
+    const decision = route(covered(securityHunk), trustedEverywhere, undefined, { security: 1 });
+    expect(decision.tier).toBe("full");
+    expect(decision.reasons).toEqual([{ ruleId: "R-escape", tier: "full", text: "Security: a bug escaped here, the next changes get a full read" }]);
+  });
+
+  it("adds one reason per escaped area the change touches", () => {
+    const reasons = escapeReasons(covered(securityHunk, analyzerHunk), { security: 2, analyzer: 1 });
+    expect(reasons.map((reason) => reason.text)).toEqual([
+      "Security: a bug escaped here, the next changes get a full read",
+      "Analyzer: a bug escaped here, the next changes get a full read",
+    ]);
+  });
+
+  it("ignores escapes in areas the change does not touch and zero counts", () => {
+    expect(escapeReasons(covered(securityHunk), { analyzer: 3 })).toEqual([]);
+    expect(escapeReasons(covered(securityHunk), { security: 0 })).toEqual([]);
+    expect(route(covered(securityHunk), trustedEverywhere).tier).toBe("light");
+  });
+
+  it("sits after R-read-share and before R-refusal", () => {
+    const review = makeReview({ hunks: [securityHunk], refusals: [refusal(["h1"])] });
+    expect(route(review, trustedEverywhere, undefined, { security: 1 }).reasons.map((reason) => reason.ruleId)).toEqual(["R-read-share", "R-escape", "R-refusal"]);
   });
 });
 

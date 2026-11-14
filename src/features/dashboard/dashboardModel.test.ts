@@ -167,6 +167,7 @@ describe("escalation reasons", () => {
 describe("reasonLabel", () => {
   it("names the routing rules it knows", () => {
     expect(reasonLabel("R-area-level", "Security: Shadow, the AI's output routes nothing here")).toBe("Area not yet Trusted");
+    expect(reasonLabel("R-escape", "Security: a bug escaped here, the next changes get a full read")).toBe("A bug escaped in this area");
   });
 
   it("falls back to the sentence route() gave for a rule it has no label for", () => {

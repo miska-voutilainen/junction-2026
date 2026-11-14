@@ -15,6 +15,7 @@ Agent-written pull requests now outnumber human ones, and line-by-line review do
 5. **[A written refusal policy](docs/ideas/refusal-policy.md).** A versioned list of what the AI never decides, each item naming who decides instead.
 6. **[Evidence levels instead of confidence scores](docs/ideas/evidence-levels.md).** A claim is Verified, Supported, Unverified or Refused by what backs it; the model's own confidence is never shown.
 7. **[The signed receipt in git](docs/ideas/signed-receipt.md).** The owner signs what was checked, what wasn't and the risk they accept, tied to the exact diff, so the receipt can gate the merge.
+8. **[The author never checks its own work](docs/ideas/separation-of-duties.md).** An agent's own test makes a claim Supported at most, the AI drafts the receipt but only a named person signs it, and whoever plants the bugs never sees the prompts.
 
 Each idea has its own page in [`docs/ideas/`](docs/ideas/): the problem, how it works, what we measured, how to adopt it, its limits and where it lives in the code.
 
@@ -26,11 +27,21 @@ Built at Junction 2026 for Tieto's challenge, **Earned Trust in AI Code** ([chal
 
 <!-- demo-prep turns this part into the judges' README at the freeze: a GIF or screenshot, the live URL, what it does, how it uses the partner's tech, the architecture, what's real vs mocked, how to run it locally, and how we used AI tools. -->
 
-## Prepared before the event: Markdown only
+<!-- demo-prep keeps the next section word for word: it is the team's declaration of what existed before the event. -->
 
-The agent environment below was set up before Junction started, as Markdown only: written guidance on how the team works, how the agents behave, and specs for the tooling. The event rules let us bring only Markdown files, so the first commit (`chore: add agent environment`) holds nothing else.
+## Prepared before the event
 
-Every line of code was written during the event, by the team and its agents, starting with the kickoff branch on Fri 13.11. That includes the hooks, settings and CI described here. Nothing from other projects is in this repository.
+Junction 2026 started on Fri 13.11.2026 at 19:30 EET. The rules let teams bring Markdown files but no code. This is everything that existed before 19:30, and when work started. Times are EET, from GitHub and `git log`; check them with `git log --reverse` and `gh repo view --json createdAt`.
+
+| Time (Fri 13.11) | What happened                                                                                                                                                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 19:12            | Empty repository created on GitHub                                                                                                                                                                                                                                                       |
+| 19:13            | Issue #1 (the agent sync log) opened with a one-line description; first comment at 20:49                                                                                                                                                                                                 |
+| 19:30            | Event starts                                                                                                                                                                                                                                                                             |
+| 19:40            | First commit `bac8ef7`, `chore: add agent environment`: 38 Markdown files written before the event (rules, skills, subagent definitions, templates, setup guide) and two plain-text config files, `.gitignore` (9 ignore patterns) and `.gitattributes` (one line, `* text=auto eol=lf`) |
+| 22:03            | First code: the skeleton, PR #26                                                                                                                                                                                                                                                         |
+
+The Markdown is project-agnostic. It never names Countersign, Tieto or the challenge, and `docs/spec.md` in that commit is an empty template. We picked the challenge, the idea, the name and the spec at the event. Every line of code, including the hooks, settings and CI that the Markdown describes, was written during the event by the team and its agents. Nothing from other projects is in this repository; tools such as Lightfoot and Graphify run on our laptops and are not committed.
 
 ## Agent environment
 
@@ -48,58 +59,58 @@ Everything here is Markdown. Rules, skills and subagents are in place. Hooks, se
 
 ### The harness
 
-| When | What | Where |
-| --- | --- | --- |
-| Session start | lane, handoffs, my task queue, overlapping PRs, new sync-log summaries, the next task | `session-brief` hook |
-| Every action | secrets, force pushes, pushes to `main`, other lanes' files, stray files, GitHub text format | `guard` hook |
-| Every edit | formatting, lint, accessibility lint, hard-coded colours, placeholder copy | `format-on-edit` hook |
-| Every turn | type errors, failing unit tests | `quality-on-stop` hook |
-| Every task | pick the next ready issue, build to the spec, ship, merge, repeat | `go` skill |
-| Every PR | lanes touched, self-check, reviews by tier, docs, PR description, e2e | `ship-pr` skill |
-| Every push / deploy | lane check, tree check, hook tests, lint, typecheck, tests, build; e2e on previews | CI |
-| Session end | commit, push, decisions recorded, summary on issue #1 | `handover` skill |
-| Midpoint and freeze | whole-product, docs and tree sweep into `polish` issues; judge's-eye critique | `polish-pass`, `product-critic` |
+| When                | What                                                                                         | Where                           |
+| ------------------- | -------------------------------------------------------------------------------------------- | ------------------------------- |
+| Session start       | lane, handoffs, my task queue, overlapping PRs, new sync-log summaries, the next task        | `session-brief` hook            |
+| Every action        | secrets, force pushes, pushes to `main`, other lanes' files, stray files, GitHub text format | `guard` hook                    |
+| Every edit          | formatting, lint, accessibility lint, hard-coded colours, placeholder copy                   | `format-on-edit` hook           |
+| Every turn          | type errors, failing unit tests                                                              | `quality-on-stop` hook          |
+| Every task          | pick the next ready issue, build to the spec, ship, merge, repeat                            | `go` skill                      |
+| Every PR            | lanes touched, self-check, reviews by tier, docs, PR description, e2e                        | `ship-pr` skill                 |
+| Every push / deploy | lane check, tree check, hook tests, lint, typecheck, tests, build; e2e on previews           | CI                              |
+| Session end         | commit, push, decisions recorded, summary on issue #1                                        | `handover` skill                |
+| Midpoint and freeze | whole-product, docs and tree sweep into `polish` issues; judge's-eye critique                | `polish-pass`, `product-critic` |
 
 ### Subagents and models
 
-| Model | Agents | For |
-| --- | --- | --- |
-| opus | main session on Max, `product-critic`; `code-reviewer`, `ux-reviewer`, `test-writer` follow the session (`inherit`) | judgment: architecture, hard bugs, reviews, critique |
-| sonnet | main session on Pro (so the `inherit` agents too), `builder`, `docs-keeper`, `pr-writer`, `researcher` | well-specified building, tests, docs, PR prose, research |
-| haiku | `scout`, `tidy` | search, log digging, file-tree hygiene |
+| Model  | Agents                                                                                                              | For                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| opus   | main session on Max, `product-critic`; `code-reviewer`, `ux-reviewer`, `test-writer` follow the session (`inherit`) | judgment: architecture, hard bugs, reviews, critique     |
+| sonnet | main session on Pro (so the `inherit` agents too), `builder`, `docs-keeper`, `pr-writer`, `researcher`              | well-specified building, tests, docs, PR prose, research |
+| haiku  | `scout`, `tidy`                                                                                                     | search, log digging, file-tree hygiene                   |
 
 Delegation rules and budget mode for Pro plans: [.claude/rules/delegation.md](.claude/rules/delegation.md).
 
 ### Tools on every machine
 
-| Tool | What it does here | Rule |
-| --- | --- | --- |
+| Tool      | What it does here                                                                                                                               | Rule                                                        |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Lightfoot | Installed at the venue (docs/setup.md section 1). A local proxy that trims what each turn re-sends; on Pro and Max it stretches the usage limit | `lightfoot claude`, or `lightfoot integrate on` for VS Code |
-| Graphify | A code map in `graphify-out/` (gitignored), rebuilt by git hooks with no model calls; agents query it before searching | [.claude/rules/tools.md](.claude/rules/tools.md) |
-| Obsidian | Each person's vault gets a Lightfoot handoff note at the end of every session; private, issue #1 stays the team record | [.claude/rules/tools.md](.claude/rules/tools.md) |
+| Graphify  | A code map in `graphify-out/` (gitignored), rebuilt by git hooks with no model calls; agents query it before searching                          | [.claude/rules/tools.md](.claude/rules/tools.md)            |
+| Obsidian  | Each person's vault gets a Lightfoot handoff note at the end of every session; private, issue #1 stays the team record                          | [.claude/rules/tools.md](.claude/rules/tools.md)            |
 
 Setup: [docs/setup.md](docs/setup.md) section 1.
 
 ### What's in here
 
-| Path | What it is |
-| --- | --- |
-| [docs/setup.md](docs/setup.md) | Machine setup, repo and issue #1, settings, lane map, hook specs, GitHub workflow, CI spec |
-| [CLAUDE.md](CLAUDE.md) | Agent entry point: how to work, lanes, commands, stack, file tree; `kickoff` fills it |
-| [AGENTS.md](AGENTS.md) | Pointer for Cursor, Codex, Gemini and others |
-| [.github/](.github/) | `pull_request_template.md` |
-| [docs/](docs/) | `spec` (what to build, with the Ready checklist), `architecture`, `decisions`, `api`, `development` |
-| [.claude/rules/](.claude/rules/) | `lanes`, `quality`, `design`, `ai-features`, `structure`, `docs`, `git`, `delegation`, `security`, `testing`, `tools` |
-| [.claude/agents/](.claude/agents/) | The ten subagents above |
-| [.claude/skills/](.claude/skills/) | `join`, `go`, `kickoff`, `ship-pr`, `handover`, `polish-pass`, `demo-prep` |
+| Path                               | What it is                                                                                                            |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| [docs/setup.md](docs/setup.md)     | Machine setup, repo and issue #1, settings, lane map, hook specs, GitHub workflow, CI spec                            |
+| [CLAUDE.md](CLAUDE.md)             | Agent entry point: how to work, lanes, commands, stack, file tree; `kickoff` fills it                                 |
+| [AGENTS.md](AGENTS.md)             | Pointer for Cursor, Codex, Gemini and others                                                                          |
+| [.github/](.github/)               | `pull_request_template.md`                                                                                            |
+| [docs/](docs/)                     | `spec` (what to build, with the Ready checklist), `architecture`, `decisions`, `api`, `development`                   |
+| [.claude/rules/](.claude/rules/)   | `lanes`, `quality`, `design`, `ai-features`, `structure`, `docs`, `git`, `delegation`, `security`, `testing`, `tools` |
+| [.claude/agents/](.claude/agents/) | The ten subagents above                                                                                               |
+| [.claude/skills/](.claude/skills/) | `join`, `go`, `kickoff`, `ship-pr`, `handover`, `polish-pass`, `demo-prep`                                            |
 
 ### Team
 
-| Name | GitHub | Role |
-| --- | --- | --- |
-| Miska | `miska-voutilainen` | Repo owner; runs `kickoff` |
-| Elias | `eliasnorta` | Miska's backup: admin on the repo, takes over `kickoff` if Miska's laptop or account fails |
-| Veijo | `Kasanen` | |
+| Name  | GitHub              | Role                                                                                       |
+| ----- | ------------------- | ------------------------------------------------------------------------------------------ |
+| Miska | `miska-voutilainen` | Repo owner; runs `kickoff`                                                                 |
+| Elias | `eliasnorta`        | Miska's backup: admin on the repo, takes over `kickoff` if Miska's laptop or account fails |
+| Veijo | `Kasanen`           |                                                                                            |
 
 Lanes and their owners are decided at kickoff.
 

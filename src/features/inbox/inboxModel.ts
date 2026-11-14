@@ -11,6 +11,7 @@ import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
 import { route } from "@/rules/route";
+import { routingPolicy } from "@/policy/routing";
 
 /** What the server hands over for one change: its input, the state of its review, and its receipt if any. */
 export interface InboxSource {
@@ -76,7 +77,7 @@ const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread"]);
 export function decideChange(review: Review, reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): ChangeDecision {
   if (reportCard.state !== "ok") return decisionWithoutReportCard(review);
   const levels = applyEscapes(levelsFromReportCard(reportCard.data), escapes);
-  return { decision: route(review, levels), levels, isEvidenceAvailable: true };
+  return { decision: route(review, levels, routingPolicy, escapes), levels, isEvidenceAvailable: true };
 }
 
 function decisionWithoutReportCard(review: Review): ChangeDecision {

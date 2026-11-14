@@ -1,5 +1,5 @@
 /**
- * Draws the diagrams of the seven idea pages (docs/ideas) into docs/ideas/img/.
+ * Draws the diagrams of the eight idea pages (docs/ideas) into docs/ideas/img/.
  * Every diagram is described once and rendered in a light and a dark theme, so
  * the two versions cannot drift apart. Output is plain SVG with system fonts:
  * GitHub shows SVGs as images, and an image cannot load web fonts (docs.md).
@@ -15,6 +15,7 @@ import { coverageMap } from "./diagrams/coverageMap";
 import { evidenceLevels } from "./diagrams/evidenceLevels";
 import { ideasOverview } from "./diagrams/ideasOverview";
 import { quoteCheck } from "./diagrams/quoteCheck";
+import { separationOfDuties } from "./diagrams/separationOfDuties";
 import { signedReceipt } from "./diagrams/signedReceipt";
 import { trustLadder } from "./diagrams/trustLadder";
 import { renderDocument, THEMES } from "./svg";
@@ -35,6 +36,7 @@ const DIAGRAMS = [
   quoteCheck,
   evidenceLevels,
   signedReceipt,
+  separationOfDuties,
   ideasOverview,
 ];
 

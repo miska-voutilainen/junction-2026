@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoTimestampSchema, ReceiptBodySchema, ShaSchema } from "./common";
+import { CoverageSchema, IsoTimestampSchema, ReceiptBodySchema, ShaSchema } from "./common";
 
 /** The signed payload of a receipt; the draft lives in .scratch/receipts/<changeId>.json (producer: evidence lane). */
 export const ReceiptSchema = z.strictObject({
@@ -18,6 +18,20 @@ export const ReceiptSchema = z.strictObject({
   owner: z.string(), // GitHub login, the allowed_signers principal
   signedAt: IsoTimestampSchema,
   ...ReceiptBodySchema.shape,
+  /**
+   * The hunk ledger, from `review.routing.coverage` at draft time. It sits
+   * inside the signed payload, so the signature covers which hunks the owner
+   * read and which checks covered the rest. `readBy` is the owner for read
+   * hunks, else null.
+   */
+  hunks: z.array(
+    z.strictObject({
+      hunkId: z.string(),
+      file: z.string(),
+      coverage: CoverageSchema,
+      readBy: z.string().nullable(),
+    }),
+  ),
 });
 export type Receipt = z.infer<typeof ReceiptSchema>;
 

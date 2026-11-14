@@ -217,7 +217,7 @@ export function label(
   return text(x, y, content, cssClass, anchor);
 }
 
-/** A numbered circle that points at one of the seven ideas. */
+/** A numbered circle that points at one of the eight ideas. */
 export function badge(
   centerX: number,
   centerY: number,
