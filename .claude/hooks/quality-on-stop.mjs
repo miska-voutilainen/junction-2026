@@ -23,7 +23,12 @@ export function changedSourceFiles(porcelain) {
   return porcelain
     .split("\n")
     .filter((line) => line.length > 3 && !line.slice(0, 2).includes("D"))
-    .map((line) => line.slice(3).replace(/^.* -> /, "").replace(/^"|"$/g, ""))
+    .map((line) =>
+      line
+        .slice(3)
+        .replace(/^.* -> /, "")
+        .replace(/^"|"$/g, ""),
+    )
     .filter((path) => SOURCE.test(path));
 }
 
@@ -31,19 +36,47 @@ export function changedSourceFiles(porcelain) {
  * Chooses the checks a set of changed files needs, in the order they run. Each check is a Node
  * tool (`script` inside node_modules) or plain Node (`script` null) with its arguments.
  * `failureStatuses` lists the exit codes that mean "ran and found problems".
- * @returns {{ name: string, script: string | null, args: string[], failureStatuses: number[] }[]}
+ * A check with `prerequisiteOf` never blocks; if it does not complete, the check it names is skipped.
+ * @returns {{ name: string, script: string | null, args: string[], failureStatuses: number[], prerequisiteOf?: string }[]}
  */
 export function checksFor(files) {
   const typeScript = files.filter((file) => TS_SOURCE.test(file));
   const checks = [];
   if (typeScript.length > 0) {
+    // `next typegen` writes the route types (PageProps, LayoutProps) the app imports. A checkout
+    // without .next/types fails the typecheck with errors the agent cannot fix, so it runs first.
+    checks.push({
+      name: "typegen",
+      script: "next/dist/bin/next",
+      args: ["typegen"],
+      failureStatuses: [],
+      prerequisiteOf: "typecheck",
+    });
     // tsc exits 2 when it reports errors without emitting, 1 when it also skips output.
-    checks.push({ name: "typecheck", script: "typescript/bin/tsc", args: ["--noEmit"], failureStatuses: [1, 2] });
-    const related = typeScript.length > RELATED_FILE_LIMIT ? ["run"] : ["related", "--run", "--passWithNoTests", ...typeScript];
-    checks.push({ name: "unit tests", script: "vitest/vitest.mjs", args: related, failureStatuses: [1] });
+    checks.push({
+      name: "typecheck",
+      script: "typescript/bin/tsc",
+      args: ["--noEmit"],
+      failureStatuses: [1, 2],
+    });
+    const related =
+      typeScript.length > RELATED_FILE_LIMIT
+        ? ["run"]
+        : ["related", "--run", "--passWithNoTests", ...typeScript];
+    checks.push({
+      name: "unit tests",
+      script: "vitest/vitest.mjs",
+      args: related,
+      failureStatuses: [1],
+    });
   }
   if (files.some((file) => HOOK_FILE.test(file))) {
-    checks.push({ name: "hook tests", script: null, args: ["--test", ".claude/hooks/**/*.test.mjs"], failureStatuses: [1] });
+    checks.push({
+      name: "hook tests",
+      script: null,
+      args: ["--test", ".claude/hooks/**/*.test.mjs"],
+      failureStatuses: [1],
+    });
   }
   return checks;
 }
@@ -61,6 +94,24 @@ function runCheck(root, check, timeoutMs) {
   return runCommand(process.execPath, check.args, { cwd: root, ...options });
 }
 
+/**
+ * Runs the checks in order inside one deadline and returns the first failure as a report, or null.
+ * A prerequisite that did not complete skips the check it names instead of blocking on noise.
+ * @param {(check: object, timeoutMs: number) => { ran: boolean, ok: boolean, failed: boolean, output: string }} run
+ */
+export function firstFailure(checks, run, deadline) {
+  const skipped = new Set();
+  for (const check of checks) {
+    if (skipped.has(check.name)) continue;
+    const timeLeft = deadline - Date.now();
+    if (timeLeft <= 0) return null; // out of budget: skipping beats a hook the platform kills mid-report
+    const result = run(check, timeLeft);
+    if (check.prerequisiteOf && !result.ok) skipped.add(check.prerequisiteOf);
+    if (result.failed) return `${check.name} failed: ${trimReport(result.output)}`;
+  }
+  return null;
+}
+
 function main() {
   let input = {};
   try {
@@ -71,17 +122,18 @@ function main() {
   }
   if (input.stop_hook_active) return; // the agent is already fixing a block: never loop
   const root = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
-  const status = runCommand("git", ["status", "--porcelain", "-uall"], { cwd: root, timeoutMs: 10_000 });
+  const status = runCommand("git", ["status", "--porcelain", "-uall"], {
+    cwd: root,
+    timeoutMs: 10_000,
+  });
   if (!status.ran) return;
-  const deadline = Date.now() + TOTAL_DEADLINE_MS;
-  for (const check of checksFor(changedSourceFiles(status.output.replace(/\r/g, "")))) {
-    const timeLeft = deadline - Date.now();
-    if (timeLeft <= 0) return; // out of budget: skipping beats a hook the platform kills mid-report
-    const result = runCheck(root, check, timeLeft);
-    if (!result.failed) continue;
-    process.stdout.write(JSON.stringify({ decision: "block", reason: `${check.name} failed: ${trimReport(result.output)}` }));
-    return;
-  }
+  const checks = checksFor(changedSourceFiles(status.output.replaceAll("\r", "")));
+  const reason = firstFailure(
+    checks,
+    (check, timeoutMs) => runCheck(root, check, timeoutMs),
+    Date.now() + TOTAL_DEADLINE_MS,
+  );
+  if (reason) process.stdout.write(JSON.stringify({ decision: "block", reason }));
 }
 
 const self = process.argv[1] ? pathToFileURL(process.argv[1]).href.toLowerCase() : "";

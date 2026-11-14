@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { changedSourceFiles, checksFor, trimReport } from "./quality-on-stop.mjs";
+import { changedSourceFiles, checksFor, firstFailure, trimReport } from "./quality-on-stop.mjs";
 
 test("lists files inside a new folder (git status -uall) and skips deleted and non-source files", () => {
   const porcelain =
@@ -23,7 +23,7 @@ test("no changed source files means no checks", () => {
 
 test("TypeScript changes run typecheck, then the related tests", () => {
   const names = checksFor(["src/a.ts"]).map((check) => check.name);
-  assert.deepEqual(names, ["typecheck", "unit tests"]);
+  assert.deepEqual(names, ["typegen", "typecheck", "unit tests"]);
 });
 
 test("hook changes run the hook tests", () => {
@@ -55,4 +55,30 @@ test("a long report keeps the tail from the first failure, not the start", () =>
   assert.ok(report.startsWith("FAIL src/a.test.ts"));
   assert.ok(report.length <= 4000);
   assert.ok(trimReport("x".repeat(9000) + "end").endsWith("end"));
+});
+
+const completed = { ran: true, ok: true, failed: false, output: "" };
+const farAway = Date.now() + 60_000;
+
+test("typecheck is skipped when typegen did not run, so a missing route-types folder never blocks", () => {
+  const seen = [];
+  const run = (check) => {
+    seen.push(check.name);
+    if (check.name === "typegen") return { ...completed, ran: false, ok: false };
+    return { ...completed, ok: false, failed: true, output: "FAIL" };
+  };
+  const reason = firstFailure(checksFor(["src/a.ts"]), run, farAway);
+  assert.deepEqual(seen, ["typegen", "unit tests"]);
+  assert.match(reason, /^unit tests failed/);
+});
+
+test("typecheck runs after a completed typegen and its failure blocks", () => {
+  const run = (check) =>
+    check.name === "typecheck"
+      ? { ...completed, ok: false, failed: true, output: "error TS2322" }
+      : completed;
+  assert.match(
+    firstFailure(checksFor(["src/a.ts"]), run, farAway),
+    /^typecheck failed: error TS2322/,
+  );
 });

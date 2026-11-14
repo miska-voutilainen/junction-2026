@@ -48,7 +48,10 @@ test("a run with no file path or unparsable input prints nothing", () => {
 });
 
 test("CSS custom-property definitions may hold colours; entities and issue numbers in copy are not colours", () => {
-  assert.deepEqual(polishFindings("@media print { :root { --surface: #ffffff; --ink: rgb(0 0 0); } }"), []);
+  assert.deepEqual(
+    polishFindings("@media print { :root { --surface: #ffffff; --ink: rgb(0 0 0); } }"),
+    [],
+  );
   assert.deepEqual(polishFindings("<p>Wait &#8212; see ticket #1234</p>"), []);
   assert.ok(flagged(".card { color: #ff0000; }"));
   assert.ok(flagged('const palette = ["#abc"];'));
@@ -79,4 +82,11 @@ test("formats a file only when it is new or its committed version is already pre
 
 test("projectRootOf finds the worktree that holds the file", () => {
   assert.equal(projectRootOf(resolve(repoRoot, "src/app/page.tsx"), "/elsewhere"), repoRoot);
+});
+
+test("colours inside a value are flagged, ticket numbers are not", () => {
+  assert.ok(flagged(".a { border: 1px solid #fff; }"));
+  assert.ok(flagged(".a { box-shadow: 0 0 0 1px #000; }"));
+  assert.ok(flagged('<div className="shadow-[0_0_0_1px_#000]" />'));
+  assert.deepEqual(polishFindings("<p>Fixed in #1234 and &#8212; done</p>"), []);
 });

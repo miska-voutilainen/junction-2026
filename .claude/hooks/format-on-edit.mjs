@@ -6,14 +6,30 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { runCommand, runNodeTool } from "./runCommand.mjs";
 
-const FORMATTED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".json", ".css", ".md"]);
+const FORMATTED_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".json",
+  ".css",
+  ".md",
+]);
 const LINTED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
 const UI_EXTENSIONS = new Set([".tsx", ".jsx", ".css"]);
-const SKIPPED_PATH = /(^|\/)(node_modules|\.next|\.scratch|\.review|graphify-out)\/|^data\/(recordings|runs)\//;
+const SKIPPED_PATH =
+  /(^|\/)(node_modules|\.next|\.scratch|\.review|graphify-out)\/|^data\/(recordings|runs)\//;
 const PRETTIER = "prettier/bin/prettier.cjs";
 const ESLINT = "eslint/bin/eslint.js";
 const REPORT_LIMIT = 4000;
-const TOOL_TIMEOUT_MS = 25_000;
+// The hook is registered with a 60 s timeout; stay under it so a slow tool never gets it killed mid-report.
+const TOTAL_DEADLINE_MS = 50_000;
+
+/** Milliseconds left of a deadline, at least 1 (a timeout of 0 means "no limit" to spawn). */
+function timeLeft(deadline) {
+  return Math.max(1, deadline - Date.now());
+}
 
 /** True for files a person reads in the browser: UI source that is neither tokens nor a test. */
 export function isUiFile(relPath) {
@@ -38,16 +54,28 @@ function stripNonValues(text) {
     .replace(/href=(["'])#[^"']*\1/g, "");
 }
 
-// A colour must follow `:`, `[`, `(`, `,` or a quote, so `&#8212;` and "ticket #1234" in copy don't match.
-const COLOUR_LITERAL = /(?:[:[(,]|["'`])\s*#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+// A colour follows `:`, `[`, `(`, `,` or a quote, or sits after a space or `_` inside a value
+// (`1px solid #fff`, Tailwind `shadow-[0_0_0_1px_#000]`). After a space only 3, 6 or 8 digits count,
+// so "ticket #1234" in copy and `&#8212;` do not match.
+const COLOUR_LITERAL =
+  /(?:[:[(,]|["'`])\s*#[0-9a-fA-F]{3,8}\b|[\s_]#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b|\brgba?\(|\bhsla?\(/;
 
 const POLISH_CHECKS = [
   { name: "colour literal (use a design token)", pattern: COLOUR_LITERAL },
-  { name: "raw pixel font size (use a type token)", pattern: /font-?size["']?\s*:\s*["']?\d+|text-\[\d+px\]/i },
+  {
+    name: "raw pixel font size (use a type token)",
+    pattern: /font-?size["']?\s*:\s*["']?\d+|text-\[\d+px\]/i,
+  },
   { name: "lorem ipsum", pattern: /lorem ipsum/i },
-  { name: "TODO or FIXME in user-visible text", pattern: />[^<>{}\n]*\b(TODO|FIXME)\b|(["'`])[^"'`\n]*\b(TODO|FIXME)\b[^"'`\n]*\2/ },
+  {
+    name: "TODO or FIXME in user-visible text",
+    pattern: />[^<>{}\n]*\b(TODO|FIXME)\b|(["'`])[^"'`\n]*\b(TODO|FIXME)\b[^"'`\n]*\2/,
+  },
   { name: "image without alt text", pattern: /<img\b(?![^>]*\balt=)[^>]*>/ },
-  { name: "clickable element without a role (use a button or link)", pattern: /<(?:div|span|li|p|section)\b(?![^>]*\brole=)[^>]*\bonClick=/ },
+  {
+    name: "clickable element without a role (use a button or link)",
+    pattern: /<(?:div|span|li|p|section)\b(?![^>]*\brole=)[^>]*\bonClick=/,
+  },
 ];
 
 /**
@@ -74,24 +102,27 @@ export function projectRootOf(absoluteFile, fallbackRoot) {
  * or its committed version is already prettier-clean. The repo was never bulk-formatted, so
  * formatting any other file would rewrite lines the edit never touched.
  */
-export function isSafeToFormat(root, relPath) {
-  const committed = runCommand("git", ["show", `HEAD:${relPath}`], { cwd: root, timeoutMs: 10_000 });
+export function isSafeToFormat(root, relPath, deadline = Date.now() + TOTAL_DEADLINE_MS) {
+  const committed = runCommand("git", ["show", `HEAD:${relPath}`], {
+    cwd: root,
+    timeoutMs: timeLeft(deadline),
+  });
   if (!committed.ran) return false;
   if (!committed.ok) return true; // not in HEAD: a new file
   const check = runNodeTool(root, PRETTIER, ["--check", "--stdin-filepath", relPath], {
-    timeoutMs: TOOL_TIMEOUT_MS,
+    timeoutMs: timeLeft(deadline),
     input: committed.stdout, // untrimmed: the final newline is part of what prettier checks
   });
   return check.ok;
 }
 
-function formatAndLint(root, relPath) {
+function formatAndLint(root, relPath, deadline) {
   const extension = extname(relPath);
-  if (FORMATTED_EXTENSIONS.has(extension) && isSafeToFormat(root, relPath)) {
-    runNodeTool(root, PRETTIER, ["--write", relPath], { timeoutMs: TOOL_TIMEOUT_MS });
+  if (FORMATTED_EXTENSIONS.has(extension) && isSafeToFormat(root, relPath, deadline)) {
+    runNodeTool(root, PRETTIER, ["--write", relPath], { timeoutMs: timeLeft(deadline) });
   }
   if (!LINTED_EXTENSIONS.has(extension)) return [];
-  const lint = runNodeTool(root, ESLINT, ["--fix", relPath], { timeoutMs: TOOL_TIMEOUT_MS });
+  const lint = runNodeTool(root, ESLINT, ["--fix", relPath], { timeoutMs: timeLeft(deadline) });
   return lint.failed ? [`lint: ${lint.output}`] : [];
 }
 
@@ -105,8 +136,11 @@ export function checkEditedFile(fallbackRoot, filePath) {
   const root = projectRootOf(absolute, fallbackRoot);
   const relPath = relative(root, absolute).replaceAll("\\", "/");
   if (relPath.startsWith("..") || SKIPPED_PATH.test(relPath)) return [];
-  const findings = formatAndLint(root, relPath);
-  if (isUiFile(relPath)) findings.push(...polishFindings(readFileSync(absolute, "utf8")).map((name) => `polish: ${name}`));
+  const findings = formatAndLint(root, relPath, Date.now() + TOTAL_DEADLINE_MS);
+  if (isUiFile(relPath))
+    findings.push(
+      ...polishFindings(readFileSync(absolute, "utf8")).map((name) => `polish: ${name}`),
+    );
   return findings;
 }
 
@@ -124,7 +158,12 @@ function main() {
   const findings = checkEditedFile(root, filePath);
   if (findings.length === 0) return;
   const shown = relative(root, resolve(root, filePath)).replaceAll("\\", "/");
-  process.stdout.write(JSON.stringify({ decision: "block", reason: `${shown}: ${findings.join("; ")}`.slice(0, REPORT_LIMIT) }));
+  process.stdout.write(
+    JSON.stringify({
+      decision: "block",
+      reason: `${shown}: ${findings.join("; ")}`.slice(0, REPORT_LIMIT),
+    }),
+  );
 }
 
 const self = process.argv[1] ? pathToFileURL(process.argv[1]).href.toLowerCase() : "";
