@@ -50,6 +50,14 @@
 - **Rejected:** Asking Veijo or Elias to write the plants (their time was not available); keeping the wording "written blind by a person" (it would claim more than happened).
 - **PR:** T08
 
+## 2026-11-14 · A refusal counts as accepted only by a receipt signed against the same review run
+
+- **Context:** A receipt lists the refusals its owner accepts by id (`residualRisk.acceptedRefusalIds`). Refusal ids (`r1`, `r2`) are numbered per review run, and the review on screen can be a later run than the one the owner signed.
+- **Decision:** The review page marks a refusal accepted only when the receipt verifies, matches this diff and `receipt.reviewRunId` equals `review.run.id` (`buildRefusals()` in `src/features/review/steps/stepsModel.ts`). Otherwise the decision stays open. The receipt page still lists the accepted ids, with their rule only when the review is the signed run. A receipt whose signature verified but has no readable review to compare the diff with is "unchecked": no seal and no "diff unchanged" (`src/features/receipt-view/receiptModel.ts`).
+- **Why:** Another run's `r2` may be a different refusal. Matching ids across runs would show the owner accepting a decision they never saw, and a seal over a diff nobody compared would vouch for more than was checked.
+- **Rejected:** Matching refusals across runs by rule id and hunks (a re-run can split or merge refusals); showing a receipt without a review as signed.
+- **PR:** #90 built it; this PR records it.
+
 ## 2026-11-14 · The AI client validates answers itself instead of using `messages.parse`
 
 - **Context:** Spec section 6 names the SDK's `messages.parse` for the API backend. T10 built one client for two backends (`claude-code` and `api`) with record and replay.
