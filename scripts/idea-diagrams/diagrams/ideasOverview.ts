@@ -1,12 +1,5 @@
-import {
-  badge,
-  type Diagram,
-  MARGIN,
-  node,
-  path,
-  secondaryLine,
-  text,
-} from "../svg";
+import type { IdeaNumber } from "../../../src/lib/ideaLinks";
+import { badge, type Diagram, MARGIN, node, path, secondaryLine, text } from "../svg";
 
 const STAGE_WIDTH = 120;
 const STAGE_GAP = 19;
@@ -14,7 +7,7 @@ const STAGE_TOP = 150;
 const STAGE_HEIGHT = 64;
 
 // Left to right along one pull request; `idea` is the number of the idea page.
-const STAGES = [
+const STAGES: { title: string; subtitle: string; idea: IdeaNumber; ideaName: string }[] = [
   {
     title: "Expectation",
     subtitle: "from the requirement",
@@ -58,7 +51,7 @@ export function ideasOverview(): Diagram {
   const stageX = STAGES.map((_, i) => MARGIN + i * (STAGE_WIDTH + STAGE_GAP));
   const lastStage = STAGES.length - 1;
   const body: string[] = [
-    text(MARGIN, 34, "One agent-written pull request, left to right", "h"),
+    text(MARGIN, 34, "One agent-written pull request, left to right", "heading"),
   ];
 
   STAGES.forEach(({ title, subtitle, idea, ideaName }, i) => {
@@ -75,14 +68,8 @@ export function ideasOverview(): Diagram {
       ),
     );
     if (i < lastStage)
-      body.push(
-        path(
-          `M${x + STAGE_WIDTH + 2},182 L${stageX[i + 1] - 3},182`,
-          "la",
-          "a",
-        ),
-      );
-    body.push(badge(x + 22, 248, idea), text(x + 38, 252, ideaName, "t"));
+      body.push(path(`M${x + STAGE_WIDTH + 2},182 L${stageX[i + 1] - 3},182`, "la", "accent"));
+    body.push(badge(x + 22, 248, idea), text(x + 38, 252, ideaName, "title"));
   });
 
   // The ladder spans two columns and feeds route(), the fifth stage.
@@ -106,7 +93,7 @@ export function ideasOverview(): Diagram {
       MARGIN,
       296,
       "Ideas 2, 4, 5 and 6 build the evidence; 1 and 3 decide what a person reads; 7 makes the person accountable.",
-      "s",
+      "secondary",
     ),
   );
   body.push(
@@ -115,7 +102,7 @@ export function ideasOverview(): Diagram {
       MARGIN + 26,
       326,
       "Idea 8 runs through all of it: the author never checks its own work.",
-      "s",
+      "secondary",
     ),
   );
   return {

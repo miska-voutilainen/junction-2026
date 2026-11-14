@@ -39,55 +39,40 @@ export function quoteCheck(): Diagram {
   );
   body.push(path(`M454,${MIDDLE_Y} L489,${MIDDLE_Y}`, "ln"));
   body.push(
-    node(492, ROW_Y, 170, NODE_HEIGHT, "Quote found in", [
-      secondaryLine("the cited lines?"),
-    ]),
+    node(492, ROW_Y, 170, NODE_HEIGHT, "Quote found in", [secondaryLine("the cited lines?")]),
   );
   body.push(
-    path(`M664,${MIDDLE_Y} L709,${MIDDLE_Y}`, "la", "a"),
-    label(686, ROW_Y + 28, "yes", "ta"),
+    path(`M664,${MIDDLE_Y} L709,${MIDDLE_Y}`, "la", "accent"),
+    label(686, ROW_Y + 28, "yes", "accent-text"),
   );
   body.push(
     rect(712, ROW_Y, 136, NODE_HEIGHT, "node-acc"),
     rect(712, ROW_Y, 136, NODE_HEIGHT, "tint-acc"),
   );
   body.push(
-    text(780, ROW_Y + 32, "Supported", "t", "middle"),
-    text(780, ROW_Y + 50, "shown with quote", "s", "middle"),
+    text(780, ROW_Y + 32, "Supported", "title", "middle"),
+    text(780, ROW_Y + 50, "shown with quote", "secondary", "middle"),
   );
 
   const failureTop = ROW_Y + NODE_HEIGHT + 62;
-  body.push(
-    path(
-      `M577,${ROW_Y + NODE_HEIGHT + 2} L577,${ROW_Y + NODE_HEIGHT + 58}`,
-      "lr",
-      "r",
-    ),
-  );
-  body.push(label(589, ROW_Y + NODE_HEIGHT + 32, "no", "tr", "start"));
+  body.push(path(`M577,${ROW_Y + NODE_HEIGHT + 2} L577,${ROW_Y + NODE_HEIGHT + 58}`, "lr", "rose"));
+  body.push(label(589, ROW_Y + NODE_HEIGHT + 32, "no", "rose-text", "start"));
   body.push(rect(492, failureTop, 356, 64, "node-rose"));
+  body.push(text(508, failureTop + 26, "Unverified: shown without citations", "title"));
   body.push(
-    text(508, failureTop + 26, "Unverified: shown without citations", "t"),
-  );
-  body.push(
-    text(
-      508,
-      failureTop + 44,
-      "A3 findings with no passing citation are dropped.",
-      "s",
-    ),
+    text(508, failureTop + 44, "A3 findings with no passing citation are dropped.", "secondary"),
   );
 
-  body.push(text(MARGIN, 176, "Normalising", "t"));
+  body.push(text(MARGIN, 176, "Normalising", "title"));
   NORMALISING_RULES.forEach((rule, index) =>
-    body.push(text(MARGIN, 198 + 18 * index, rule, "c")),
+    body.push(text(MARGIN, 198 + 18 * index, rule, "code")),
   );
   body.push(
     text(
       MARGIN,
       290,
       "Every failure is counted: quotes checked, quote failures, findings dropped. No model call.",
-      "s",
+      "secondary",
     ),
   );
   return {

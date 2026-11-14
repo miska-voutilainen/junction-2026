@@ -1,12 +1,4 @@
-import {
-  type Diagram,
-  MARGIN,
-  node,
-  path,
-  secondaryLine,
-  text,
-  type TextLine,
-} from "../svg";
+import { type Diagram, MARGIN, node, path, secondaryLine, text, type TextLine } from "../svg";
 
 const COLUMNS = 5;
 const COLUMN_WIDTH = 140;
@@ -95,26 +87,14 @@ export function blindFirst(): Diagram {
   );
   const body: string[] = [];
   for (const { y, heading, isBlindFirst, nodes } of LANES) {
-    body.push(text(MARGIN, y, heading, "h"));
+    body.push(text(MARGIN, y, heading, "heading"));
     const top = y + 16;
     const arrowY = top + NODE_HEIGHT / 2;
     nodes.forEach(({ title, lines, cssClass }, i) => {
-      body.push(
-        node(
-          columnX[i],
-          top,
-          COLUMN_WIDTH,
-          NODE_HEIGHT,
-          title,
-          lines,
-          cssClass,
-        ),
-      );
+      body.push(node(columnX[i], top, COLUMN_WIDTH, NODE_HEIGHT, title, lines, cssClass));
       if (i < COLUMNS - 1) {
         const arrow = `M${columnX[i] + COLUMN_WIDTH + 2},${arrowY} L${columnX[i + 1] - 3},${arrowY}`;
-        body.push(
-          path(arrow, isBlindFirst ? "la" : "ln", isBlindFirst ? "a" : "n"),
-        );
+        body.push(path(arrow, isBlindFirst ? "la" : "ln", isBlindFirst ? "accent" : "neutral"));
       }
     });
   }
@@ -123,7 +103,7 @@ export function blindFirst(): Diagram {
       MARGIN,
       300,
       "Same reviewer, same 5 planted false sentences, 3 runs per mode: 15 chances to catch them in each lane.",
-      "s",
+      "secondary",
     ),
   );
   body.push(
@@ -131,7 +111,7 @@ export function blindFirst(): Diagram {
       MARGIN,
       320,
       "A plant is caught when A4 marks the planted sentence contradicted or unsupported.",
-      "s",
+      "secondary",
     ),
   );
   return {

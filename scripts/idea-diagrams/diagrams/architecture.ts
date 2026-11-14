@@ -41,7 +41,7 @@ export function architecture(): Diagram {
       MARGIN,
       508,
       "The halves meet only through committed files in data/. P3 is the same pure code on both sides.",
-      "s",
+      "secondary",
     ),
   ];
   return {
@@ -58,15 +58,8 @@ export function architecture(): Diagram {
 
 function laptopRegion(): string[] {
   return [
-    rect(
-      REGION_LEFT,
-      LAPTOP_TOP,
-      REGION_WIDTH,
-      LAPTOP_BOTTOM - LAPTOP_TOP,
-      "node-dash",
-      8,
-    ),
-    text(MARGIN + 16, 38, "Laptop (operator's machine)", "h"),
+    rect(REGION_LEFT, LAPTOP_TOP, REGION_WIDTH, LAPTOP_BOTTOM - LAPTOP_TOP, "node-dash", 8),
+    text(MARGIN + 16, 38, "Laptop (operator's machine)", "heading"),
     node(48, ROW_Y, 170, NODE_HEIGHT, "P1 · Demo data", [
       secondaryLine("our fork of Tieto's repo"),
       codeLine("+ data/sample"),
@@ -74,9 +67,7 @@ function laptopRegion(): string[] {
     node(242, ROW_Y, 262, NODE_HEIGHT, "P2 · Review pipeline", [
       secondaryLine("A1–A5, quote check, .NET tests"),
     ]),
-    node(524, ROW_Y, 150, NODE_HEIGHT, "P4 · Measurement", [
-      secondaryLine("planted-bug eval"),
-    ]),
+    node(524, ROW_Y, 150, NODE_HEIGHT, "P4 · Measurement", [secondaryLine("planted-bug eval")]),
     node(694, ROW_Y, 138, NODE_HEIGHT, "P5 · Receipt CLI", [
       codeLine("ssh-keygen"),
       secondaryLine("+ git notes"),
@@ -97,14 +88,8 @@ function laptopRegion(): string[] {
 
 function dataAndRules(): string[] {
   return [
-    path(`M300,${LAPTOP_BOTTOM + 2} L300,${DATA_Y - 3}`, "la", "a"),
-    label(
-      312,
-      242,
-      "writes JSON: pnpm review, evals, countersign",
-      "s",
-      "start",
-    ),
+    path(`M300,${LAPTOP_BOTTOM + 2} L300,${DATA_Y - 3}`, "la", "accent"),
+    label(312, 242, "writes JSON: pnpm review, evals, countersign", "secondary", "start"),
     node(
       REGION_LEFT,
       DATA_Y,
@@ -127,7 +112,7 @@ function dataAndRules(): string[] {
     ),
     // The pipeline imports P3 to decide a tier; the app re-runs the same code.
     // The elbow runs through the gap right of P2 so the arrowhead lands on P2, not P5.
-    path(`M758,${DATA_Y - 2} L758,170 L516,170 L516,100 L506,100`, "la", "a"),
+    path(`M758,${DATA_Y - 2} L758,170 L516,170 L516,100 L506,100`, "la", "accent"),
     label(640, 164, "imported by P2"),
   ];
 }
@@ -135,28 +120,17 @@ function dataAndRules(): string[] {
 function siteRegion(): string[] {
   return [
     rect(REGION_LEFT, SITE_TOP, REGION_WIDTH, 126, "node-dash", 8),
-    text(
-      MARGIN + 16,
-      374,
-      "Static site on Vercel (no server, no database)",
-      "h",
-    ),
-    path(`M480,${DATA_Y + DATA_HEIGHT + 2} L480,${APP_Y - 3}`, "la", "a"),
-    label(468, 346, "read when the site is built", "s", "end"),
+    text(MARGIN + 16, 374, "Static site on Vercel (no server, no database)", "heading"),
+    path(`M480,${DATA_Y + DATA_HEIGHT + 2} L480,${APP_Y - 3}`, "la", "accent"),
+    label(468, 346, "read when the site is built", "secondary", "end"),
     node(48, APP_Y, 540, 76, "P6 · Review app", [
       secondaryLine("S1 inbox · S2 review · S3 report card"),
       secondaryLine("S4 receipt · S5 dashboard"),
     ]),
-    node(612, APP_Y, 220, 76, "Simulated escapes", [
-      secondaryLine("browser storage"),
-    ]),
+    node(612, APP_Y, 220, 76, "Simulated escapes", [secondaryLine("browser storage")]),
     path("M590,424 L610,424", "ln", null),
     // P3 reaches the app by its own route: it is code, not a data file.
-    path(
-      `M740,${DATA_Y + DATA_HEIGHT + 2} L740,345 L560,345 L560,${APP_Y - 3}`,
-      "la",
-      "a",
-    ),
-    label(650, 338, "re-run in the browser", "s"),
+    path(`M740,${DATA_Y + DATA_HEIGHT + 2} L740,345 L560,345 L560,${APP_Y - 3}`, "la", "accent"),
+    label(650, 338, "re-run in the browser", "secondary"),
   ];
 }

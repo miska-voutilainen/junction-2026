@@ -4,6 +4,8 @@
  * because GitHub renders SVGs in an image context that cannot load web fonts.
  */
 
+import type { IdeaNumber } from "../../src/lib/ideaLinks";
+
 /** Canvas width of every diagram; heights differ per diagram. */
 export const CANVAS_WIDTH = 880;
 
@@ -23,10 +25,10 @@ export interface Diagram {
 export type TextLine = readonly [text: string, cssClass: string];
 
 /** Secondary text line (muted colour). */
-export const secondaryLine = (content: string): TextLine => [content, "s"];
+export const secondaryLine = (content: string): TextLine => [content, "secondary"];
 
 /** Code or identifier text line (monospace). */
-export const codeLine = (content: string): TextLine => [content, "c"];
+export const codeLine = (content: string): TextLine => [content, "code"];
 
 /** One colour set; every diagram is drawn once per theme. */
 export interface Theme {
@@ -42,6 +44,9 @@ export interface Theme {
   amber: string;
   rose: string;
 }
+
+/** Text on a brand-coloured fill (the badge numbers): the app's text-on-brand role. */
+const TEXT_ON_BRAND = "#ffffff";
 
 /**
  * The dark set mirrors `src/styles/tokens.css`. The light set is picked for
@@ -94,26 +99,29 @@ function styleSheet(c: Theme): string {
 .node-rose{fill:${c.panel};stroke:${c.rose};stroke-width:1.5;stroke-dasharray:5 4}
 .node-dash{fill:none;stroke:${c.border};stroke-width:1.5;stroke-dasharray:5 4}
 text{font-family:${SANS_FONTS};font-size:12px;fill:${c.muted}}
-.t{font-size:13px;font-weight:600;fill:${c.text}}
-.h{font-size:14px;font-weight:600;fill:${c.text}}
-.s{fill:${c.muted}}
-.c{font-family:${MONO_FONTS};fill:${c.sec}}
-.ta{fill:${c.accent}}.tr{fill:${c.rose}}
+.title{font-size:13px;font-weight:600;fill:${c.text}}
+.heading{font-size:14px;font-weight:600;fill:${c.text}}
+.secondary{fill:${c.muted}}
+.code{font-family:${MONO_FONTS};fill:${c.sec}}
+.accent-text{fill:${c.accent}}.rose-text{fill:${c.rose}}
 .ln{stroke:${c.muted};stroke-width:1.5;fill:none}
 .la{stroke:${c.accent};stroke-width:2;fill:none}
 .lr{stroke:${c.rose};stroke-width:1.5;fill:none;stroke-dasharray:5 4}
-.fn{fill:${c.muted}}.fa{fill:${c.accent}}.fr{fill:${c.rose}}
-.dot{fill:${c.brand}}.dott{fill:#ffffff;font-size:12px;font-weight:600}
+.head-neutral{fill:${c.muted}}.head-accent{fill:${c.accent}}.head-rose{fill:${c.rose}}
+.badge-dot{fill:${c.brand}}.badge-number{fill:${TEXT_ON_BRAND};font-size:12px;font-weight:600}
 .strike{stroke:${c.rose};stroke-width:1.5}
 `;
 }
 
-// One arrowhead per line colour: n(eutral), a(ccent), r(ose); filled by the .fn/.fa/.fr classes.
-const ARROW_HEADS = ["n", "a", "r"] as const;
+// One arrowhead per line colour, filled by the matching .head-* class.
+const ARROW_HEADS = ["neutral", "accent", "rose"] as const;
+
+/** Colour of an arrowhead: the line colours `neutral`, `accent` and `rose`. */
+export type ArrowHead = (typeof ARROW_HEADS)[number];
 const MARKERS = ARROW_HEADS.map(
   (head) =>
     `<marker id="ah-${head}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" ` +
-    `orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f${head}"/></marker>`,
+    `orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-${head}"/></marker>`,
 ).join("");
 
 /** Escapes the five XML special characters with fixed entities, so re-running the generator writes identical bytes. */
@@ -168,10 +176,16 @@ export function text(
 // Title line height, and the height of each extra line, inside a node.
 const NODE_TITLE_HEIGHT = 16;
 const NODE_LINE_HEIGHT = 17;
+// Gap between a node's left edge and its text.
+const NODE_TEXT_INSET = 14;
+// Distance from the top of the text block to the title's baseline: the title's ascent.
+const NODE_TITLE_BASELINE = 13;
+// Distance from the title's baseline to the first secondary line's baseline.
+const NODE_FIRST_LINE_OFFSET = 18;
 
 /**
  * A rectangle with a bold title and secondary lines, vertically centred.
- * The text starts 14 px from the left edge.
+ * The text starts NODE_TEXT_INSET px from the left edge.
  */
 export function node(
   x: number,
@@ -185,23 +199,19 @@ export function node(
 ): string {
   const parts = [rect(x, y, width, height, cssClass)];
   if (tint) parts.push(rect(x, y, width, height, tint));
-  const textX = x + 14;
+  const textX = x + NODE_TEXT_INSET;
   const blockHeight = NODE_TITLE_HEIGHT + NODE_LINE_HEIGHT * lines.length;
-  const titleY = y + (height - blockHeight) / 2 + 13;
-  parts.push(text(textX, titleY, title, "t"));
+  const titleY = y + (height - blockHeight) / 2 + NODE_TITLE_BASELINE;
+  parts.push(text(textX, titleY, title, "title"));
   lines.forEach(([content, lineClass], index) => {
-    const lineY = titleY + 18 + NODE_LINE_HEIGHT * index;
+    const lineY = titleY + NODE_FIRST_LINE_OFFSET + NODE_LINE_HEIGHT * index;
     parts.push(text(textX, lineY, content, lineClass));
   });
   return parts.join("");
 }
 
-/** A path with an arrowhead of the given colour (`n`, `a`, `r`); pass `null` for none. */
-export function path(
-  d: string,
-  cssClass = "ln",
-  head: "n" | "a" | "r" | null = "n",
-): string {
+/** A path with an arrowhead of the given colour (`neutral`, `accent`, `rose`); pass `null` for none. */
+export function path(d: string, cssClass = "ln", head: ArrowHead | null = "neutral"): string {
   const marker = head ? ` marker-end="url(#ah-${head})"` : "";
   return `<path class="${cssClass}" d="${d}"${marker}/>`;
 }
@@ -211,20 +221,16 @@ export function label(
   x: number,
   y: number,
   content: string,
-  cssClass = "s",
+  cssClass = "secondary",
   anchor = "middle",
 ): string {
   return text(x, y, content, cssClass, anchor);
 }
 
 /** A numbered circle that points at one of the eight ideas. */
-export function badge(
-  centerX: number,
-  centerY: number,
-  ideaNumber: number,
-): string {
+export function badge(centerX: number, centerY: number, ideaNumber: IdeaNumber): string {
   return (
-    `<circle class="dot" cx="${centerX}" cy="${centerY}" r="10"/>` +
-    text(centerX, centerY + 4, String(ideaNumber), "dott", "middle")
+    `<circle class="badge-dot" cx="${centerX}" cy="${centerY}" r="10"/>` +
+    text(centerX, centerY + 4, String(ideaNumber), "badge-number", "middle")
   );
 }
