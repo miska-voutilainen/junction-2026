@@ -70,7 +70,7 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
   return {
     async call<T>(request: TypedRequest<T>): Promise<T> {
       const runIndex = request.runIndex ?? 0;
-      const key = recordingKey(request.promptVersion, request.prompt, runIndex);
+      const key = recordingKey(request, runIndex);
       const file = recordingPath(directory, request.promptVersion, key);
 
       if (options.mode === "replay") return replay(request, file, logUsage);

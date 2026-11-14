@@ -6,8 +6,8 @@
 
 - **Context:** A1's prompt is only the requirement, so every change with the same requirement has the same A1 key at the same run index, and a second `record` run overwrote the file the first one wrote. The T13 review also found that A3's missing-test findings cited test files first (area null, so they could never count toward a planted bug's area) and that A4's copied sentences failed the substring check on backticks and wrapped lines.
 - **Decision:** In record mode, a recording that exists under the key and still passes the schema is used instead of calling the model, with one stderr line saying so. The key format is unchanged. A3 reports a missing test only when no test in the change exercises the requirement item, and cites the source file first. A4's `statement` is exempt from "plain text, no Markdown", and the substring check strips the line-start `| ` markers from both sides.
-- **Why:** Same prompt, model and run index is the same input; sharing the answer is what a replay does anyway, and it saves A1's cost on every variant. The system text is not in the key, so after a prompt text change the old recording must be deleted by hand before `record` (the prompt version stays a3.v1 and a4.v1 until the prompts are frozen as rv1).
-- **Rejected:** Adding the change id to the key (a spec change that would record the same A1 answer once per change); bumping the prompt versions now (nothing has been frozen yet).
+- **Why:** Same prompt, model and run index is the same input; sharing the answer is what a replay does anyway, and it saves A1's cost on every variant. The key now also hashes the system text and the answer schema, so a prompt wording change gets a new key and can neither replay nor reuse an answer given to the old wording; the five existing recordings were renamed to their new keys without a model call.
+- **Rejected:** Adding the change id to the key (a spec change that would record the same A1 answer once per change); keeping the system text out of the key; bumping the prompt versions now (nothing has been frozen yet).
 - **PR:** #105
 
 ## 2026-11-14 · T13 choices: area by path, AI refusals only, nullable failure citation
