@@ -2,6 +2,13 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-14 · The 93 findings on planted-bug runs that match no plant
+
+- **What happened:** The 30 planted-bug runs (10 plants, 3 runs each) produced 117 findings; 24 match their plant by the eval's rule. The report card leaves the other 93 unscored, so the share of wrong findings is unknown, and it's the first thing a reviewer of an AI reviewer asks.
+- **What we measured, without a person:** for each of the 93, whether a defect or missing finding on the variant's parent change (`data/runs/<parent>/review.json`, recorded without the plant) cites the same file and side with lines within ±3, the eval's own tolerance; and whether another run of the same variant has a finding there. Result: 56 are `missing` (a test or a check the change lacks), 37 `defect`. 70 sit where the parent change's review also has a finding, so the plant didn't cause them; 74 recur in another run of the same variant; 78 do one or both. 15 appear in one run only and nowhere on the parent.
+- **What it means:** most of the unscored findings are the reviewer repeating what it says about Tieto's change itself, not noise the plants provoked. That says they're consistent, not that they're right: whether the parent's findings are real still needs a person, and the 15 one-off findings are the likeliest false positives. This is a count we ran once by hand from the committed runs; the report card doesn't compute it.
+- **What we changed:** nothing in the scorer; [trust-ladder.md](ideas/trust-ladder.md) quotes the split.
+
 ## 2026-11-14 · Independent audit of the eight ideas against the recorded data
 
 - **What we did:** A script outside the test suite parsed every recorded file against its schema, re-ran `route()` on the four Tieto reviews, and re-checked each citation with plain `git show` in the fork, not with the pipeline's quote check. It also checked the evidence rules (no Verified claim without an A5 test that fails on the base and passes on the head; none on the PR's own test alone), the ladder thresholds, the fixed refusals and the receipt against the review. 54 recorded reviews, 1,421 citations: no violation. `pnpm countersign verify mp-2283` exits 0, and the 53 demo-path e2e specs pass on a production build.

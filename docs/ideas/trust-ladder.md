@@ -33,7 +33,7 @@ From the report card (reviewer rv2), three runs per planted bug; a plant counts 
 - **Security:** 1 of 3 caught: v06 in 3 of 3 runs, v03 and v10 in 0 of 3 (no finding at all). Shadow: a human reads every security hunk ([lessons](../lessons.md#correction-2026-11-14)).
 - **Performance:** no planted bugs, so Shadow; its catch rate is not measured yet.
 
-No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 117 findings across the 30 runs, 24 matched a plant (24 of 30 runs caught theirs); the rest aren't scored.
+No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 117 findings across the 30 runs, 24 matched a plant (24 of 30 runs caught theirs). The other 93 aren't scored as right or wrong, but 70 of them sit where the same reviewer also flagged the unplanted change, so the plant didn't cause them, and only 15 appear once and nowhere else ([lessons](../lessons.md#2026-11-14--the-93-findings-on-planted-bug-runs-that-match-no-plant)).
 
 ## How to adopt it
 
