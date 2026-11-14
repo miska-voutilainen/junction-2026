@@ -7,6 +7,7 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  mergeFixedRefusals,
 } from "./checkFindings";
 import type { SideReader } from "./quoteCheck";
 
@@ -199,5 +200,23 @@ describe("refusals", () => {
     expect(
       fixedRefusalsFor([{ id: "h1", file: "src/MessagePack/Reader.cs" }] as Review["hunks"]),
     ).toEqual([]);
+  });
+});
+
+describe("mergeFixedRefusals", () => {
+  const ai = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "ai" as const, reason: "a", hunkIds });
+  const fixed = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "rule" as const, reason: "f", hunkIds });
+
+  it("adds a rule refusal only for matched hunks no AI refusal of that rule lists", () => {
+    const merged = mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2", "h3"])]);
+    expect(merged).toEqual([ai("R7", ["h2"]), fixed("R7", ["h3"])]);
+  });
+
+  it("adds nothing when the AI already refused every matched hunk", () => {
+    expect(mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R7", ["h2"])]);
+  });
+
+  it("ignores an AI refusal under another rule id", () => {
+    expect(mergeFixedRefusals([ai("R1", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R1", ["h2"]), fixed("R7", ["h2"])]);
   });
 });

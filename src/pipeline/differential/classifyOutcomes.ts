@@ -29,7 +29,7 @@ export interface TestOutcome {
 export type Verdict = "tells-apart" | "same" | "broken-on-head" | "fails-on-both" | "inconclusive";
 
 /** A test that said nothing about the change, with the reason a reader can act on. */
-export type InconclusiveTest = NonNullable<Review["inconclusiveTests"]>[number];
+type InconclusiveTest = NonNullable<Review["inconclusiveTests"]>[number];
 
 /** How many test methods ended each way, for the log. */
 export type VerdictCounts = Record<Verdict, number>;
@@ -100,7 +100,7 @@ export function applyOutcomes(
       const updated = withEvidence(claim, outcome, verdict, methods);
       if (outcome.source === "pr-test") return updated;
       if (verdict === "broken-on-head") {
-        const broken = methods.filter(({ verdict: v }) => v === "broken-on-head");
+        const broken = methods.filter((method) => method.verdict === "broken-on-head");
         retractions.push({
           claimId: claim.id,
           reason: `A test written from the requirement passes on the base and fails on the head: ${broken.map(({ name }) => name).join(", ")}.`,
@@ -172,6 +172,8 @@ function reasonForRunError(output: string, side: "base" | "head"): string {
     return `no test matches the filter on the ${side}`;
   const line = buildErrorLine(output);
   if (line === null) return `no test result in the output on the ${side}`;
+  // Drops the "<worktree>/" lead of a path and the project suffix of a build error:
+  // "<worktree>/src/A.cs(3,1): error CS1002: ; expected [<worktree>/tests/T.csproj]" -> "src/A.cs(3,1): error CS1002: ; expected".
   const readable = line.replace(/^<worktree>[\\/]/, "").replace(/ \[[^\]]+\.csproj\]$/, "");
   const shown =
     readable.length > MAX_REASON_CHARS ? `${readable.slice(0, MAX_REASON_CHARS)}…` : readable;

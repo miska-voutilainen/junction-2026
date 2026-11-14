@@ -11,7 +11,8 @@ import { reveal, useMotionPreset } from "@/lib/motion";
 import { DiffTable } from "./DiffTable";
 import type { CodeToken } from "./highlightHunks";
 import { OWN_TEST_NOTE, hunkRawText } from "./reviewModel";
-import type { HighlightedLines, HunkEntry } from "./reviewModel";
+import type { HighlightedLines } from "./citationHighlights";
+import type { HunkEntry } from "./reviewModel";
 import { hunkHeaderId } from "./useDiffReveal";
 
 /**

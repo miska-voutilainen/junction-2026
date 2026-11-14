@@ -1,10 +1,38 @@
+/**
+ * Evidence levels: how a claim is backed, as a checkable fact, never as a
+ * confidence score. The model's own confidence is neither stored nor shown
+ * (spec section 1, principle 3), so a reader sees what was checked, not how
+ * sure the AI sounded. The levels, strongest first:
+ * - Verified: a differential test the authoring agent did not write (A5 writes
+ *   it from the requirement without seeing the code) failed on the base and
+ *   passed on the head.
+ * - Supported: the claim's quote was found in the code by the mechanical quote
+ *   check. The PR's own test can add evidence to such a claim but never changes
+ *   its level, because the author must not vouch for itself.
+ * - Unverified: no checkable evidence, so the claim covers no hunk on its own. A failed
+ *   quote check lands here, and so does a claim an A5 test showed the change broke.
+ * - Refused: a policy rule hands the decision to a named person. Refusals are
+ *   recorded in `Review.refusals`, not on claims; `route()` always sends the
+ *   hunks they name to the reader.
+ *
+ * What each evidence kind (`Review.claims[].evidence[].kind`) can give:
+ * - `quote-check`: Supported.
+ * - `differential-test`: lifts a Supported claim to Verified; a test that passes
+ *   on the base and fails on the head drops the claim to Unverified.
+ * - `pr-test`: evidence only, never a level change.
+ * `route()` covers a hunk as Verified or Supported by the best level among the
+ * claims on it, unless a finding, a refusal or a Shadow area sends it to the reader first (spec section 5).
+ */
 import { z } from "zod";
 
 /** Review area. Used by data/runs/<changeId>/review.json and data/eval/report-card.json (producer: engine). */
 export const AreaSchema = z.enum(["generator", "analyzer", "security", "performance"]);
 export type Area = z.infer<typeof AreaSchema>;
 
-/** How strongly a claim is backed (data/runs/<changeId>/review.json, producer: engine). */
+/**
+ * How strongly a claim is backed (data/runs/<changeId>/review.json, producer: engine).
+ * What earns each level is in the header above.
+ */
 export const EvidenceLevelSchema = z.enum(["verified", "supported", "unverified", "refused"]);
 export type EvidenceLevel = z.infer<typeof EvidenceLevelSchema>;
 

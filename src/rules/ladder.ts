@@ -16,17 +16,15 @@ export interface AreaRecord {
   planted: number;
   caught: number;
   spotChecksClean: number;
-  escapes: number;
 }
 
 /**
- * Level an area has earned, after its escapes.
- * Example: 4 planted, 3 caught, 0 spot checks, 1 escape: Calibrated, then Shadow.
+ * Level an area has earned from its record; `applyEscapes` lowers it after.
+ * Example: 4 planted, 3 caught, 0 spot checks: Calibrated.
  */
 export function ladderLevel(record: AreaRecord, policy: LadderPolicy = ladderPolicy): LadderLevel {
-  const { planted, caught, spotChecksClean, escapes } = record;
-  const earned = earnedRung(planted, caught, spotChecksClean, policy);
-  return rungs[Math.max(0, earned - escapes)];
+  const { planted, caught, spotChecksClean } = record;
+  return rungs[earnedRung(planted, caught, spotChecksClean, policy)];
 }
 
 function earnedRung(planted: number, caught: number, spotChecksClean: number, policy: LadderPolicy): number {

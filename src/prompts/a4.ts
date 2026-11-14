@@ -32,7 +32,7 @@ Rules:
 
 Answer with only the JSON object that matches the schema.`;
 
-/** What A4 sees. */
+/** What A4 sees: the description to test, and what A2 found in the code. Never a hunk or the requirement. */
 export interface A4Input {
   authorDescription: string;
   /** A2's story as JSON text. */
@@ -41,7 +41,7 @@ export interface A4Input {
   claims: string;
 }
 
-/** Renders the user text. */
+/** Renders the user text: the description with its lines marked, then the story and the claims it is tested against. */
 export function render({ authorDescription, story, claims }: A4Input): string {
   return [
     `<author-description>\n${prefixLines(authorDescription)}\n</author-description>`,
@@ -64,7 +64,7 @@ const StatementSchema = z.object({
 /** One checked statement of the description. */
 export type Statement = z.infer<typeof StatementSchema>;
 
-/** A4's answer. */
+/** A4's answer: a verdict for each factual statement of the description. */
 export interface A4Output {
   statements: Statement[];
 }
@@ -102,7 +102,10 @@ export function outputSchema({ authorDescription, claimIds }: A4Reference): z.Zo
       const problem = (field: string, message: string) =>
         context.addIssue({ code: "custom", path: ["statements", index, field], message });
       if (!description.includes(comparable(statement.statement)))
-        problem("statement", "statement is not a sentence of the author description; copy it exactly");
+        problem(
+          "statement",
+          "statement is not a sentence of the author description; copy it exactly",
+        );
       for (const id of statement.claimIds)
         if (!knownClaims.has(id)) problem("claimIds", `unknown claim id "${id}"`);
       statement.citations.forEach((citation, citationIndex) => {

@@ -7,9 +7,16 @@
  */
 import { z } from "zod";
 import { AreaSchema, type Requirement } from "../contracts";
+import { requirementBlock, requirementItems } from "../pipeline/promptContext";
 
 /** Prompt version; bumping it also bumps the reviewer version (spec section 6). */
 export const version = "a1.v1";
+
+/** Most behaviours A1 may expect per requirement item; the prompt text and the schema both use it. */
+const MAX_EXPECTED_BEHAVIOURS = 5;
+
+/** Most tests A1 may expect per requirement item; the prompt text and the schema both use it. */
+const MAX_EXPECTED_TESTS = 3;
 
 /** Fixed orientation to the repository, from spec 9.1 T12. The only repository knowledge A1 gets. */
 export const repositoryOrientation =
@@ -19,9 +26,9 @@ export const repositoryOrientation =
 export const system = `You write the blind expectation for a code review. You receive one requirement and a short orientation to the repository. You have not seen the change and you must not guess at its code. Your expectation is the yardstick the real change is compared with afterwards.
 
 For every requirement item, functional and non-functional, write:
-- expectedBehaviours: 1 to 5 observable behaviours a correct change must show. Describe what a user or a build would see, not how the code is structured. When the item guards against a failure, name that failure.
+- expectedBehaviours: 1 to ${MAX_EXPECTED_BEHAVIOURS} observable behaviours a correct change must show. Describe what a user or a build would see, not how the code is structured. When the item guards against a failure, name that failure.
 - likelyAreas: where such a change most likely lands. generator: the Roslyn source generator and its output. analyzer: diagnostics and their release notes. security: code that deserializes or generates deserialization of untrusted input. performance: allocation and hot paths. Leave the list empty when none fits.
-- expectedTests: 0 to 3 tests that would show the item holds, one sentence each.
+- expectedTests: 0 to ${MAX_EXPECTED_TESTS} tests that would show the item holds, one sentence each.
 
 Rules:
 - One entry per requirement item, each id exactly once, no other ids.
@@ -38,20 +45,12 @@ export interface A1Input {
 
 /** Renders the user text: the orientation and the requirement, each in a delimited block. */
 export function render({ requirement }: A1Input): string {
-  const items = [...requirement.functional, ...requirement.nonFunctional]
-    .map((item) => `${item.id}: ${item.text}`)
-    .join("\n");
   return [
     "<repository-orientation>",
     repositoryOrientation,
     "</repository-orientation>",
     "",
-    `<requirement id="${requirement.id}">`,
-    `Title: ${requirement.title}`,
-    `Intent: ${requirement.intent}`,
-    "Items:",
-    items,
-    "</requirement>",
+    requirementBlock(requirement),
     "",
     "Write the expectation, one entry per item id above.",
   ].join("\n");
@@ -61,9 +60,9 @@ const nonEmptyText = z.string().min(1);
 
 const ExpectationItemSchema = z.object({
   requirementItemId: z.string(),
-  expectedBehaviours: z.array(nonEmptyText).min(1).max(5),
+  expectedBehaviours: z.array(nonEmptyText).min(1).max(MAX_EXPECTED_BEHAVIOURS),
   likelyAreas: z.array(AreaSchema),
-  expectedTests: z.array(nonEmptyText).max(3),
+  expectedTests: z.array(nonEmptyText).max(MAX_EXPECTED_TESTS),
 });
 
 /** A1's answer: one item per requirement item. Same shape as Review.expectation. */
@@ -74,9 +73,7 @@ export type A1Output = { items: z.infer<typeof ExpectationItemSchema>[] };
  * repeated or missing, so the client retries once with the message below.
  */
 export function outputSchema(requirement: Requirement): z.ZodType<A1Output> {
-  const expectedIds = [...requirement.functional, ...requirement.nonFunctional].map(
-    (item) => item.id,
-  );
+  const expectedIds = requirementItems(requirement).map((item) => item.id);
   return z.object({ items: z.array(ExpectationItemSchema) }).superRefine((output, context) => {
     const seen = new Set<string>();
     output.items.forEach((item, index) => {

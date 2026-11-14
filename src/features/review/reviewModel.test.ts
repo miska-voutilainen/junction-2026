@@ -9,18 +9,14 @@ import {
   buildSections,
   coverageLineText,
   coveredSummary,
-  evidenceAlert,
   fileName,
-  highlightedLinesOf,
-  highlightedLinesOfSelection,
   hunkRange,
   hunkRawText,
-  isLineHighlighted,
   isOwnTestOnly,
   OWN_TEST_LABEL,
-  scrollTargetOf,
-  splitCitations,
 } from "./reviewModel";
+import { highlightedLinesOf, highlightedLinesOfSelection, isLineHighlighted, scrollTargetOf, splitCitations } from "./citationHighlights";
+import { evidenceAlert } from "./ReviewStates";
 
 const fixtureRoot = "data/fixtures";
 const changeIds = ["mp-2129", "mp-2234", "mp-2283", "mp-2297"];
@@ -100,6 +96,13 @@ describe("evidence line", () => {
     const broken = { ...review, files: review.files.filter((file) => file.path !== review.hunks[0].file) };
     const { decision, levels } = decideChange(broken, await readableCard(), {});
     expect(() => buildSections(broken, decision, levels)).toThrow(/mp-2283.*h1.*pnpm review run mp-2283/);
+  });
+
+  it("throws instead of showing developer text when a covered hunk has no claim at its level", async () => {
+    const review = await load("mp-2283");
+    const { decision, levels } = decideChange(review, await readableCard(), {});
+    const withoutVerified = { ...review, claims: review.claims.filter((claim) => claim.level !== "verified") };
+    expect(() => buildSections(withoutVerified, decision, levels)).toThrow(/mp-2283.*Verified.*pnpm review run mp-2283/);
   });
 });
 

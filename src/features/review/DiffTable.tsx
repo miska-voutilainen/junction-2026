@@ -3,8 +3,8 @@ import type { Coverage, Review } from "@/contracts";
 import { COVERAGE_BAR } from "@/components/CoverageMark";
 import { cn } from "@/lib/utils";
 import type { CodeToken } from "./highlightHunks";
-import { isLineHighlighted } from "./reviewModel";
-import type { HighlightedLines } from "./reviewModel";
+import { isLineHighlighted } from "./citationHighlights";
+import type { HighlightedLines } from "./citationHighlights";
 
 type Hunk = Review["hunks"][number];
 

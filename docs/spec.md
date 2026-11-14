@@ -160,7 +160,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
   - **Blind check:** heading "Expected from <requirementId> before reading the diff": A1's items, each with its expected behaviours; then "Contradictions": each as two lines "The PR says: <statement>" and "The code does: <explanation>" with citations; then "Given the PR description first vs blind-first": one row per planted contradiction of this change (9.1 T19), and below it the overall count from the report card, "Across <p> planted contradictions × <k> runs: given the description first caught <a> of <t> · blind-first caught <b> of <t>"; then "Missing" and "Scope creep" (A3's `missing` and `scope-creep` findings). Empty copy per section: "No contradictions between the PR description and the code." · "Nothing missing." · "No scope creep found."
   - **Refused:** each refusal as "<ruleId> · <rule title>", the reason, "Decides: <decider>" and links to its hunks. Empty: "Nothing refused. Policy v1 has 7 rules. None applied to this change."
   - **Receipt:** unsigned: the intro "Drafted by the AI. Only a named human can sign it.", then "Checked" (each item and by whom or what: "tool", "AI, supported", "human"), "Not checked" (each item and its reason), "Residual risk" (text plus the refused items the owner accepts); then "Sign on your own machine" with two copyable commands, `pnpm countersign draft mp-2283` (writes the draft to edit) and `pnpm countersign sign mp-2283`. Signed: "Signed by <owner> · <date and time>", the same three sections from the signed receipt, then "Verify" with the command `pnpm countersign verify mp-2283` and its recorded output in a code block, and the line "Signature valid · diff unchanged". Stale (the receipt's `diffSha256` differs from the review's): a warning "Stale: the code changed after signing." with both hashes.
-- **375 px:** one column: header, coverage line, the Read this hunks, the Review steps tabs and a sticky Sign bar (`docs/design/ui-plan.md`, section 5); covered hunks are one summary line. The diff scrolls horizontally inside its own container; the page never does.
+- **375 px:** one column: header, coverage line, the Read this hunks, the Review steps tabs and, when there is something to sign, a sticky Sign bar (`docs/design/ui-plan.md`, section 5); covered hunks are one summary line. The diff scrolls horizontally inside its own container; the page never does.
 - **States:** unknown id: "No change with id <id>." and a link "Back to the inbox" (`not-found.tsx`) · review missing: "This change hasn't been reviewed yet. Run `pnpm review run <id>`." · review invalid: "This review couldn't be read. Re-record it with `pnpm review run <id>`." · success as above.
 
 ### S3 · Reviewer report card (`/reviewer`)
@@ -287,7 +287,7 @@ Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, n
 
 ### `TierDecision` and `route()` (`src/rules/route.ts`)
 
-`route(review: Review, levels: Record<Area, LadderLevel>, policy = routingPolicy, escapes: Partial<Record<Area, number>> = {}): TierDecision` where
+`route(review: Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals">, levels: Record<Area, LadderLevel>, policy = routingPolicy, escapes: Partial<Record<Area, number>> = {}): TierDecision` where
 
 `TierDecision = { tier: Tier; reasons: { ruleId: string; text: string; tier: Tier }[]; coverage: Record<string /* hunkId */, Coverage>; readHunks: number; totalHunks: number; readLines: number; totalLines: number; readMinutes: number; fullMinutes: number }`.
 
@@ -311,7 +311,7 @@ Reading time: `readMinutes = ceil(readLines / 25)` (minimum 1 when readLines > 0
 
 ### Ladder (`src/rules/ladder.ts`)
 
-`ladderLevel({ planted, caught, spotChecksClean, escapes }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Each escape then drops one level (trusted → calibrated → shadow; shadow stays). `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so.
+`ladderLevel({ planted, caught, spotChecksClean }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Escapes are applied afterwards, one level per escape (trusted → calibrated → shadow; shadow stays): `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so.
 
 ### `ReportCard` (`src/contracts/reportCard.ts`)
 

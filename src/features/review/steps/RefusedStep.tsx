@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LocationButton } from "./LocationButton";
-import type { Refusals, RefusalView } from "./stepsModel";
+import type { Refusals, RefusalView } from "./refusalsModel";
 
 interface RefusedStepProps {
   refusals: Refusals;

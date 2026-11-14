@@ -27,6 +27,15 @@ import {
   TEST_RUN_TIMEOUT_MS,
 } from "../../policy/differentialTests";
 import {
+  CONTAINER_NUGET,
+  CONTAINER_WORKTREE,
+  restoreArguments,
+  testArguments,
+  warmupArguments,
+  type RestoreRequest,
+  type TestRunRequest,
+} from "./dockerArguments";
+import {
   classifyTestOutput,
   parseMethodResults,
   trimOutput,
@@ -49,27 +58,6 @@ export interface TestRun {
   output: string;
 }
 
-/** One worktree and the test project in it. */
-export interface RestoreRequest {
-  /** Absolute path of the worktree. */
-  worktreeDir: string;
-  /** Repository-relative project folder, forward slashes. */
-  projectDir: string;
-  /**
-   * One of the repository's own tests. Roslyn analyzer tests download their
-   * reference assemblies at run time, which the network-free test phase cannot do,
-   * so this test runs once with the network, before any model-written file exists,
-   * to fill the cache volume.
-   */
-  warmupTestName?: string;
-}
-
-/** One `dotnet test` call: where, which project, which tests. */
-export interface TestRunRequest extends Omit<RestoreRequest, "warmupTestName"> {
-  /** Test names; the run keeps the tests whose full name contains any of them. */
-  testNames: readonly string[];
-}
-
 /** What the A5 step needs from .NET. Tests supply a fake; production uses `dockerDotnetRunner`. */
 export interface DotnetRunner {
   /** Fails early, before any model call, when the runner cannot work. @throws Error with what to do. */
@@ -80,120 +68,22 @@ export interface DotnetRunner {
   test(request: TestRunRequest): Promise<TestRun>;
 }
 
-/** Where the worktree is mounted inside the container. */
-const CONTAINER_WORKTREE = "/work";
+/** Docker's own quick commands (server info, volume create) answer in well under this; longer means Docker is stuck. */
+const QUICK_DOCKER_TIMEOUT_MS = 30_000;
 
-/** Where the NuGet volume is mounted inside the container. */
-const CONTAINER_NUGET = "/nuget";
-
-/** Settings every container gets: nothing from the host's environment but these, and no extra privileges. */
-function commonArguments(name: string, worktreeDir: string, nugetMode: "rw" | "ro"): string[] {
-  return [
-    "run",
-    "--rm",
-    "--name",
-    name,
-    "--user",
-    CONTAINER_USER,
-    "--cap-drop",
-    "ALL",
-    "--security-opt",
-    "no-new-privileges",
-    "-v",
-    `${worktreeDir.replaceAll("\\", "/")}:${CONTAINER_WORKTREE}`,
-    "-v",
-    `${NUGET_VOLUME}:${CONTAINER_NUGET}:${nugetMode}`,
-    "-w",
-    CONTAINER_WORKTREE,
-    "-e",
-    "DOTNET_NOLOGO=1",
-    "-e",
-    "DOTNET_CLI_TELEMETRY_OPTOUT=1",
-    "-e",
-    `NUGET_PACKAGES=${CONTAINER_NUGET}`,
-    // The app user has no home folder to write to.
-    "-e",
-    "HOME=/tmp",
-    "-e",
-    "DOTNET_CLI_HOME=/tmp",
-  ];
-}
-
-/** Where the Roslyn testing library keeps the reference assemblies it downloads, relative to the temp folder. */
-const REFERENCE_PACKAGES = "test-packages";
-
-/**
- * The `docker run` arguments that run one of the repository's own tests with the
- * network, to download the reference assemblies the analyzer tests need into the
- * cache volume. The script is fixed; the project and the test name arrive as
- * positional arguments, never inside the script text.
- */
-export function warmupArguments(name: string, request: RestoreRequest): string[] {
-  const script = [
-    `mkdir -p ${CONTAINER_NUGET}/${REFERENCE_PACKAGES}`,
-    `cp -a ${CONTAINER_NUGET}/${REFERENCE_PACKAGES} /tmp/`,
-    'dotnet test "$0" --no-restore --nologo --disable-build-servers --filter "$1" > /dev/null 2>&1',
-    `cp -a /tmp/${REFERENCE_PACKAGES}/. ${CONTAINER_NUGET}/${REFERENCE_PACKAGES}/`,
-  ].join("; ");
-  return [
-    ...commonArguments(name, request.worktreeDir, "rw"),
-    DOTNET_SDK_IMAGE,
-    "sh",
-    "-c",
-    script,
-    request.projectDir,
-    `FullyQualifiedName~${request.warmupTestName}`,
-  ];
-}
-
-/** The `docker run` arguments of the restore phase: network on, no model-written file in the worktree yet. */
-export function restoreArguments(name: string, request: RestoreRequest): string[] {
-  return [
-    ...commonArguments(name, request.worktreeDir, "rw"),
-    DOTNET_SDK_IMAGE,
-    "dotnet",
-    "restore",
-    request.projectDir,
-    "--nologo",
-  ];
-}
-
-/**
- * The `docker run` arguments of the test phase: no network, no restore, the NuGet
- * cache read-only. The filter is a `~` match of any name, so a name never needs quoting.
- */
-export function testArguments(name: string, request: TestRunRequest): string[] {
-  const filter = request.testNames.map((testName) => `FullyQualifiedName~${testName}`).join("|");
-  return [
-    ...commonArguments(name, request.worktreeDir, "ro"),
-    "--network",
-    "none",
-    DOTNET_SDK_IMAGE,
-    // Copy the cached reference assemblies to the temp folder, where the testing library looks for them.
-    "sh",
-    "-c",
-    `cp -a ${CONTAINER_NUGET}/${REFERENCE_PACKAGES} /tmp/ 2>/dev/null; exec dotnet "$@"`,
-    "sh",
-    "test",
-    request.projectDir,
-    "--no-restore",
-    "--nologo",
-    "--disable-build-servers",
-    "--logger",
-    "console;verbosity=normal",
-    "--filter",
-    filter,
-  ];
-}
+const MS_PER_MINUTE = 60_000;
 
 /** The real runner: Docker. */
 export const dockerDotnetRunner: DotnetRunner = {
   async ensureReady() {
-    const info = await runDocker(["info", "--format", "{{.ServerVersion}}"], 30_000);
+    const info = await runDocker(
+      ["info", "--format", "{{.ServerVersion}}"],
+      QUICK_DOCKER_TIMEOUT_MS,
+    );
     if (info.exitCode !== 0)
       throw new Error("Docker is not running. Start Docker Desktop, or run with --no-tests.");
     // The volume is created root-owned; the container user needs to write the restored packages into it.
-    await runDocker(["volume", "create", NUGET_VOLUME], 30_000);
+    await runDocker(["volume", "create", NUGET_VOLUME], QUICK_DOCKER_TIMEOUT_MS);
     const chown = await runDocker(
       [
         "run",
@@ -243,7 +133,9 @@ export const dockerDotnetRunner: DotnetRunner = {
       return {
         result: "error",
         methods,
-        output: trimOutput(`${output}\nTimed out after ${TEST_RUN_TIMEOUT_MS / 60_000} minutes.`),
+        output: trimOutput(
+          `${output}\nTimed out after ${TEST_RUN_TIMEOUT_MS / MS_PER_MINUTE} minutes.`,
+        ),
       };
     return { result: classifyTestOutput(output, exitCode), methods, output: trimOutput(output) };
   },
@@ -254,8 +146,24 @@ function containerName(): string {
   return `countersign-a5-${randomBytes(6).toString("hex")}`;
 }
 
+/** Lines of a failed command's output that an error message quotes: the last ones hold the cause. */
+const ERROR_TAIL_LINES = 3;
+
+/** Longest quote in an error message; a build log line can be very long. */
+const ERROR_TAIL_MAX_CHARS = 400;
+
+/**
+ * The end of a command's output as one line, for an error message.
+ *
+ * @example tail("restoring\nerror NU1101: no package\n") // "restoring | error NU1101: no package"
+ */
 function tail(output: string): string {
-  return output.trim().split(/\r?\n/).slice(-3).join(" | ").slice(-400);
+  return output
+    .trim()
+    .split(/\r?\n/)
+    .slice(-ERROR_TAIL_LINES)
+    .join(" | ")
+    .slice(-ERROR_TAIL_MAX_CHARS);
 }
 
 interface ProcessResult {

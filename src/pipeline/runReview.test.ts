@@ -7,7 +7,7 @@ import type { ModelClient } from "../ai/client";
 import { ReviewSchema, type ChangeInput, type Requirement } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
 import { checkReview } from "./checkReview";
-import { mergeFixedRefusals, runReview, type ModelStep } from "./runReview";
+import { runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const requirement: Requirement = {
@@ -350,23 +350,5 @@ describe("runReview with a fake model", () => {
       ["A1 covers every requirement item exactly once", true],
       ["A2 lists every hunk of a non-docs, non-generated file in a claim", true],
     ]);
-  });
-});
-
-describe("mergeFixedRefusals", () => {
-  const ai = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "ai" as const, reason: "a", hunkIds });
-  const fixed = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "rule" as const, reason: "f", hunkIds });
-
-  it("adds a rule refusal only for matched hunks no AI refusal of that rule lists", () => {
-    const merged = mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2", "h3"])]);
-    expect(merged).toEqual([ai("R7", ["h2"]), fixed("R7", ["h3"])]);
-  });
-
-  it("adds nothing when the AI already refused every matched hunk", () => {
-    expect(mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R7", ["h2"])]);
-  });
-
-  it("ignores an AI refusal under another rule id", () => {
-    expect(mergeFixedRefusals([ai("R1", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R1", ["h2"]), fixed("R7", ["h2"])]);
   });
 });
