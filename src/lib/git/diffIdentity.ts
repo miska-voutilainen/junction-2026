@@ -3,15 +3,13 @@
  * said "approved" about a diff nobody can pin down would prove nothing, so the
  * hash covers the exact bytes git produces for base..head. What is pinned:
  * system and global git config are ignored, git's environment overrides are
- * removed, and the diff options are fixed (algorithm, no external diff, no
- * renames, prefixes, quoting, binary and full-index output). What is not: the
- * clone's own `.git/config` is still read (`pnpm seed` sets only
- * `core.longpaths`, which does not change diff output), and the hashed diff
- * passes no `-U`, `--no-textconv` or indent-heuristic flag, so local diff
- * settings still apply. For example, a clone whose config sets `diff.context`,
- * `diff.indentHeuristic`, `diff.relative` or a textconv driver
- * would hash the same change differently, and `verify` would call a good
- * receipt stale.
+ * removed, and every diff option that git would otherwise take from the
+ * clone's own `.git/config` or from a `.gitattributes` textconv driver is set
+ * on the command line (algorithm, context, hunk merging, indent heuristic,
+ * textconv, relative paths, submodule format, renames, prefixes,
+ * quoting, binary and full-index output). So a clone that sets
+ * `diff.context` or `diff.indentHeuristic` hashes the same change the same way.
+ * Not pinned: `diff.orderFile` (git rejects an empty value), which only reorders files.
  * The review and the receipt call this one function; if the diff changes, the
  * hash changes and the receipt reads as stale. Spec section 5, Diff identity.
  */
@@ -35,10 +33,16 @@ export interface DiffIdentity {
  * `extraOptions` adds what only one of them needs (--binary, -U3).
  */
 export function pinnedDiffArgs(baseSha: string, headSha: string, extraOptions: string[]): string[] {
+  // prettier-ignore
   return [
     "-c", "core.quotepath=false",
     "-c", "diff.algorithm=myers",
-    "diff", ...extraOptions, "--no-ext-diff", "--no-color", "--no-renames",
+    // Blank-line suppression would change the bytes of context lines.
+    "-c", "diff.suppressBlankEmpty=false",
+    // The pins come before `extraOptions`, so a caller's own -U (the hunk diff) wins.
+    "diff", "-U3", "--inter-hunk-context=0", "--no-textconv", "--indent-heuristic",
+    "--no-relative", "--submodule=short", ...extraOptions,
+    "--no-ext-diff", "--no-color", "--no-renames",
     "--src-prefix=a/", "--dst-prefix=b/",
     baseSha, headSha,
   ];

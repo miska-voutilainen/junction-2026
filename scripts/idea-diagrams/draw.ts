@@ -22,12 +22,7 @@ import { signedReceipt } from "./diagrams/signedReceipt";
 import { trustLadder } from "./diagrams/trustLadder";
 import { renderDocument, THEMES } from "./svg";
 
-const DOCS_DIR = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "docs",
-);
+const DOCS_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "docs");
 
 const DIAGRAM_GROUPS = [
   {

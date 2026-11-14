@@ -10,7 +10,7 @@ import { ReviewSchema } from "@/contracts/review";
 import { computeDiffIdentity } from "@/lib/git";
 import { CommandError, signatureNamespace, type ReceiptOptions } from "./context";
 import { draftReceipt } from "./draft";
-import { exportReceipt } from "./exportRecord";
+import { exportReceipt } from "./exportReceipt";
 import { signReceipt } from "./sign";
 import { canonicalJson } from "./canonicalJson";
 import { defaultSshKeygenPath, toSshPath } from "./sshKeygen";
