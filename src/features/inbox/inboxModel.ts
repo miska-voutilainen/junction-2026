@@ -4,7 +4,7 @@
  * trust levels, so a simulated escape re-routes the inbox without a reload
  * (spec section 3, S1 "Live re-routing"). Pure functions, no React.
  */
-import type { ShellChange } from "@/components/ShellChange";
+import type { ShellChange } from "@/components/shellChange";
 import { tierLabel } from "@/contracts";
 import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier, TierDecision } from "@/contracts";
 import { receiptStatus } from "@/lib/data/receiptStatus";

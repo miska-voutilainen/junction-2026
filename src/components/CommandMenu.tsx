@@ -11,7 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Kbd } from "@/components/ui/kbd";
 import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
 import { useShortcuts } from "@/lib/useShortcuts";
-import type { ShellChange } from "./ShellChange";
+import type { ShellChange } from "./shellChange";
 
 const COPIED_MS = 1500;
 // The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.

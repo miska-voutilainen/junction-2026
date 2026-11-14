@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { AppNav } from "@/components/AppNav";
 import { CommandMenu } from "@/components/CommandMenu";
 import { MobileHeader } from "@/components/MobileHeader";
-import type { ShellChange } from "@/components/ShellChange";
+import type { ShellChange } from "@/components/shellChange";
 import { TopBar } from "@/components/TopBar";
 import type { BreadcrumbItem } from "@/components/TopBar";
 

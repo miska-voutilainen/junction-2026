@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppNav } from "./AppNav";
 import { CommandMenu, CommandMenuProvider } from "./CommandMenu";
-import type { ShellChange } from "./ShellChange";
+import type { ShellChange } from "./shellChange";
 import { TopBar } from "./TopBar";
 
 const navigation = vi.hoisted(() => ({ pathname: "/", push: vi.fn() }));
