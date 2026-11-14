@@ -74,6 +74,15 @@ describe("accessGate", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
+  it.each(["/opengraph-image-x", "/opengraph-image/x", "/OpenGraph-Image"])(
+    "still gates %s: the preview exemption is one exact path",
+    async (pathname) => {
+      vi.stubEnv("ACCESS_CODE", "8888");
+      const response = await accessGate(requestFor(pathname));
+      expect(response.status).toBe(307);
+    },
+  );
+
   it("redirects when the cookie belongs to another code", async () => {
     vi.stubEnv("ACCESS_CODE", "8888");
     const response = await accessGate(requestFor("/", sha256("1234")));

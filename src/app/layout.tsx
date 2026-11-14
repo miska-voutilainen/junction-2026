@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   title: "Countersign",
   description:
     "AI reviews. A named human countersigns, on evidence they can check.",
+  // X shows the small card unless asked; the preview image is made for the large one.
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: Readonly<LayoutProps<"/">>) {
