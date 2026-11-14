@@ -117,6 +117,32 @@ export interface ComparisonRun {
 }
 
 /**
+ * The comparison runs recorded for a change, blind before anchored, by run number.
+ * The contradiction plants (cp1-cp4) have only these, no review.json.
+ * @example for cp1: [{ mode: "blind", runNumber: 1 }, { mode: "blind", runNumber: 2 }, { mode: "anchored", runNumber: 1 }, ...]
+ */
+export async function listComparisonRuns(changeId: string): Promise<ComparisonRun[]> {
+  const modes: ComparisonRun["mode"][] = ["blind", "anchored"];
+  const runs = await Promise.all(
+    modes.map(async (mode) => {
+      const folder = path.join(RUNS, checkedId(changeId), mode);
+      if (!existsSync(folder)) return [];
+      return (await readdir(insideData(folder)))
+        .map((name) => name.match(/^(\d+)\.json$/)?.[1]) // "2.json" gives "2"; other files are skipped
+        .filter((runNumber): runNumber is string => runNumber !== undefined)
+        .map((runNumber) => ({ mode, runNumber: Number(runNumber) }))
+        .sort((a, b) => a.runNumber - b.runNumber);
+    }),
+  );
+  return runs.flat();
+}
+
+/** True when data/runs/<changeId>/review.json exists. */
+export function hasRecordedReview(changeId: string): boolean {
+  return existsSync(reviewPath(changeId));
+}
+
+/**
  * Writes data/runs/<changeId>/review.json, or the comparison run's file when
  * `comparison` is given (2-space JSON, trailing newline), and returns its path.
  */

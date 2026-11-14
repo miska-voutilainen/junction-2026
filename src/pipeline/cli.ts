@@ -1,7 +1,8 @@
 /**
  * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
  * review, `check <changeId>` runs the eval cases of A1 to A5 on it, `comment <changeId>`
- * prints the pull request comment CI posts, `eval` runs the planted-bug eval.
+ * prints the pull request comment CI posts, `legacy <changeId>` adds the legacy guard to
+ * its recorded runs without a model call, `eval` runs the planted-bug eval.
  * Spec section 5, Pipeline CLI.
  */
 import { existsSync } from "node:fs";
@@ -14,10 +15,14 @@ import { countGenerated } from "../rules/route";
 import { MP2283_CHANGE_ID, checkReview, loadContradictionKey } from "./checkReview";
 import { receiptExitFrom, renderReviewComment } from "./prComment";
 import {
+  hasRecordedReview,
+  listComparisonRuns,
   loadChangeAndRequirement,
   loadRecordedReview,
+  loadRecordedRun,
   loadReportCard,
   writeRecordedReview,
+  type ComparisonRun,
 } from "./reviewFiles";
 import { runEvalCommand } from "./eval/evalCommand";
 import { blindComparisonSteps, reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
@@ -78,17 +83,36 @@ async function main(argv: string[]): Promise<void> {
   });
 }
 
-/** `legacy`: adds the legacy guard to the recorded review in place, with no model call. */
+/**
+ * `legacy`: adds the legacy guard in place, with no model call, to the change's
+ * review and to every comparison run recorded for it. The contradiction plants
+ * have comparison runs only, and they must go through the guard too.
+ */
 async function legacyCommand(changeId: string): Promise<void> {
   if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
   const repoDir = process.env.SAMPLE_REPO_DIR;
   if (!repoDir) fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
-  const before = await loadRecordedReview(changeId);
-  const after = await addLegacyGuard(before, repoDir, levelsForReviewer(await loadReportCard(), MODEL));
-  await writeRecordedReview(after);
+  const levels = levelsForReviewer(await loadReportCard(), MODEL);
+  const runs: Array<ComparisonRun | undefined> = [
+    ...(hasRecordedReview(changeId) ? [undefined] : []),
+    ...(await listComparisonRuns(changeId)),
+  ];
+  if (runs.length === 0) fail(`No recorded review or comparison run for ${changeId}. Run pnpm review run ${changeId} first.`);
+  for (const comparison of runs) {
+    const before = comparison ? await loadRecordedRun(changeId, comparison) : await loadRecordedReview(changeId);
+    const label = comparison ? `${changeId} ${comparison.mode} ${comparison.runNumber}` : changeId;
+    if (!before) fail(`${label} does not match the Review contract; runs listed above are already updated. Record it again with pnpm review run, then re-run this command (it is safe to repeat).`);
+    const after = await addLegacyGuard(before, repoDir, levels);
+    await writeRecordedReview(after, comparison);
+    printLegacyResult(label, before, after);
+  }
+}
+
+/** One line per run: the tier before and after, then one line per touch point. */
+function printLegacyResult(label: string, before: Review, after: Review): void {
   const points = after.legacyTouchPoints ?? [];
   console.log(
-    `${changeId} · ${before.routing.tier} -> ${after.routing.tier} · ${points.length} touch points` +
+    `${label} · ${before.routing.tier} -> ${after.routing.tier} · ${points.length} touch points` +
       points.map((point) => `
   ${point.kind} · ${point.guard.status} · ${point.hunkIds.length} hunks · ${point.detail}`).join(""),
   );

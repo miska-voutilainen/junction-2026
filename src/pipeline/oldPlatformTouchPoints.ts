@@ -8,10 +8,12 @@
 import type { LegacyTouchPoint } from "../contracts";
 import type { BaseTree } from "../lib/git/baseTree";
 import {
+  currentPlatformIf,
   legacyTargetFramework,
   maintainersOwner,
   maxListedFiles,
   oldPlatformDirective,
+  preprocessor,
 } from "../policy/legacyTouch";
 import { groupSightings, type Guard, type Hunk, type Sighting } from "./touchSightings";
 
@@ -36,15 +38,50 @@ export async function oldPlatformTouchPoints(
  */
 function directiveSighting(hunk: Hunk): Sighting[] {
   const project = hunk.file.match(/^src\/([^/]+)\//)?.[1];
-  // The first directive stands for the hunk: one hunk is one sighting, and a hunk
-  // that changes several `#if` lines still asks the same question of the owner.
-  const directive = hunk.lines
-    .filter((line) => line.kind !== "context" && oldPlatformDirective.test(line.text))
-    .map((line) => line.text.trim())[0];
+  const directive = firstOldPlatformDirective(hunk.lines);
   if (!project || !directive) return [];
   return [
     { detail: directive, owner: maintainersOwner.platform, hunkId: hunk.id, subject: project },
   ];
+}
+
+/**
+ * The first changed line that only old targets compile: an old-platform `#if`,
+ * or an `#else` of an `#if` on one current target. The first stands for the
+ * hunk: a hunk that changes several such lines asks the owner the same question.
+ * @example a hunk with context "#if NET8_0_OR_GREATER" and an added "#else" gives "#else of #if NET8_0_OR_GREATER"
+ */
+function firstOldPlatformDirective(lines: Hunk["lines"]): string | null {
+  for (const [index, line] of lines.entries()) {
+    if (line.kind === "context") continue;
+    if (oldPlatformDirective.test(line.text)) return line.text.trim();
+    if (!preprocessor.elseLine.test(line.text)) continue;
+    const opening = openingIf(lines, index);
+    if (opening && currentPlatformIf.test(opening)) return `#else of ${opening}`;
+  }
+  return null;
+}
+
+/**
+ * The `#if` line an `#else` at `index` closes, or null when it opened above the
+ * hunk. Walks back through the same version of the file as the `#else`: an
+ * added line through context and added lines, a removed one through context
+ * and removed lines. Nested `#if ... #endif` blocks on the way are skipped.
+ * @example lines "#if NET8_0_OR_GREATER", "Fast();", "#else" give "#if NET8_0_OR_GREATER" for the third line
+ */
+function openingIf(lines: Hunk["lines"], index: number): string | null {
+  const version = lines[index].kind;
+  let depth = 0;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const { kind, text } = lines[i];
+    if (kind !== "context" && kind !== version) continue;
+    if (preprocessor.endifLine.test(text)) depth += 1;
+    else if (preprocessor.ifLine.test(text)) {
+      if (depth === 0) return text.trim();
+      depth -= 1;
+    }
+  }
+  return null;
 }
 
 /**

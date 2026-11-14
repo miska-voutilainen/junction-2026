@@ -195,21 +195,32 @@ function sizeReasons(review: RoutedReview, policy: RoutingPolicy): Reason[] {
 
 /**
  * Rule R-legacy: one reason per legacy zone the change's hunks touch, naming
- * the owner who decides. Focused, or Full when the change touches the zones in
- * `legacyTouchFull` hunks or more.
+ * the owner who decides. Focused, or Full when the change touches legacy code
+ * in `legacyTouchFull` hunks or more, counting hunks in a zone and hunks that
+ * reach into one from outside (legacy-code touch points): ten reach-ins rework
+ * the boundary as much as ten edits inside it.
  * @example "Wire format: edits legacy code in 3 hunks, the runtime owner (the maintainers) decides"
  */
 function legacyReasons(review: RoutedReview): Reason[] {
   const touched = legacyZones
     .map((zone) => ({ zone, count: review.hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone).length }))
     .filter(({ count }) => count > 0);
-  const totalTouches = touched.reduce((sum, { count }) => sum + count, 0);
-  const tier: Tier = totalTouches >= legacyTouchFull ? "full" : "focused";
-  return touched.map(({ zone, count }): Reason => ({
+  const zoneHunks = new Set(review.hunks.filter((hunk) => legacyZoneOf(hunk.file) !== null).map((hunk) => hunk.id));
+  const reachIns = (review.legacyTouchPoints ?? []).filter((touch) => touch.kind === "legacy-code" && touch.hunkIds.some((id) => !zoneHunks.has(id)));
+  const reachInHunks = new Set(reachIns.flatMap((touch) => touch.hunkIds).filter((id) => !zoneHunks.has(id)));
+  const total = zoneHunks.size + reachInHunks.size;
+  const tier: Tier = total >= legacyTouchFull ? "full" : "focused";
+  // Named whenever it lifts the tier, so a Full on "3 hunks" says where the other 2 came from.
+  const reaching = reachInHunks.size > 0 && tier === "full" ? `, plus ${reachInHunks.size} reaching in` : "";
+  const zoneReasons = touched.map(({ zone, count }): Reason => ({
     ruleId: "R-legacy",
     tier,
-    text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}, the ${zone.owner} decides`,
+    text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}${reaching}, the ${zone.owner} decides`,
   }));
+  // Reach-ins alone have no zone reason to carry the Full tier, so they get their own.
+  if (zoneReasons.length > 0 || tier !== "full") return zoneReasons;
+  const owners = [...new Set(reachIns.map((touch) => touch.owner))].join(" and the ");
+  return [{ ruleId: "R-legacy", tier, text: `Legacy code: reaches into the legacy zones from ${reachInHunks.size} hunks, the ${owners} decides` }];
 }
 
 /**

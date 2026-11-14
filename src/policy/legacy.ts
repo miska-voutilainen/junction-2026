@@ -67,7 +67,8 @@ export const legacyZones: LegacyZone[] = [
 ];
 
 /**
- * Hunks in legacy zones, across all zones of one change, at or above which rule
+ * Hunks that touch legacy code (in a zone, or reaching into one from outside),
+ * across all zones of one change, at or above which rule
  * R-legacy asks for a Full read instead of Focused. 5 is a judgement, not a
  * measurement: a handful of hunks is a focused read of the boundary; past that
  * the change is reworking the boundary and needs a full read.
