@@ -36,7 +36,7 @@ Nothing to measure in rates. The MP-2283 receipt will be signed with a real key,
 
 - **A signature proves who signed, not that they read.** The receipt makes the unread part explicit, so signing is deliberate.
 - **Notes are easy to forget to push** (`git push origin refs/notes/countersign`). Verify fails closed (exit 2).
-- **A squash merge keeps the receipt valid if the diff is the same:** it binds the diff, not the commit.
+- **A rebase or a new commit makes the receipt stale:** it binds the head commit, the base and head trees and the diff hash. A rebase onto a changed base can change what the same diff does, so the change is reviewed and signed again.
 - **Personal SSH keys are a reference choice;** an organisation would use Sigstore or similar.
 
 ## Where it fits in regulated delivery

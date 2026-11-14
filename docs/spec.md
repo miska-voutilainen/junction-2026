@@ -347,7 +347,7 @@ ReceiptRecord = { schemaVersion: 1, changeId: string, receipt: Receipt, signatur
                   verify: { command: string, output: string, ok: boolean, verifiedAt: string } }
 ```
 
-The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt.diffSha256 !== review.diff.diffSha256`. `hunks` comes from `review.routing.coverage` at draft time, so the signature covers which hunks the owner read and which checks covered the rest. Because the receipt binds the diff, not a commit, a squash or rebase that leaves the diff unchanged keeps it valid.
+The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt.diffSha256 !== review.diff.diffSha256`. `hunks` comes from `review.routing.coverage` at draft time, so the signature covers which hunks the owner read and which checks covered the rest. `verify` requires the head commit, `baseTree`, `headTree` and `diffSha256` to match, so a rebase or a new commit makes the receipt stale and the change is reviewed and signed again.
 
 ### Diff identity (`src/lib/git/diffIdentity.ts`)
 
