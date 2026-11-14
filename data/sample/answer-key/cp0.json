@@ -1,0 +1,13 @@
+{
+  "plantId": "cp0",
+  "changeId": "mp-2283",
+  "kind": "contradiction",
+  "area": null,
+  "file": null,
+  "startLine": null,
+  "endLine": null,
+  "defect": "The change also adds a new analyzer diagnostic, MsgPack023, that warns when a member's type comes from a referenced assembly.",
+  "why": "The diff adds no analyzer diagnostic: it changes how existing diagnostics are located and drops those outside the compilation, and AnalyzerReleases.Unshipped.md is untouched.",
+  "writtenBy": "Claude Sonnet builder subagent, briefed by the engine lane; did not open prompts, pipeline or review output",
+  "writtenAt": "2026-11-14T02:13:47.221Z"
+}

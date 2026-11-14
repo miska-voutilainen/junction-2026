@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · The AI client validates answers itself instead of using `messages.parse`
+
+- **Context:** Spec section 6 names the SDK's `messages.parse` for the API backend. T10 built one client for two backends (`claude-code` and `api`) with record and replay.
+- **Decision:** The API transport calls `beta.messages.create` with a zod-derived output format and returns the raw text. `src/ai/client.ts` validates it, for both backends and for replayed recordings. Recordings keep the raw text, named `<promptVersion>-<first 16 hex of the key>.json`.
+- **Why:** Our validation drives the retry (the error goes back to the model), the usage log's `invalid` outcome and the replay check; `parse` would validate inside the SDK, where the Claude Code backend and recordings cannot share it.
+- **Rejected:** `messages.parse` for `api` only (two validation paths); storing parsed answers (a schema change would silently rewrite what the model said).
+- **PR:** T10
+
 ## 2026-11-14 · The architecture diagram is an SVG too; `next dev` no longer edits AGENTS.md
 
 - **Context:** The SVG decision below left the architecture diagram in Mermaid only because spec T05 said so. Separately, `next dev` writes a generic Next.js block into `AGENTS.md` whenever it detects an AI agent, and puts it back if removed.
@@ -25,6 +33,7 @@
 - **Why:** The build brief fixes the navigator's switch to a dropdown at about 1100 px, so the space has to come from the columns' widths.
 - **Rejected:** Collapsing the navigator into its dropdown below 1600 px (contradicts the brief); leaving 415 px (the diff, the thing being reviewed, becomes the hardest part to read).
 - **PR:** the Review steps panel PR
+
 ## 2026-11-14 · Seven ideas kept and sharpened after four research runs; recordings run on the Max plan
 
 - **Context:** Four Gemini Deep Research runs challenged the seven ideas: two looked for better ones, one gathered evidence on how agent PRs fail, one red-teamed the concept. Separately, paying for API credits for the recordings was more than the team wanted to spend.
@@ -173,6 +182,7 @@
   3. **The receipt lives in git.** The signed receipt is stored as a git note on the reviewed commit, signed with the owner's SSH key, and anyone can verify it with one command. Accountability travels with the code, with no SaaS database to trust. A new commit leaves the receipt pointing at the old hash, visibly.
 
   Small extra: a **"Prove it"** button on any Supported claim. The reviewer must produce an executable check (a test it writes and runs). The claim is upgraded to Verified, or retracted on screen and counted.
+
 - **Why:** Each one is a few hundred lines and reuses the same pipeline. Each answers a judges' question directly, and each turns a principle into something shown live, not asserted on a slide.
 - **Rejected:** Multi-agent debate between reviewers (expensive and hard to explain). Mutation testing of the test suite (heavier tooling, and canaries cover the reviewer, which matters more here). Learned risk models (training is out of scope). A VS Code or GitHub-native product (product scope).
 - **PR:** –
@@ -245,6 +255,7 @@
   6. Anything it can't trace to the requirement ID.
 
   The list is written as a versioned policy that both the prompt and the UI read.
+
 - **Why:** Refusals make the AI's limits visible and push the change to Focused or Full. A refusal is an outcome we show proudly, not a failure.
 - **Rejected:** Letting the model decide case by case what to refuse. That is inconsistent and can't be audited.
 - **PR:** –
