@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Area, LadderLevel, ReportCard } from "../contracts";
 import { applyEscapes, ladderLevel, levelsFromReportCard } from "./ladder";
 
-const record = (planted: number, caught: number, spotChecksClean = 0, escapes = 0) => ({ planted, caught, spotChecksClean, escapes });
+const record = (planted: number, caught: number, spotChecksClean = 0) => ({ planted, caught, spotChecksClean });
 
 describe("ladderLevel", () => {
   it("is shadow with fewer than 3 planted bugs, even when all were caught", () => {
@@ -23,12 +23,6 @@ describe("ladderLevel", () => {
     expect(ladderLevel(record(4, 4, 5))).toBe("trusted");
   });
 
-  it("drops one level per escape and shadow stays shadow", () => {
-    expect(ladderLevel(record(4, 4, 5, 1))).toBe("calibrated");
-    expect(ladderLevel(record(4, 4, 5, 2))).toBe("shadow");
-    expect(ladderLevel(record(4, 4, 0, 1))).toBe("shadow");
-    expect(ladderLevel(record(0, 0, 0, 3))).toBe("shadow");
-  });
 });
 
 describe("applyEscapes", () => {

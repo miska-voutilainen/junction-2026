@@ -115,7 +115,7 @@ All objects are strict: an unknown key fails validation. Lines are 1-based and i
 
 ```ts
 route(
-  review: Review,
+  review: Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals">,
   levels: Record<Area, LadderLevel>,
   policy: RoutingPolicy = routingPolicy,
   escapes: Partial<Record<Area, number>> = {},
@@ -155,7 +155,7 @@ route(
 
 `src/rules/ladder.ts`; thresholds in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`).
 
-- `ladderLevel({ planted, caught, spotChecksClean, escapes }): LadderLevel`: `shadow` if fewer than 3 planted bugs or a catch rate under 0.6; `calibrated` if earned and fewer than 5 clean spot checks; `trusted` otherwise. Each escape then drops one level; `shadow` stays. Example: 4 planted, 3 caught, 0 spot checks, 1 escape gives Calibrated, then Shadow.
+- `ladderLevel({ planted, caught, spotChecksClean }): LadderLevel`: `shadow` if fewer than 3 planted bugs or a catch rate under 0.6; `calibrated` if earned and fewer than 5 clean spot checks; `trusted` otherwise. Example: 4 planted, 3 caught, 0 spot checks gives Calibrated; `applyEscapes` with 1 escape then gives Shadow.
 - `applyEscapes(levels, escapes): Record<Area, LadderLevel>`: drops each area one level per recorded escape.
 - `levelsFromReportCard(reportCard | null): Record<Area, LadderLevel>`: the report card's levels, or all `shadow` with none.
 

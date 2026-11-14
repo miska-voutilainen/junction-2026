@@ -1,6 +1,6 @@
 /**
  * Planted-bug calibration: bugs are written blind with an answer key, and a
- * review "catches" one when a defect finding sits in the planted area and cites
+ * review "catches" one when a defect or missing finding sits in the planted area and cites
  * the planted lines. The catch rate per area sets the trust ladder's starting
  * level. Spec section 6 (Planted-bug eval) and 9.1 (T16).
  */

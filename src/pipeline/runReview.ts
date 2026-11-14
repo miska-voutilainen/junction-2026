@@ -4,8 +4,9 @@
  * every quote, A3 reviews the area checklists and refuses what belongs to a
  * person, and only then does A4 read the author's description and test it
  * against the claims. Anchored (the comparison): A2 reads the description first,
- * with no A1, and A3 is skipped (a step list can switch steps off). The order is the idea: in blind-first mode
- * nothing the author said reaches A1, A2 or A3. Spec section 6.
+ * with no A1, and A3 is skipped. A5 (differential tests on .NET) is opt-in: it
+ * runs last, on the quote-checked claims. The order is the idea: in blind-first
+ * mode nothing the author said reaches A1, A2 or A3. Spec section 6.
  */
 import type { ModelClient } from "../ai/client";
 import type { ChangeInput, LadderLevel, Area, Requirement, Review } from "../contracts";
@@ -21,6 +22,8 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  mergeFixedRefusals,
+  type UnnumberedFinding,
   type UnnumberedRefusal,
 } from "./checkFindings";
 import { dockerDotnetRunner, type DotnetRunner } from "./differential/dotnetRunner";
@@ -42,8 +45,13 @@ export type ModelStep = "a1" | "a2" | "a3" | "a4" | "a5";
 export const reviewStepsWithTests: readonly ModelStep[] = ["a1", "a2", "a3", "a4", "a5"];
 
 // A5 is opt-in: it needs .NET and minutes per run, so only a caller that has them lists it.
-const allSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
-const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
+const defaultBlindSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
+
+/** The blind comparison runs: A3 is most of a run's cost and is not what they compare. */
+export const blindComparisonSteps: readonly ModelStep[] = ["a1", "a2", "a4"];
+
+/** Anchored runs: A2 reads the description first, so there is no A1 and no A3. */
+export const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
 
 /** What a run needs besides the model. */
 export interface RunReviewInput {
@@ -57,10 +65,9 @@ export interface RunReviewInput {
   /** "anchored" shows A2 the description first and skips A1 and A3. Defaults to "blind-first". */
   mode?: Review["mode"];
   /**
-   * The model steps to run; A2 always runs. Defaults to every step for
-   * blind-first and A2 and A4 for anchored. The blind comparison runs are
-   * A1, A2 and A4: A3 is most of the cost and is not what they compare.
-   * A3 needs A1's expectation.
+   * The model steps to run; A2 always runs. Defaults to A1 to A4 for
+   * blind-first (A5 only when listed) and A2 and A4 for anchored.
+   * A3 and A5 need A1's expectation.
    */
   steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
@@ -108,9 +115,10 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   const drafts = answer.claims.map((claim, index) => ({ ...claim, id: `c${index + 1}` }));
   const checkedClaims = await checkClaims(drafts, loadedDiff.hunks, readSide);
   // The Review contract has no field for this count, so it goes to the log only.
-  console.error(
-    `quote check removed ${checkedClaims.hunkIdsRemoved} hunk ids that no passing citation lay in`,
-  );
+  if (checkedClaims.hunkIdsRemoved > 0)
+    console.error(
+      `quote check removed ${checkedClaims.hunkIdsRemoved} hunk ids that no passing citation lay in`,
+    );
   const { claims, quoteCheck } = checkedClaims;
 
   const didRunA3 = expectation !== null && steps.has("a3");
@@ -158,7 +166,6 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
         })
       : null;
 
-  const finishedAt = new Date();
   return assembleReview({
     change,
     requirement,
@@ -169,27 +176,55 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     retractions: tests?.retractions ?? [],
     inconclusiveTests: tests?.didRun ? tests.inconclusiveTests : undefined,
     mode,
-    findings: [...areaFindings, ...contradictions].map((finding, index) => ({
-      ...finding,
-      id: `f${index + 1}`,
-    })),
-    refusals: refusals.map((refusal, index) => ({ ...refusal, id: `r${index + 1}` })),
-    promptVersions: {
-      a1: expectation ? a1.version : "none",
-      a2: a2.version,
-      a3: didRunA3 ? a3.version : "none",
-      a4: description ? a4.version : "none",
-      a5: tests?.didRun ? a5.version : "none",
-    },
+    ...numberFindingsAndRefusals([...areaFindings, ...contradictions], refusals),
+    promptVersions: promptVersionsFor({
+      hasExpectation: expectation !== null,
+      didRunA3,
+      hasDescription: description !== null,
+      didRunA5: tests?.didRun === true,
+    }),
     levels: input.levels,
-    run: {
-      id: runId(startedAt),
-      startedAt: startedAt.toISOString(),
-      finishedAt: finishedAt.toISOString(),
-      durationMs: finishedAt.getTime() - startedAt.getTime(),
-      usage: input.usage.totals(),
-    },
+    run: runMetadata(startedAt, input.usage),
   });
+}
+
+/** Findings f1.. and refusals r1.. in output order; the model never writes ids. */
+function numberFindingsAndRefusals(
+  findings: readonly UnnumberedFinding[],
+  refusals: readonly UnnumberedRefusal[],
+) {
+  return {
+    findings: findings.map((finding, index) => ({ ...finding, id: `f${index + 1}` })),
+    refusals: refusals.map((refusal, index) => ({ ...refusal, id: `r${index + 1}` })),
+  };
+}
+
+/** The prompt version of each step that ran; "none" for a step that did not. */
+function promptVersionsFor(ran: {
+  hasExpectation: boolean;
+  didRunA3: boolean;
+  hasDescription: boolean;
+  didRunA5: boolean;
+}): Review["reviewer"]["promptVersions"] {
+  return {
+    a1: ran.hasExpectation ? a1.version : "none",
+    a2: a2.version,
+    a3: ran.didRunA3 ? a3.version : "none",
+    a4: ran.hasDescription ? a4.version : "none",
+    a5: ran.didRunA5 ? a5.version : "none",
+  };
+}
+
+/** When the run started and ended, how long it took and what it cost. */
+function runMetadata(startedAt: Date, usage: UsageTally): Review["run"] {
+  const finishedAt = new Date();
+  return {
+    id: runId(startedAt),
+    startedAt: startedAt.toISOString(),
+    finishedAt: finishedAt.toISOString(),
+    durationMs: finishedAt.getTime() - startedAt.getTime(),
+    usage: usage.totals(),
+  };
 }
 
 /**
@@ -200,7 +235,7 @@ function checkedSteps(
   requested: readonly ModelStep[] | undefined,
   isAnchored: boolean,
 ): Set<ModelStep> {
-  const steps = new Set(requested ?? (isAnchored ? anchoredSteps : allSteps));
+  const steps = new Set(requested ?? (isAnchored ? anchoredSteps : defaultBlindSteps));
   if (steps.has("a3") && !steps.has("a1"))
     throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
   if (steps.has("a5") && !steps.has("a1"))
@@ -220,7 +255,7 @@ async function reviewAreas(
   quoteCheck: Parameters<typeof checkAreaFindings>[2],
 ): Promise<{
   areaFindings: Awaited<ReturnType<typeof checkAreaFindings>>;
-  refusals: ReturnType<typeof mergeFixedRefusals>;
+  refusals: UnnumberedRefusal[];
 }> {
   const areaReview = await writeAreaReview(client, areaInput);
   return {
@@ -230,28 +265,6 @@ async function reviewAreas(
       fixedRefusalsFor(areaInput.hunks),
     ),
   };
-}
-
-/**
- * The AI's refusals plus the fixed ones, without counting one decision twice:
- * a rule refusal is added only for the matched hunks no AI refusal with the
- * same rule id already lists (spec section 5, Policy). An AI R7 on the hunk a
- * fixed R7 matches already makes the person decide it.
- */
-export function mergeFixedRefusals(
-  aiRefusals: readonly UnnumberedRefusal[],
-  fixedRefusals: readonly UnnumberedRefusal[],
-): UnnumberedRefusal[] {
-  const addedFixed = fixedRefusals.flatMap((fixed) => {
-    const listed = new Set(
-      aiRefusals
-        .filter((refusal) => refusal.ruleId === fixed.ruleId)
-        .flatMap((refusal) => refusal.hunkIds),
-    );
-    const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
-    return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];
-  });
-  return [...aiRefusals, ...addedFixed];
 }
 
 /** `YYYYMMDDTHHMMSSZ` in UTC, e.g. 20261114T093005Z. */

@@ -5,8 +5,7 @@ const LOG_HEADING = "# Lessons log\n";
 
 /**
  * Adds a dated entry to the lessons log, creating the file with its heading
- * when it is missing (whichever of T15 or T16 lands first creates it). An entry
- * is "## YYYY-MM-DD HH:mm · <title>" and what happened.
+ * when it is missing. An entry is "## YYYY-MM-DD HH:mm · <title>" and what happened.
  *
  * @returns false when the log already holds this exact text, so re-scoring
  * unchanged runs doesn't add a second identical entry.
