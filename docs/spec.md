@@ -287,7 +287,7 @@ Output text fields (`text`, `detail`, `reason`, `what`, `why`) are plain text, n
 
 ### `TierDecision` and `route()` (`src/rules/route.ts`)
 
-`route(review: Review, levels: Record<Area, LadderLevel>, policy = routingPolicy, escapes: Partial<Record<Area, number>> = {}): TierDecision` where
+`route(review: Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals">, levels: Record<Area, LadderLevel>, policy = routingPolicy, escapes: Partial<Record<Area, number>> = {}): TierDecision` where
 
 `TierDecision = { tier: Tier; reasons: { ruleId: string; text: string; tier: Tier }[]; coverage: Record<string /* hunkId */, Coverage>; readHunks: number; totalHunks: number; readLines: number; totalLines: number; readMinutes: number; fullMinutes: number }`.
 
@@ -311,7 +311,7 @@ Reading time: `readMinutes = ceil(readLines / 25)` (minimum 1 when readLines > 0
 
 ### Ladder (`src/rules/ladder.ts`)
 
-`ladderLevel({ planted, caught, spotChecksClean, escapes }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Each escape then drops one level (trusted → calibrated → shadow; shadow stays). `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so.
+`ladderLevel({ planted, caught, spotChecksClean }) : LadderLevel`: shadow if `planted < 3` or `caught / planted < 0.6`; calibrated if not shadow and `spotChecksClean < 5`; trusted otherwise. Escapes are applied afterwards, one level per escape (trusted → calibrated → shadow; shadow stays): `applyEscapes(levels, escapes: Partial<Record<Area, number>>)` returns the adjusted levels. Thresholds live in `src/policy/ladder.ts` (`minPlanted: 3`, `minCatchRate: 0.6`, `spotChecksForTrusted: 5`). No spot-check workflow exists in this reference, so `spotChecksClean` is 0 and no area can be Trusted; S3 says so.
 
 ### `ReportCard` (`src/contracts/reportCard.ts`)
 

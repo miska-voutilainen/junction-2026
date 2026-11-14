@@ -22,7 +22,7 @@ export interface RoutingPolicy {
   /**
    * Share of hunks that need reading at or above which the tier is Full: the AI
    * covered too little to save effort. 0.75 is a judgement (spec section 5),
-   * not something we measured. Lower, changes where the AI did cover a quarter
+   * not something we measured. Lower, changes where the AI covered over a quarter
    * of the hunks read Full anyway; higher, a change the AI barely covered still
    * gets a Focused read.
    */

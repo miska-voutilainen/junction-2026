@@ -176,7 +176,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     retractions: tests?.retractions ?? [],
     inconclusiveTests: tests?.didRun ? tests.inconclusiveTests : undefined,
     mode,
-    ...numberFindings([...areaFindings, ...contradictions], refusals),
+    ...numberFindingsAndRefusals([...areaFindings, ...contradictions], refusals),
     promptVersions: promptVersionsFor({
       hasExpectation: expectation !== null,
       didRunA3,
@@ -189,7 +189,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
 }
 
 /** Findings f1.. and refusals r1.. in output order; the model never writes ids. */
-function numberFindings(
+function numberFindingsAndRefusals(
   findings: readonly UnnumberedFinding[],
   refusals: readonly UnnumberedRefusal[],
 ) {
