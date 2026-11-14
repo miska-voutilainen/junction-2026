@@ -36,7 +36,36 @@ export const oldPlatformDirective =
  */
 export const legacyTargetFramework = /^(?:net4\d+|netstandard\d.*)$/i;
 
-/** Public surface consumers compile against; a change here reaches every consumer. */
+/**
+ * A declaration consumers compile against: a public or protected type or member.
+ * Anchored at the line start so a comment that mentions `public` does not match.
+ * @example "    public static int Foo(" and "public sealed class Bar" match; "private int Foo(" and "// public API" do not.
+ */
+export const publicSurfaceLine =
+  /^\s*(?:public|protected)\s+(?:(?:static|virtual|override|abstract|sealed|async|partial|readonly|unsafe|new|extern)\s+)*(?:(?:class|struct|interface|enum|record|delegate)\b|[\w.]+(?:<[^>]*>)?(?:\[\])*\??\s+\w+\s*(?:<[^>]*>)?\s*(?:\(|\{|=>|=|;))/;
+
+/**
+ * A serialization attribute. A changed `[Key]` index makes readers built against
+ * the old index decode the same bytes into the wrong field, with no compile error.
+ * @example "[Key(3)]" and "[MessagePackObject(true)]" match; "[Obsolete]" does not.
+ */
+export const wireAttributeLine =
+  /\[(?:Key\(|MessagePackObject\b|Union\(|IgnoreMember\b|SerializationConstructor\b)/;
+
+/**
+ * A diagnostic id string. Consumers suppress and document analyzer diagnostics by id.
+ * @example 'DiagnosticId = "MsgPack019"' matches; "MsgPackWriter" does not.
+ */
+export const diagnosticIdLiteral = /"MsgPack\d{3}"/;
+
+/** Contract shapes a changed line can have, named as the touch point's detail lists them. */
+export const contractShapes: ReadonlyArray<{ label: string; pattern: RegExp }> = [
+  { label: "public surface", pattern: publicSurfaceLine },
+  { label: "wire attributes", pattern: wireAttributeLine },
+  { label: "diagnostic ids", pattern: diagnosticIdLiteral },
+];
+
+/** Paths of the public surface consumers compile against; a change here reaches every consumer. */
 export const consumerContractGlobs = [
   "src/MessagePack.Annotations/**",
   "**/PublicAPI.*.txt",
