@@ -40,26 +40,24 @@ export function CoverageLine({ decision }: Readonly<{ decision: TierDecision }>)
 const AREA_RULE = "R-area-level";
 
 /**
- * One line per rule that fired, in two groups: what this change contains
- * (size, refusals, defects, sensitive paths) and how far the AI is trusted
- * in each area it touches. The groups answer different questions, so from
- * 1100 px they sit side by side instead of one list cut in half. Rule ids
+ * One line per rule that fired. What this change contains (size, refusals,
+ * defects, sensitive paths) shows as a list; how far the AI is trusted in
+ * each area it touches folds under "Reviewer trust by area" below it. The
+ * area lines repeat for every change and say the same thing the report card
+ * does, so open they crowd out the reasons specific to this diff. Rule ids
  * lead each line in their own column, so they line up and never wrap.
- * From 760 px up the reasons are a plain list, so nothing animates after
- * hydration; below that, more than two go behind a "Why <Tier>" disclosure
- * to keep the phone's first screen short.
+ * From 760 px up the change reasons are a plain list, so nothing animates
+ * after hydration; below that, more than two go behind a "Why <Tier>"
+ * disclosure to keep the phone's first screen short.
  */
 function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
   const changeReasons = decision.reasons.filter((reason) => reason.ruleId !== AREA_RULE);
   const areaReasons = decision.reasons.filter((reason) => reason.ruleId === AREA_RULE);
-  const hasBothGroups = changeReasons.length > 0 && areaReasons.length > 0;
-  const list = hasBothGroups ? (
-    <div className="flex flex-col gap-3 wide:grid wide:grid-cols-2 wide:gap-x-8">
-      <ReasonGroup label="This change" reasons={changeReasons} />
-      <ReasonGroup label="Reviewer trust by area" reasons={areaReasons} />
+  const list = (
+    <div className="flex flex-col gap-1">
+      {changeReasons.length > 0 && <ReasonList reasons={changeReasons} />}
+      {areaReasons.length > 0 && <AreaTrust reasons={areaReasons} />}
     </div>
-  ) : (
-    <ReasonList reasons={decision.reasons} />
   );
   if (decision.reasons.length <= MAX_PLAIN_REASONS) return list;
   return (
@@ -74,13 +72,23 @@ function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
 
 type Reason = TierDecision["reasons"][number];
 
-/** A labelled group of reasons; the label is a plain caption, not a heading, so the page outline stays the review's own. */
-function ReasonGroup({ label, reasons }: Readonly<{ label: string; reasons: Reason[] }>) {
+/** The R-area-level lines, closed by default; the count says how many areas are inside without opening it. */
+function AreaTrust({ reasons }: Readonly<{ reasons: Reason[] }>) {
+  const areaCount = `${reasons.length} ${reasons.length === 1 ? "area" : "areas"}`;
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <p className="text-xs font-medium text-text-muted">{label}</p>
-      <ReasonList reasons={reasons} />
-    </div>
+    <Disclosure
+      // The button's own padding would push the chevron right of the rule-id column.
+      className="-ml-1 w-fit"
+      title={
+        <span className="text-sm">
+          Reviewer trust by area <span className="text-text-muted">· {areaCount}</span>
+        </span>
+      }
+    >
+      <div className="pl-7">
+        <ReasonList reasons={reasons} />
+      </div>
+    </Disclosure>
   );
 }
 
