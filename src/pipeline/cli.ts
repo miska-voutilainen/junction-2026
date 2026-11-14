@@ -9,7 +9,7 @@ import { createModelClientFromEnv } from "../ai/client";
 import type { AnswerKey, Review } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
 import { countGenerated } from "../rules/route";
-import { checkReview, loadContradictionKey } from "./checkReview";
+import { MP2283_CHANGE_ID, checkReview, loadContradictionKey } from "./checkReview";
 import {
   loadChangeAndRequirement,
   loadRecordedReview,
@@ -24,9 +24,6 @@ const usage = `Usage:
   pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
   pnpm review check <changeId>
   pnpm evals [--runs <n>] [--score-only]`;
-
-/** The sample change whose planted contradiction `check` expects an answer key for. */
-const contradictionChangeId = "mp-2283";
 
 /** The optional local environment file, loaded the way the seed script does. */
 const localEnvironmentFile = ".env";
@@ -129,9 +126,9 @@ function printChecks(review: Review, contradictionKey: AnswerKey | null): void {
     console.log(`${result.passed ? "PASS" : "MISS"}  ${result.name}${detail}`);
   }
   // A missing key is not a miss: say the case did not run, so a pass count is not read as complete.
-  if (review.changeId === contradictionChangeId && contradictionKey === null)
+  if (review.changeId === MP2283_CHANGE_ID && contradictionKey === null)
     console.log(
-      `SKIP  ${contradictionChangeId}: the planted contradiction is caught (answer key not found in this checkout)`,
+      `SKIP  ${MP2283_CHANGE_ID}: the planted contradiction is caught (answer key not found in this checkout)`,
     );
 }
 
