@@ -16,6 +16,8 @@ export const RecordingSchema = z.object({
   promptVersion: z.string(),
   runIndex: z.number().int().nonnegative(),
   rawAnswer: z.string(),
+  /** Requests the call made, validation retry included; absent in recordings made before it was kept. */
+  attempts: z.number().int().positive().optional(),
   usage: z.object({
     inputTokens: z.number(),
     outputTokens: z.number(),

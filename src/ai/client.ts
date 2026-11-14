@@ -85,6 +85,7 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
           promptVersion: request.promptVersion,
           runIndex,
           rawAnswer: accepted.rawAnswer,
+          attempts: accepted.attempts,
           usage: accepted.usage,
         });
       }
@@ -97,10 +98,12 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
  * Client from the environment: AI_BACKEND (default claude-code) picks the transport,
  * AI_MODE (default record) picks record, replay or live.
  *
+ * @param usageSink where usage lines go; defaults to stderr. The pipeline passes a sink that also totals them.
  * @throws if AI_BACKEND or AI_MODE hold a value other than the documented ones.
  */
 export function createModelClientFromEnv(
   env: NodeJS.ProcessEnv = process.env,
+  usageSink?: UsageSink,
 ): ModelClient {
   const backend = parseChoice<AiBackend>(
     "AI_BACKEND",
@@ -116,6 +119,7 @@ export function createModelClientFromEnv(
   return createModelClient({
     mode,
     transport: backend === "api" ? apiTransport : claudeCodeTransport,
+    usageSink,
   });
 }
 
@@ -151,6 +155,7 @@ async function replay<T>(
     milliseconds: 0,
     outcome: "ok",
     source: "replay",
+    requests: recording.attempts ?? 1,
   });
   return checked.value;
 }
@@ -161,6 +166,8 @@ interface AcceptedAnswer<T> {
   model: string;
   /** Tokens and cost of every ask this call made, so a recording shows what the answer cost. */
   usage: Usage;
+  /** Requests made, so a replay can report the same call count. */
+  attempts: number;
 }
 
 /**
@@ -214,6 +221,7 @@ async function askUntilValid<T>(
         rawAnswer: response.text,
         model: response.model,
         usage: total,
+        attempts: attempt + 1,
       };
     }
 

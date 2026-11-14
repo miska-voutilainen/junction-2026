@@ -19,7 +19,7 @@
     "test:hooks": "node --test \".claude/hooks/**/*.test.mjs\"",
     "e2e": "playwright test",
     "screenshots": "playwright test --project=screenshots",
-    "pipeline": "tsx src/pipeline/cli.ts",
+    "review": "tsx src/pipeline/cli.ts",
     "evals": "tsx src/pipeline/cli.ts eval",
     "countersign": "tsx src/receipt/cli.ts",
     "seed": "tsx scripts/seed.ts"

@@ -95,8 +95,8 @@ describeWithClone("against the fork clone, mp-2283", () => {
     expect(await readFileAtCommit(repoDir!, baseSha, "no/such/file.cs")).toBeNull();
   });
 
-  it("throws for a folder instead of returning text", async () => {
-    await expect(readFileAtCommit(repoDir!, baseSha, "src")).rejects.toThrow(/not a file/);
+  it("returns null for a folder, which has no file text", async () => {
+    expect(await readFileAtCommit(repoDir!, baseSha, "src")).toBeNull();
   });
 
   it("fails loudly when the commit is unknown, not as a missing file", async () => {

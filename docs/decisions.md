@@ -2,6 +2,46 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · A hunk counts as covered only where a claim quotes code in it
+
+- **Context:** A2 listed hunks on claims whose citations lay in only one of them, so a Supported claim could cover hunks it showed nothing about, and `route()` would then skip reading them.
+- **Decision:** After the quote check, a supported claim keeps only the hunks a passing citation overlaps (new-side lines for a `new` citation, old-side for `old`); `pathGlob` claims keep their expanded hunks. A2 is told to cite inside every hunk it lists. Miska decided. The count of removed ids goes to the run log, because the Review contract has no field for it.
+- **Why:** Coverage is what lets a human skip a hunk; it has to rest on a quote in that hunk.
+- **Rejected:** Trusting the listed `hunkIds` (inflates coverage); making the schema reject the mismatch (the schema cannot see the quote check, and a retry costs a full A2 call).
+- **PR:** T12
+
+## 2026-11-14 · The pipeline script is `pnpm review`, not `pnpm pipeline`
+
+- **Context:** pnpm 12 has a built-in `pnpm pipeline` command, so `pnpm pipeline run mp-2283` fails with "unexpected argument".
+- **Decision:** The `package.json` script is `review`: `pnpm review run <changeId>` and `pnpm review check <changeId>`. Miska decided; docs and spec mentions follow in a separate sweep.
+- **Why:** A script that the package manager shadows cannot be the documented way to run the product.
+- **Rejected:** `pnpm run pipeline ...` in every doc (easy to get wrong, and `pnpm pipeline` keeps failing for newcomers).
+- **PR:** T12
+
+## 2026-11-14 · Claims are never dropped; 9.1 over section 6
+
+- **Context:** Spec section 6 said a claim with no passing citation is dropped; 9.1 said claims are never dropped.
+- **Decision:** 9.1 wins. A claim with no passing citation becomes `unverified` with no citations, stays on the review, and each failed citation is in `quoteCheck.failures`. Section 6 is corrected.
+- **Why:** A dropped claim leaves its hunk looking unexamined for no visible reason; an unverified one tells the reviewer what the model said and that nothing backed it.
+- **Rejected:** Dropping claims (nothing the model said is silently lost is the policy for findings too).
+- **PR:** T12
+
+## 2026-11-14 · The 60,000-token cut applies to every file at once
+
+- **Context:** Spec section 6 says larger files are cut to 80 lines around each hunk; 9.1 says files are cut when the total passes 60,000 tokens.
+- **Decision:** When the total of source and test files exceeds the budget, every file is cut to the lines around its hunks. Below it, no file is cut.
+- **Why:** One rule a reader can state; cutting only the biggest file would need a second rule for which one.
+- **Rejected:** Cutting only the largest files until the total fits.
+- **PR:** T12
+
+## 2026-11-14 · A2 also receives the requirement text
+
+- **Context:** Spec section 6 lists A2's input as hunks, files and A1's output.
+- **Decision:** A2 also gets the requirement (title, intent, items) in a delimited block.
+- **Why:** Claims carry a `requirementItemId` and the story a "why"; without the requirement the model would guess both. In blind-first mode this adds nothing the author wrote, so the blindness holds.
+- **Rejected:** Giving A2 only A1's expectation (it would map claims to item ids from the expectation's copy of them, losing the item text).
+- **PR:** T12
+
 ## 2026-11-14 · T08 planted bugs written in Miska's session, by an isolated subagent
 
 - **Context:** Principle 9 said the planted bugs are written by someone who never sees the reviewer's prompts, and T08 sat in the evidence lane (Veijo). No person with that separation was free in time, and Miska's session writes the prompts.
