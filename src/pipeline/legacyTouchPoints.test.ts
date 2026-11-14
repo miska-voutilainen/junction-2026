@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
 import { legacyTouchRefusalsFor } from "./checkFindings";
-import {
-  addedCalls,
-  changedDeclarations,
-  findLegacyTouchPoints,
-  parseTargets,
-  type BaseTree,
-} from "./legacyTouchPoints";
+import type { BaseTree } from "../lib/git/baseTree";
+import { findLegacyTouchPoints, parseTargets } from "./legacyTouchPoints";
 
 type Hunk = Review["hunks"][number];
 
@@ -45,7 +40,11 @@ function fakeTree(
   return {
     filesMentioning: async (word, pathspecs) =>
       (pathspecs[0] === "tests" ? parts.mentions?.[word] : parts.zoneMentions?.[word]) ?? [],
-    declaredSymbolsIn: async () => new Map(Object.entries(parts.zoneSymbols ?? {})),
+    accessModifierLines: async () =>
+      Object.entries(parts.zoneSymbols ?? {}).map(([name, path]) => ({
+        path,
+        text: `public void ${name}(int a)`,
+      })),
     readFile: async (path) => files[path] ?? null,
     listFiles: async () => Object.keys(files),
   };
@@ -105,27 +104,6 @@ describe("legacy-code", () => {
   });
 });
 
-describe("hunk readers", () => {
-  it("names the type and method a declaration adds, not a field", () => {
-    const lines = hunk("h", "a.cs", [
-      ["add", "public static Foo<T, U>? Bar<T>(int a)"],
-      ["add", "internal sealed class Baz"],
-      ["add", "private int writer;"],
-      ["context", "public void Skipped()"],
-    ]);
-    expect(changedDeclarations(lines)).toEqual(["Bar", "Baz"]);
-  });
-
-  it("skips comments, declarations, object creation and this. calls", () => {
-    const lines = hunk("h", "a.cs", [
-      ["add", "// Old(1);"],
-      ["add", "public void Decl(int a)"],
-      ["add", "var x = new Thing(); this.Own(); Real(1);"],
-    ]);
-    expect(addedCalls(lines)).toEqual(["Real"]);
-  });
-});
-
 describe("old-platform", () => {
   const directive = "#if !NETSTANDARD2_0 && !NETFRAMEWORK";
   const template = hunk("h1", "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs", [
@@ -159,6 +137,14 @@ describe("old-platform", () => {
     expect((await find([template], windowsOnly))[0].guard.status).toBe("partly");
   });
 
+  it("does not give a source project the test projects of a longer-named one", async () => {
+    const generatorTests = fakeTree({ files: testProject("<TargetFramework>net472</TargetFramework>") });
+    const core = hunk("h9", "src/MessagePack/Core.cs", [["add", directive]]);
+    const [point] = await find([core], generatorTests);
+    expect(point.guard.status).toBe("unguarded");
+    expect(point.guard.evidence).toContain("no test project under tests/ matches MessagePack");
+  });
+
   it("groups hunks with the same directive and ignores other #if lines", async () => {
     const second = hunk("h2", "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs", [
       ["del", directive],
@@ -175,6 +161,7 @@ describe("old-platform", () => {
     const csproj =
       "<PropertyGroup><TargetFrameworks>$(X);net8.0</TargetFrameworks></PropertyGroup>" +
       '<PropertyGroup Condition="a"><TargetFramework>net472</TargetFramework></PropertyGroup>';
+    expect(parseTargets("<PropertyGroup><TargetFrameworks>net8.0; net472</TargetFrameworks></PropertyGroup>").map((target) => target.framework)).toEqual(["net8.0", "net472"]);
     expect(parseTargets(csproj)).toEqual([
       { framework: "net8.0", isConditional: false },
       { framework: "net472", isConditional: true },
@@ -229,7 +216,7 @@ describe("legacyTouchRefusalsFor", () => {
   };
 
   it("adds one R8 rule refusal for hunks no rule refusal names yet", () => {
-    const [refusal] = legacyTouchRefusalsFor([point], [{ source: "rule", hunkIds: ["h1"] }]);
+    const [refusal] = legacyTouchRefusalsFor([point], [{ ruleId: "R8", source: "rule", hunkIds: ["h1"] }]);
     expect(refusal).toMatchObject({ ruleId: "R8", source: "rule", hunkIds: ["h2"] });
     expect(refusal.reason).toBe(
       "Old platform: #if NETFRAMEWORK (unguarded: no test runs it); the platform owner (the maintainers) decides",
@@ -237,8 +224,14 @@ describe("legacyTouchRefusalsFor", () => {
   });
 
   it("adds nothing when every hunk is already named", () => {
-    expect(legacyTouchRefusalsFor([point], [{ source: "rule", hunkIds: ["h1", "h2"] }])).toEqual(
-      [],
-    );
+    const named = [{ ruleId: "R8", source: "rule" as const, hunkIds: ["h1", "h2"] }];
+    expect(legacyTouchRefusalsFor([point], named)).toEqual([]);
+  });
+
+  it("skips hunks an AI R7 names for a consumer contract, but not for other kinds", () => {
+    const aiR7 = [{ ruleId: "R7", source: "ai" as const, hunkIds: ["h1"] }];
+    const contract = { ...point, kind: "consumer-contract" as const };
+    expect(legacyTouchRefusalsFor([contract], aiR7)[0].hunkIds).toEqual(["h2"]);
+    expect(legacyTouchRefusalsFor([point], aiR7)[0].hunkIds).toEqual(["h1", "h2"]);
   });
 });

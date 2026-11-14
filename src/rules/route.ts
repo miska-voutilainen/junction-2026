@@ -12,6 +12,8 @@
  * that gets through returns inspection to 100% until trust is earned again.
  * Hunks in a declared legacy zone (policy/legacy.ts) carry an R8 refusal, so
  * no claim or ladder level takes them off the list, and R-legacy names the owner.
+ * Touch points (pipeline/legacyTouchPoints.ts) add what R-legacy can't see: R-legacy-guard
+ * says per touch what covers it, and a touch with no guard asks for a Full read.
  * Spec section 5, route().
  */
 import { areaLabel, ladderLevelLabel } from "../contracts";
@@ -213,7 +215,9 @@ function legacyReasons(review: RoutedReview): Reason[] {
 /**
  * Rule R-legacy-guard: one reason per touch point, so the owner sees what covers
  * each touch. Unguarded is Full; partly guarded and owner-read are Focused; a
- * guarded touch is Light and only informs.
+ * guarded touch adds a Light reason so the owner sees the guard. Its R8 refusal,
+ * when it has one, still keeps the hunk on the reading list, so the change is at
+ * least Focused: a guard tells the owner what covers the touch, it never removes it.
  * @example "Old platform: #if !NETFRAMEWORK in 7 hunks, no test runs it on .NET Framework; the platform owner (the maintainers) decides"
  */
 function legacyGuardReasons(review: RoutedReview): Reason[] {
