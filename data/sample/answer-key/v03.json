@@ -1,0 +1,13 @@
+{
+  "plantId": "v03",
+  "changeId": "v03",
+  "kind": "planted-bug",
+  "area": "security",
+  "file": "src/MessagePack/MessagePackSecurity.cs",
+  "startLine": 37,
+  "endLine": 37,
+  "defect": "The UntrustedData preset sets HashCollisionResistant = false instead of true, so data deserialized as untrusted uses the default equality comparer.",
+  "why": "Collision-resistant hashing is what protects dictionary and map keys read from untrusted input against hash-flooding denial of service; the UntrustedData preset must keep it on.",
+  "writtenBy": "engine lane (Miska), written by an isolated Claude Sonnet subagent that never opened the reviewer's prompts, pipeline or review output; the agents writing the prompts never opened the plants",
+  "writtenAt": "2026-11-14T03:03:16.000Z"
+}
