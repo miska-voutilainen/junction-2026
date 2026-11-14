@@ -11,7 +11,6 @@ const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "sh
  * the branch, size and which reviewer recorded the review. Everything the AI
  * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
  *
-
  * @param receiptHref Where the full receipt page is; set whenever a receipt file exists, whatever its status.
  * @param review The recorded review; absent while it is missing or unreadable, so only the change's own facts show.
  */

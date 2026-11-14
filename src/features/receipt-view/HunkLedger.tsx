@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import type { LedgerRow } from "./receiptModel";
 
 /**
- * Hunk ledger: every hunk of the signed diff, what covered it, and who read it.
+ * Hunk ledger (the console is its own heading): every hunk of the signed diff, what covered it, and who read it.
  * One mono line per hunk in aligned columns, in a console so a long path scrolls
  * inside the box and Copy takes the plain text. Hunks a person read come first
  * and are amber, the same signal as the coverage gutter on the review page.
@@ -12,8 +12,7 @@ import type { LedgerRow } from "./receiptModel";
 export function HunkLedger({ rows }: { rows: LedgerRow[] }) {
   const lines = ledgerLines(rows);
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-medium text-text-muted">Hunk ledger</h2>
+    <section>
       <Console label="Hunk ledger" kind="output" text={lines.map((line) => line.text).join("\n")}>
         <div>
           {lines.map((line) => (

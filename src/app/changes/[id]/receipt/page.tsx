@@ -4,7 +4,7 @@ import { EscapeCounter } from "@/components/EscapeCounter";
 import { InboxError } from "@/features/inbox";
 import { ReceiptScreen } from "@/features/receipt-view";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
-import { loadChanges, loadReceipt } from "@/lib/data/loaders";
+import { loadChanges, loadReceipt, loadReceiptText } from "@/lib/data/loaders";
 
 // No `dynamicParams = false`: it would answer an unknown id with Next's unstyled 404 instead of the not-found.tsx with the shell.
 
@@ -41,6 +41,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   if (!data.sources.some((source) => source.change.id === id)) notFound();
 
   const receipt = await loadReceipt(id);
+  const receiptText = await loadReceiptText(id);
   return (
     <ReceiptScreen
       changeId={id}
@@ -49,6 +50,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
       repo={data.repo ?? FALLBACK_REPO}
       usesFixture={data.usesFixture}
       receiptError={receipt.status === "invalid" ? receipt.error : null}
+      receiptText={receiptText}
     />
   );
 }

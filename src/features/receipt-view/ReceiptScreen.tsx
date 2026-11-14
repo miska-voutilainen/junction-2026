@@ -17,6 +17,7 @@ import { buildReceiptView } from "./receiptModel";
  *
  * @param changeId The change whose receipt to show; it must be one of `sources`.
  * @param receiptError Why the receipt file failed validation, when it did.
+ * @param receiptText The exact text of the receipt file, for Copy JSON.
  */
 export function ReceiptScreen({
   changeId,
@@ -25,6 +26,7 @@ export function ReceiptScreen({
   repo,
   usesFixture,
   receiptError,
+  receiptText,
 }: {
   changeId: string;
   sources: InboxSource[];
@@ -32,10 +34,11 @@ export function ReceiptScreen({
   repo: string;
   usesFixture: boolean;
   receiptError: string | null;
+  receiptText: string | null;
 }) {
   const changes = useShellChanges(sources, reportCard);
   const source = sources.find((candidate) => candidate.change.id === changeId);
-  const view = useMemo(() => (source ? buildReceiptView(source, receiptError) : null), [source, receiptError]);
+  const view = useMemo(() => (source ? buildReceiptView(source, receiptError, receiptText) : null), [source, receiptError, receiptText]);
 
   return (
     <AppShell

@@ -1,10 +1,20 @@
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { unlock } from "./unlock";
 
 // Fixtures: mp-2283 signed and current, mp-2129 signed for an older diff, mp-2234 not signed.
-const SIGNED_DIFF_HASH_PREFIX = "4324d7fc9bf1398271864e2d529054c4f28b9dc911d42b3bb4184463d2f3a322";
+const SIGNED_DIFF_HASH = "4324d7fc9bf1398271864e2d529054c4f28b9dc911d42b3bb4184463d2f3a322";
 const WIDTHS = [320, 375, 768, 1440, 1920];
+
+const normalizeLineEndings = (text: string): string => text.replaceAll("\r\n", "\n");
+
+/** The receipt file as the site reads it: the recorded one, else the fixture. */
+function receiptFileText(changeId: string): string {
+  const recorded = path.join("data", "receipts", `${changeId}.json`);
+  return readFileSync(existsSync(recorded) ? recorded : path.join("data", "fixtures", "receipts", `${changeId}.json`), "utf8");
+}
 
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
 function watchConsole(page: Page): string[] {
@@ -33,7 +43,7 @@ test("a signed receipt shows the seal, the diff hash and the verify output", asy
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText("Signature verified", { exact: true })).toBeVisible();
-  await expect(page.getByText(SIGNED_DIFF_HASH_PREFIX).first()).toBeVisible();
+  await expect(page.getByText(SIGNED_DIFF_HASH).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Checked", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Not checked" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Residual risk" })).toBeVisible();
@@ -50,7 +60,8 @@ test("a receipt for an older diff shows the stale notice and no seal", async ({ 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/changes/mp-2129/receipt");
 
-  await expect(page.getByText("The code changed after signing. This receipt no longer covers the diff.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stale: the code changed after signing." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Diff hashes" })).toContainText(/Signed diff\s+[0-9a-f]{12}\s+Reviewed diff\s+[0-9a-f]{12}/);
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "sign command" })).toContainText("pnpm countersign sign mp-2129");
   await page.screenshot({ path: `.review/receipt-stale-${testInfo.project.name === "mobile" ? 375 : 1440}.png`, fullPage: true });
@@ -61,7 +72,7 @@ test("a change without a receipt says so and shows the sign command", async ({ p
   const problems = watchConsole(page);
   await page.goto("/changes/mp-2234/receipt");
 
-  await expect(page.getByRole("heading", { name: "Not signed yet." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No receipt for mp-2234 yet." })).toBeVisible();
   await expect(page.getByText("Only a named human can sign. Review the change, then run")).toBeVisible();
   await expect(page.getByText("pnpm countersign sign mp-2234")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to the review" })).toHaveAttribute("href", "/changes/mp-2234");
@@ -116,4 +127,28 @@ test("the review page links to the full receipt", async ({ page }) => {
   await page.goto("/changes/mp-2129");
   await page.getByRole("link", { name: "View full receipt" }).click();
   await expect(page).toHaveURL(/\/changes\/mp-2129\/receipt$/);
+});
+
+test("the toolbar copies the verify command and an absolute link to the page", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/changes/mp-2283/receipt");
+
+  await page.getByRole("button", { name: "Copy verify command" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Copied" })).toHaveCount(1);
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm countersign verify mp-2283");
+
+  await page.getByRole("button", { name: "Copy link" }).click();
+  const link = await page.evaluate(() => navigator.clipboard.readText());
+  expect(link).toMatch(/^https?:\/\/.+\/changes\/mp-2283\/receipt$/);
+});
+
+test("Copy JSON puts the receipt file's exact text on the clipboard", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/changes/mp-2283/receipt");
+
+  await page.getByRole("button", { name: "Receipt JSON", exact: true }).click();
+  await page.getByRole("button", { name: "Copy Receipt JSON" }).click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  // A Windows checkout has CRLF in the file and the browser's clipboard may return LF; nothing else may differ.
+  expect(normalizeLineEndings(copied)).toBe(normalizeLineEndings(receiptFileText("mp-2283")));
 });

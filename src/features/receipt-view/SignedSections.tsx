@@ -44,14 +44,16 @@ export function SignedSections({ view }: { view: ReceiptDocumentView }) {
         <p className="text-md text-text-primary">{residualRisk.text}</p>
         {residualRisk.accepted.length > 0 && (
           <ul aria-label="Accepted refusals" className="flex flex-col gap-1 text-sm text-text-secondary">
-            {residualRisk.accepted.map(({ refusalId, rule }) => (
+            {residualRisk.accepted.map(({ refusalId, rule, runId }) => (
               <li key={refusalId}>
                 {rule ? (
                   <>
                     <span className="font-mono text-text-primary">{rule.id}</span> · {rule.title}
                   </>
                 ) : (
-                  <span className="font-mono">{refusalId}</span>
+                  <>
+                    <span className="font-mono text-text-primary">{refusalId}</span> · recorded in run <span className="font-mono">{runId}</span>
+                  </>
                 )}
               </li>
             ))}

@@ -9,7 +9,7 @@ export function NoReceipt({ changeId, signCommand }: { changeId: string; signCom
   return (
     <EmptyState
       icon={<FileSignature />}
-      title="Not signed yet."
+      title={`No receipt for ${changeId} yet.`}
       body="Only a named human can sign. Review the change, then run"
       command={signCommand}
       actions={

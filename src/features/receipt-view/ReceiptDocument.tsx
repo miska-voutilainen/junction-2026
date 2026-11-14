@@ -1,3 +1,5 @@
+import { Console } from "@/components/Console";
+import { Disclosure } from "@/components/Disclosure";
 import { HunkLedger } from "./HunkLedger";
 import { IdentityList } from "./IdentityList";
 import { ReceiptNotice } from "./ReceiptNotice";
@@ -14,7 +16,6 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * unverified receipt shows what was signed but no seal.
  */
 export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
-  const hasLedger = view.ledger !== null && view.ledger.length > 0;
   // The failed check is already in the notice; repeating it in a Verify section would say the same twice.
   const showVerify = view.status !== "unverified";
 
@@ -35,8 +36,11 @@ export function ReceiptDocument({ view }: { view: ReceiptDocumentView }) {
         </header>
         <IdentityList rows={view.identity} />
         <SignedSections view={view} />
-        {hasLedger && view.ledger && <HunkLedger rows={view.ledger} />}
+        {view.ledger?.length ? <HunkLedger rows={view.ledger} /> : null}
         {showVerify && <VerifySection view={view} />}
+        <Disclosure title="Receipt JSON">
+          <Console label="Receipt JSON" kind="log" text={view.recordJson} />
+        </Disclosure>
         <footer className="flex flex-col gap-0.5 border-t border-border-subtle pt-6">
           <span className="text-xl font-semibold break-words">{view.owner}</span>
           <span className="text-sm text-text-muted">Signed {view.signedAt}</span>
