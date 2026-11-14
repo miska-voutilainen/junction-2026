@@ -26,6 +26,14 @@
 - **Why:** A majority rule is stable against one lucky or unlucky run and costs 3x the plant runs, not more.
 - **Rejected:** One run per plant (noisy on security); scoring any-of-3 (rewards luck); changing the scorer to count `scope-creep` findings (moves the goalposts after seeing the results; the fix went into the prompt, `a3.v2`, instead).
 
+## 2026-11-14 · CI: replay the recorded eval on every PR, one live Kimi canary on main
+
+- **Context:** The live eval (`countersign-eval`) runs only when prompts or policy change, since a full run costs about $25–50 of credits (estimate, from the recorded usage), needs a key that fork PRs can't read, and gives different answers run to run. Nothing checked on every PR that the committed report card still matched the committed runs. Miska has Verda inference credits for Kimi K3.1 Pro.
+- **Decision:** `ci` runs `pnpm evals --check`: it re-scores the committed runs against the answer keys and fails when `data/eval/report-card.json` differs. No model call. A separate `model-canary` workflow runs one small schema-checked call through a Kimi backend (`AI_BACKEND=kimi`, `KIMI_API_KEY`) on pushes to `main` and by hand, to catch a dead key or endpoint. The review stays on Claude; the canary scores nothing.
+- **Why:** The replay catches a hand-edited or stale card at no cost. The canary catches what a replay can't, a provider that stopped answering, for a fraction of a cent. Verda documents JSON mode but not schema enforcement, so the client's validate-and-retry layer holds the answer to the schema.
+- **Rejected:** A live eval on every PR (cost, secrets on forks, nondeterminism); Kimi as the reviewer (no streaming yet, so Verda's 60 s limit on non-streaming requests rules out large reviews).
+- **PR:** not opened
+
 ## 2026-11-14 · T16: 2 runs per mode, blind runs shared by prompt, counts are the measured n
 
 - **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants, about 30 more reviews of a shared credit budget. Stage 1 ran 2 per mode and both modes caught 10 of 10.

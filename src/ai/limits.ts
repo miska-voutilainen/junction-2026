@@ -39,6 +39,27 @@ export const INPUT_USD_PER_MILLION_TOKENS = 4;
 /** Price per million output tokens in US dollars, from the partner credit terms. */
 export const OUTPUT_USD_PER_MILLION_TOKENS = 20;
 
+/** Verda Inference's OpenAI-compatible endpoint (docs.verda.com/inference/openai-compatibility). */
+export const KIMI_BASE_URL = "https://inference.verda.com/v1";
+
+/** Verda's id for Kimi K3.1 Pro. Moonshot's own API spells it differently; the two are not interchangeable. */
+export const KIMI_MODEL = "kimi-k3-1-pro";
+
+/**
+ * Thinking budget for Kimi calls. The model defaults to `max`, which can spend the whole
+ * token budget on reasoning and return empty content; `low` keeps short structured answers fast.
+ */
+export const KIMI_REASONING_EFFORT = "low";
+
+/** Output cap for Kimi calls, reasoning tokens included; a request reserves it against the tokens-per-minute limit. */
+export const KIMI_MAX_TOKENS = 4_000;
+
+/** Verda list price per million input tokens in US dollars (verda.com/models/kimi-k3-1-pro; confirm in the console). */
+export const KIMI_INPUT_USD_PER_MILLION_TOKENS = 2;
+
+/** Verda list price per million output tokens in US dollars; reasoning tokens bill as output. */
+export const KIMI_OUTPUT_USD_PER_MILLION_TOKENS = 10;
+
 /** Validation failures are retried once, with the validation error sent back to the model. */
 export const MAX_VALIDATION_RETRIES = 1;
 

@@ -57,7 +57,7 @@ pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_R
 
 Production: https://countersign-junction.com (public; `www` and `http` redirect to it; DNS on Cloudflare as DNS-only records pointing at Vercel). The `*.vercel.app` URLs stay behind Vercel Authentication (protection covers everything except custom domains). Previews: one per PR from Vercel (team "junction", project "junction-2026").
 
-Env (names in `.env.example`): `AI_BACKEND` (`claude-code` | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`), `ACCESS_CODE` (temporary gate; empty = off).
+Env (names in `.env.example`): `AI_BACKEND` (`claude-code` | `api` | `kimi`), `ANTHROPIC_API_KEY` (only for `api`), `KIMI_API_KEY` (only for `kimi` and the model canary), `SAMPLE_REPO_DIR` (absolute path of the fork's clone), `AI_MODE` (`record` | `replay` | `live`), `ACCESS_CODE` (temporary gate; empty = off).
 
 ## Stack
 
