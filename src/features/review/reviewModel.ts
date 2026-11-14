@@ -219,12 +219,14 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
  * The text after the tier badge: "read 2 of 8 hunks · ~1 min (full read ~3 min)".
  * Like the inbox row, it leaves the reading estimate out when nothing needs reading,
  * and names the generated hunks when the count leaves some out: "read 12 of 423 hunks · 411 generated".
+ * The full-read time is left out when it equals the reading time: two equal numbers compare nothing.
  */
 export function coverageLineText(decision: TierDecision): string {
   const generated = countGenerated(decision.coverage);
   const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
   const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
-  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading} (full read ~${decision.fullMinutes} min)`;
+  const fullRead = decision.fullMinutes === decision.readMinutes ? "" : ` (full read ~${decision.fullMinutes} min)`;
+  return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading}${fullRead}`;
 }
 
 /** The line under a collapsed covered section: "4 verified · 5 supported", a zero part left out. */

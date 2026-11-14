@@ -39,7 +39,8 @@ test("shows the tier line the routing computes, with no console errors and no pa
   const { tier, readHunks, totalHunks, readMinutes, fullMinutes } = fixture.routing;
   const tierLine = page.getByRole("region", { name: "Review tier" });
   await expect(tierLine).toContainText(tier[0].toUpperCase() + tier.slice(1));
-  await expect(tierLine).toContainText(`read ${readHunks} of ${totalHunks} hunks · ~${readMinutes} min (full read ~${fullMinutes} min)`);
+  const fullRead = fullMinutes === readMinutes ? "" : ` (full read ~${fullMinutes} min)`;
+  await expect(tierLine).toContainText(`read ${readHunks} of ${totalHunks} hunks · ~${readMinutes} min${fullRead}`);
   // More than two reasons: open on a desktop, behind "Why <Tier>" on a phone.
   if (testInfo.project.name === "mobile") await expect(tierLine.getByRole("button", { name: /^Why / })).toHaveAttribute("aria-expanded", "false");
   else await expect(tierLine.getByRole("listitem").first()).toBeVisible();
