@@ -116,7 +116,7 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
      - 3 Refused: rule, reason, "Decides: <decider>" from policy, links to hunks. Each refusal has a small neutral chip (a tap toggles its tooltip on a phone): "Fixed rule" (a code rule raised it, tooltip "A fixed policy rule raised this, no model involved. It always reaches a person, whatever the model says.") or "AI".
      - 4 Sign: draft read-only, `countersign draft`/`sign` consoles; signed with verify console and one seal pulse; stale with both hashes.
    - Cut: "Request changes", "Ask builder-7 to fix", "Ask Jonas", "Check signature", editable receipt textareas (the draft is edited in the file `countersign draft` writes).
-   - Mobile: header, coverage line, Read-only hunks, Review steps, sticky Sign bar.
+   - Mobile: header, coverage line, Read-only hunks, Review steps, sticky Sign bar when there is something to sign.
    - States:
      - Loading: the skeleton as drawn, "Tier pending".
      - Empty: "This change has no diff".

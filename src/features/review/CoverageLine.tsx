@@ -7,6 +7,7 @@ import { TierBadge } from "@/components/TierBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { tierLabel } from "@/contracts";
 import type { TierDecision } from "@/contracts";
+import { cn } from "@/lib/utils";
 import { routingPolicy } from "@/policy/routing";
 import { coverageLineText } from "./reviewModel";
 
@@ -40,13 +41,23 @@ export function CoverageLine({ decision }: Readonly<{ decision: TierDecision }>)
  * One line per rule that fired. From 760 px up they are a plain list, so
  * nothing animates after hydration; below that, more than two go behind a
  * "Why <Tier>" disclosure to keep the phone's first screen short. From
- * 1100 px they run in two columns, so the reading list starts higher.
+ * 1100 px three or more run in two columns, filled top to bottom so each
+ * column keeps the order route() returns, and the reading list starts higher.
  */
+/** Fewer reasons than this stay one column: a lone reason at half width wraps early. */
+const TWO_COLUMN_MIN = 3;
+
 function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
   const list = (
-    <ul className="flex flex-col gap-1 wide:grid wide:grid-cols-2 wide:gap-x-8">
+    <ul
+      className={cn(
+        "flex flex-col gap-1",
+        decision.reasons.length >= TWO_COLUMN_MIN &&
+          "wide:block wide:columns-2 wide:space-y-1 wide:gap-x-8",
+      )}
+    >
       {decision.reasons.map((reason, index) => (
-        <li key={index} className="text-base text-text-secondary">
+        <li key={index} className="text-base text-text-secondary wide:break-inside-avoid">
           {reason.text} <span className="font-mono text-xs text-text-muted">{reason.ruleId}</span>
         </li>
       ))}
@@ -73,12 +84,14 @@ function HowIsThisComputed() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="inline-flex items-center rounded-chip text-xs text-link max-compact:min-h-11 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
+            className="inline-flex items-center rounded-chip text-xs text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring max-compact:min-h-11"
           >
             How is this computed?
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right" align="center" sideOffset={8} className="max-w-72 text-sm">{HOW_IS_THIS_COMPUTED}</TooltipContent>
+        <TooltipContent side="right" align="center" sideOffset={8} className="max-w-72 text-sm">
+          {HOW_IS_THIS_COMPUTED}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

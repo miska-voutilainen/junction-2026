@@ -9,7 +9,7 @@
  * - Supported: the claim's quote was found in the code by the mechanical quote
  *   check. The PR's own test can add evidence to such a claim but never changes
  *   its level, because the author must not vouch for itself.
- * - Unverified: no checkable evidence, so a person reads the hunk. A failed
+ * - Unverified: no checkable evidence, so the claim covers no hunk on its own. A failed
  *   quote check lands here, and so does a claim an A5 test showed the change broke.
  * - Refused: a policy rule hands the decision to a named person. Refusals are
  *   recorded in `Review.refusals`, not on claims; `route()` always sends the

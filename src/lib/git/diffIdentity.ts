@@ -7,8 +7,9 @@
  * renames, prefixes, quoting, binary and full-index output). What is not: the
  * clone's own `.git/config` is still read (`pnpm seed` sets only
  * `core.longpaths`, which does not change diff output), and the hashed diff
- * passes no `-U`, `--no-textconv` or indent-heuristic flag. A clone whose own
- * config sets `diff.context`, `diff.indentHeuristic` or a textconv driver
+ * passes no `-U`, `--no-textconv` or indent-heuristic flag, so local diff
+ * settings still apply. For example, a clone whose config sets `diff.context`,
+ * `diff.indentHeuristic`, `diff.relative` or a textconv driver
  * would hash the same change differently, and `verify` would call a good
  * receipt stale.
  * The review and the receipt call this one function; if the diff changes, the
