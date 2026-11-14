@@ -3,7 +3,7 @@ import { AreaChip } from "@/components/AreaChip";
 import { Disclosure } from "@/components/Disclosure";
 import { IdeaLabel } from "@/components/IdeaLabel";
 import type { ReportCard } from "@/contracts";
-import { failedQuotes, hallucinationLines, missedPlants, retractedClaims } from "./reportCardModel";
+import { failedQuotes, hallucinationLines, missedPlants, retractedClaims, unknownRuleRefusals } from "./reportCardModel";
 import type { ReviewOfChange } from "./reportCardModel";
 
 /**
@@ -16,6 +16,7 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
   const missed = missedPlants(reportCard);
   const planted = reportCard.areas.reduce((sum, entry) => sum + entry.planted, 0);
   const quotes = failedQuotes(reviews);
+  const unknownRules = unknownRuleRefusals(reviews);
   const retracted = retractedClaims(reviews);
   const inReviews = reviews.length === 1 ? "In the 1 recorded review" : `In the ${reviews.length} recorded reviews`;
 
@@ -51,7 +52,7 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
         )}
       </ListCard>
 
-      <ListCard title="Hallucinations caught" count={quotes.length} idea>
+      <ListCard title="Hallucinations caught" count={quotes.length + unknownRules.length} idea>
         <Scope>Across the eval runs and recorded reviews</Scope>
         <ul className="flex flex-col gap-1 text-text-secondary">
           {hallucinationLines(reportCard).map((line) => (
@@ -72,6 +73,25 @@ export function ReportLists({ reportCard, reviews }: { reportCard: ReportCard; r
                   </span>
                   <code className="font-mono text-sm break-words text-text-secondary">{quote.quote}</code>
                   <span data-written-text className="text-text-secondary">{quote.reason}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="mt-3 border-t border-border-subtle pt-3">
+          <Scope>
+            {unknownRules.length === 0
+              ? "Refusals struck for an unknown rule id"
+              : `${inReviews}: ${unknownRules.length} refusal${unknownRules.length === 1 ? "" : "s"} struck for an unknown rule id`}
+          </Scope>
+          {unknownRules.length === 0 ? (
+            <p className="text-text-muted">None in the {reviews.length} recorded {reviews.length === 1 ? "review" : "reviews"}.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border-subtle">
+              {unknownRules.map((refusal) => (
+                <li key={`${refusal.changeId}-${refusal.itemId}`} className="flex flex-wrap items-baseline gap-x-2.5 py-2.5 first:pt-0 last:pb-0 text-text-secondary">
+                  <span>Refusal {refusal.itemId} · unknown rule id</span>
+                  <span className="font-mono text-sm text-text-muted">{refusal.changeId}</span>
                 </li>
               ))}
             </ul>

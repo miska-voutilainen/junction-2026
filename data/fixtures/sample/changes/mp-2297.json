@@ -12,6 +12,6 @@
   "authorDescription": {
     "text": "This change decorates the types the source generator emits with System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage so coverage tools skip them. FormatterTemplate and ResolverTemplate now write the attribute above each generated formatter and above the generated resolver. The attribute is written with its global:: name so it cannot clash with user types. No option was added: it is always emitted, as the issue suggests. The checked-in generator snapshots under tests/.../Resources are updated to match, and one new generation test asserts every generated source contains the attribute. Hand-written formatters and the runtime library are untouched.",
     "synthetic": true,
-    "writtenBy": "Kasanen (evidence lane), written blind"
+    "writtenBy": "engine lane (Miska), synthetic, drafted without opening prompts, pipeline or review output"
   }
 }

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ReceiptRecordSchema, ReviewSchema } from "@/contracts";
-import { receiptStatus } from "./receiptStatus";
+import { receiptStatus, signerOf } from "./receiptStatus";
 
 const fixture = (relativePath: string): unknown =>
   JSON.parse(readFileSync(path.join(process.cwd(), "data", "fixtures", relativePath), "utf8"));
@@ -33,5 +33,17 @@ describe("receiptStatus", () => {
   it("is stale when the diff changed after signing", () => {
     const amended = { ...review, diff: { ...review.diff, diffSha256: "0".repeat(64) } };
     expect(receiptStatus(amended, record)).toBe("stale");
+  });
+});
+
+describe("signerOf", () => {
+  it("names the owner only for a receipt whose signature check passed", () => {
+    expect(signerOf(record)).toEqual({ kind: "signed", owner: record.receipt.owner });
+    expect(signerOf({ ...record, verify: { ...record.verify, ok: false } })).toEqual({ kind: "unverified" });
+  });
+
+  it("tells no receipt from an unreadable one", () => {
+    expect(signerOf(null)).toEqual({ kind: "unsigned" });
+    expect(signerOf("unreadable")).toEqual({ kind: "unreadable" });
   });
 });

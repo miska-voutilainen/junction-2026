@@ -208,6 +208,8 @@ export interface RefusalView {
   title: string;
   decider: string;
   reason: string;
+  /** "rule": a fixed policy rule raised it with no model involved; "ai": the reviewer did. */
+  source: "ai" | "rule";
   locations: HunkLocation[];
   /** The receipt owner when a valid, current receipt accepted this refusal; otherwise null. */
   acceptedBy: string | null;
@@ -252,6 +254,7 @@ export function buildRefusals(review: Review, record: ReceiptRecord | null, sign
         title: rule?.title ?? `Rule not in refusal policy ${refusalPolicyVersion}`,
         decider: rule?.decider ?? "not named in the policy",
         reason: refusal.reason,
+        source: refusal.source,
         locations: locationsOf(review, refusal.hunkIds),
         acceptedBy: accepted.includes(refusal.id) && record !== null ? record.receipt.owner : null,
       };

@@ -11,6 +11,7 @@ import {
   measuredLine,
   missedPlants,
   retractedClaims,
+  unknownRuleRefusals,
 } from "./reportCardModel";
 
 const fixtureRoot = path.join(process.cwd(), "data", "fixtures");
@@ -23,7 +24,7 @@ describe("areaCardModel", () => {
   it("states the sample size in the headline and the spot-check gap as the next step", () => {
     const card = areaCardModel("generator", entry("generator"), 0);
     expect(card.level).toBe("calibrated");
-    expect(card.headline).toBe("3 of 4 planted bugs caught · written blind");
+    expect(card.headline).toBe("3 of 4 planted bugs caught · planted before the prompts");
     expect(card.nextStep).toBe("Trusted needs 5 clean spot checks: 0 recorded");
     expect(card.nextStepNote).toMatch(/no spot checks/);
     expect(card.effect).toMatch(/Focused at best/);
@@ -73,7 +74,7 @@ describe("areaCardModel", () => {
 
 describe("report card lists", () => {
   it("describes what the levels rest on", () => {
-    expect(measuredLine(reportCard)).toBe("Reviewer rv1 · claude-opus-5-5 · measured on 10 planted bugs written blind");
+    expect(measuredLine(reportCard)).toBe("Reviewer rv1 · claude-opus-5-5 · measured on 10 planted bugs, planted before the prompts were written");
   });
 
   it("lists only the plants the reviewer missed, with their area and variant link", () => {
@@ -97,6 +98,24 @@ describe("report card lists", () => {
     const retracted = retractedClaims(reviews);
     expect(retracted).toHaveLength(review.retractions.length);
     expect(retracted[0].claimText).toBe(review.claims.find((claim) => claim.id === review.retractions[0].claimId)?.text);
+  });
+
+  it("lists refusals struck for an unknown rule id apart from failed quotes, matching the phrase in any case", () => {
+    const [failure] = review.quoteCheck.failures;
+    const synthetic = {
+      ...review,
+      quoteCheck: {
+        ...review.quoteCheck,
+        failures: [failure, { ...failure, itemId: "r3", reason: "Unknown rule ID R9: not in refusal policy 1" }],
+      },
+    };
+    const reviews = [{ changeId: "mp-2283", review: synthetic }];
+    expect(unknownRuleRefusals(reviews)).toEqual([{ changeId: "mp-2283", itemId: "r3" }]);
+    expect(failedQuotes(reviews).map((quote) => quote.itemId)).toEqual([failure.itemId]);
+  });
+
+  it("finds no unknown-rule refusals in the recorded fixtures", () => {
+    expect(unknownRuleRefusals([{ changeId: "mp-2283", review }])).toEqual([]);
   });
 
   it("summarises described-first against blind-first per plant", () => {

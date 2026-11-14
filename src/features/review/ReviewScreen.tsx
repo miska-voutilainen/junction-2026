@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
 import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
-import { receiptStatus } from "@/lib/data/receiptStatus";
+import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import { ReviewBody } from "./ReviewBody";
 import { ReviewHeader } from "./ReviewHeader";
 import { ReviewMissing, ReviewUnreadable } from "./ReviewStates";
@@ -65,7 +65,7 @@ export function ReviewScreen({
             change={change}
             review={review.state === "ok" ? review.data : undefined}
             receiptStatus={review.state === "ok" ? receiptStatus(review.data, record) : undefined}
-            signedBy={record?.receipt.owner}
+            signer={signerOf(receipt)}
             receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
             isReceiptUnreadable={isReceiptUnreadable}
           />
