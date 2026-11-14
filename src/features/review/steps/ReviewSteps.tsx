@@ -59,6 +59,8 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
       <h2 id="review-steps-heading" className="sr-only">
         Review steps
       </h2>
+      {/* Roving tabindex: the active tab is focusable, which the lint rule cannot see across the map. */}
+      {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus */}
       <div role="tablist" aria-label="Review steps" onKeyDown={moveBetweenTabs} className="grid grid-cols-4 border-b border-border-subtle">
         {tabs.map((tab) => {
           const isActive = tab.id === step;
