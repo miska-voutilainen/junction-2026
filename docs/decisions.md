@@ -9,6 +9,13 @@
 - **Why:** The build brief fixes the navigator's switch to a dropdown at about 1100 px, so the space has to come from the columns' widths.
 - **Rejected:** Collapsing the navigator into its dropdown below 1600 px (contradicts the brief); leaving 415 px (the diff, the thing being reviewed, becomes the hardest part to read).
 - **PR:** the Review steps panel PR
+## 2026-11-14 · Seven ideas kept and sharpened after four research runs; recordings run on the Max plan
+
+- **Context:** Four Gemini Deep Research runs challenged the seven ideas: two looked for better ones, one gathered evidence on how agent PRs fail, one red-teamed the concept. Separately, paying for API credits for the recordings was more than the team wanted to spend.
+- **Decision:** No idea replaced or added. Six small additions: an escaped bug sends the area's next changes to a full read (`R-escape`); only a test the authoring agent didn't write can make a claim Verified; a refusal must cite a rule that exists; public API files always produce a fixed `R7` refusal; the signed receipt records the per-hunk ledger; the pitch follows one spine with the pedigrees on the idea pages. The model client gets a `claude-code` backend (Claude Code headless on Miska's Max plan, the default) next to the API. Miska decided.
+- **Why:** The research found the ideas already match long-proven methods (continuous sampling, rules of evidence) and real agent failure modes (an agent writing a test that encodes its own bug); the red team found the pitch overloaded, not the ideas weak. Recording on the subscription costs no money; the site never calls a model, so judges see the same recorded output either way.
+- **Rejected:** Replacing planted bugs with live false-positive telemetry (no live users); registered PRs, audit sampling and round-trip property tests as built features (Tieto's changes are already written or too small; they go to "Beyond the reference"); per-hunk reverts (break the C# build); a native GitHub CI integration (out of scope); prompts tuned to the published defect taxonomy (the eval would measure our tuning).
+- **PR:** this PR
 
 ## 2026-11-14 · Doc diagrams are SVG images, drawn by a script
 
