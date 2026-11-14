@@ -128,25 +128,27 @@ const inboxRowOf = (page: Page, id: string) => page.getByRole("row").filter({ ha
 
 test("tints the re-routed inbox row after an escape, and not after Undo", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
-  // Wait for the inbox's URL and the Signed fold: under a full parallel run the click
-  // can otherwise land on the fold before the client-side navigation has rendered it.
+  // Wait for the inbox's URL and heading: under a full parallel run a click can otherwise
+  // land before the client-side navigation has rendered the list.
   const openInbox = async () => {
     await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
     await page.waitForURL((url) => url.pathname === "/");
-    await expect(page.getByRole("button", { name: "Signed 1", expanded: false })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Inbox", level: 1 })).toBeVisible();
   };
 
   await page.goto("/reviewer");
   await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
   await openInbox();
-  // mp-2283 is signed, so its row sits in the folded Signed list.
-  await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
+  // The escape moves hunks the signer was told a check covered to "Read this", which reopens
+  // mp-2283's receipt: its row leaves the folded Signed list and shows tinted with the others.
+  await expect(page.getByRole("button", { name: /^Signed \d/, expanded: false })).toHaveCount(0);
   await expect(inboxRowOf(page, "mp-2283")).toHaveClass(RE_ROUTED_TINT);
 
   await page.getByRole("navigation").getByRole("link", { name: "Reviewer" }).click();
   await page.waitForURL((url) => url.pathname === "/reviewer");
   await generatorCard(page).getByRole("button", { name: "Undo" }).click();
   await openInbox();
+  // Signed again: back in the fold, untinted.
   await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
   await expect(inboxRowOf(page, "mp-2283")).not.toHaveClass(RE_ROUTED_TINT);
 });
