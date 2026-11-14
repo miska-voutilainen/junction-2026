@@ -68,11 +68,12 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 | Component | What it is |
 | --- | --- |
 | `AppShell`, `TopBar`, `AppNav`, `MobileHeader`, `CommandMenu`, `Wordmark` | Shell, above |
-| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. The URL comes from `src/lib/ideaLinks.ts` (spec section 3, "Idea labels") |
+| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All eight ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "The author never checks its own work" |
 | `EvidenceMark` + `EvidenceBadge` | Verified: filled dot. Supported: ring. Unverified: amber dashed ring. Refused: ring with slash. Always with the text label |
 | `CoverageMark` | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid) |
 | `TierBadge` | Signal bars (1–3) and "Light", "Focused" or "Full" |
-| `ReceiptStatus` | "Needs review", "Signed by <owner>" or "Stale" (spec T06) |
+| `ReceiptStatus` | "Needs review", "Signed by <owner>", "Stale" or "Signature failed verification" (spec T06). The Inbox shows all four; the Review header shows only Stale and the failed state, because the roles line owns "Signed by" |
+| `RolesLine` | Idea 8: "Written by <author agent> · Reviewed by <reviewer version> · Signed by <owner>", "Not signed yet" (muted) while there is no receipt. The version is mono, names are sans. Each "role name" pair wraps as a unit at 375 px. Used in the Review header meta row and the Receipt identity fields |
 | `LevelLadder` | Shadow, Calibrated and Trusted, three steps, current one marked |
 | `Console` | Code or output box with a Wrap/Copy toolbar (section 6) |
 | `CopyButton` | Copy-to-check icon crossfade for 1.5 s, fixed width, "Copied" announced politely |
@@ -104,15 +105,15 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
    - Cut: "Decide" approve/reject and "Send to my desktop" (no backend). Mobile shows open refusals as "Waiting on a decision" links to step 3.
    - States: empty "No recorded reviews yet." plus the `pnpm pipeline run mp-2283` command; per-row "Not reviewed yet" and "couldn't be read"; error "Couldn't read the recorded reviews" with the validation error in a console.
 2. **Review `/changes/[id]`** (Phase 4). Canvas Review, ReviewMobile, ReviewStates, Sidebar, SidebarTabs.
-   - Header: title, id, receipt status, "Sign" primary (`4`).
-   - Coverage line: "Focused: read 2 of 8 hunks · ~2 min (full read ~10 min)", then the spec's reasons, one line each with rule id, under a disclosure. Idea 3.
-   - Meta row: agent, branch, +/− and files, "Reviewed by rv1 · <model> · <date>".
+   - Header: title, id, receipt status only when it asks for action (Stale, Signature failed verification) with "View full receipt", "Sign" primary (`4`). The author agent chip is gone: the roles line states it.
+   - Coverage line: "Focused: read 2 of 8 hunks · ~2 min (full read ~10 min)", then the spec's reasons, one line each with rule id, under a disclosure. Idea 3. A simulated escape adds "R-escape" (Full) for each touched area, e.g. "Analyzer: a bug escaped here, the next changes get a full read".
+   - Meta row: branch, +/− and files, the roles line with Idea 8 ("Written by … · Reviewed by rv1 · Signed by <owner>", or "Not signed yet"), then "<model> · <date>".
    - Navigator: Read this (with "0/2 read" progress), Supported, Verified. Below ~1100 px it becomes a dropdown.
-   - Diff: Read-this hunks open with Wrap/Copy/Mark read; then "Covered by evidence: n hunks", with each hunk's evidence line built from its claims. "Mark read" is browser-only and says so.
+   - Diff: Read-this hunks open with Wrap/Copy/Mark read; then "Covered by evidence: n hunks", with each hunk's evidence line built from its claims. A hunk whose only test evidence is the PR's own test (`pr-test`, no `differential-test`) reads "Supported · the PR's own test" with Idea 8 beside the row and the tooltip "The same agent wrote the code and this test, so it can't make the claim Verified." On a phone the covered hunks are one summary line, so this line is desktop only. "Mark read" is browser-only and says so.
    - Review steps: tabs 1 Read · 2 Blind check · 3 Refused · 4 Sign, with a shared-layout underline.
-     - 1 Read is the spec's Story: what, why, touches, claims by requirement item, defects.
+     - 1 Read is the spec's Story: what, why, touches, claims by requirement item, defects. A claim backed only by the PR's own test shows "Supported · the PR's own test", Idea 8 and the same note when opened.
      - 2 Blind check: contradiction "The PR says / The code does" with "Show in diff", anchored-vs-blind counts, Missing, Scope creep.
-     - 3 Refused: rule, reason, "Decides: <decider>" from policy, links to hunks.
+     - 3 Refused: rule, reason, "Decides: <decider>" from policy, links to hunks. Each refusal has a small neutral chip: "Fixed rule" (a code rule raised it, tooltip "A fixed policy rule raised this, no model involved. It always reaches a person, whatever the model says.") or "AI".
      - 4 Sign: draft read-only, `countersign draft`/`sign` consoles; signed with verify console and one seal pulse; stale with both hashes.
    - Cut: "Request changes", "Ask builder-7 to fix", "Ask Jonas", "Check signature", editable receipt textareas (the draft is edited in the file `countersign draft` writes).
    - Mobile: header, coverage line, Read-only hunks, Review steps, sticky Sign bar.
@@ -123,15 +124,15 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
      - Not found and review-invalid copy per the spec.
 3. **Receipt `/changes/[id]/receipt`** (Phase 4). Canvas Receipt.
    - Toolbar: Copy verify command, Copy link, Print (`window.print`; print stylesheet). "Signature verified" seal.
-   - Fields: commit, base, diff hash, author agent, signer key fingerprint.
-   - The three sections in sans (people's words); hunk ledger (location, coverage, "Read by <owner>"); open decisions; verify output console.
+   - Fields: commit, base, diff hash, repo, reviewer run, and the roles line (Idea 8), which replaces the separate author and signer rows.
+   - The three sections in sans (people's words); the hunk ledger, headed "Hunk ledger · signed" with the note "Part of the signed payload: the signature covers which hunks <owner> read and which checks covered the rest." (hunk id, file, coverage, "Read by <owner>"), read from `receipt.hunks` in the signed payload, so a stale receipt shows it too; open decisions; verify output console.
    - Per-hunk hashes are cut: the receipt signs one `diffSha256`, and we show that.
    - Not signed: "No receipt for mp-2283 yet." and the sign command. Stale: banner.
 4. **Reviewer `/reviewer`** (Phase 4). Canvas Reviewer, ReviewerMobile, ReviewerStates.
    - h1 "Reviewer Report Card"; "Measured on n planted bugs and p planted contradictions, written blind".
    - "How levels work" disclosure.
    - Four area cards: level, ladder, "3 of 4 planted bugs caught · written blind", blind-first vs described-first counts, "Effect now", next step, "Record escape" with Undo (simulated, toast, re-routes).
-   - Lists: Missed planted bugs, Hallucinations caught, Retracted claims, all from the report card and reviews.
+   - Lists: Missed planted bugs, Hallucinations caught, Retracted claims, all from the report card and reviews. Hallucinations caught has two scoped sub-lists: quotes that failed the check, and refusals struck for an unknown rule id ("Refusal r3 · unknown rule id" with the change id, or "None in the 4 recorded reviews.").
    - Spec's routing spread line.
    - "Plant a synthetic bug" (the one primary) opens a dialog with the real steps (variant branch, answer key, `pnpm evals`) in a console.
    - States: loading as drawn, empty "Every area is at Shadow", error with "every area is treated as Shadow" and the validation error.
