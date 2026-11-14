@@ -64,7 +64,7 @@ const NO_TRACK_RECORD_REASON: TierDecision["reasons"][number] = {
 };
 
 // route() reasons that quote a read count; forcing every hunk to "read" would make them wrong.
-const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread"]);
+const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread", "R-generated"]);
 
 /**
  * The one routing decision every screen uses (inbox, shell, dashboard, reviewer, S2).

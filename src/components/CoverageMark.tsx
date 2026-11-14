@@ -4,14 +4,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * Hunk coverage (idea 3): a bar in the gutter and a text label. Only "Read
- * this" is amber and solid; Supported is grey dashed and Verified grey solid,
- * so the eye lands on the hunks that need a person. Spec section 3.
+ * this" is amber and solid; Supported is grey dashed, Verified grey solid and
+ * Generated grey dotted, so the eye lands on the hunks that need a person. Spec section 3.
  */
 /** The border classes of the coverage bar; the diff gutter draws the same bar on every row. */
 export const COVERAGE_BAR: Record<Coverage, string> = {
   read: "border-solid border-coverage-read",
   supported: "border-dashed border-coverage-supported",
   verified: "border-solid border-coverage-verified",
+  generated: "border-dotted border-coverage-generated",
 };
 
 /**

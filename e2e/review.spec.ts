@@ -146,7 +146,7 @@ for (const changeId of ["mp-2283", "mp-2297"]) {
       await page.goto(`/changes/${changeId}`);
       const covered = page.getByRole("button", { name: /^Covered by evidence/ });
       if (await covered.isVisible()) await covered.click();
-      const generated = page.getByRole("button", { name: /snapshot files? · Show/ });
+      const generated = page.getByRole("button", { name: /snapshot files? · not in the reading count · Show/ });
       if (await generated.isVisible()) await generated.click();
       expect(await hasHorizontalScroll(page), `page scrolls sideways at ${width} px`).toBe(false);
     }

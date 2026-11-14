@@ -161,8 +161,10 @@ function statusOf(review: Review | null, record: ReceiptRecord): ReceiptDocument
 
 /** "Focused review. A person read 2 of 8 hunks. Tests or checked quotes covered the other 6." */
 function readingSummary({ routing }: Review): string {
-  const covered = routing.totalHunks - routing.readHunks;
-  return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.`;
+  const generated = Object.values(routing.coverage).filter((coverage) => coverage === "generated").length;
+  const covered = routing.totalHunks - routing.readHunks - generated;
+  const generatedNote = generated > 0 ? ` ${generated} generated ${generated === 1 ? "hunk was" : "hunks were"} not read.` : "";
+  return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.${generatedNote}`;
 }
 
 function identityRows({ receipt }: ReceiptRecord): IdentityRow[] {
@@ -195,7 +197,7 @@ function shortHash(hash: string): string {
   return hash.slice(0, SHORT_HASH_LENGTH);
 }
 
-const COVERAGE_ORDER: Coverage[] = ["read", "supported", "verified"];
+const COVERAGE_ORDER: Coverage[] = ["read", "supported", "verified", "generated"];
 
 /** One row per signed hunk, the ones a person read first, in the signed order within each group. */
 function hunkLedger(signedHunks: ReceiptRecord["receipt"]["hunks"]): LedgerRow[] {

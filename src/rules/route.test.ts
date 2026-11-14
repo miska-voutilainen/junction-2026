@@ -123,7 +123,7 @@ describe("coverage per hunk", () => {
     expect(route(review, trustedEverywhere).coverage).toEqual({ h1: "read", h2: "read" });
   });
 
-  it("applies the same rule to generated-file hunks", () => {
+  it("marks generated-file hunks generated, whatever claims cover them", () => {
     const review = makeReview({
       hunks: [
         { id: "h1", file: "tests/Resources/a.cs", kind: "generated" },
@@ -131,7 +131,59 @@ describe("coverage per hunk", () => {
       ],
       claims: [claim("c1", "supported", ["h1"])],
     });
-    expect(route(review, trustedEverywhere).coverage).toEqual({ h1: "supported", h2: "read" });
+    expect(route(review, trustedEverywhere).coverage).toEqual({ h1: "generated", h2: "generated" });
+  });
+
+  it("still marks a generated-file hunk read when a finding names it", () => {
+    const review = makeReview({
+      hunks: [{ id: "h1", file: "tests/Resources/a.cs", kind: "generated" }],
+      findings: [finding("defect", ["h1"])],
+    });
+    expect(route(review, trustedEverywhere).coverage.h1).toBe("read");
+  });
+});
+
+describe("generated hunks", () => {
+  const snapshots = (count: number): HunkSpec[] =>
+    Array.from({ length: count }, (_, index) => ({ id: `g${index + 1}`, file: `tests/Resources/s${index + 1}.verified.cs`, kind: "generated" as FileKind }));
+
+  it("leaves a change of only generated hunks at Light, with nothing to read and one reason", () => {
+    const decision = route(makeReview({ hunks: snapshots(3) }), trustedEverywhere);
+    expect(decision).toMatchObject({ tier: "light", readHunks: 0, totalHunks: 3, readLines: 0, readMinutes: 0 });
+    expect(decision.reasons).toEqual([
+      {
+        ruleId: "R-generated",
+        tier: "light",
+        text: "3 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)",
+      },
+    ]);
+  });
+
+  it("counts only the hunks a person could read in the read share, and says the risk once", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }, { id: "h2" }, ...snapshots(10)], claims: verifiedOn("h1") });
+    const decision = route(review, trustedEverywhere);
+    // 1 of the 2 readable hunks is read: 50%, under the 75% limit, however many snapshots there are.
+    expect(decision.readHunks).toBe(1);
+    expect(decision.totalHunks).toBe(12);
+    expect(decision.reasons.map((reason) => reason.ruleId)).toEqual(["R-unread", "R-generated"]);
+    expect(decision.tier).toBe("focused");
+  });
+
+  it("fires R-read-share against the readable hunks, not the snapshots", () => {
+    const review = makeReview({ hunks: [{ id: "h1" }, ...snapshots(10)] });
+    const decision = route(review, trustedEverywhere);
+    expect(decision.reasons[0]).toEqual({ ruleId: "R-read-share", tier: "full", text: "Read 1 of 1 hunks: most of the change needs a human" });
+  });
+
+  it("keeps the reason singular for one snapshot", () => {
+    const decision = route(makeReview({ hunks: snapshots(1) }), trustedEverywhere);
+    expect(decision.reasons[0].text).toMatch(/^1 is a generated snapshot: read the template change that produces it /);
+  });
+
+  it("adds no reason and no generated coverage to a change without generated hunks", () => {
+    const decision = route(makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") }), trustedEverywhere);
+    expect(decision.reasons).toEqual([]);
+    expect(Object.values(decision.coverage)).not.toContain("generated");
   });
 });
 
@@ -147,7 +199,7 @@ describe("rules", () => {
 
   it("does not fire R-size at exactly 400 lines, or for lines in generated files", () => {
     expect(ruleIds(covered([{ id: "h1", changed: 400 }]))).toEqual([]);
-    expect(ruleIds(covered([{ id: "h1", changed: 900, kind: "generated", file: "tests/Resources/a.cs" }]))).toEqual([]);
+    expect(ruleIds(covered([{ id: "h1", changed: 900, kind: "generated", file: "tests/Resources/a.cs" }]))).toEqual(["R-generated"]);
   });
 
   it("fires R-read-share when read hunks are at least 75% of all hunks", () => {
@@ -312,6 +364,11 @@ describe("coverageReason", () => {
   it("says the area is at Shadow when that is why a covered hunk is read", () => {
     const review = makeReview({ hunks: [{ id: "h1", area: "generator" }], claims: [claim("c1", "supported", ["h1"])] });
     expect(coverageReason(review, shadowGenerator, "h1")).toBe("Generator is at Shadow: the AI's evidence routes nothing here yet");
+  });
+
+  it("says a generated hunk is not read and what that risks", () => {
+    const review = makeReview({ hunks: [{ id: "h1", file: "tests/Resources/a.cs", kind: "generated" }] });
+    expect(coverageReason(review, trusted, "h1")).toBe("Generated file: not read, so code hidden in it wouldn't be caught");
   });
 
   it("says no Verified or Supported claim covers it otherwise", () => {
