@@ -31,8 +31,7 @@
         "src/lib/simulation/**",
         "src/lib/*.ts",
         "data/fixtures/**",
-        "e2e/**",
-        "public/**"
+        "e2e/**"
       ]
     },
     "evidence": {
@@ -56,6 +55,7 @@
     "components.json",
     "vercel.json",
     ".prettierrc.json",
+    ".prettierignore",
     ".env.example",
     ".gitignore",
     ".gitattributes",

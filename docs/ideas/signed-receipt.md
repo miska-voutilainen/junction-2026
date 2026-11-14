@@ -45,6 +45,6 @@ Auditors already ask who approved a change, what was checked and what risk was a
 
 ## In the code
 
-- `src/receipt/`: the countersign CLI (T20)
-- `src/lib/git/diffIdentity.ts`: `computeDiffIdentity()`, which feeds both review and receipt (T09)
+- `src/receipt/`: the countersign CLI: draft, sign, verify and export a receipt
+- `src/lib/git/diffIdentity.ts`: `computeDiffIdentity()`, which feeds both review and receipt
 - Shown on S2, the Receipt tab (signed, unsigned or stale), and S4, the full receipt
