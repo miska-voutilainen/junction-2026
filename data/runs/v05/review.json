@@ -1,0 +1,2689 @@
+{
+  "schemaVersion": 1,
+  "changeId": "v05",
+  "requirementId": "MP-2283",
+  "title": "Fix crash on closed generic structs from referenced assemblies",
+  "authorAgent": "Coding agent (Tieto sample)",
+  "kind": "planted-bug",
+  "mode": "blind-first",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5",
+    "promptVersions": {
+      "a1": "a1.v1",
+      "a2": "a2.v1",
+      "a3": "a3.v1",
+      "a4": "none",
+      "a5": "none"
+    }
+  },
+  "run": {
+    "id": "20261114T054618Z",
+    "startedAt": "2026-11-14T05:46:18.883Z",
+    "finishedAt": "2026-11-14T05:49:50.463Z",
+    "durationMs": 211580,
+    "usage": {
+      "inputTokens": 251301,
+      "outputTokens": 24674,
+      "costUsd": 2.7231638,
+      "calls": 4
+    }
+  },
+  "diff": {
+    "baseSha": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+    "headSha": "082f7a664132a9051c4152197c9fbcec17820537",
+    "baseTree": "b5d1e9794b7253350ede75f5c38cf8b5906d63b7",
+    "headTree": "f9bece52d5c77a949f7c89946870d61cc2838f8e",
+    "diffSha256": "984049d426634ac2b73d5cf33e01e56563aa91a2b75121b5b1b2b50b3b1c6a49",
+    "filesChanged": 4,
+    "linesAdded": 226,
+    "linesRemoved": 4
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "kind": "docs",
+      "area": null,
+      "added": 5,
+      "removed": 0,
+      "hunkIds": [
+        "h1"
+      ]
+    },
+    {
+      "path": "doc/analyzers/MsgPack004.md",
+      "kind": "docs",
+      "area": "analyzer",
+      "added": 5,
+      "removed": 0,
+      "hunkIds": [
+        "h2"
+      ]
+    },
+    {
+      "path": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "kind": "source",
+      "area": "generator",
+      "added": 27,
+      "removed": 4,
+      "hunkIds": [
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "h7"
+      ]
+    },
+    {
+      "path": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+      "kind": "test",
+      "area": null,
+      "added": 189,
+      "removed": 0,
+      "hunkIds": [
+        "h8",
+        "h9"
+      ]
+    }
+  ],
+  "hunks": [
+    {
+      "id": "h1",
+      "file": "README.md",
+      "header": "@@ -1636,6 +1636,11 @@",
+      "oldStart": 1636,
+      "oldLines": 6,
+      "newStart": 1636,
+      "newLines": 11,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1636,
+          "newLine": 1636,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1637,
+          "newLine": 1637,
+          "text": "Learn more about using a mix of your own custom formatters and automatically generated ones in [the Analyzer section](#analyzer)."
+        },
+        {
+          "kind": "context",
+          "oldLine": 1638,
+          "newLine": 1638,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1639,
+          "text": "### Generic types from referenced assemblies"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1640,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1641,
+          "text": "Closed generic types defined in a referenced assembly (for example, `Item<int>` where `Item<T>` is defined in another project or NuGet package) can be used as members of your `[MessagePackObject]` types, including generic value types and record structs."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1642,
+          "text": "Diagnostics about the members of such a type are reported by the assembly that defines it rather than by the consuming project, so any problem must be fixed there."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1643,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1639,
+          "newLine": 1644,
+          "text": "### MagicOnion"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1640,
+          "newLine": 1645,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1641,
+          "newLine": 1646,
+          "text": "[MagicOnion](https://github.com/Cysharp/MagicOnion) is a code-first gRPC framework based on grpc-dotnet and MessagePack. gRPC usually communicates with Protocol Buffers using IDL. But MagicOnion uses MessagePack for C# and does not need IDL. When communicating C# to C#, schemaless (or rather C# classes as schema) is better than using IDL."
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "file": "doc/analyzers/MsgPack004.md",
+      "header": "@@ -45,3 +45,8 @@",
+      "oldStart": 45,
+      "oldLines": 3,
+      "newStart": 45,
+      "newLines": 8,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 45,
+          "newLine": 45,
+          "text": "    public int B { get; set; }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 46,
+          "newLine": 46,
+          "text": "}"
+        },
+        {
+          "kind": "context",
+          "oldLine": 47,
+          "newLine": 47,
+          "text": "```"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 48,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 49,
+          "text": "## Types from referenced assemblies"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 50,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 51,
+          "text": "This analyzer only reports on members declared in the project being compiled."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 52,
+          "text": "Members of a type defined in a referenced assembly are reported by the project that defines that type, so an unattributed public member of such a type must be fixed in its defining project."
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -236,7 +236,7 @@",
+      "oldStart": 236,
+      "oldLines": 7,
+      "newStart": 236,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 236,
+          "newLine": 236,
+          "text": "    private TypeCollector(Compilation compilation, AnalyzerOptions options, ReferenceSymbols referenceSymbols, ITypeSymbol targetType, Action<Diagnostic>? reportAnalyzerDiagnostic, CancellationToken cancellationToken)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 237,
+          "newLine": 237,
+          "text": "    {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 238,
+          "newLine": 238,
+          "text": "        this.typeReferences = referenceSymbols;"
+        },
+        {
+          "kind": "del",
+          "oldLine": 239,
+          "newLine": null,
+          "text": "        this.reportDiagnostic = reportAnalyzerDiagnostic;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 239,
+          "text": "        this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
+        },
+        {
+          "kind": "context",
+          "oldLine": 240,
+          "newLine": 240,
+          "text": "        this.options = options;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 241,
+          "newLine": 241,
+          "text": "        this.compilation = compilation;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 242,
+          "newLine": 242,
+          "text": "        this.cancellationToken = cancellationToken;"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -970,7 +970,7 @@",
+      "oldStart": 970,
+      "oldLines": 7,
+      "newStart": 970,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 970,
+          "newLine": 970,
+          "text": "                else"
+        },
+        {
+          "kind": "context",
+          "oldLine": 971,
+          "newLine": 971,
+          "text": "                {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 972,
+          "newLine": 972,
+          "text": "                    // If this attributed member is non-public, then all non-public members should be attributed."
+        },
+        {
+          "kind": "del",
+          "oldLine": 973,
+          "newLine": null,
+          "text": "                    nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 973,
+          "text": "                    nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 974,
+          "newLine": 974,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 975,
+          "newLine": 975,
+          "text": "                    nestedFormatterRequired |= item.GetMethod is not null && IsPartialTypeRequired(item.GetMethod.DeclaredAccessibility);"
+        },
+        {
+          "kind": "context",
+          "oldLine": 976,
+          "newLine": 976,
+          "text": "                    if (item.SetMethod is not null && IsPartialTypeRequired(item.SetMethod.DeclaredAccessibility))"
+        }
+      ]
+    },
+    {
+      "id": "h5",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -982,7 +982,7 @@",
+      "oldStart": 982,
+      "oldLines": 7,
+      "newStart": 982,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 982,
+          "newLine": 982,
+          "text": "                    var stringKey = key is { Value: string stringKeyValue } ? stringKeyValue : default;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 983,
+          "newLine": 983,
+          "text": "                    if (intKey == null && stringKey == null)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 984,
+          "newLine": 984,
+          "text": "                    {"
+        },
+        {
+          "kind": "del",
+          "oldLine": 985,
+          "newLine": null,
+          "text": "                        this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, ((PropertyDeclarationSyntax)item.DeclaringSyntaxReferences[0].GetSyntax()).Identifier.GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 985,
+          "text": "                        this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, GetPropertyIdentifierLocation(item), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
+        },
+        {
+          "kind": "context",
+          "oldLine": 986,
+          "newLine": 986,
+          "text": "                    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 987,
+          "newLine": 987,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 988,
+          "newLine": 988,
+          "text": "                    // A property with an init accessor and an initializer has a default that will be discarded by the deserializer."
+        }
+      ]
+    },
+    {
+      "id": "h6",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1074,7 +1074,7 @@",
+      "oldStart": 1074,
+      "oldLines": 7,
+      "newStart": 1074,
+      "newLines": 7,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1074,
+          "newLine": 1074,
+          "text": "                            {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1075,
+          "newLine": 1075,
+          "text": "                                Diagnostic diagnostic = derivedKeyAttribute is not null && suppressSourceGeneration is not true"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1076,
+          "newLine": 1076,
+          "text": "                                    ? Diagnostic.Create(MsgPack00xMessagePackAnalyzer.AOTDerivedKeyAttribute, derivedKeyAttribute.GetSyntax(this.cancellationToken).GetLocation())"
+        },
+        {
+          "kind": "del",
+          "oldLine": 1077,
+          "newLine": null,
+          "text": "                                    : Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, item.DeclaringSyntaxReferences[0].GetSyntax().GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1077,
+          "text": "                                    : Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1078,
+          "newLine": 1078,
+          "text": "                                if (nonPublicMembersAreSerialized || (item.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public)"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1079,
+          "newLine": 1079,
+          "text": "                                {"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1080,
+          "newLine": 1080,
+          "text": "                                    this.reportDiagnostic?.Invoke(diagnostic);"
+        }
+      ]
+    },
+    {
+      "id": "h7",
+      "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+      "header": "@@ -1426,6 +1426,29 @@",
+      "oldStart": 1426,
+      "oldLines": 6,
+      "newStart": 1426,
+      "newLines": 29,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1426,
+          "newLine": 1426,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1427,
+          "newLine": 1427,
+          "text": "    private static Location? GetIdentifierLocation(INamedTypeSymbol type) => ((BaseTypeDeclarationSyntax?)type.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax())?.Identifier.GetLocation();"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1428,
+          "newLine": 1428,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1429,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1430,
+          "text": "    /// Gets the location of the identifier of a property, if it is declared in source."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1431,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1432,
+          "text": "    /// <param name=\"property\">The property symbol. It may be declared in metadata, in which case <see langword=\"null\" /> is returned.</param>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1433,
+          "text": "    /// <returns>The location of the identifier, or <see langword=\"null\" /> if the property has no declaration in source.</returns>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1434,
+          "text": "    private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1435,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1436,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1437,
+          "text": "    /// Reports a diagnostic only when its location belongs to the compilation being analyzed."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1438,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1439,
+          "text": "    /// <remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1440,
+          "text": "    /// Types and members that come from metadata (or from another compilation) have no location in the compilation being analyzed."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1441,
+          "text": "    /// Their problems are reported by the compilation that defines them, so they are dropped here rather than being reported"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1442,
+          "text": "    /// against a location that does not exist, which analyzers are not permitted to do."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1443,
+          "text": "    /// </remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1444,
+          "text": "    private void ReportIfLocatedInCompilation(Action<Diagnostic> report, Diagnostic diagnostic)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1445,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1446,
+          "text": "        if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1447,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1448,
+          "text": "            report(diagnostic);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1449,
+          "text": "        }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1450,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 1451,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1429,
+          "newLine": 1452,
+          "text": "    private static Location? GetLocation(IParameterSymbol parameter) => parameter.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation();"
+        },
+        {
+          "kind": "context",
+          "oldLine": 1430,
+          "newLine": 1453,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 1431,
+          "newLine": 1454,
+          "text": "    private static Location? GetParameterListLocation(IMethodSymbol? method) => ((BaseMethodDeclarationSyntax?)method?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax())?.ParameterList.GetLocation();"
+        }
+      ]
+    },
+    {
+      "id": "h8",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+      "header": "@@ -1,7 +1,9 @@",
+      "oldStart": 1,
+      "oldLines": 7,
+      "newStart": 1,
+      "newLines": 9,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 1,
+          "newLine": 1,
+          "text": "﻿// Copyright (c) All contributors. All rights reserved."
+        },
+        {
+          "kind": "context",
+          "oldLine": 2,
+          "newLine": 2,
+          "text": "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
+        },
+        {
+          "kind": "context",
+          "oldLine": 3,
+          "newLine": 3,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 4,
+          "text": "using Microsoft.CodeAnalysis;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 4,
+          "newLine": 5,
+          "text": "using Microsoft.CodeAnalysis.CSharp;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 6,
+          "text": "using Microsoft.CodeAnalysis.Testing;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 5,
+          "newLine": 7,
+          "text": "using VerifyCS = CSharpSourceGeneratorVerifier<MessagePack.SourceGenerator.MessagePackGenerator>;"
+        },
+        {
+          "kind": "context",
+          "oldLine": 6,
+          "newLine": 8,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 7,
+          "newLine": 9,
+          "text": "public class GenericsFormatterTests"
+        }
+      ]
+    },
+    {
+      "id": "h9",
+      "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+      "header": "@@ -494,6 +496,193 @@",
+      "oldStart": 494,
+      "oldLines": 6,
+      "newStart": 496,
+      "newLines": 193,
+      "lines": [
+        {
+          "kind": "context",
+          "oldLine": 494,
+          "newLine": 496,
+          "text": "        }.RunAsync();"
+        },
+        {
+          "kind": "context",
+          "oldLine": 495,
+          "newLine": 497,
+          "text": "    }"
+        },
+        {
+          "kind": "context",
+          "oldLine": 496,
+          "newLine": 498,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 499,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 500,
+          "text": "    /// Asserts that a closed generic value type defined in a referenced <em>assembly</em> (metadata only, no syntax),"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 501,
+          "text": "    /// used as a member type, does not crash the generator or analyzer."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 502,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 503,
+          "text": "    /// <remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 504,
+          "text": "    /// See https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 505,
+          "text": "    /// </remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 506,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 507,
+          "text": "    public async Task ClosedGenericStruct_FromMetadataReference()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 508,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 509,
+          "text": "        string defineSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 510,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 511,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 512,
+          "text": "namespace TempProject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 513,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 514,
+          "text": "    [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 515,
+          "text": "    public struct MyGenericStruct<T>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 516,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 517,
+          "text": "        [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 518,
+          "text": "        public T Content { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 519,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 520,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 521,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 522,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 523,
+          "text": "        string usageSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 524,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 525,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 526,
+          "text": "namespace TempProject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 527,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 528,
+          "text": "    [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 529,
+          "text": "    public class MyObject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 530,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 531,
+          "text": "        [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 532,
+          "text": "        public MyGenericStruct<int> Value { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 533,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 534,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 535,
+          "text": "    [GeneratedMessagePackResolver]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 536,
+          "text": "    partial class MyResolver { }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 537,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 538,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 539,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 540,
+          "text": "        await RunWithMetadataReferenceAsync(defineSource, usageSource, \"TempProject.MyResolver.g.cs\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 541,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 542,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 543,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 544,
+          "text": "    /// Asserts that a closed generic <em>record struct</em> defined in a referenced assembly, used as a member type,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 545,
+          "text": "    /// does not crash the generator or analyzer."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 546,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 547,
+          "text": "    /// <remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 548,
+          "text": "    /// See https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 549,
+          "text": "    /// </remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 550,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 551,
+          "text": "    public async Task ClosedGenericRecordStruct_FromMetadataReference()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 552,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 553,
+          "text": "        string defineSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 554,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 555,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 556,
+          "text": "namespace Lib;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 557,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 558,
+          "text": "[MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 559,
+          "text": "public partial record struct Item<T>([property: Key(0)] string Key);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 560,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 561,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 562,
+          "text": "        string usageSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 563,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 564,
+          "text": "using Lib;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 565,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 566,
+          "text": "namespace App;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 567,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 568,
+          "text": "[MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 569,
+          "text": "public sealed partial record Cmd([property: Key(0)] string Scope)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 570,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 571,
+          "text": "    [Key(1)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 572,
+          "text": "    public Item<int> Member { get; init; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 573,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 574,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 575,
+          "text": "[GeneratedMessagePackResolver]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 576,
+          "text": "partial class AppResolver { }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 577,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 578,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 579,
+          "text": "        await RunWithMetadataReferenceAsync(defineSource, usageSource, \"App.AppResolver.g.cs\", LanguageVersion.Latest);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 580,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 581,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 582,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 583,
+          "text": "    /// Asserts that a closed generic value type from a referenced assembly whose members lack a key attribute"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 584,
+          "text": "    /// does not crash the generator or analyzer, since its member diagnostics belong to the defining assembly."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 585,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 586,
+          "text": "    /// <remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 587,
+          "text": "    /// See https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 588,
+          "text": "    /// </remarks>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 589,
+          "text": "    [Fact]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 590,
+          "text": "    public async Task ClosedGenericStruct_FromMetadataReference_UnkeyedMember()"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 591,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 592,
+          "text": "        string defineSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 593,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 594,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 595,
+          "text": "namespace TempProject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 596,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 597,
+          "text": "    [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 598,
+          "text": "    public struct MyGenericStruct<T>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 599,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 600,
+          "text": "        [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 601,
+          "text": "        public string Key { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 602,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 603,
+          "text": "        public int Unkeyed { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 604,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 605,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 606,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 607,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 608,
+          "text": "        string usageSource = \"\"\""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 609,
+          "text": "using MessagePack;"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 610,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 611,
+          "text": "namespace TempProject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 612,
+          "text": "{"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 613,
+          "text": "    [MessagePackObject]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 614,
+          "text": "    public class MyObject"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 615,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 616,
+          "text": "        [Key(0)]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 617,
+          "text": "        public MyGenericStruct<int> Value { get; set; }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 618,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 619,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 620,
+          "text": "    [GeneratedMessagePackResolver]"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 621,
+          "text": "    partial class MyResolver { }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 622,
+          "text": "}"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 623,
+          "text": "\"\"\";"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 624,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 625,
+          "text": "        await RunWithMetadataReferenceAsync(defineSource, usageSource, \"TempProject.MyResolver.g.cs\");"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 626,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 627,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 628,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 629,
+          "text": "    /// Compiles <paramref name=\"defineSource\"/> to an assembly image, then verifies that the analyzers and the generator"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 630,
+          "text": "    /// handle <paramref name=\"usageSource\"/> without diagnostics, referencing that image as metadata only,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 631,
+          "text": "    /// and that the resolver named <paramref name=\"expectedResolverHintName\"/> is generated."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 632,
+          "text": "    /// </summary>"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 633,
+          "text": "    private static async Task RunWithMetadataReferenceAsync(string defineSource, string usageSource, string expectedResolverHintName, LanguageVersion languageVersion = LanguageVersion.CSharp7_3)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 634,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 635,
+          "text": "        MetadataReference definingAssembly = await CompileToMetadataReferenceAsync(\"DefiningProject\", defineSource, languageVersion);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 636,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 637,
+          "text": "        // Run the analyzers and the generator, failing on any diagnostic (the defect surfaced as AD0001 and CS8785)."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 638,
+          "text": "        var test = new VerifyCS.Test(ReferencesSet.MessagePack)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 639,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 640,
+          "text": "            LanguageVersion = languageVersion,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 641,
+          "text": "            TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 642,
+          "text": "            TestState ="
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 643,
+          "text": "            {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 644,
+          "text": "                Sources = { usageSource },"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 645,
+          "text": "            },"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 646,
+          "text": "        };"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 647,
+          "text": "        test.TestState.AdditionalReferences.Add(definingAssembly);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 648,
+          "text": "        await test.RunAsync();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 649,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 650,
+          "text": "        // Verify that the resolver was actually generated for the usage assembly, since the defect caused it to be silently omitted."
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 651,
+          "text": "        ImmutableArray<MetadataReference> frameworkReferences = await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 652,
+          "text": "        Compilation usageCompilation = CreateCompilation(\"App\", usageSource, languageVersion, frameworkReferences.Concat(ReferencesHelper.GetReferences(ReferencesSet.MessagePack)).Append(definingAssembly));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 653,
+          "text": "        GeneratorDriverRunResult runResult = CSharpGeneratorDriver.Create(new MessagePack.SourceGenerator.MessagePackGenerator().AsSourceGenerator())"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 654,
+          "text": "            .RunGenerators(usageCompilation)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 655,
+          "text": "            .GetRunResult();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 656,
+          "text": "        Assert.Empty(runResult.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 657,
+          "text": "        var hintNames = runResult.Results.SelectMany(r => r.GeneratedSources).Select(s => s.HintName).ToList();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 658,
+          "text": "        Assert.Contains(expectedResolverHintName, hintNames);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 659,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 660,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 661,
+          "text": "    private static async Task<MetadataReference> CompileToMetadataReferenceAsync(string assemblyName, string source, LanguageVersion languageVersion)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 662,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 663,
+          "text": "        ImmutableArray<MetadataReference> frameworkReferences = await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, CancellationToken.None);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 664,
+          "text": "        Compilation compilation = CreateCompilation(assemblyName, source, languageVersion, frameworkReferences.Concat(ReferencesHelper.GetReferences(ReferencesSet.MessagePack)), OutputKind.DynamicallyLinkedLibrary);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 665,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 666,
+          "text": "        using var stream = new MemoryStream();"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 667,
+          "text": "        Microsoft.CodeAnalysis.Emit.EmitResult emitResult = compilation.Emit(stream);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 668,
+          "text": "        if (!emitResult.Success)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 669,
+          "text": "        {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 670,
+          "text": "            throw new InvalidOperationException(\"Failed to compile referenced assembly: \" + string.Join(Environment.NewLine, emitResult.Diagnostics));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 671,
+          "text": "        }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 672,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 673,
+          "text": "        return MetadataReference.CreateFromImage(stream.ToArray());"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 674,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 675,
+          "text": ""
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 676,
+          "text": "    private static Compilation CreateCompilation(string assemblyName, string source, LanguageVersion languageVersion, IEnumerable<MetadataReference> references, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary)"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 677,
+          "text": "    {"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 678,
+          "text": "        var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(languageVersion);"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 679,
+          "text": "        return CSharpCompilation.Create("
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 680,
+          "text": "            assemblyName,"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 681,
+          "text": "            new[] { CSharpSyntaxTree.ParseText(source, parseOptions) },"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 682,
+          "text": "            references.ToArray(),"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 683,
+          "text": "            new CSharpCompilationOptions(outputKind));"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 684,
+          "text": "    }"
+        },
+        {
+          "kind": "add",
+          "oldLine": null,
+          "newLine": 685,
+          "text": ""
+        },
+        {
+          "kind": "context",
+          "oldLine": 497,
+          "newLine": 686,
+          "text": "    /// <summary>"
+        },
+        {
+          "kind": "context",
+          "oldLine": 498,
+          "newLine": 687,
+          "text": "    /// Asserts that the generator can handle directly recursive generic constraints."
+        },
+        {
+          "kind": "context",
+          "oldLine": 499,
+          "newLine": 688,
+          "text": "    /// </summary>"
+        }
+      ]
+    }
+  ],
+  "requirement": {
+    "id": "MP-2283",
+    "title": "Generator and analyzer crash with IndexOutOfRangeException on a closed generic struct from a referenced assembly",
+    "intent": "A [MessagePackObject] type with a member whose type is a closed generic value type from a referenced assembly must build cleanly and still get a generated resolver.",
+    "functional": [
+      {
+        "id": "F1",
+        "text": "The generator does not throw when a member's type is a closed generic struct or record struct defined in a referenced assembly."
+      },
+      {
+        "id": "F2",
+        "text": "The analyzer does not throw for the same member types."
+      },
+      {
+        "id": "F3",
+        "text": "The compiling assembly gets its generated resolver, as it does when the generic type is declared in the same project."
+      }
+    ],
+    "nonFunctional": [
+      {
+        "id": "N1",
+        "text": "A failure of the generator or analyzer must not pass silently as a build warning that leaves the assembly without a resolver. (inferred)"
+      },
+      {
+        "id": "N2",
+        "text": "Behaviour for generic classes, non-generic structs and types declared in the same project does not change. (inferred)"
+      }
+    ],
+    "derivedFrom": {
+      "kind": "github-issue",
+      "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283",
+      "note": "Derived by the engine lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
+    }
+  },
+  "expectation": {
+    "items": [
+      {
+        "requirementItemId": "F1",
+        "expectedBehaviours": [
+          "Compiling a project with a [MessagePackObject] type that has a member typed as a closed generic struct from a referenced assembly (for example ValueTuple-like or a library GenericStruct<int>) does not make the source generator throw an IndexOutOfRangeException.",
+          "The same holds when the referenced generic value type is a record struct.",
+          "No CS8785 generator-failed warning or error is reported for these member types."
+        ],
+        "likelyAreas": [
+          "generator"
+        ],
+        "expectedTests": [
+          "A generator test compiles a referenced assembly that defines a generic struct, then a consuming project with a [MessagePackObject] member of a closed form of that struct, and asserts the generator produced no exceptions or failure diagnostics.",
+          "The same test with a generic record struct from the referenced assembly."
+        ]
+      },
+      {
+        "requirementItemId": "F2",
+        "expectedBehaviours": [
+          "Running the MessagePack analyzers on a [MessagePackObject] type whose member is a closed generic struct or record struct from a referenced assembly does not throw IndexOutOfRangeException.",
+          "No AD0001 analyzer-crashed diagnostic is reported for that code.",
+          "Analyzer diagnostics that apply to the type are still reported as normal, and no spurious ones appear."
+        ],
+        "likelyAreas": [
+          "analyzer"
+        ],
+        "expectedTests": [
+          "An analyzer test with a closed generic struct member from a referenced metadata assembly checks that no AD0001 and no unexpected MsgPack diagnostics are produced."
+        ]
+      },
+      {
+        "requirementItemId": "F3",
+        "expectedBehaviours": [
+          "The consuming assembly gets a generated resolver and a formatter for the [MessagePackObject] type, as it does when the generic struct is declared in the same project.",
+          "At runtime, the generated resolver serializes and deserializes the object with the cross-assembly generic struct member without error."
+        ],
+        "likelyAreas": [
+          "generator"
+        ],
+        "expectedTests": [
+          "A snapshot test checks the generated resolver and formatter output for a type with a member of a closed generic struct from a referenced assembly.",
+          "A round-trip test serializes and deserializes an instance through the generated resolver and checks the member value survives."
+        ]
+      },
+      {
+        "requirementItemId": "N1",
+        "expectedBehaviours": [
+          "If the generator or analyzer hits an unexpected condition with these types, the build shows it clearly as a failure or an error-level diagnostic, not only as a CS8785 or AD0001 warning that leaves the assembly without a resolver.",
+          "A successful build is never missing the expected generated resolver."
+        ],
+        "likelyAreas": [
+          "generator",
+          "analyzer"
+        ],
+        "expectedTests": [
+          "Generator tests fail when the generator reports exceptions or generator-failure diagnostics, so a silent warning cannot pass."
+        ]
+      },
+      {
+        "requirementItemId": "N2",
+        "expectedBehaviours": [
+          "Generated output for members of generic classes, non-generic structs and generic types declared in the same project matches the existing snapshot files with no changes.",
+          "Existing analyzer diagnostics for those cases are unchanged."
+        ],
+        "likelyAreas": [
+          "generator",
+          "analyzer"
+        ],
+        "expectedTests": [
+          "The existing generator snapshot tests and analyzer tests still pass without updates to their expected Resources files."
+        ]
+      }
+    ]
+  },
+  "story": {
+    "what": "TypeCollector now wraps the analyzer's diagnostic callback so that it only reports diagnostics whose location is in a syntax tree of the compilation being analyzed. Two places that indexed DeclaringSyntaxReferences[0] now use a safe lookup. These are the BothStringAndIntKeyAreNull property diagnostic, through the new GetPropertyIdentifierLocation helper, and the MemberNeedsKey field diagnostic, through FirstOrDefault. Metadata-only members no longer index an empty array. The change also flips the comparison that sets nonPublicMembersAreSerialized for keyed properties. Three new tests compile a defining assembly to a metadata image and run the analyzers and generator against a consuming project. The README and the MsgPack004 docs describe how diagnostics work for types from referenced assemblies.",
+    "why": "Issue 2283 (MP-2283): the generator and analyzer threw IndexOutOfRangeException when a [MessagePackObject] member's type was a closed generic struct or record struct from a referenced assembly. These members have no source declarations, so DeclaringSyntaxReferences is empty. The crash showed up as a CS8785 or AD0001 warning and left the assembly without a generated resolver.",
+    "touches": [
+      {
+        "symbol": "TypeCollector..ctor",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "reportDiagnostic is now a wrapper that calls ReportIfLocatedInCompilation."
+      },
+      {
+        "symbol": "TypeCollector.ReportIfLocatedInCompilation",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "New. Forwards a diagnostic only if its location is in source and in the current compilation."
+      },
+      {
+        "symbol": "TypeCollector.GetPropertyIdentifierLocation",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "New. Returns the property identifier location, or null when the property has no source declaration."
+      },
+      {
+        "symbol": "TypeCollector.GetObjectInfo",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "note": "Safe location lookups for BothStringAndIntKeyAreNull and MemberNeedsKey. The nonPublicMembersAreSerialized comparison for keyed properties is flipped."
+      },
+      {
+        "symbol": "GenericsFormatterTests.RunWithMetadataReferenceAsync",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+        "note": "New helper. Compiles the defining source to a metadata image, runs the verifier, then runs the generator driver and asserts the resolver is generated."
+      },
+      {
+        "symbol": "GenericsFormatterTests.ClosedGenericStruct_FromMetadataReference",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+        "note": "New test using a generic struct from a metadata reference."
+      },
+      {
+        "symbol": "GenericsFormatterTests.ClosedGenericRecordStruct_FromMetadataReference",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+        "note": "New test using a generic record struct from a metadata reference."
+      },
+      {
+        "symbol": "GenericsFormatterTests.ClosedGenericStruct_FromMetadataReference_UnkeyedMember",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+        "note": "New test where the referenced generic struct has an unkeyed public property."
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "c1",
+      "requirementItemId": "F2",
+      "text": "When an analyzer callback is supplied, the TypeCollector constructor stores a wrapper in reportDiagnostic that routes every diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (generator mode), reportDiagnostic stays null.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 239,
+          "endLine": 239,
+          "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:239–239",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "requirementItemId": "F2",
+      "text": "ReportIfLocatedInCompilation forwards a diagnostic only if its location is in source and its syntax tree belongs to the current compilation. All other diagnostics are dropped, including those with a null or metadata location.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1444–1450",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "requirementItemId": "F1",
+      "text": "The BothStringAndIntKeyAreNull diagnostic now gets its location from GetPropertyIdentifierLocation instead of casting DeclaringSyntaxReferences[0]. The helper returns null when the property has no source declaration, so properties that exist only in metadata no longer index an empty array.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h5",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 985,
+          "endLine": 985,
+          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, GetPropertyIdentifierLocation(item), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1434,
+          "endLine": 1434,
+          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:985–985",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "requirementItemId": "F1",
+      "text": "The MemberNeedsKey diagnostic for unkeyed fields now uses DeclaringSyntaxReferences.FirstOrDefault() instead of indexing [0], so fields declared only in metadata produce a null location instead of throwing.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1077,
+          "endLine": 1077,
+          "quote": ": Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, item.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().GetLocation(), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1077–1077",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "requirementItemId": null,
+      "text": "For properties that have a Key attribute, the condition that sets nonPublicMembersAreSerialized changed from != Accessibility.Public to == Accessibility.Public. The flag is now set when the keyed property is public, not when it is non-public. The neighbouring comment and the matching field branch (line 1120) still use !=.",
+      "kind": "behaviour",
+      "level": "supported",
+      "hunkIds": [
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 972,
+          "endLine": 973,
+          "quote": "nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public;"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "old",
+          "startLine": 973,
+          "endLine": 973,
+          "quote": "nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public;"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:972–973",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "requirementItemId": "F1",
+      "text": "The new tests ClosedGenericStruct_FromMetadataReference and ClosedGenericRecordStruct_FromMetadataReference reference a closed generic struct and a closed generic record struct from an assembly compiled to a metadata-only image, and use each as a keyed member of a [MessagePackObject] type.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 532,
+          "endLine": 540,
+          "quote": "await RunWithMetadataReferenceAsync(defineSource, usageSource, \"TempProject.MyResolver.g.cs\");"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 559,
+          "endLine": 559,
+          "quote": "public partial record struct Item<T>([property: Key(0)] string Key);"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 579,
+          "endLine": 579,
+          "quote": "await RunWithMetadataReferenceAsync(defineSource, usageSource, \"App.AppResolver.g.cs\", LanguageVersion.Latest);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:532–540",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c7",
+      "requirementItemId": "F2",
+      "text": "ClosedGenericStruct_FromMetadataReference_UnkeyedMember uses a referenced generic struct with an unkeyed public property. It expects no diagnostics in the consuming project, because diagnostics located in the defining assembly are dropped.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 600,
+          "endLine": 603,
+          "quote": "public int Unkeyed { get; set; }"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:600–603",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c8",
+      "requirementItemId": "N1",
+      "text": "RunWithMetadataReferenceAsync runs the analyzer and generator verifier with no expected diagnostics, which fails on AD0001 or CS8785. It skips the generated-sources check.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 637,
+          "endLine": 648,
+          "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:637–648",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c9",
+      "requirementItemId": "F3",
+      "text": "RunWithMetadataReferenceAsync then runs MessagePackGenerator directly on a compilation of the consuming source. It asserts there are no warning-or-higher generator diagnostics and that the expected resolver hint name is among the generated sources. It does not check the content of the generated resolver and does not do a runtime round trip.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 656,
+          "endLine": 658,
+          "quote": "Assert.Empty(runResult.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning));"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 658,
+          "endLine": 658,
+          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:656–658",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "requirementItemId": null,
+      "text": "The test helpers CompileToMetadataReferenceAsync and CreateCompilation compile the defining source against the Net80 reference assemblies and MessagePack, emit it to memory, and wrap the image with MetadataReference.CreateFromImage. Supporting using directives for Microsoft.CodeAnalysis and Microsoft.CodeAnalysis.Testing were added.",
+      "kind": "test",
+      "level": "supported",
+      "hunkIds": [
+        "h8",
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 4,
+          "endLine": 6,
+          "quote": "using Microsoft.CodeAnalysis.Testing;"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 673,
+          "endLine": 673,
+          "quote": "return MetadataReference.CreateFromImage(stream.ToArray());"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:4–6",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    },
+    {
+      "id": "c11",
+      "requirementItemId": null,
+      "text": "The README gains a section stating that closed generic types from referenced assemblies, including value types and record structs, can be used as members. It says diagnostics about such types' members are reported by the defining assembly. MsgPack004.md adds the same note.",
+      "kind": "docs",
+      "level": "supported",
+      "hunkIds": [
+        "h1",
+        "h2"
+      ],
+      "citations": [
+        {
+          "file": "README.md",
+          "side": "new",
+          "startLine": 1639,
+          "endLine": 1642,
+          "quote": "### Generic types from referenced assemblies"
+        },
+        {
+          "file": "doc/analyzers/MsgPack004.md",
+          "side": "new",
+          "startLine": 49,
+          "endLine": 52,
+          "quote": "This analyzer only reports on members declared in the project being compiled."
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "quote-check",
+          "summary": "Quote checked against the code at README.md:1639–1642",
+          "testName": null,
+          "base": null,
+          "head": null
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "high",
+      "title": "Keyed-property accessibility check inverted, flags every public keyed member",
+      "detail": "In GetObjectInfo, the keyed-property branch now sets nonPublicMembersAreSerialized when the property is public (== Accessibility.Public). The comment above it and the matching field branch at line 1120 still use !=. Nothing in the requirement asks for this. In practice, any ordinary [MessagePackObject] type with a public [Key] property is now treated as serializing non-public members. In analyzer mode, line 1352 then reports MessagePackObjectAllowPrivateRequired on fully public types, and deferred non-public-member diagnostics get reported. In both analyzer and generator mode, the partial-type check at line 1382 now runs for types whose only issue is a private setter, so their formatter is dropped (return null) when the type is not partial. This breaks N2: existing analyzer tests and snapshots will change. The new metadata-reference tests should also fail, because MyObject has a public keyed property and the test expects no diagnostics.",
+      "statement": null,
+      "hunkIds": [
+        "h4"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 972,
+          "endLine": 973,
+          "quote": "nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public;"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1352,
+          "endLine": 1363,
+          "quote": "if (allowPrivateAttribute is not true && (nonPublicMembersAreSerialized || ctor is { DeclaredAccessibility: not Accessibility.Public } || formattedType.GetEffectiveAccessibility() is not Accessibility.Public))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1382,
+          "endLine": 1393,
+          "quote": "if (nestedFormatterRequired && nonPublicMembersAreSerialized)"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1119,
+          "endLine": 1120,
+          "quote": "nonPublicMembersAreSerialized |= (item.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public;"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "kind": "defect",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Filter silently drops in-project diagnostics that have no location",
+      "detail": "ReportIfLocatedInCompilation forwards a diagnostic only when its location is in source. Many diagnostics for types declared in the project are built with locations that can be null, for example FirstOrDefault()?.GetSyntax() or the new GetPropertyIdentifierLocation. Those diagnostics are now dropped instead of being reported without a location. One concrete case: GetPropertyIdentifierLocation only handles PropertyDeclarationSyntax. For a positional record property declared in the project, the declaring syntax is a ParameterSyntax, so the helper returns null and BothStringAndIntKeyAreNull is lost silently. Line 926 already handles ParameterSyntax for MemberNeedsKey; the helper does not. This changes analyzer behaviour for in-project types, which N2 says must not change.",
+      "statement": null,
+      "hunkIds": [
+        "h3",
+        "h5",
+        "h7"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1434,
+          "endLine": 1434,
+          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 925,
+          "endLine": 926,
+          "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "No check of generated resolver content or runtime round trip",
+      "detail": "F3 requires the consuming assembly to get a working resolver and formatter, as it does for same-project generics. The new tests skip the generated-sources check and only assert that a resolver hint name exists. Nothing checks that the resolver registers a formatter for the cross-assembly closed generic struct, or that serialize and deserialize work through it. A resolver that is empty or wrong would still pass.",
+      "statement": null,
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 646,
+          "endLine": 655,
+          "quote": "this.CollectCore(type.OriginalDefinition, callerSymbol);"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 641,
+          "endLine": 641,
+          "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 656,
+          "endLine": 658,
+          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "low",
+      "title": "Generator or analyzer failures can still pass as build warnings",
+      "detail": "N1 asks that a generator or analyzer failure not pass silently as a CS8785 or AD0001 warning that leaves the assembly without a resolver. The change fixes the specific crash sites, but adds nothing in the product to surface unexpected exceptions in TypeCollector as an error or an error-level diagnostic. Any other unhandled case will still degrade to a warning and a missing resolver. Only the new tests guard against this.",
+      "statement": null,
+      "hunkIds": [
+        "h3"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 263,
+          "endLine": 272,
+          "quote": "FullModel model = collector.Collect();"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "r1",
+      "ruleId": "R7",
+      "source": "ai",
+      "reason": "The README and MsgPack004 help page now document that diagnostics about members of types from referenced assemblies are never reported in the consuming project, which changes documented analyzer behaviour and is for the maintainers to approve.",
+      "hunkIds": [
+        "h1",
+        "h2"
+      ]
+    }
+  ],
+  "quoteCheck": {
+    "checked": 29,
+    "passed": 29,
+    "downgraded": 0,
+    "dropped": 0,
+    "failures": []
+  },
+  "retractions": [],
+  "receiptDraft": {
+    "checked": [
+      {
+        "item": "When an analyzer callback is supplied, the TypeCollector constructor stores a wrapper in reportDiagnostic that routes every diagnostic through ReportIfLocatedInCompilation. When no callback is supplied (generator mode), reportDiagnostic stays null. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "ReportIfLocatedInCompilation forwards a diagnostic only if its location is in source and its syntax tree belongs to the current compilation. All other diagnostics are dropped, including those with a null or metadata location. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The BothStringAndIntKeyAreNull diagnostic now gets its location from GetPropertyIdentifierLocation instead of casting DeclaringSyntaxReferences[0]. The helper returns null when the property has no source declaration, so properties that exist only in metadata no longer index an empty array. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The MemberNeedsKey diagnostic for unkeyed fields now uses DeclaringSyntaxReferences.FirstOrDefault() instead of indexing [0], so fields declared only in metadata produce a null location instead of throwing. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "For properties that have a Key attribute, the condition that sets nonPublicMembersAreSerialized changed from != Accessibility.Public to == Accessibility.Public. The flag is now set when the keyed property is public, not when it is non-public. The neighbouring comment and the matching field branch (line 1120) still use !=. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The new tests ClosedGenericStruct_FromMetadataReference and ClosedGenericRecordStruct_FromMetadataReference reference a closed generic struct and a closed generic record struct from an assembly compiled to a metadata-only image, and use each as a keyed member of a [MessagePackObject] type. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "ClosedGenericStruct_FromMetadataReference_UnkeyedMember uses a referenced generic struct with an unkeyed public property. It expects no diagnostics in the consuming project, because diagnostics located in the defining assembly are dropped. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "RunWithMetadataReferenceAsync runs the analyzer and generator verifier with no expected diagnostics, which fails on AD0001 or CS8785. It skips the generated-sources check. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "RunWithMetadataReferenceAsync then runs MessagePackGenerator directly on a compilation of the consuming source. It asserts there are no warning-or-higher generator diagnostics and that the expected resolver hint name is among the generated sources. It does not check the content of the generated resolver and does not do a runtime round trip. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The test helpers CompileToMetadataReferenceAsync and CreateCompilation compile the defining source against the Net80 reference assemblies and MessagePack, emit it to memory, and wrap the image with MetadataReference.CreateFromImage. Supporting using directives for Microsoft.CodeAnalysis and Microsoft.CodeAnalysis.Testing were added. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      },
+      {
+        "item": "The README gains a section stating that closed generic types from referenced assemblies, including value types and record structs, can be used as members. It says diagnostics about such types' members are reported by the defining assembly. MsgPack004.md adds the same note. (the quoted code is where the claim says)",
+        "by": "ai-supported"
+      }
+    ],
+    "notChecked": [
+      {
+        "item": "README.md:1636 (h1)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
+        "reason": "Finding f2 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:970 (h4)",
+        "reason": "Finding f1 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h5)",
+        "reason": "Finding f2 (defect) names this hunk"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h6)",
+        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h7)",
+        "reason": "Finding f2 (defect) names this hunk"
+      },
+      {
+        "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h9)",
+        "reason": "Finding f3 (missing) names this hunk"
+      }
+    ],
+    "residualRisk": {
+      "text": "r1 (R7): The README and MsgPack004 help page now document that diagnostics about members of types from referenced assemblies are never reported in the consuming project, which changes documented analyzer behaviour and is for the maintainers to approve.",
+      "acceptedRefusalIds": []
+    }
+  },
+  "routing": {
+    "tier": "full",
+    "reasons": [
+      {
+        "ruleId": "R-read-share",
+        "text": "Read 8 of 9 hunks: most of the change needs a human",
+        "tier": "full"
+      },
+      {
+        "ruleId": "R-refusal",
+        "text": "1 item refused: a human decides",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-defect",
+        "text": "2 defects found",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "tier": "focused"
+      },
+      {
+        "ruleId": "R-area-level",
+        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "tier": "focused"
+      }
+    ],
+    "coverage": {
+      "h1": "read",
+      "h2": "read",
+      "h3": "read",
+      "h4": "read",
+      "h5": "read",
+      "h6": "read",
+      "h7": "read",
+      "h8": "supported",
+      "h9": "read"
+    },
+    "readHunks": 8,
+    "totalHunks": 9,
+    "readLines": 228,
+    "totalLines": 230,
+    "readMinutes": 10,
+    "fullMinutes": 10
+  }
+}

@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · T16: 2 runs per mode, blind runs shared by prompt, counts are the measured n
+
+- **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants, about 30 more reviews of a shared credit budget. Stage 1 ran 2 per mode and both modes caught 10 of 10.
+- **Decision:** `pnpm evals` defaults to `--runs 2`, and the spec's counts read "of 10" (5 plants x 2 runs); Miska approved the cut. `--runs <n>` still runs k = 1..n per mode and plant and reuses any run in `data/runs/` for the current reviewer version, so a later `--runs 3` would record only the third. The report card counts the runs that exist and the S3 copy reads that n. A blind run never sees the author description, so its A1 and A2 prompts are identical across the plants of one Tieto change; those runs go through one job group in turn and the later ones reuse the recording. `quotesChecked` sums over every run read, so those shared claims count once per run: it is "quote checks run", not distinct quotes. After scoring, the four Tieto reviews are routed again with the measured levels and their receipt drafts rebuilt, so "not checked" matches the routing.
+- **Why:** A third run would add about 10 Opus runs and could not separate two modes already at the ceiling. Sharing A1 and A2 saves a third of the blind calls.
+- **Rejected:** 3 runs per mode as in the spec (cost, no information); a fixed run count in the copy; one group per plant (identical blind calls would race instead of reuse); deduplicating shared claims by recording key (more code for a count that is only a denominator).
+- **PR:** T16
+
 ## 2026-11-14 · A5 tests run in Docker: restore with the network, test without
 
 - **Context:** A5's test file is C# the model wrote, and it runs with the operator's rights. A temporary worktree and a clean environment do not stop it from reading `~/.ssh` or a `.env` by absolute path, or from using the network. The first version only contained the working folder.
@@ -26,6 +34,7 @@
 - **Why:** "Fails on base and passes on head" is the one signal that tells the versions apart; a build error on the base (the test uses a type the change adds) is the common case and must not count as a failing test. Model-written C# runs on this laptop, so it only ever runs in a worktree that is deleted afterwards.
 - **Rejected:** Treating a build error on the base as "fails on base" (hands out Verified for free); retracting on a failing PR test; running the PR's tests before A5's in the same worktree.
 - **PR:** T14
+
 ## 2026-11-14 · A fifth research pass changes the limits and the wording, not the ideas
 
 - **Context:** A Gemini Deep Research pass audited all eight ideas and proposed replacing the trust ladder and adding Roslyn slicing, property tests, a rule ratchet and a pre-review gate. We opened none of its sources.

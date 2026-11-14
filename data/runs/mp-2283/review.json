@@ -2545,10 +2545,6 @@
         "reason": "Finding f1 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
         "reason": "Finding f1 (defect) names this hunk"
       },
@@ -2571,7 +2567,7 @@
     "reasons": [
       {
         "ruleId": "R-read-share",
-        "text": "Read 8 of 8 hunks: most of the change needs a human",
+        "text": "Read 7 of 8 hunks: most of the change needs a human",
         "tier": "full"
       },
       {
@@ -2591,12 +2587,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
@@ -2605,14 +2601,14 @@
       "h2": "read",
       "h3": "read",
       "h4": "read",
-      "h5": "read",
+      "h5": "verified",
       "h6": "read",
       "h7": "read",
       "h8": "read"
     },
-    "readHunks": 8,
+    "readHunks": 7,
     "totalHunks": 8,
-    "readLines": 228,
+    "readLines": 226,
     "totalLines": 228,
     "readMinutes": 10,
     "fullMinutes": 10

@@ -1,7 +1,7 @@
 /**
  * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
- * review, `check <changeId>` runs the eval cases of A1 to A5 on it. Spec section 5,
- * Pipeline CLI.
+ * review, `check <changeId>` runs the eval cases of A1 to A5 on it, `eval` runs the
+ * planted-bug eval. Spec section 5, Pipeline CLI.
  */
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
@@ -16,17 +16,21 @@ import {
   loadReportCard,
   writeRecordedReview,
 } from "./reviewFiles";
+import { runEvalCommand } from "./eval/evalCommand";
 import { reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
   pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
-  pnpm review check <changeId>`;
+  pnpm review check <changeId>
+  pnpm evals [--runs <n>] [--score-only]`;
 
 /** The optional local environment file, loaded the way the seed script does. */
 const localEnvironmentFile = ".env";
 
 async function main(argv: string[]): Promise<void> {
+  // `eval` takes its own flags and no change id.
+  if (argv[0] === "eval") return runEvalCommand(argv.slice(1));
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
@@ -123,7 +127,9 @@ function printChecks(review: Review, contradictionKey: AnswerKey | null): void {
   }
   // A missing key is not a miss: say the case did not run, so a pass count is not read as complete.
   if (review.changeId === "mp-2283" && contradictionKey === null)
-    console.log("SKIP  mp-2283: the planted contradiction is caught (answer key not found in this checkout)");
+    console.log(
+      "SKIP  mp-2283: the planted contradiction is caught (answer key not found in this checkout)",
+    );
 }
 
 function fail(message: string): never {

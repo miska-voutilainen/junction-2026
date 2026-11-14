@@ -12,3 +12,9 @@
 - **What happened:** A5 wrote one test for F1 (the generator and analyzer do not throw for a closed generic value type from a referenced assembly) and one for F2. The F1 tests fail on the base and on the head with a generator-verifier assertion from the Roslyn testing library, so the spec's rule retracted claims c3 and c4 (now Unverified, with the head output in `retractions`). The F2 tests could not run (no verdict, claims unchanged). No claim became Verified through A5; the PR's own tests fail on the base and pass on the head, which keeps c1 and c2 at Supported by design.
 - **Why:** The sample repository's generator tests compare generated source with expected snapshot files. A test written without seeing the change cannot know the expected output, so it fails on both sides. A test that fails on the head is read as "the claim is wrong", which is not what this failure says.
 - **What we changed (Miska decided):** A5 retracts only when a test passes on the base and fails on the head. A test that fails on both versions, or does not build, says nothing: the claim stays and the reason goes into `inconclusiveTests`. The A5 prompt (`a5.v2`) now says the model cannot know generated output and must assert behaviour directly. The `a5.v1` recordings were deleted.
+
+## 2026-11-14 10:59 · Anchored versus blind-first
+
+No-go: no advantage for blind-first, so the pitch drops the claim. Blind-first caught 10 of 10, anchored 10 of 10 (5 plants, 2 runs per mode).
+
+Both modes caught every contradiction plant in every run (10 of 10 each), so at n = 2 runs per mode the count cannot separate them; the plants were likely too easy. The blind runs of cp0, cp1 and cp2 share A1 and A2 per run number (same recording, one Tieto change), so those runs are not independent. What we changed: the pitch drops the blind-first claim, and moment 2 leads with the contradiction and the refusals.
