@@ -7,7 +7,6 @@ import { TierBadge } from "@/components/TierBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { tierLabel } from "@/contracts";
 import type { TierDecision } from "@/contracts";
-import { cn } from "@/lib/utils";
 import { routingPolicy } from "@/policy/routing";
 import { coverageLineText } from "./reviewModel";
 
@@ -37,31 +36,30 @@ export function CoverageLine({ decision }: Readonly<{ decision: TierDecision }>)
   );
 }
 
-/**
- * One line per rule that fired. From 760 px up they are a plain list, so
- * nothing animates after hydration; below that, more than two go behind a
- * "Why <Tier>" disclosure to keep the phone's first screen short. From
- * 1100 px three or more run in two columns, filled top to bottom so each
- * column keeps the order route() returns, and the reading list starts higher.
- */
-/** Fewer reasons than this stay one column: a lone reason at half width wraps early. */
-const TWO_COLUMN_MIN = 3;
+/** The rule whose reasons are about the reviewer's track record per area, not about this change. */
+const AREA_RULE = "R-area-level";
 
+/**
+ * One line per rule that fired, in two groups: what this change contains
+ * (size, refusals, defects, sensitive paths) and how far the AI is trusted
+ * in each area it touches. The groups answer different questions, so from
+ * 1100 px they sit side by side instead of one list cut in half. Rule ids
+ * lead each line in their own column, so they line up and never wrap.
+ * From 760 px up the reasons are a plain list, so nothing animates after
+ * hydration; below that, more than two go behind a "Why <Tier>" disclosure
+ * to keep the phone's first screen short.
+ */
 function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
-  const list = (
-    <ul
-      className={cn(
-        "flex flex-col gap-1",
-        decision.reasons.length >= TWO_COLUMN_MIN &&
-          "wide:block wide:columns-2 wide:space-y-1 wide:gap-x-8",
-      )}
-    >
-      {decision.reasons.map((reason, index) => (
-        <li key={index} className="text-sm text-text-secondary wide:break-inside-avoid">
-          {reason.text} <span className="font-mono text-xs text-text-muted">{reason.ruleId}</span>
-        </li>
-      ))}
-    </ul>
+  const changeReasons = decision.reasons.filter((reason) => reason.ruleId !== AREA_RULE);
+  const areaReasons = decision.reasons.filter((reason) => reason.ruleId === AREA_RULE);
+  const hasBothGroups = changeReasons.length > 0 && areaReasons.length > 0;
+  const list = hasBothGroups ? (
+    <div className="flex flex-col gap-3 wide:grid wide:grid-cols-2 wide:gap-x-8">
+      <ReasonGroup label="This change" reasons={changeReasons} />
+      <ReasonGroup label="Reviewer trust by area" reasons={areaReasons} />
+    </div>
+  ) : (
+    <ReasonList reasons={decision.reasons} />
   );
   if (decision.reasons.length <= MAX_PLAIN_REASONS) return list;
   return (
@@ -71,6 +69,42 @@ function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
         <div className="pl-7">{list}</div>
       </Disclosure>
     </>
+  );
+}
+
+type Reason = TierDecision["reasons"][number];
+
+/** A labelled group of reasons; the label is a plain caption, not a heading, so the page outline stays the review's own. */
+function ReasonGroup({ label, reasons }: Readonly<{ label: string; reasons: Reason[] }>) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <p className="text-xs font-medium text-text-muted">{label}</p>
+      <ReasonList reasons={reasons} />
+    </div>
+  );
+}
+
+/**
+ * Rule id, then the reason: from 760 px a two-column grid whose first column
+ * is as wide as the longest id, so "R-sensitive-path" stays on one line and
+ * every reason starts at the same x. On a phone that column would squeeze the
+ * text to half the width, so the id follows the reason instead.
+ */
+function ReasonList({ reasons }: Readonly<{ reasons: Reason[] }>) {
+  return (
+    <ul className="flex flex-col gap-1 compact:grid compact:grid-cols-[max-content_minmax(0,1fr)] compact:gap-x-3">
+      {reasons.map((reason, index) => (
+        <li
+          key={index}
+          className="flex flex-wrap items-baseline gap-x-2 text-sm text-text-secondary compact:col-span-2 compact:grid compact:grid-cols-subgrid compact:gap-x-3"
+        >
+          <span className="order-last font-mono text-xs whitespace-nowrap text-text-muted compact:order-none">
+            {reason.ruleId}
+          </span>
+          <span className="min-w-0 break-words">{reason.text}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
