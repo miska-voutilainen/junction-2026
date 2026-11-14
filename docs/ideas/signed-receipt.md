@@ -24,7 +24,7 @@ The named owner signs a receipt of what was checked, what wasn't and what risk t
 
 ## What we measured
 
-Nothing to measure in rates. The MP-2283 receipt will be signed with a real key, verified, and committed with its verify output to `data/receipts/`.
+No rates to measure. The MP-2283 draft lists 8 checked items (2 by `tool`, 6 `ai-supported`) and 7 not checked; the signed receipt goes to `data/receipts/` with its verify output.
 
 ## How to adopt it
 
@@ -41,7 +41,7 @@ Nothing to measure in rates. The MP-2283 receipt will be signed with a real key,
 
 ## Where it fits in regulated delivery
 
-Auditors already ask who approved a change, what was checked and what risk was accepted, with the approver separate from the implementer. PCI DSS 6.2.3.1 asks for review by someone other than the author, approved before release, and DORA's rules on ICT change management ask for approval separate from implementation. With an agent as author, the named signer is that approver. The receipt is that approval record, not a compliance claim; see [`docs/research.md`](../research.md).
+Auditors already ask who approved a change, what was checked and what risk was accepted, with the approver separate from the implementer. PCI DSS 6.2.3.1 asks for review by someone other than the author, approved before release, and DORA's rules on ICT change management ask for approval separate from implementation. The receipt is that approval record, not a compliance claim; see [`docs/research.md`](../research.md).
 
 ## In the code
 

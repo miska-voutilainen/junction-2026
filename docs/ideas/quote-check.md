@@ -2,8 +2,6 @@
 
 Every claim the AI makes cites the code with a file, a line range and a quote, and plain code checks that the quote is really there before anyone sees the claim.
 
-> Draft. The hallucination counts come from recorded runs and are "not measured yet".
-
 ## The problem
 
 A model can describe code that doesn't exist: a call that isn't made, a check that isn't there, a line from another version. In a review that reads as confident evidence. Asking the model to be careful doesn't help; checking its citations does, and needs no second model.
@@ -25,7 +23,7 @@ A model can describe code that doesn't exist: a call that isn't made, a check th
 
 ## What we measured
 
-Not measured yet. The report card will show "quote failures: x of n quotes checked" over all recorded runs. A unit test checks that a deliberately wrong quote is caught.
+From the report card, over all recorded runs: **quote failures 0 of 790 quotes checked**, 0 findings dropped, 0 claims retracted by a failing test. A unit test checks that a deliberately wrong quote is caught, so the zero isn't a check that can't fire. It says this model quoted this repository accurately, not that its claims are right (see Limits).
 
 ## How to adopt it
 

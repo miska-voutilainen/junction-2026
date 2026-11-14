@@ -2,8 +2,6 @@
 
 Test the AI reviewer on bugs planted by someone who never sees its prompts, and let its measured catch rate in each area decide how much a human reads there.
 
-> Draft. Numbers come from the planted-bug eval (T16) and are "not measured yet" until it runs.
-
 ## The problem
 
 Teams trust an AI reviewer everywhere or nowhere, and both are guesses. A reviewer can be sharp on generator code and blind to security bugs in the same repository, and nobody knows until a bug escapes. Trust should be earned per area, from evidence, and lost the same way.
@@ -28,12 +26,19 @@ The numbers 3, 60% and 5 live in one policy file, so a team can argue about them
 
 ## What we measured
 
-Not measured yet. The eval runs the reviewer on 10 planted bugs across four areas; the report card shows "<caught> of <planted> caught" per area, never a bare percentage. We have no spot-check workflow, so `spotChecksClean` is 0 and no area reaches Trusted. The report card says so.
+From the report card, one blind run per planted bug:
+
+- **Generator:** 4 of 4 caught. Calibrated.
+- **Analyzer:** 3 of 3 caught. Calibrated.
+- **Security:** 0 of 3 caught. Shadow: a human reads every security hunk.
+- **Performance:** no planted bugs, so Shadow; its catch rate is not measured yet.
+
+No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 40 findings across the 10 runs, 8 matched a plant; the rest aren't scored.
 
 ## How to adopt it
 
 - **You need:** areas with path rules, a planter who never sees the prompts, an answer key per bug.
-- **It costs:** one reviewer run per plant, plus writing the plants. Cost per run: not measured yet.
+- **It costs:** one reviewer run per plant, plus writing the plants. Our 10 plant runs cost $1.78 to $3.59 each ($22.14 in all) and took 2 to 4 minutes each.
 - **First step:** start every area in Shadow, plant three bugs in the area you care about most, and publish the catch rate with its sample size.
 
 ## Limits and failure modes

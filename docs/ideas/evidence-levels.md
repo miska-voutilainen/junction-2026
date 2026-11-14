@@ -2,8 +2,6 @@
 
 Each claim the AI makes is labelled by what backs it, Verified, Supported, Unverified or Refused, and the model's own confidence is never shown.
 
-> Draft. How many claims reach each level on Tieto's changes is "not measured yet".
-
 ## The problem
 
 "Confidence: 92%" looks precise and means little. It's the model's opinion of itself, uncalibrated against anything a reader can check, and it invites trust in the number instead of the code. A person deciding whether to sign needs to know what kind of proof stands behind a claim.
@@ -38,7 +36,7 @@ The levels feed the coverage map: a Verified claim makes its hunk Verified, a Su
 
 ## What we measured
 
-Not measured yet. MP-2283 should show at least one Verified claim, with the failing base output and passing head output beside it.
+MP-2283: 8 claims, **2 Verified, 6 Supported, 0 Unverified**. Both Verified claims rest on A5 tests failing on base and passing on head; two more didn't build on the base. All 96 claims in the 10 planted-bug runs are Supported; none has a test result.
 
 ## How to adopt it
 
