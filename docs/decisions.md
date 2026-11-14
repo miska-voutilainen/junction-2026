@@ -10,6 +10,47 @@
 - **Rejected:** 3 runs per mode as in the spec (cost, no information); a fixed run count in the copy; one group per plant (identical blind calls would race instead of reuse); deduplicating shared claims by recording key (more code for a count that is only a denominator).
 - **PR:** T16
 
+## 2026-11-14 · A5 tests run in Docker: restore with the network, test without
+
+- **Context:** A5's test file is C# the model wrote, and it runs with the operator's rights. A temporary worktree and a clean environment do not stop it from reading `~/.ssh` or a `.env` by absolute path, or from using the network. The first version only contained the working folder.
+- **Decision (Miska):** Every A5 run (A5 tests and the PR's tests, base and head) runs in the pinned image `mcr.microsoft.com/dotnet/sdk:8.0@sha256:1b955f17...` (`DOTNET_SDK_IMAGE`). Phase 1, `dotnet restore` of the test project, runs with the network before any model-written file is in the worktree, plus one of the repository's own tests, so the Roslyn testing library can download its reference assemblies into the cache volume. Phase 2 copies the test file in and runs `dotnet test --no-restore` with `--network none`, as the non-root `app` user (1654), `--cap-drop ALL`, `no-new-privileges`, `--rm`, a named container that `docker kill` stops on the 15 min timeout. Mounted: that side's worktree (read-write) and the volume `countersign-a5-nuget` (read-only in phase 2). Not mounted and not passed: the host's home, its NuGet cache and its environment; only `DOTNET_NOLOGO`, `DOTNET_CLI_TELEMETRY_OPTOUT`, `NUGET_PACKAGES`, `HOME` and `DOTNET_CLI_HOME` are set. Without Docker the step stops with "Docker is not running. Start Docker Desktop, or run with --no-tests."; it never runs on the host.
+- **Accepted risk:** the test can use CPU until the timeout, and a container escape is not defended against. Tests run on Linux; a test that passes on Windows only because of the OS would show here as a difference.
+- **Why:** the restore runs the repository's own MSBuild, which has to reach NuGet; model code must not. Splitting the phases gives both. The host no longer needs the .NET SDK.
+- **Rejected:** a temporary profile folder on the host (still reads absolute paths and the network); running the whole test with the network (the model's code could send data out).
+- **PR:** T14
+
+## 2026-11-14 · A5 retracts only when the behaviour broke; a test that fails on both says nothing
+
+- **Context:** The first mp-2283 recording retracted two correct claims: A5's F1 tests failed on the base and on the head, because they compared generated output they could not know. The spec retracted on any head failure.
+- **Decision (Miska):** Retract only when the A5 test passes on the base and fails on the head. A test that fails on both versions, or that has a build error, no matching test or a timeout on either side, says nothing: the claim stays and the test goes into the new optional `Review.inconclusiveTests` with its reason (shared contract change: Miska's call). The A5 prompt (`a5.v2`) tells the model it cannot know generated output and must assert behaviour directly (no exception, no error diagnostic, a value or round trip). Spec section 6 changed with it.
+- **Why:** A failing test that fails the same way before the change does not test the change; calling the claim wrong would be a false retraction. The reason belongs in the review so a reader can see why a claim got no test evidence.
+- **Rejected:** Keeping "fails on head retracts" (false retractions); retracting a claim on a failure with the same message on both sides only (needs output comparison and is easy to fool).
+- **PR:** T14
+
+## 2026-11-14 · T14 choices: how A5 reads test results
+
+- **Context:** Spec section 6 says what a test result means but leaves open which claims a test covers, what a build error on one side means and how the tests run.
+- **Decision:** An A5 test covers the behaviour claims that cite hunks and carry its requirement item id. A5 writes tests only for functional items that such a claim names. Only a Supported claim becomes Verified; an Unverified claim has no matching quote, so a test does not lift it. A build error, a filter that matches no test and a timeout on either side are "could not say": the claim stays as it was and the run is counted in the log. An A5 test that passes on the base and fails on the head retracts the claims it covers (they become Unverified, with the head output in `retractions`); see the entry above for fails-on-both. A PR test that fails on the head adds evidence only: it may fail for reasons unrelated to the claim. The PR's own tests are the methods with an added line in the PR's test files, and they run on a base that holds only the PR's test files, after A5's runs, so a PR test that does not compile on the base cannot break A5's. Results are judged per test method: one run holds several methods, so a verdict needs the method, not the run. An A5 method that passes on the base and fails on the head retracts and wins over the others; else one that fails on the base and passes on the head verifies; else no verdict.
+- **Why:** "Fails on base and passes on head" is the one signal that tells the versions apart; a build error on the base (the test uses a type the change adds) is the common case and must not count as a failing test. Model-written C# runs on this laptop, so it only ever runs in a worktree that is deleted afterwards.
+- **Rejected:** Treating a build error on the base as "fails on base" (hands out Verified for free); retracting on a failing PR test; running the PR's tests before A5's in the same worktree.
+- **PR:** T14
+
+## 2026-11-14 · A fifth research pass changes the limits and the wording, not the ideas
+
+- **Context:** A Gemini Deep Research pass audited all eight ideas and proposed replacing the trust ladder and adding Roslyn slicing, property tests, a rule ratchet and a pre-review gate. We opened none of its sources.
+- **Decision:** Keep all eight ideas. Correct two research claims we had worded wrongly (Gao: trust and agreement, not accuracy; Ehsani: 38% closed without review, not "too large"). Add three limits to the concept card (the catch rate measures the reviewer, the diff-only quote check strikes some true claims, hunks are judged one at a time) and three "Beyond the reference" items. The raw output is kept in `docs/research/`, labelled unverified.
+- **Why:** The limits are true of the design as built, and saying them is cheaper and more credible than building around them before the freeze. Roslyn and FsCheck need the .NET tooling that A5 (#110) is still fighting.
+- **Receipt wording:** The spec, `docs/api.md`, the signed-receipt idea page and `docs/research.md` said a squash or rebase with an unchanged diff keeps a receipt valid. The code is stricter: the signed receipt holds the head commit and both trees, and `verify` rejects a change in any of them. The docs now match the code. Shared spec change, decided by Miska.
+- **Rejected:** Dropping the trust ladder (the planted-bug rate measures the reviewer, not the agent, which the pass conflated); building Roslyn slices, property tests or the rule ratchet now (no time to finish one properly); quoting its DORA article numbers (not read in the primary text).
+
+## 2026-11-14 · Generated hunks get their own coverage state and leave the reading count
+
+- **Context:** Tieto's `mp-2297` has 237 files and 423 hunks, nearly all generated snapshots. Counting them made "Read 12 of 423" meaningless: they were either listed as read (nobody reads 411 snapshots) or marked Verified or Supported by claims about the template.
+- **Decision:** Hunks in files `src/policy/areas.ts` classifies as `generated` get coverage `generated`: shown on the hunk map, left out of `readHunks`, `readLines` and the `R-read-share` denominator. `R-generated` (tier light) adds one line: "411 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)". A finding or refusal that names a generated hunk still makes it `read`. Shared contract and spec change, decided by Miska.
+- **Why:** The honest statement is that nobody reads snapshots and the real review is of the template that produces them; the line also says what that leaves unchecked. Recorded reviews without generated files route byte for byte as before; `schemaVersion` stays 1 because the new enum value only appears where generated hunks exist.
+- **Rejected:** Keeping them counted (the count stays unreadable and the tier is driven by snapshots). Dropping `mp-2297` from the sample (it is the one real Tieto change that shows the idea; hiding it would be cherry-picking).
+- **PR:** #113
+
 ## 2026-11-14 · Record mode reuses a recording with the same key; A3 cites source first, A4 copies statements exactly
 
 - **Context:** A1's prompt is only the requirement, so every change with the same requirement has the same A1 key at the same run index, and a second `record` run overwrote the file the first one wrote. The T13 review also found that A3's missing-test findings cited test files first (area null, so they could never count toward a planted bug's area) and that A4's copied sentences failed the substring check on backticks and wrapped lines.

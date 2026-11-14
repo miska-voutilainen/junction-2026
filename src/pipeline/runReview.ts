@@ -14,6 +14,7 @@ import * as a1 from "../prompts/a1";
 import * as a2 from "../prompts/a2";
 import * as a3 from "../prompts/a3";
 import * as a4 from "../prompts/a4";
+import * as a5 from "../prompts/a5";
 import { assembleReview } from "./assembleReview";
 import {
   checkAreaFindings,
@@ -22,6 +23,8 @@ import {
   fixedRefusalsFor,
   type UnnumberedRefusal,
 } from "./checkFindings";
+import { dockerDotnetRunner, type DotnetRunner } from "./differential/dotnetRunner";
+import { runDifferentialTests } from "./differential/runDifferentialTests";
 import { buildPromptContext } from "./promptContext";
 import { checkClaims, type SideReader } from "./quoteCheck";
 import {
@@ -32,9 +35,13 @@ import {
 } from "./steps";
 import type { UsageTally } from "./usageTally";
 
-/** A model step of the pipeline; A5 (tests) is not a model step here. */
-export type ModelStep = "a1" | "a2" | "a3" | "a4";
+/** A step of the pipeline. A5 writes tests with the model, then runs them on .NET. */
+export type ModelStep = "a1" | "a2" | "a3" | "a4" | "a5";
 
+/** The steps of a full blind-first review; the CLI uses this unless `--no-tests`. */
+export const reviewStepsWithTests: readonly ModelStep[] = ["a1", "a2", "a3", "a4", "a5"];
+
+// A5 is opt-in: it needs .NET and minutes per run, so only a caller that has them lists it.
 const allSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
 const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
 
@@ -58,11 +65,13 @@ export interface RunReviewInput {
   steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
   runIndex?: number;
+  /** Runs `dotnet` for A5; defaults to Docker. Tests pass a fake. */
+  testRunner?: DotnetRunner;
 }
 
 /**
- * Runs the pipeline's model steps and returns the review. A5 (differential tests)
- * is not part of this function; its prompt version stays "none".
+ * Runs the pipeline's steps and returns the review. A5 (differential tests) runs
+ * only when `steps` lists it; otherwise its prompt version stays "none".
  *
  * @throws if git or the model fails, or an answer fails validation twice; no partial review is returned.
  */
@@ -81,13 +90,11 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   });
   const readSide = cachedReader(repoDir, change);
   const isAnchored = mode === "anchored";
-  const steps = new Set(input.steps ?? (isAnchored ? anchoredSteps : allSteps));
-  if (steps.has("a3") && !steps.has("a1"))
-    throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
-  if (isAnchored && steps.has("a1"))
-    throw new Error("Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.");
+  const steps = checkedSteps(input.steps, isAnchored);
 
-  const expectation = steps.has("a1") ? await writeBlindExpectation(client, requirement, runIndex) : null;
+  const expectation = steps.has("a1")
+    ? await writeBlindExpectation(client, requirement, runIndex)
+    : null;
   const answer = await writeChangeStory(client, {
     requirement,
     hunks: loadedDiff.hunks,
@@ -106,23 +113,15 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   );
   const { claims, quoteCheck } = checkedClaims;
 
-  const areaReview =
-    expectation === null || !steps.has("a3")
-      ? null
-      : await writeAreaReview(client, {
-          requirement,
-          hunks: loadedDiff.hunks,
-          context,
-          expectation,
-          claims,
-          runIndex,
-        });
-  const areaFindings = areaReview
-    ? await checkAreaFindings(areaReview.findings, readSide, quoteCheck)
-    : [];
-  const refusals = areaReview
-    ? mergeFixedRefusals(checkRefusals(areaReview.refusals, quoteCheck), fixedRefusalsFor(loadedDiff.hunks))
-    : [];
+  const didRunA3 = expectation !== null && steps.has("a3");
+  const { areaFindings, refusals } = didRunA3
+    ? await reviewAreas(
+        client,
+        { requirement, hunks: loadedDiff.hunks, context, expectation, claims, runIndex },
+        readSide,
+        quoteCheck,
+      )
+    : { areaFindings: [], refusals: [] };
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {
@@ -133,8 +132,31 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       })
     : null;
   const contradictions = description
-    ? await checkContradictions(description.statements, claims, loadedDiff.hunks, readSide, quoteCheck)
+    ? await checkContradictions(
+        description.statements,
+        claims,
+        loadedDiff.hunks,
+        readSide,
+        quoteCheck,
+      )
     : [];
+
+  // The tests run last: they need the quote-checked claims, and only a claim that passed that check can become Verified.
+  const tests =
+    steps.has("a5") && expectation
+      ? await runDifferentialTests({
+          repoDir,
+          change,
+          requirement,
+          expectation,
+          claims,
+          files: loadedDiff.files,
+          hunks: loadedDiff.hunks,
+          client,
+          runIndex,
+          runner: input.testRunner ?? dockerDotnetRunner,
+        })
+      : null;
 
   const finishedAt = new Date();
   return assembleReview({
@@ -143,7 +165,9 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     loadedDiff,
     expectation,
     story: answer.story,
-    checkedClaims,
+    checkedClaims: tests ? { ...checkedClaims, claims: tests.claims } : checkedClaims,
+    retractions: tests?.retractions ?? [],
+    inconclusiveTests: tests?.didRun ? tests.inconclusiveTests : undefined,
     mode,
     findings: [...areaFindings, ...contradictions].map((finding, index) => ({
       ...finding,
@@ -153,9 +177,9 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     promptVersions: {
       a1: expectation ? a1.version : "none",
       a2: a2.version,
-      a3: areaReview ? a3.version : "none",
+      a3: didRunA3 ? a3.version : "none",
       a4: description ? a4.version : "none",
-      a5: "none",
+      a5: tests?.didRun ? a5.version : "none",
     },
     levels: input.levels,
     run: {
@@ -166,6 +190,46 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       usage: input.usage.totals(),
     },
   });
+}
+
+/**
+ * The steps to run, after checking they make sense together.
+ * @throws when a step lacks what it needs (A3 and A5 need A1; anchored mode can't run A1).
+ */
+function checkedSteps(
+  requested: readonly ModelStep[] | undefined,
+  isAnchored: boolean,
+): Set<ModelStep> {
+  const steps = new Set(requested ?? (isAnchored ? anchoredSteps : allSteps));
+  if (steps.has("a3") && !steps.has("a1"))
+    throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
+  if (steps.has("a5") && !steps.has("a1"))
+    throw new Error("A5 needs A1's expectation. Add a1 to the steps or drop a5.");
+  if (isAnchored && steps.has("a1"))
+    throw new Error(
+      "Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.",
+    );
+  return steps;
+}
+
+/** A3, then the quote check on its findings and refusals, with the fixed rule refusals merged in. */
+async function reviewAreas(
+  client: Parameters<typeof writeAreaReview>[0],
+  areaInput: Parameters<typeof writeAreaReview>[1],
+  readSide: Parameters<typeof checkAreaFindings>[1],
+  quoteCheck: Parameters<typeof checkAreaFindings>[2],
+): Promise<{
+  areaFindings: Awaited<ReturnType<typeof checkAreaFindings>>;
+  refusals: ReturnType<typeof mergeFixedRefusals>;
+}> {
+  const areaReview = await writeAreaReview(client, areaInput);
+  return {
+    areaFindings: await checkAreaFindings(areaReview.findings, readSide, quoteCheck),
+    refusals: mergeFixedRefusals(
+      checkRefusals(areaReview.refusals, quoteCheck),
+      fixedRefusalsFor(areaInput.hunks),
+    ),
+  };
 }
 
 /**
@@ -180,7 +244,9 @@ export function mergeFixedRefusals(
 ): UnnumberedRefusal[] {
   const addedFixed = fixedRefusals.flatMap((fixed) => {
     const listed = new Set(
-      aiRefusals.filter((refusal) => refusal.ruleId === fixed.ruleId).flatMap((refusal) => refusal.hunkIds),
+      aiRefusals
+        .filter((refusal) => refusal.ruleId === fixed.ruleId)
+        .flatMap((refusal) => refusal.hunkIds),
     );
     const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
     return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];
@@ -199,11 +265,15 @@ async function readHeadTexts(
   headSha: string,
   files: Review["files"],
 ): Promise<Map<string, string>> {
+  const shown = files.filter((file) => file.kind === "source" || file.kind === "test");
+  const read = await Promise.all(
+    shown.map(
+      async (file) => [file.path, await readFileAtCommit(repoDir, headSha, file.path)] as const,
+    ),
+  );
   const texts = new Map<string, string>();
-  for (const file of files) {
-    if (file.kind !== "source" && file.kind !== "test") continue;
-    const text = await readFileAtCommit(repoDir, headSha, file.path);
-    if (text !== null) texts.set(file.path, text);
+  for (const [path, text] of read) {
+    if (text !== null) texts.set(path, text);
   }
   return texts;
 }

@@ -21,7 +21,7 @@ export function MobileHunks({
   tokens: HighlightedHunks;
   highlightedLines: HighlightedLines[];
 }>) {
-  const covered = [...sections.covered, ...sections.generated];
+  const covered = sections.covered;
   return (
     <div className="flex flex-col gap-3 compact:hidden">
       <p className="text-base text-text-secondary">Reading code works best on a desktop. These hunks are read-only.</p>
@@ -37,6 +37,11 @@ export function MobileHunks({
       {covered.length > 0 && (
         <p className="text-base text-text-muted">
           Covered by evidence: {covered.length} {covered.length === 1 ? "hunk" : "hunks"} · {coveredSummary(covered)}
+        </p>
+      )}
+      {sections.generated.length > 0 && (
+        <p className="text-base text-text-muted">
+          Generated: {sections.generated.length} {sections.generated.length === 1 ? "hunk" : "hunks"}, not in the reading count
         </p>
       )}
     </div>

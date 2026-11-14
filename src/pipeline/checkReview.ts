@@ -25,28 +25,59 @@ export async function loadContradictionKey(changeId: string): Promise<AnswerKey 
 }
 
 /**
- * The eval cases of A1 to A4 (spec section 6) run on a recorded review. A miss
+ * The eval cases of A1 to A5 (spec section 6) run on a recorded review. A miss
  * is a measurement for docs/lessons.md, not a test failure, so this only reports.
  * `contradictionKey` is the planted false sentence, when the change has one.
  */
-export function checkReview(review: Review, contradictionKey: AnswerKey | null = null): CheckResult[] {
+export function checkReview(
+  review: Review,
+  contradictionKey: AnswerKey | null = null,
+): CheckResult[] {
   const results = [checkExpectationCoversItems(review), checkEveryCodeHunkIsClaimed(review)];
   if (review.changeId === "mp-2283") {
     results.splice(1, 0, ...checkMp2283Expectation(review));
-    results.push(checkMp2283Refusal(review));
-    if (contradictionKey !== null) results.push(checkPlantedContradiction(review, contradictionKey));
+    results.push(checkMp2283Refusal(review), checkMp2283VerifiedClaim(review));
+    if (contradictionKey !== null)
+      results.push(checkPlantedContradiction(review, contradictionKey));
   }
   return results;
 }
 
 /** The change silently drops diagnostics for referenced-assembly types: a documented-behaviour decision (R7) or a product call (R1). */
 function checkMp2283Refusal(review: Review): CheckResult {
-  const cited = review.refusals.filter((refusal) => refusal.source === "ai").map((refusal) => refusal.ruleId);
+  const cited = review.refusals
+    .filter((refusal) => refusal.source === "ai")
+    .map((refusal) => refusal.ruleId);
   return {
     name: "mp-2283: A3 refuses with R7 or R1",
     passed: cited.some((ruleId) => ruleId === "R7" || ruleId === "R1"),
     // The fixed R7 triggers don't count: the case measures what the model refuses.
     detail: `model refusals: ${cited.join(", ") || "none"}`,
+  };
+}
+
+/** T14's acceptance: a claim is Verified because a test failed on the base and passed on the head. */
+function checkMp2283VerifiedClaim(review: Review): CheckResult {
+  const verified = review.claims.filter(
+    (claim) =>
+      claim.level === "verified" &&
+      claim.evidence.some(
+        (evidence) =>
+          evidence.kind === "differential-test" &&
+          evidence.base?.result === "fail" &&
+          evidence.head?.result === "pass",
+      ),
+  );
+  const unsaid = (review.inconclusiveTests ?? [])
+    .map((test) => `${test.testNames.join(", ")}: ${test.reason}`)
+    .join("; ");
+  return {
+    name: "mp-2283: A5 verifies a claim with a test that fails on the base and passes on the head",
+    passed: verified.length > 0,
+    detail:
+      verified.length > 0
+        ? `claims: ${verified.map((claim) => claim.id).join(", ")}`
+        : `no Verified claim; ${unsaid || "A5 left no reason"}`,
   };
 }
 
@@ -111,6 +142,6 @@ function checkEveryCodeHunkIsClaimed(review: Review): CheckResult {
     detail:
       unclaimed.length === 0
         ? `${total} hunks`
-        : `not claimed: ${unclaimed.map((hunk) => `${hunk.id} (${hunk.file})`).join(", ")}`,
+        : "not claimed: " + unclaimed.map((hunk) => `${hunk.id} (${hunk.file})`).join(", "),
   };
 }

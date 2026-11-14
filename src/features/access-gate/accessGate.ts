@@ -45,12 +45,15 @@ export function safeNextPath(next: string | null | undefined): string {
   return url.pathname + url.search + url.hash;
 }
 
+// Link-preview crawlers carry no cookie; a redirect to /unlock would leave shared links without an image.
+const SOCIAL_PREVIEW_PATH = "/opengraph-image";
+
 const SAME_SITE_BASE = "http://gate.invalid";
 
 /**
  * The proxy step: lets a request through when the gate is off or the visitor
- * holds the right cookie, and otherwise sends them to `/unlock`. Every gated
- * response asks search engines not to index the site. With the gate off,
+ * holds the right cookie (or asks for the social preview image), and otherwise sends them to `/unlock`. Every
+ * response while the gate is on, the preview image included, asks search engines not to index the site. With the gate off,
  * `/unlock` itself answers with a 307 to `next`: doing it here, rather than in
  * the page, keeps the root loading boundary from streaming a 200 first.
  */
@@ -60,9 +63,10 @@ export async function accessGate(request: NextRequest): Promise<NextResponse> {
   if (code === null) return isUnlockPage ? redirectPastUnlock(request) : NextResponse.next();
   if (isUnlockPage) return NextResponse.next();
 
+  const isSocialPreview = request.nextUrl.pathname === SOCIAL_PREVIEW_PATH;
   const cookie = request.cookies.get(ACCESS_COOKIE)?.value;
   const response =
-    cookie === (await accessCookieValue(code))
+    isSocialPreview || cookie === (await accessCookieValue(code))
       ? NextResponse.next()
       : redirectToUnlock(request);
   response.headers.set("X-Robots-Tag", "noindex");

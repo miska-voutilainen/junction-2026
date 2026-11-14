@@ -1,3 +1,4 @@
+import { countGenerated } from "@/rules/route";
 import type { ReviewedRow } from "./inboxModel";
 
 /** "1 contradiction", "2 contradictions": the noun takes an "s" unless the count is one. */
@@ -5,9 +6,11 @@ export function countOf(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-/** How many hunks a person reads: "read 2 of 8". */
+/** How many hunks a person reads: "read 2 of 8", or "read 12 of 423 · 411 generated" when snapshots are left out of the count. */
 export function readCount(row: ReviewedRow): string {
-  return `read ${row.readHunks} of ${row.totalHunks}`;
+  const generated = countGenerated(row.coverage);
+  const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
+  return `read ${row.readHunks} of ${row.totalHunks}${generatedNote}`;
 }
 
 /** The reading estimate of a row: "read 2 of 8 · ~2 min", or without minutes when nothing needs reading. */

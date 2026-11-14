@@ -11,7 +11,7 @@ Eight ideas for reviewing agent-written code so that a named person can accept a
 | --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | [Planted-bug calibration and a trust ladder](trust-ladder.md)   | The reviewer's measured catch rate per area decides how much a person reads there.                                              |
 | 2   | [Blind-first review](blind-first.md)                            | The reviewer writes what the requirement should produce before it reads the code or the author's story.                         |
-| 3   | [The hunk coverage map](coverage-map.md)                        | Every hunk is Verified, Supported or Read this, from rules a person can read.                                                   |
+| 3   | [The hunk coverage map](coverage-map.md)                        | Every hunk is Verified, Supported, Read this or Generated, from rules a person can read.                                                   |
 | 4   | [A mechanical quote check](quote-check.md)                      | Code checks that every quoted citation is really in the cited lines.                                                            |
 | 5   | [A written refusal policy](refusal-policy.md)                   | Seven things the AI never decides, each with the role that does.                                                                |
 | 6   | [Evidence levels instead of confidence](evidence-levels.md)     | A claim is labelled by what backs it, never by how sure the model felt.                                                         |

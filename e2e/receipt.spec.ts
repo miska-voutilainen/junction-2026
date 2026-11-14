@@ -73,7 +73,7 @@ test("a change without a receipt says so and shows the sign command", async ({ p
   await page.goto("/changes/mp-2234/receipt");
 
   await expect(page.getByRole("heading", { name: "No receipt for mp-2234 yet." })).toBeVisible();
-  await expect(page.getByText("Only a named human can sign. Review the change, then run")).toBeVisible();
+  await expect(page.getByText("Only a named human can sign. Review the change, then run this command:")).toBeVisible();
   await expect(page.getByText("pnpm countersign sign mp-2234")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to the review" })).toHaveAttribute("href", "/changes/mp-2234");
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);

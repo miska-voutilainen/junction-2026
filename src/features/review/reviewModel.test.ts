@@ -150,18 +150,28 @@ describe("navigator", () => {
     expect(buildNavigator(sections).map((group) => group.title)).toEqual(["Read this"]);
   });
 
-  it("folds covered generated files into one item per group and keeps them out of the read list", async () => {
+  it("folds generated hunks into one Generated item and keeps them out of the read list", async () => {
     const review = await load("mp-2297");
     const { sections } = await sectionsOf(review, await readableCard());
-    const verified = buildNavigator(sections).find((group) => group.title === "Verified");
+    const generated = buildNavigator(sections).find((group) => group.title === "Generated");
 
     expect(sections.generated.map((entry) => entry.hunk.id)).toEqual(["h3", "h4"]);
-    expect(verified?.hunkCount).toBe(2);
-    expect(verified?.items).toEqual([expect.objectContaining({ label: "2 generated snapshot files", isGenerated: true, hunkId: "h3" })]);
+    expect(generated?.hunkCount).toBe(2);
+    expect(generated?.items).toEqual([expect.objectContaining({ label: "2 generated snapshot files", isGenerated: true, hunkId: "h3" })]);
   });
 });
 
 describe("coverage line", () => {
+  it("leaves the full-read time out when it equals the reading time", async () => {
+    const { decision } = await sectionsOf(await load("mp-2283"), await readableCard());
+    expect(coverageLineText({ ...decision, readMinutes: 3, fullMinutes: 3 })).not.toContain("full read");
+  });
+
+  it("names the generated hunks the count leaves out", async () => {
+    const { decision } = await sectionsOf(await load("mp-2297"), await readableCard());
+    expect(coverageLineText(decision)).toBe("read 2 of 5 hunks · 2 generated · ~1 min");
+  });
+
   it("reads the numbers of the decision", async () => {
     const { decision } = await sectionsOf(await load("mp-2283"), await readableCard());
     expect(coverageLineText(decision)).toBe("read 2 of 8 hunks · ~1 min (full read ~3 min)");

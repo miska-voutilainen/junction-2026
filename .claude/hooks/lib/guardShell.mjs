@@ -5,8 +5,8 @@ import { ghRows } from "./guardGh.mjs";
 import { SUBSTITUTION_PLACEHOLDER, optValues, splitCommand, substitutions, words } from "./guardTokens.mjs";
 import { isOutside, normalisePath } from "./lanes.mjs";
 
-const EMOJI = /\p{Extended_Pictographic}|️|(?<![\w:]):[a-z0-9_+-]+:(?![\w:])/u;
-const TRAILER = /co-authored-by\s*[:=][^\n]*(claude|anthropic)|Generated with \[Claude Code\]\(/i;
+export const EMOJI = /\p{Extended_Pictographic}|\uFE0F|(?<![\w:]):[a-z0-9_+-]+:(?![\w:])/u;
+export const TRAILER = /co-authored-by\s*[:=][^\n]*(claude|anthropic)|Generated with \[Claude Code\]\(/i;
 const ENV_FILE = /(^|\/)\.env(?![\w-])/i;
 const ENV_EXAMPLE = /(^|\/)\.env\.example$/i;
 const HARNESS = /\.claude\/(hooks\/|settings\.json)/i;
@@ -142,8 +142,10 @@ export function shellRows(command, ctx, input, add) {
   const { io, lane } = ctx;
   const emojiTexts = [];
   const trailerTexts = [];
+  // A body file resolves where the command runs: the `cd` directory first (a sibling worktree has its
+  // own .scratch/), then the hook's cwd, then the repo root. env.cwd moves with `cd`, hence the closure.
   const readBody = (p) => {
-    for (const base of [input.cwd, ctx.root]) {
+    for (const base of [env.cwd, input.cwd, ctx.root]) {
       if (!base) continue;
       const t = io.readFile(resolve(base, p));
       if (t != null) return t.replace(/^﻿/, "");

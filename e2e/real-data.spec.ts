@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "./fixtures";
-import { unlock } from "./unlock";
+import { bypassHeaders, unlock } from "./unlock";
 
 // Runs in the `real-data` project against a build of the committed data/ as it is.
 // Everything expected here is read from data/ at test time, so the spec keeps
@@ -60,21 +60,24 @@ for (const id of changeIds) {
   });
 }
 
-test("planted inputs are not reviewable changes", async ({ request }) => {
+test("planted inputs are not reviewable changes", async ({ page }) => {
+  // Sets the gate cookie in the context, which page.request shares.
+  await unlock(page);
   const plantIds = readdirSync(changesFolder)
     .filter((name) => name.endsWith(".json"))
     .map((name) => name.replace(/\.json$/, ""))
     .filter((id) => !changeIds.includes(id));
   for (const id of plantIds) {
     // A request, not a page visit: the browser logs every 404 as a console error.
-    const response = await request.get(`/changes/${id}`);
+    // No redirects: a gate redirect to /unlock must fail the test, not read as a 200.
+    const response = await page.request.get(`/changes/${id}`, { headers: bypassHeaders(), maxRedirects: 0 });
     expect(response.status(), `/changes/${id}`).toBe(404);
   }
 });
 
 test("the reviewer report card and the dashboard load cleanly", async ({ page }) => {
   await page.goto("/reviewer");
-  await expect(page.getByRole("heading", { level: 1, name: "Reviewer Report Card" })).toBeAttached();
+  await expect(page.getByRole("heading", { level: 1, name: "Reviewer report card" })).toBeAttached();
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { level: 1 })).toBeAttached();
 });

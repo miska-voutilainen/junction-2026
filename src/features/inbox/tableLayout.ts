@@ -4,4 +4,7 @@
  * and from 1024 px a chevron. Status and chevron are fixed-size `auto` tracks.
  */
 export const ROW_GRID =
-  "grid grid-cols-[auto_minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] lg:grid-cols-[auto_minmax(0,2.2fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto] items-center gap-x-4 px-4";
+  "grid grid-cols-[auto_minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.4fr)] lg:grid-cols-[auto_minmax(0,2fr)_minmax(0,2fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_auto] items-center gap-x-4 px-4";
+
+/** Background of a row the last simulated escape re-routed; rose, the colour of everything "escape" on S3. */
+export const REROUTED_TINT = "bg-rose/15";

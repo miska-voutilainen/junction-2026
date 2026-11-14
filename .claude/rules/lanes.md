@@ -5,6 +5,7 @@ Each person on the team runs their own agent on the same repo, on their own mach
 ## The model
 
 - A **lane** is an area of work with an owner and the paths it owns. Lanes are decided at kickoff and recorded in the Lanes table in `CLAUDE.md` and in `.claude/lanes.json` (for the hooks and CI); the two always match.
+- A lane may list **co-owners** (`coOwners` in `lanes.json`): people who work the lane with its owner and count as owners for the CI lane check, so their PRs in that lane need no `cross-lane` label. The Owner column in `CLAUDE.md` keeps the one owner.
 - **Shared paths** (contracts, shared types, env var names, design tokens, root configs, the package manifest and lockfile, `docs/spec.md`, `.github/`, everything in `.claude/` except your own `settings.local.json`) belong to no single lane; changing one needs the affected owners' agreement.
 - **Open paths** (`README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/` except `docs/spec.md`) belong to every lane: docs change in the same PR as the code. Edit only the lines your change affects and add rather than rewrite; on a conflict, keep both sides. The Lanes table in `CLAUDE.md` changes only together with `lanes.json`.
 - **Pre-agreed shared paths:** a foundation task's issue lists the shared paths it may change; the sign-off of the spec was the owners' agreement, so build them without stopping (the guard still asks your user; that's expected). Any shared path not on that list is a normal stop-and-ask.

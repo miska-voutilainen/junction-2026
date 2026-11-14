@@ -30,8 +30,16 @@ const areaRules: AreaRule[] = [
   { globs: ["**/*.md"], kind: "docs", area: null },
   { globs: ["src/MessagePack.SourceGenerator/Analyzers/**"], kind: "source", area: "analyzer" },
   // These generate or run deserialization of untrusted input.
-  { globs: ["src/MessagePack.SourceGenerator/Transforms/**", "src/MessagePack/**"], kind: "source", area: "security" },
-  { globs: ["src/MessagePack.SourceGenerator/**", "src/MessagePack.Annotations/**"], kind: "source", area: "generator" },
+  {
+    globs: ["src/MessagePack.SourceGenerator/Transforms/**", "src/MessagePack/**"],
+    kind: "source",
+    area: "security",
+  },
+  {
+    globs: ["src/MessagePack.SourceGenerator/**", "src/MessagePack.Annotations/**"],
+    kind: "source",
+    area: "generator",
+  },
 ];
 
 /**
@@ -40,6 +48,8 @@ const areaRules: AreaRule[] = [
  * @example classifyFile("src/MessagePack/Resolvers/DynamicObjectResolver.cs") // { kind: "source", area: "security" }
  */
 export function classifyFile(path: string): FileClass {
-  const rule = areaRules.find((candidate) => candidate.globs.some((glob) => matchesGlob(glob, path)));
+  const rule = areaRules.find((candidate) =>
+    candidate.globs.some((glob) => matchesGlob(glob, path)),
+  );
   return rule ? { kind: rule.kind, area: rule.area } : { kind: "source", area: null };
 }

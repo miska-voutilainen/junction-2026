@@ -30,6 +30,9 @@
 - **The plants come from the prompt author's session.** Separate agents kept each side blind to the other, but no second person planted them; a team should have someone outside the prompt work do it.
 - **Some plants stand alone.** A plant's area follows its file's path, so the analyzer and security plants sit in files the original change doesn't touch; a lone edit there may be easier to spot than a real agent's bug.
 - **Small n per area.** Every rate shows its sample size, and a small one is a weak rate.
+- **The planted-bug catch rate measures the reviewer, not the agent.** It says how often the reviewer finds a planted kind of defect, not how often agents write that kind; real defect mixes differ.
+- **A diff-only quote check strikes some true claims.** A claim about code the change doesn't touch, such as a caller left unchanged, has nothing in the diff to quote. It is struck and stays in the log.
+- **Hunks are judged one at a time.** Two hunks can be fine alone and wrong together (a buffer rented in one, returned in another); routing doesn't see that interaction.
 - **Notes are not tamper-evident without the signature.** An unsigned or unverified git note proves nothing.
 - **One repository, one reviewer model.** Results say nothing yet about other code or models.
 
@@ -46,7 +49,7 @@
 
 1. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
 2. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
-3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this.
+3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
 4. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
 5. [A written refusal policy](ideas/refusal-policy.md): seven things the AI never decides.
 6. [Evidence levels instead of confidence](ideas/evidence-levels.md): a claim is labelled by what backs it.
@@ -64,3 +67,6 @@ Next ideas, **not built**: registered pull requests (the owner signs the tests b
 - **The PR comment and "Prove it" button.** The tier and receipt status appear on the pull request, and a button re-runs a claim's evidence.
 - **Reverts as escapes.** A revert of a merged change feeds the ladder automatically.
 - **Organisation-managed signing.** Sigstore or similar replaces personal SSH keys.
+- **Review slices instead of hunks.** A compiler's call and data-flow graph groups hunks that share a field or a caller, so a hunk that needs a human keeps its linked hunks in view.
+- **A rule ratchet.** A finding a person makes becomes an executable rule, tested against the rejected and the fixed diff, that guards later changes.
+- **A reviewer from another model family.** The receipt records the author's and the verifier's model families and flags a match.

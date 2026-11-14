@@ -54,7 +54,7 @@ export function CoveredRow({
             <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
             <span className="ml-auto flex min-w-0 items-center gap-2 text-xs text-text-muted">
               {/* The own-test line carries the point of this row, so it wraps instead of being cut with an ellipsis; the idea label sits on its own line below. */}
-              <span className={isOwnTest ? undefined : "truncate"}>{evidence}</span>
+              {evidence && <span className={isOwnTest ? undefined : "truncate"}>{evidence}</span>}
               {isExpanded ? (
                 <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
               ) : (

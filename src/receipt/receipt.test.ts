@@ -373,7 +373,7 @@ describe("receipt refusals", () => {
   );
 
   it(
-    "exits 1 for a passphrase-protected key instead of waiting for a prompt",
+    "exits 1 for a passphrase-protected key when there is no terminal to prompt in",
     async () => {
       const encryptedKey = join(root, "encrypted");
       makeKey(encryptedKey, "secret");
@@ -382,7 +382,7 @@ describe("receipt refusals", () => {
         force: true,
       });
       await expect(signReceipt(changeId, options, { keyOption: encryptedKey })).rejects.toThrow(
-        "Use an unencrypted demo key",
+        "has a passphrase. Run pnpm countersign sign in a terminal",
       );
     },
     slow,

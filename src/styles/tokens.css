@@ -46,10 +46,11 @@
   --green: #57c98b;
   --green-light: #7ddba6;
 
-  /* Hunk coverage (idea 3): only "Read this" asks for attention, so only it is coloured. */
+  /* Hunk coverage (idea 3): only "Read this" asks for attention, so only it is coloured; Generated is a dotted neutral. */
   --coverage-verified: var(--text-faint);
   --coverage-supported: var(--text-faint);
   --coverage-read: var(--amber);
+  --coverage-generated: var(--text-faint);
 
   /* Review tiers: more bars and a warmer colour as more must be read. */
   --tier-light: var(--text-muted);
@@ -86,9 +87,12 @@
   /* Layout */
   --layout-topbar: 56px;
   --layout-nav: 248px;
+  --layout-nav-rail: 56px;
   --layout-navigator: 264px;
   --layout-steps-panel: 392px;
   --layout-content-max: 1280px;
+  /* The review screen holds a diff, a navigator and a steps panel side by side, so it runs wider than the other pages; the cap keeps a 4K window readable. */
+  --layout-review-max: 1680px;
   /* The receipt reads as a document: about 70 characters a line. */
   --layout-prose-max: 820px;
   --layout-gate-max: 380px;

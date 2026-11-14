@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { buildInboxModel, toShellChanges } from "@/features/inbox/inboxModel";
 import type { InboxSource, ReportCardInput } from "@/features/inbox/inboxModel";
-import type { ShellChange } from "@/components/ShellChange";
+import type { ShellChange } from "@/components/shellChange";
 import { useEscapes } from "@/lib/simulation/escapes";
 
 /**

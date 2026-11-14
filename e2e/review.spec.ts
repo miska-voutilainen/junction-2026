@@ -39,7 +39,8 @@ test("shows the tier line the routing computes, with no console errors and no pa
   const { tier, readHunks, totalHunks, readMinutes, fullMinutes } = fixture.routing;
   const tierLine = page.getByRole("region", { name: "Review tier" });
   await expect(tierLine).toContainText(tier[0].toUpperCase() + tier.slice(1));
-  await expect(tierLine).toContainText(`read ${readHunks} of ${totalHunks} hunks · ~${readMinutes} min (full read ~${fullMinutes} min)`);
+  const fullRead = fullMinutes === readMinutes ? "" : ` (full read ~${fullMinutes} min)`;
+  await expect(tierLine).toContainText(`read ${readHunks} of ${totalHunks} hunks · ~${readMinutes} min${fullRead}`);
   // More than two reasons: open on a desktop, behind "Why <Tier>" on a phone.
   if (testInfo.project.name === "mobile") await expect(tierLine.getByRole("button", { name: /^Why / })).toHaveAttribute("aria-expanded", "false");
   else await expect(tierLine.getByRole("listitem").first()).toBeVisible();
@@ -77,12 +78,12 @@ test("a navigator click focuses the hunk header, and j moves to the next hunk", 
   await expect(page.locator("[data-hunk-card]:visible").first().locator("[id^=hunk-header-]")).toBeFocused();
 
   // A covered hunk sits in a closed section; the jump opens it.
-  await navigator.getByRole("button", { name: /GenerationTests\.cs:118/ }).click();
+  await navigator.getByRole("button", { name: /GenerationTests\.cs\s*:118/ }).click();
   await expect(page.getByRole("button", { name: /^Covered by evidence/ })).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator("[data-hunk-id=h5] button[aria-expanded]")).toBeFocused();
 
   await page.keyboard.press("j");
-  await expect(navigator.getByRole("button", { name: /GenerationTests\.cs:331/ })).toHaveAttribute("aria-current", "true");
+  await expect(navigator.getByRole("button", { name: /GenerationTests\.cs\s*:331/ })).toHaveAttribute("aria-current", "true");
 });
 
 test("Wrap toggles, Copy announces Copied and Mark read moves the progress", async ({ page, context }, testInfo) => {
@@ -121,6 +122,20 @@ test("the phone shows the hunks to read read-only, behind one button", async ({ 
   expect(await hasHorizontalScroll(page)).toBe(false);
 });
 
+test("mp-2297 lists its generated hunks apart from the reading count", async ({ page }, testInfo) => {
+  await page.goto("/changes/mp-2297");
+  await expect(page.getByText("read 2 of 5 hunks · 2 generated")).toBeVisible();
+  await expect(page.getByText(/^2 are generated snapshots: read the template that produces them/)).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    // The note sits above the sticky Sign bar once the page is scrolled to its end.
+    const note = page.getByText("Generated: 2 hunks, not in the reading count");
+    await note.scrollIntoViewIfNeeded();
+    await expect(note).toBeVisible();
+    return;
+  }
+  await expect(page.getByRole("heading", { name: /^Generated\s*2$/ })).toBeVisible();
+});
+
 test("an unknown id says so, keeps the four changes in the shell and links back to the inbox", async ({ page }, testInfo) => {
   await page.goto("/changes/zz-9999");
   await expect(page.getByText("No change with id zz-9999.")).toBeVisible();
@@ -146,7 +161,7 @@ for (const changeId of ["mp-2283", "mp-2297"]) {
       await page.goto(`/changes/${changeId}`);
       const covered = page.getByRole("button", { name: /^Covered by evidence/ });
       if (await covered.isVisible()) await covered.click();
-      const generated = page.getByRole("button", { name: /snapshot files? · Show/ });
+      const generated = page.getByRole("button", { name: /snapshot files? · not in the reading count · Show/ });
       if (await generated.isVisible()) await generated.click();
       expect(await hasHorizontalScroll(page), `page scrolls sideways at ${width} px`).toBe(false);
     }

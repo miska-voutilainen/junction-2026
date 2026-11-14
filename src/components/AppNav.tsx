@@ -1,12 +1,15 @@
 "use client";
 
 import { useId } from "react";
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
 import { Gauge, Inbox, Keyboard, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/ui/kbd";
 import { useEnterTransition } from "@/lib/motion";
 import { SHORTCUT_LIST, useSearchShortcutLabel } from "@/lib/useShortcuts";
@@ -38,8 +41,13 @@ function isCurrent(href: string, pathname: string): boolean {
  *
  * @param needsReviewCount The badge on Inbox; hidden at zero.
  * @param onNavigate Called when a link is followed, so a sheet can close.
+ * @param isRail Icons only, for the review screen where the diff needs the width; the names stay as accessible names and tooltips, the shortcut list is left out.
  */
-export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewCount: number; onNavigate?: () => void }>) {
+export function AppNav({
+  needsReviewCount,
+  onNavigate,
+  isRail = false,
+}: Readonly<{ needsReviewCount: number; onNavigate?: () => void; isRail?: boolean }>) {
   const pathname = usePathname();
   // Two navs can be mounted (the page's and the sheet's); a group id keeps their highlights apart.
   const groupId = useId();
@@ -47,22 +55,23 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
   const searchShortcut = useSearchShortcutLabel();
 
   return (
-    <nav aria-label="Main" className="flex h-full flex-col gap-5 px-2.5 pt-4 pb-3 text-sm">
+    <nav aria-label="Main" className={cn("flex h-full flex-col gap-5 pt-4 pb-3 text-sm", isRail ? "px-1.5" : "px-2.5")}>
       <LayoutGroup id={groupId}>
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="flex flex-col gap-0.5">
-            <div className="px-2.5 pb-1.5 text-xs font-semibold text-text-faint">{group.label}</div>
+            <div className={cn("px-2.5 pb-1.5 text-xs font-semibold text-text-faint", isRail && "sr-only")}>{group.label}</div>
             {group.items.map((item) => {
               const isActive = isCurrent(item.href, pathname);
               const Icon = item.icon;
               return (
+                <RailTip key={item.href} label={item.label} isRail={isRail}>
                 <Link
-                  key={item.href}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
                   onClick={onNavigate}
                   className={cn(
                     "relative flex items-center gap-2.5 rounded-item px-2.5 py-2 text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary",
+                    isRail && "justify-center px-0",
                     isActive && "text-text-primary",
                   )}
                 >
@@ -75,8 +84,15 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
                     />
                   )}
                   <Icon aria-hidden="true" className="relative size-4 shrink-0" />
-                  <span className="relative flex-1">{item.label}</span>
-                  {item.hasBadge && needsReviewCount > 0 && (
+                  <span className={cn("relative flex-1", isRail && "sr-only")}>{item.label}</span>
+                  {item.hasBadge && needsReviewCount > 0 && isRail && (
+                    // The count does not fit the rail; a dot says "something waits" and the label carries the number.
+                    <>
+                      <span aria-hidden="true" className="absolute top-1 right-1.5 size-2 rounded-full bg-text-muted" />
+                      <span className="sr-only">{needsReviewCount} need review</span>
+                    </>
+                  )}
+                  {item.hasBadge && needsReviewCount > 0 && !isRail && (
                     <span
                       className="relative rounded-chip bg-surface-control px-1.5 font-mono text-xs text-text-primary"
                       aria-label={`${needsReviewCount} need review`}
@@ -85,6 +101,7 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
                     </span>
                   )}
                 </Link>
+                </RailTip>
               );
             })}
           </div>
@@ -92,23 +109,65 @@ export function AppNav({ needsReviewCount, onNavigate }: Readonly<{ needsReviewC
       </LayoutGroup>
 
       <div className="mt-auto border-t border-border-subtle pt-3">
-        <Disclosure
-          title={
-            <span className="flex items-center gap-2.5">
-              <Keyboard aria-hidden="true" className="size-4" />
-              Keyboard shortcuts
-            </span>
-          }
-        >
-          <dl className="grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 py-1 pr-2.5 pl-9 text-xs text-text-muted">
-            <ShortcutRow keys={[searchShortcut]} label="Search and actions" />
-            {SHORTCUT_LIST.map((shortcut) => (
-              <ShortcutRow key={shortcut.label} keys={shortcut.keys} label={shortcut.label} />
-            ))}
-          </dl>
-        </Disclosure>
+        {isRail ? (
+          <ShortcutsDialog searchShortcut={searchShortcut} />
+        ) : (
+          <Disclosure
+            title={
+              <span className="flex items-center gap-2.5">
+                <Keyboard aria-hidden="true" className="size-4" />
+                Keyboard shortcuts
+              </span>
+            }
+          >
+            <ShortcutList searchShortcut={searchShortcut} className="py-1 pr-2.5 pl-9" />
+          </Disclosure>
+        )}
       </div>
     </nav>
+  );
+}
+
+/** The rail's name for a link: a tooltip that opens on focus as well as hover, so a keyboard user sees it too. Outside the rail the label is visible and there is nothing to add. */
+function RailTip({ label, isRail, children }: Readonly<{ label: string; isRail: boolean; children: ReactElement }>) {
+  if (!isRail) return children;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side="right">{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/** The rail has no room for the list, so its Keyboard shortcuts control opens it in a dialog. */
+function ShortcutsDialog({ searchShortcut }: Readonly<{ searchShortcut: string }>) {
+  return (
+    <Dialog>
+      <DialogTrigger
+        aria-label="Keyboard shortcuts"
+        className="flex w-full items-center justify-center rounded-item py-2 text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary focus-visible:outline-2 focus-visible:outline-focus-ring"
+      >
+        <Keyboard aria-hidden="true" className="size-4" />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Keyboard shortcuts</DialogTitle>
+        <DialogDescription className="sr-only">Every shortcut the review app binds.</DialogDescription>
+        <ShortcutList searchShortcut={searchShortcut} className="text-sm" />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ShortcutList({ searchShortcut, className }: Readonly<{ searchShortcut: string; className?: string }>) {
+  return (
+    <dl className={cn("grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 text-xs text-text-muted", className)}>
+      <ShortcutRow keys={[searchShortcut]} label="Search and actions" />
+      {SHORTCUT_LIST.map((shortcut) => (
+        <ShortcutRow key={shortcut.label} keys={shortcut.keys} label={shortcut.label} />
+      ))}
+    </dl>
   );
 }
 

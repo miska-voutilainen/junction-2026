@@ -4,7 +4,7 @@
  * trust levels, so a simulated escape re-routes the inbox without a reload
  * (spec section 3, S1 "Live re-routing"). Pure functions, no React.
  */
-import type { ShellChange } from "@/components/ShellChange";
+import type { ShellChange } from "@/components/shellChange";
 import { tierLabel } from "@/contracts";
 import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier, TierDecision } from "@/contracts";
 import { receiptStatus } from "@/lib/data/receiptStatus";
@@ -63,8 +63,8 @@ const NO_TRACK_RECORD_REASON: TierDecision["reasons"][number] = {
   text: "No readable report card: nothing counts as covered, so a person reads every hunk.",
 };
 
-// route() reasons that quote a read count; forcing every hunk to "read" would make them wrong.
-const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread"]);
+// route() reasons that quote a hunk count; forcing every hunk to "read" would make them wrong.
+const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread", "R-generated"]);
 
 /**
  * The one routing decision every screen uses (inbox, shell, dashboard, reviewer, S2).

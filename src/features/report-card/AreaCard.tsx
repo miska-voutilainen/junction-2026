@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { toast } from "sonner";
 import { LevelLadder } from "@/components/LevelLadder";
 import { Button } from "@/components/ui/button";
 import { areaLabel, ladderLevelLabel } from "@/contracts";
@@ -23,7 +22,7 @@ const LEVEL_PILL: Record<LadderLevel, string> = {
  * After an escape is recorded the Record button disables, so focus moves to
  * Undo rather than falling back to the page.
  *
- * @param onRecord Records one escape in this area; the card toasts the result.
+ * @param onRecord Records one escape in this area; the screen toasts what it re-routed.
  * @param onUndo Takes the escape back.
  */
 export function AreaCard({
@@ -51,7 +50,6 @@ export function AreaCard({
   function recordEscape() {
     shouldFocusUndo.current = true;
     onRecord(area);
-    toast(`Escape recorded in ${name} (simulated). Its changes re-routed.`);
   }
 
   return (
@@ -66,11 +64,6 @@ export function AreaCard({
         <span className={cn("rounded-chip border px-1.5 py-0.5 text-xs font-medium", LEVEL_PILL[level])}>
           {ladderLevelLabel[level]}
         </span>
-        {escapes > 0 && (
-          <span className="text-xs text-rose-light">
-            ({escapes === 1 ? "1 simulated escape" : `${escapes} simulated escapes`})
-          </span>
-        )}
         <LevelLadder level={level} className="ml-auto" />
       </header>
 
@@ -88,6 +81,7 @@ export function AreaCard({
         >
           <span>
             Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to {ladderLevelLabel[escapeDrop.to]}
+            {` · ${escapes === 1 ? "1 simulated escape" : `${escapes} simulated escapes`}`}
           </span>
           <Button ref={undoButton} type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
             Undo

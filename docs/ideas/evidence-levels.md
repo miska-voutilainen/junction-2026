@@ -15,7 +15,7 @@ Each claim the AI makes is labelled by what backs it, Verified, Supported, Unver
   <img src="img/evidence-levels-light.svg" alt="Verified, Supported and Unverified from strongest to weakest, Refused apart; the model's confidence is never shown." width="880">
 </picture>
 
-Three levels, strongest first, each earned by something a person can check, plus a label for what the AI may not decide:
+Three levels, strongest first, each earned by something a person can check, plus Refused:
 
 - **Verified:** a test that fails before the change and passes after it, not written by the authoring agent. The reader sees both outputs.
 - **Supported:** a citation whose quote matched ([Idea 4](quote-check.md)), or the PR's own test. The reader sees the quoted lines or "the PR's own test".

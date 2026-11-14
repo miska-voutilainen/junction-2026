@@ -1,0 +1,113 @@
+# One job, fail-fast order, target under 4 minutes (docs/setup.md section 6).
+# After the install, the quick checks (messages, lanes, tree, hook tests) run before the slow ones
+# (lint to build), which are skipped when a PR changes only Markdown, but the job still runs so the required
+# `ci` check always reports. No `paths-ignore`: a required check that never runs blocks the PR.
+name: ci
+
+on:
+  pull_request:
+    # edited re-runs the message check after a title or body fix; labeled and unlabeled too: the lane check reads the `cross-lane` label, and
+    # `gh pr create --label` adds labels only after the opened event has fired.
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  # Never cancel a push to main: its run is the record that main is green.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Full history: the message and lane checks diff against the base branch's current tip
+      # (origin/<base_ref>). Not pull_request.base.sha: that is the base when the PR was last
+      # pushed, so a later merge to main would count main's new files as this PR's changes.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # The pnpm version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Untrusted PR text reaches the scripts only through env:, never through the shell line.
+      - name: 0. Message check
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node .github/scripts/checkMessages.mjs
+
+      - name: 1. Lane check
+        if: github.event_name == 'pull_request'
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node .github/scripts/checkLanes.mjs
+
+      - name: 2. Tree check
+        run: node .github/scripts/checkTree.mjs
+
+      - name: 3. Hook, lane-logic and CI script tests
+        run: |
+          pnpm test:hooks
+          node --test ".github/scripts/*.test.mjs"
+
+      # Pushes to main always run the slow steps; a PR skips them when every changed file is Markdown.
+      - name: Decide whether the slow steps run
+        id: scope
+        shell: bash
+        run: |
+          # A push to main has no base branch and always runs every step, so only a PR diffs.
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "slow=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Capture first: a failing git diff must fail the step, not read as "no files changed".
+          changed=$(git diff --name-only "$BASE_SHA...HEAD")
+          if ! grep -qv '\.md$' <<< "$changed"; then
+            echo "slow=false" >> "$GITHUB_OUTPUT"
+            echo "Only Markdown changed: lint, typecheck, tests and build are skipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "slow=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: origin/${{ github.base_ref }}
+
+      - name: 4. Lint
+        if: steps.scope.outputs.slow == 'true'
+        run: pnpm lint
+
+      - name: 4. Typecheck
+        if: steps.scope.outputs.slow == 'true'
+        run: pnpm typecheck
+
+      - name: 4. Unit tests
+        if: steps.scope.outputs.slow == 'true'
+        run: pnpm test
+
+      - name: 4. Build
+        if: steps.scope.outputs.slow == 'true'
+        run: pnpm build
+
+      - name: 5. Secret scan
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"

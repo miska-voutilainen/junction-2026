@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { FileSignature } from "lucide-react";
+import { BackAction } from "@/components/BackAction";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
-import { Button } from "@/components/ui/button";
 
 /** The change has no receipt: says who can sign, shows the command and links back to the review. */
 export function NoReceipt({ changeId, signCommand }: Readonly<{ changeId: string; signCommand: string }>) {
@@ -10,13 +9,9 @@ export function NoReceipt({ changeId, signCommand }: Readonly<{ changeId: string
     <EmptyState
       icon={<FileSignature />}
       title={`No receipt for ${changeId} yet.`}
-      body="Only a named human can sign. Review the change, then run"
+      body="Only a named human can sign. Review the change, then run this command:"
       command={signCommand}
-      actions={
-        <Button asChild variant="secondary">
-          <Link href={`/changes/${changeId}`}>Back to the review</Link>
-        </Button>
-      }
+      actions={<BackAction href={`/changes/${changeId}`}>Back to the review</BackAction>}
     />
   );
 }
@@ -33,11 +28,7 @@ export function InvalidReceipt({ changeId, error }: Readonly<{ changeId: string;
         </>
       }
       details={error}
-      actions={
-        <Button asChild variant="secondary">
-          <Link href={`/changes/${changeId}`}>Back to the review</Link>
-        </Button>
-      }
+      actions={<BackAction href={`/changes/${changeId}`}>Back to the review</BackAction>}
     />
   );
 }

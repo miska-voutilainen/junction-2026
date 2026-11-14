@@ -14,7 +14,7 @@ import { TierDecisionSchema } from "./tierDecision";
 const nonNegInt = z.number().int().nonnegative();
 const TestResultSchema = z.strictObject({
   result: z.enum(["fail", "pass", "error"]),
-  output: z.string(), // trimmed to the last 2,000 characters
+  output: z.string(), // a 2,000-character excerpt: failed tests, error messages, repository frames, summary
 });
 
 const HunkLineSchema = z.strictObject({
@@ -178,6 +178,18 @@ export const ReviewSchema = z.strictObject({
   retractions: z.array(
     z.strictObject({ claimId: z.string(), reason: z.string(), output: z.string() }),
   ),
+  // Tests that said nothing about the change (a build error, no match, a timeout, or a failure on both
+  // versions), with the reason. Optional so reviews recorded before A5 stay valid.
+  inconclusiveTests: z
+    .array(
+      z.strictObject({
+        source: z.enum(["differential-test", "pr-test"]),
+        requirementItemId: z.string().nullable(),
+        testNames: z.array(z.string()),
+        reason: z.string(),
+      }),
+    )
+    .optional(),
   receiptDraft: ReceiptBodySchema,
   // route() at record time, with the levels from the report card then
   routing: TierDecisionSchema,

@@ -1,8 +1,11 @@
 /**
  * Hunk coverage and routing: turns a review into a reading list. Every hunk
- * gets exactly one state, Verified, Supported or Read this, so a human reads
- * only what no checked evidence covers ("Read 2 of 8 hunks"). The tier is the
- * highest any fired rule asks for. Pure rules, no model call, no I/O, so the
+ * gets exactly one state, Verified, Supported, Read this or Generated, so a
+ * human reads only what no checked evidence covers ("Read 2 of 8 hunks").
+ * Hunks in generated files (snapshots) stay visible as Generated but leave the
+ * reading count, so a change made of 400 snapshots doesn't drown its 12 real
+ * hunks; R-generated says the risk in one line. The tier is the highest any
+ * fired rule asks for. Pure rules, no model call, no I/O, so the
  * routing is explainable line by line and runs in Node and the browser.
  * After a bug escapes in an area, R-escape sends the next changes there back to
  * a full read: the cluster arrest of continuous sampling plans, where a defect
@@ -37,11 +40,12 @@ export function route(
   const readHunkList = review.hunks.filter((hunk) => coverage[hunk.id] === "read");
 
   const totalHunks = review.hunks.length;
+  const generatedHunks = countGenerated(coverage);
   const readHunks = readHunkList.length;
   const totalLines = sumChangedLines(review.hunks);
   const readLines = sumChangedLines(readHunkList);
 
-  const reasons = collectReasons({ review, levels, policy, areaOf, escapes, readHunks, totalHunks });
+  const reasons = collectReasons({ review, levels, policy, areaOf, escapes, readHunks, totalHunks, generatedHunks });
   const tier = reasons.reduce<Tier>((highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest), "light");
 
   return {
@@ -57,18 +61,21 @@ export function route(
   };
 }
 
-/** Rule 1. First match wins, so a finding beats a verified claim on the same hunk. */
+/** Rule 1. First match wins, so a finding beats a verified claim on the same hunk, and a generated file's hunk needs no claim. */
 function coverHunks(
   review: Review,
   levels: Record<Area, LadderLevel>,
   areaOf: Map<string, Area | null>,
 ): Record<string, Coverage> {
+  const kindOf = new Map(review.files.map((file) => [file.path, file.kind]));
   const flagged = new Set([...review.findings, ...review.refusals].flatMap((item) => item.hunkIds));
   const coverage: Record<string, Coverage> = {};
   for (const hunk of review.hunks) {
     const area = areaOf.get(hunk.file) ?? null;
     const claims = review.claims.filter((claim) => claim.hunkIds.includes(hunk.id));
+    // A finding or refusal still sends a generated hunk to a person: someone flagged it.
     if (flagged.has(hunk.id) || (area !== null && levels[area] === "shadow")) coverage[hunk.id] = "read";
+    else if (kindOf.get(hunk.file) === "generated") coverage[hunk.id] = "generated";
     else if (claims.some((claim) => claim.level === "verified")) coverage[hunk.id] = "verified";
     else if (claims.some((claim) => claim.level === "supported")) coverage[hunk.id] = "supported";
     else coverage[hunk.id] = "read";
@@ -107,11 +114,14 @@ interface RuleInput {
   escapes: Partial<Record<Area, number>>;
   readHunks: number;
   totalHunks: number;
+  generatedHunks: number;
 }
 
 /** Rules 2 to 10 in the spec's order; each that fires adds one reason (R-escape and R-area-level add one per area). */
 function collectReasons(input: RuleInput): Reason[] {
-  const { review, policy, readHunks, totalHunks } = input;
+  const { review, policy, readHunks, totalHunks, generatedHunks } = input;
+  // Generated hunks are never read, so the share is of the hunks a person could read.
+  const readableHunks = totalHunks - generatedHunks;
   const reasons: Reason[] = [];
 
   const sizedLines = review.files.filter((file) => file.kind !== "generated").reduce((sum, file) => sum + file.added + file.removed, 0);
@@ -119,8 +129,8 @@ function collectReasons(input: RuleInput): Reason[] {
     reasons.push({ ruleId: "R-size", tier: "full", text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})` });
   }
 
-  if (totalHunks > 0 && readHunks / totalHunks >= policy.readShareFull) {
-    reasons.push({ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${totalHunks} hunks: most of the change needs a human` });
+  if (readableHunks > 0 && readHunks / readableHunks >= policy.readShareFull) {
+    reasons.push({ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${readableHunks} hunks: most of the change needs a human` });
   }
 
   reasons.push(...escapeReasons(input));
@@ -150,7 +160,25 @@ function collectReasons(input: RuleInput): Reason[] {
   if (readHunks > 0 && reasons.length === 0) {
     reasons.push({ ruleId: "R-unread", tier: "focused", text: `${readHunks} ${readHunks === 1 ? "hunk has" : "hunks have"} no checked evidence` });
   }
+  // Last, and at tier light, so it explains the count without raising the tier or hiding R-unread.
+  if (generatedHunks > 0) {
+    reasons.push({ ruleId: "R-generated", tier: "light", text: generatedReason(generatedHunks) });
+  }
   return reasons;
+}
+
+/** How many hunks route() marked "generated": the ones the reading count leaves out. */
+export function countGenerated(coverage: Record<string, Coverage> | Coverage[]): number {
+  return Object.values(coverage).filter((state) => state === "generated").length;
+}
+
+/**
+ * The one-line note on a change with generated hunks: the count, what to read
+ * instead, and the risk of not reading them.
+ * @example "411 are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught"
+ */
+export function generatedReason(generatedHunks: number): string {
+  return `${generatedHunks} ${generatedHunks === 1 ? "is a generated snapshot" : "are generated snapshots"}: read the template that produces ${generatedHunks === 1 ? "it" : "them"}, because code hidden in a snapshot would not be caught`;
 }
 
 /** Labels of the sensitive paths any hunk falls in, in policy order. */
