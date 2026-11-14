@@ -86,10 +86,19 @@ describe("evidence line", () => {
     expect(h7?.evidence).toBe("Supported by c5 · quote checked at GenerationTests.cs:120, outside this hunk");
   });
 
-  it("says why a hunk with no finding is still read: its area has no track record", async () => {
+  it("names the Verified claim on a Shadow hunk, so Verified and Read this don't look like a contradiction", async () => {
     const review = await load("mp-2283");
     const { sections } = await sectionsOf(review, { state: "missing" });
-    // Without a report card every hunk is read; the generator hunk has no finding of its own.
+    // Without a report card every area is Shadow, so h1 is read although claim c1 is Verified.
+    expect(sections.read.find((entry) => entry.hunk.id === "h1")?.evidence).toBe(
+      "Area is at Shadow: claim c1 is Verified, but evidence here routes nothing yet",
+    );
+  });
+
+  it("says a Shadow hunk no claim covers has no track record", async () => {
+    const review = await load("mp-2283");
+    const uncovered = { ...review, claims: review.claims.filter((claim) => !claim.hunkIds.includes("h1")) };
+    const { sections } = await sectionsOf(uncovered, { state: "missing" });
     expect(sections.read.find((entry) => entry.hunk.id === "h1")?.evidence).toBe("Area is at Shadow: no track record");
   });
 
