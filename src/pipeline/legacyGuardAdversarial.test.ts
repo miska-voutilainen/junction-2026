@@ -114,6 +114,12 @@ describe("C# symbols", () => {
     expect(addedCalls(added("writer.WriteExt<T>(x);"))).toEqual(["WriteExt"]);
   });
 
+  it("reads a comparison before a call as no call: if (i < n) Process(x > (y))", () => {
+    const calls = addedCalls(added("if (i < n) Process(x > (y));"));
+    expect(calls).toContain("Process");
+    expect(calls).not.toContain("i");
+  });
+
   it("finds a call written with global:: and a namespace", () => {
     expect(addedCalls(added("global::MessagePack.MessagePackSerializer.Serialize(x);"))).toEqual([
       "Serialize",

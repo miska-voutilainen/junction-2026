@@ -98,10 +98,12 @@ const declarationPattern = new RegExp(
 /**
  * A call: a name, optional type arguments, then "(", not an object creation
  * and not a call on `this.`, which is the type's own method and not a reach
- * into another type.
+ * into another type. The `<` must follow the name directly, as C# style
+ * writes a generic call: with a space allowed, `i < n) Process(x > (y)` read as
+ * one call to `i` and hid the call to `Process`.
  * @example "writer.Write(x)" and "writer.WriteExt<T>(x)" yield "Write" and "WriteExt"; "this.Write(x)" and "new Foo()" yield nothing.
  */
 const callPattern = new RegExp(
-  String.raw`(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)\s*(?:${typeArguments}\s*)?\(`,
+  String.raw`(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)(?:${typeArguments})?\s*\(`,
   "g",
 );
