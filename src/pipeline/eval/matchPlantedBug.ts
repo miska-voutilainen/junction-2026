@@ -1,6 +1,6 @@
 /**
  * Planted-bug calibration: bugs are written blind with an answer key, and a
- * review "catches" one when a defect finding sits in the planted area and cites
+ * review "catches" one when a defect or missing finding sits in the planted area and cites
  * the planted lines. The catch rate per area sets the trust ladder's starting
  * level. Spec section 6 (Planted-bug eval) and 9.1 (T16).
  */
@@ -41,10 +41,7 @@ export function isPlantedBugMatch(finding: Finding, key: AnswerKey): boolean {
 }
 
 /** The first matching finding in output order; its id becomes the report card's findingId. */
-export function findPlantedBugMatch(
-  findings: readonly Finding[],
-  key: AnswerKey,
-): Finding | null {
+export function findPlantedBugMatch(findings: readonly Finding[], key: AnswerKey): Finding | null {
   return findings.find((finding) => isPlantedBugMatch(finding, key)) ?? null;
 }
 

@@ -2,8 +2,8 @@
  * The model steps of a review, in the order that makes it blind-first: A1 writes
  * the expectation from the requirement alone, then A2 reads the code with that
  * expectation in hand, A3 reviews the area checklists against the claims and A4
- * tests the author description last. Each step is one client call; A5 runs
- * outside the client (T14). `runIndex` keys repeated eval runs apart in the
+ * tests the author description last. Each step here is one client call; A5's
+ * calls live in `differential/runDifferentialTests.ts` (T14). `runIndex` keys repeated eval runs apart in the
  * recordings. Spec section 6.
  */
 import type { ModelClient } from "../ai/client";
