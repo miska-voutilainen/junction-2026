@@ -39,21 +39,22 @@ describe("buildReceiptView", () => {
     expect(view.checked.map((entry) => entry.by)).toEqual(expect.arrayContaining(["Tool", "AI, supported", "Human"]));
   });
 
-  it("names the change's author agent and the signer in the identity block, once each", () => {
+  it("names author, reviewer version and signer once, in the roles line, not as identity rows", () => {
     const input = source("mp-2283");
-    const rows = documentOf(input).identity;
-    expect(rows.find((row) => row.label === "author")?.value).toBe(input.change.authorAgent);
-    expect(rows.find((row) => row.label === "signer")?.value).toBe("miska-voutilainen");
+    const view = documentOf(input);
+    expect(view.roles).toEqual({ authorAgent: input.change.authorAgent, reviewerVersion: "rv1", owner: "miska-voutilainen" });
+    expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["author"]));
+    expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["signer"]));
   });
 
-  it("shows a receipt for an older diff as stale, with both hashes cut to 12 characters and no ledger or summary", () => {
+  it("shows a receipt for an older diff as stale, with both hashes cut to 12 characters and no summary but the signed ledger", () => {
     const view = documentOf(source("mp-2129"));
     expect(view.status).toBe("stale");
     expect(view.staleHashes?.signedDiff).toHaveLength(12);
     expect(view.staleHashes?.reviewedDiff).toHaveLength(12);
     expect(view.staleHashes?.signedDiff).not.toBe(view.staleHashes?.reviewedDiff);
     expect(view.identity.find((row) => row.label === "diffSha256")?.value).toHaveLength(64);
-    expect(view.ledger).toBeNull();
+    expect(view.ledger.length).toBeGreaterThan(0);
     expect(view.summary).toBeNull();
   });
 
@@ -63,7 +64,6 @@ describe("buildReceiptView", () => {
     const view = documentOf(failed);
     expect(view.status).toBe("unverified");
     expect(view.verifyLine).toBe("The signature check failed when this receipt was exported.");
-    expect(view.ledger).toBeNull();
   });
 
   it("offers the sign command when there is no receipt", () => {
@@ -85,7 +85,7 @@ describe("buildReceiptView", () => {
     expect(view.status).toBe("unchecked");
     expect(view.verifyLine).toBe("Signature valid");
     expect(view.summary).toBeNull();
-    expect(view.ledger).toBeNull();
+    expect(view.ledger.length).toBeGreaterThan(0);
     expect(view.residualRisk.accepted.every((entry) => entry.rule === null)).toBe(true);
   });
 
@@ -103,28 +103,26 @@ describe("buildReceiptView", () => {
 });
 
 describe("hunk ledger", () => {
-  const view = documentOf(source("mp-2283"));
-  const ledger = view.ledger ?? [];
-  const review = ReviewSchema.parse(fixture("runs/mp-2283/review.json"));
+  const input = source("mp-2283");
+  const view = documentOf(input);
+  const signedHunks = ReceiptRecordSchema.parse(fixture("receipts/mp-2283.json")).receipt.hunks;
 
-  it("lists every hunk of the signed diff", () => {
-    expect(ledger).toHaveLength(review.hunks.length);
+  it("lists every hunk of the receipt's signed payload", () => {
+    expect(view.ledger).toHaveLength(signedHunks.length);
   });
 
-  it("puts the hunks a person read first and names the signer on them only", () => {
-    const readRows = ledger.filter((row) => row.coverage === "read");
-    expect(ledger.slice(0, readRows.length)).toEqual(readRows);
+  it("puts the hunks a person read first and keeps who read them as signed", () => {
+    const readRows = view.ledger.filter((row) => row.coverage === "read");
+    expect(view.ledger.slice(0, readRows.length)).toEqual(readRows);
     expect(readRows.every((row) => row.readBy === view.owner)).toBe(true);
-    expect(ledger.filter((row) => row.coverage !== "read").every((row) => row.readBy === null)).toBe(true);
+    expect(view.ledger.filter((row) => row.coverage !== "read").every((row) => row.readBy === null)).toBe(true);
   });
 
-  it("writes a range as file:first–last and a one-line hunk or a deletion as file:line", () => {
-    const [ranged] = review.hunks.filter((hunk) => hunk.newLines > 1);
-    expect(ledger.find((row) => row.hunkId === ranged.id)?.location).toBe(`${ranged.file}:${ranged.newStart}–${ranged.newStart + ranged.newLines - 1}`);
-
-    const deletionOnly = { ...review, hunks: [{ ...review.hunks[0], newLines: 0 }], routing: { ...review.routing, coverage: { [review.hunks[0].id]: "read" as const } } };
-    const row = documentOf({ ...source("mp-2283"), review: { state: "ok", data: deletionOnly } }).ledger?.[0];
-    expect(row?.location).toBe(`${review.hunks[0].file}:${review.hunks[0].newStart}`);
+  it("reads the signed hunks, not the review: a review that disagrees changes nothing", () => {
+    const review = ReviewSchema.parse(fixture("runs/mp-2283/review.json"));
+    const withoutHunks = { ...review, hunks: [], routing: { ...review.routing, coverage: {} } };
+    const other = documentOf({ ...input, review: { state: "ok", data: withoutHunks } });
+    expect(other.ledger).toEqual(view.ledger);
   });
 });
 

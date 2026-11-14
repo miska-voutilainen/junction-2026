@@ -4,16 +4,23 @@ import { cn } from "@/lib/utils";
 import type { LedgerRow } from "./receiptModel";
 
 /**
- * Hunk ledger (the console is its own heading): every hunk of the signed diff, what covered it, and who read it.
- * One mono line per hunk in aligned columns, in a console so a long path scrolls
- * inside the box and Copy takes the plain text. Hunks a person read come first
- * and are amber, the same signal as the coverage gutter on the review page.
+ * Hunk ledger: every hunk of the signed diff, what covered it, and who read it.
+ * It is read from the receipt's signed payload, so the note under the heading
+ * says the signature covers it. One mono line per hunk in aligned columns, in
+ * a console so a long path scrolls inside the box and Copy takes the plain
+ * text. Hunks a person read come first and are amber, the same signal as the
+ * coverage gutter on the review page.
+ *
+ * @param owner The signer's login, named in the note.
  */
-export function HunkLedger({ rows }: { rows: LedgerRow[] }) {
+export function HunkLedger({ rows, owner }: { rows: LedgerRow[]; owner: string }) {
   const lines = ledgerLines(rows);
   return (
-    <section>
-      <Console label="Hunk ledger" kind="output" text={lines.map((line) => line.text).join("\n")}>
+    <section className="flex flex-col gap-2">
+      <p className="text-sm text-text-muted">
+        Part of the signed payload: the signature covers which hunks {owner} read and which checks covered the rest.
+      </p>
+      <Console label="Hunk ledger · signed" kind="output" text={lines.map((line) => line.text).join("\n")}>
         <div>
           {lines.map((line) => (
             <div key={line.hunkId} className={cn(line.isRead && "text-amber-light")}>
@@ -27,10 +34,11 @@ export function HunkLedger({ rows }: { rows: LedgerRow[] }) {
 }
 
 function ledgerLines(rows: LedgerRow[]): { hunkId: string; text: string; isRead: boolean }[] {
-  const locationWidth = Math.max(...rows.map((row) => row.location.length));
+  const idWidth = Math.max(...rows.map((row) => row.hunkId.length));
+  const fileWidth = Math.max(...rows.map((row) => row.file.length));
   const coverageWidth = Math.max(...rows.map((row) => coverageLabel[row.coverage].length));
   return rows.map((row) => {
-    const columns = [row.location.padEnd(locationWidth), coverageLabel[row.coverage].padEnd(coverageWidth)];
+    const columns = [row.hunkId.padEnd(idWidth), row.file.padEnd(fileWidth), coverageLabel[row.coverage].padEnd(coverageWidth)];
     if (row.readBy !== null) columns.push(`Read by ${row.readBy}`);
     return { hunkId: row.hunkId, text: columns.join("  ").trimEnd(), isRead: row.coverage === "read" };
   });
