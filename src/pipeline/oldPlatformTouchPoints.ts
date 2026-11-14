@@ -8,6 +8,7 @@
 import type { LegacyTouchPoint } from "../contracts";
 import type { BaseTree } from "../lib/git/baseTree";
 import {
+  currentPlatformIf,
   legacyTargetFramework,
   maintainersOwner,
   maxListedFiles,
@@ -38,13 +39,41 @@ function directiveSighting(hunk: Hunk): Sighting[] {
   const project = hunk.file.match(/^src\/([^/]+)\//)?.[1];
   // The first directive stands for the hunk: one hunk is one sighting, and a hunk
   // that changes several `#if` lines still asks the same question of the owner.
-  const directive = hunk.lines
-    .filter((line) => line.kind !== "context" && oldPlatformDirective.test(line.text))
-    .map((line) => line.text.trim())[0];
+  const directive = hunk.lines.flatMap((line, index) => {
+    if (line.kind === "context") return [];
+    if (oldPlatformDirective.test(line.text)) return [line.text.trim()];
+    if (!elseDirective.test(line.text)) return [];
+    const opening = openingIf(hunk.lines, index);
+    return opening && currentPlatformIf.test(opening) ? [`#else of ${opening}`] : [];
+  })[0];
   if (!project || !directive) return [];
   return [
     { detail: directive, owner: maintainersOwner.platform, hunkId: hunk.id, subject: project },
   ];
+}
+
+const elseDirective = /^\s*#\s*else\b/;
+
+/**
+ * The `#if` line an `#else` at `index` closes, or null when it opened above the
+ * hunk. Walks back through the same version of the file as the `#else`: an
+ * added line through context and added lines, a removed one through context
+ * and removed lines. Nested `#if ... #endif` blocks on the way are skipped.
+ * @example lines "#if NET8_0_OR_GREATER", "Fast();", "#else" give "#if NET8_0_OR_GREATER" for the third line
+ */
+function openingIf(lines: Hunk["lines"], index: number): string | null {
+  const version = lines[index].kind;
+  let depth = 0;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const { kind, text } = lines[i];
+    if (kind !== "context" && kind !== version) continue;
+    if (/^\s*#\s*endif\b/.test(text)) depth += 1;
+    else if (/^\s*#\s*if\b/.test(text)) {
+      if (depth === 0) return text.trim();
+      depth -= 1;
+    }
+  }
+  return null;
 }
 
 /**

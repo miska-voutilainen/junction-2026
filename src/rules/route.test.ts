@@ -409,6 +409,41 @@ describe("legacy guard", () => {
     expect(decision.tier).toBe("full");
   });
 
+  describe("reach-ins toward legacyTouchFull", () => {
+    const formatter = "src/MessagePack/Formatters/NewFormatter.cs";
+    const reachIn = (hunkIds: string[]) => ({
+      kind: "legacy-code" as const,
+      hunkIds,
+      detail: "WriteArrayHeader: calls into Wire format",
+      owner: "runtime owner (the maintainers)",
+      guard: { status: "guarded" as const, evidence: "109 test files at the base commit name WriteArrayHeader", files: [] },
+    });
+    const withReachIns = (zoneHunks: number, reachInHunks: number) => {
+      const zone = Array.from({ length: zoneHunks }, (_, index) => ({ id: `w${index}`, file: writer }));
+      const outside = Array.from({ length: reachInHunks }, (_, index) => ({ id: `f${index}`, file: formatter }));
+      const hunks = [...zone, ...outside];
+      return {
+        ...makeReview({ hunks, claims: verifiedOn(...hunks.map((hunk) => hunk.id)) }),
+        legacyTouchPoints: [reachIn(outside.map((hunk) => hunk.id))],
+      };
+    };
+    const legacyTiers = (review: ReturnType<typeof withReachIns>) =>
+      route(review, trustedEverywhere).reasons.filter((reason) => reason.ruleId === "R-legacy").map((reason) => reason.tier);
+
+    it("counts reach-in hunks with zone hunks: 3 in the zone and 2 reaching in is Full", () => {
+      expect(legacyTiers(withReachIns(3, 2))).toEqual(["full"]);
+    });
+
+    it("gives reach-ins alone their own Full reason at the threshold, and none below it", () => {
+      expect(route(withReachIns(0, 5), trustedEverywhere).reasons).toContainEqual({
+        ruleId: "R-legacy",
+        tier: "full",
+        text: "Legacy code: reaches into the legacy zones from 5 hunks, their owners decide",
+      });
+      expect(legacyTiers(withReachIns(0, 4))).toEqual([]);
+    });
+  });
+
   it("adds no R-legacy to a change without legacy files", () => {
     const review = makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") });
     expect(ruleIds(review)).not.toContain("R-legacy");

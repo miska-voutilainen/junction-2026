@@ -211,6 +211,28 @@ describe("old-platform", () => {
     expect(points.map((point) => point.hunkIds)).toEqual([["h4"]]);
   });
 
+  it("finds a changed #else of an #if on one current target, in the same version of the file", async () => {
+    const elseOfCurrent = hunk("h6", "src/MessagePack/Formatters/F.cs", [
+      ["context", "#if NET8_0_OR_GREATER"],
+      ["context", "#if DEBUG"],
+      ["context", "#endif"],
+      ["del", "Old();"],
+      ["add", "#else"],
+    ]);
+    const compound = hunk("h7", "src/MessagePack/Formatters/F.cs", [
+      ["context", "#if NET8_0_OR_GREATER || NETSTANDARD2_1"],
+      ["add", "#else"],
+    ]);
+    // The #if is on a removed line, so the added #else closes some #if above the hunk.
+    const otherVersion = hunk("h8", "src/MessagePack/Formatters/F.cs", [
+      ["del", "#if NET8_0_OR_GREATER"],
+      ["add", "#else"],
+    ]);
+    const points = await find([elseOfCurrent, compound, otherVersion], fakeTree());
+    expect(points).toHaveLength(1);
+    expect(points[0]).toMatchObject({ detail: "#else of #if NET8_0_OR_GREATER", hunkIds: ["h6"] });
+  });
+
   it("groups hunks with the same directive and ignores other #if lines", async () => {
     const second = hunk("h2", "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs", [
       ["del", directive],

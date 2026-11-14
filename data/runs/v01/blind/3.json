@@ -2493,6 +2493,15 @@
         "h1",
         "h2"
       ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R8",
+      "source": "rule",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "hunkIds": [
+        "h3"
+      ]
     }
   ],
   "quoteCheck": {
@@ -2577,10 +2586,28 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and the MsgPack004 docs now state, as documented public behaviour, that diagnostics about members of a type from a referenced assembly are reported only by the defining project and not by the consuming project. That is a decision about the public analyzer contract and belongs to the maintainers.",
+      "text": "r1 (R7): The README and the MsgPack004 docs now state, as documented public behaviour, that diagnostics about members of a type from a referenced assembly are reported only by the defining project and not by the consuming project. That is a decision about the public analyzer contract and belongs to the maintainers. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [
+    {
+      "kind": "consumer-contract",
+      "hunkIds": [
+        "h3"
+      ],
+      "detail": "contract paths",
+      "owner": "API owner (the maintainers)",
+      "guard": {
+        "status": "guarded",
+        "evidence": "the same change updates README.md, MsgPack004.md",
+        "files": [
+          "README.md",
+          "doc/analyzers/MsgPack004.md"
+        ]
+      }
+    }
+  ],
   "routing": {
     "tier": "full",
     "reasons": [
@@ -2591,8 +2618,13 @@
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "2 items refused: a human decides",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-legacy-guard",
+        "text": "Consumer contract: contract paths in 1 hunk, guarded: the same change updates README.md, MsgPack004.md",
+        "tier": "light"
       },
       {
         "ruleId": "R-defect",

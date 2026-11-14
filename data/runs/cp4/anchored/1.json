@@ -8681,6 +8681,17 @@
       "hunkIds": [
         "h7"
       ]
+    },
+    {
+      "id": "r2",
+      "ruleId": "R8",
+      "source": "rule",
+      "reason": "Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides",
+      "hunkIds": [
+        "h9",
+        "h10",
+        "h11"
+      ]
     }
   ],
   "quoteCheck": {
@@ -8812,6 +8823,18 @@
         "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
+        "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:29 (h9)",
+        "reason": "Refusal r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:315 (h10)",
+        "reason": "Refusal r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides"
+      },
+      {
+        "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:378 (h11)",
+        "reason": "Refusal r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides"
+      },
+      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/GeneratedFormatterCollector.cs:1 (h12)",
         "reason": "Finding f1 (contradiction) names this hunk"
       },
@@ -8833,10 +8856,34 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): Changes the public attributes",
+      "text": "r1 (R7): Changes the public attributes r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [
+    {
+      "kind": "consumer-contract",
+      "hunkIds": [
+        "h7",
+        "h9",
+        "h10",
+        "h11"
+      ],
+      "detail": "contract paths, public surface, diagnostic ids",
+      "owner": "API owner (the maintainers)",
+      "guard": {
+        "status": "guarded",
+        "evidence": "the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more",
+        "files": [
+          "README.md",
+          "doc/analyzers/MsgPack019.md",
+          "doc/analyzers/MsgPack020.md",
+          "doc/analyzers/MsgPack021.md",
+          "doc/analyzers/MsgPack022.md"
+        ]
+      }
+    }
+  ],
   "routing": {
     "tier": "full",
     "reasons": [
@@ -8847,8 +8894,13 @@
       },
       {
         "ruleId": "R-refusal",
-        "text": "1 item refused: a human decides",
+        "text": "2 items refused: a human decides",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-legacy-guard",
+        "text": "Consumer contract: contract paths, public surface, diagnostic ids in 4 hunks, guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more",
+        "tier": "light"
       },
       {
         "ruleId": "R-contradiction",
@@ -8885,9 +8937,9 @@
       "h6": "read",
       "h7": "read",
       "h8": "supported",
-      "h9": "supported",
-      "h10": "supported",
-      "h11": "supported",
+      "h9": "read",
+      "h10": "read",
+      "h11": "read",
       "h12": "read",
       "h13": "supported",
       "h14": "supported",
@@ -8911,11 +8963,11 @@
       "h32": "supported",
       "h33": "supported"
     },
-    "readHunks": 12,
+    "readHunks": 15,
     "totalHunks": 33,
-    "readLines": 507,
+    "readLines": 553,
     "totalLines": 1043,
-    "readMinutes": 21,
+    "readMinutes": 23,
     "fullMinutes": 42
   }
 }
