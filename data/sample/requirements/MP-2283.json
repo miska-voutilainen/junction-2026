@@ -1,0 +1,34 @@
+{
+  "id": "MP-2283",
+  "title": "Generator and analyzer crash with IndexOutOfRangeException on a closed generic struct from a referenced assembly",
+  "intent": "A [MessagePackObject] type with a member whose type is a closed generic value type from a referenced assembly must build cleanly and still get a generated resolver.",
+  "functional": [
+    {
+      "id": "F1",
+      "text": "The generator does not throw when a member's type is a closed generic struct or record struct defined in a referenced assembly."
+    },
+    {
+      "id": "F2",
+      "text": "The analyzer does not throw for the same member types."
+    },
+    {
+      "id": "F3",
+      "text": "The compiling assembly gets its generated resolver, as it does when the generic type is declared in the same project."
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "N1",
+      "text": "A failure of the generator or analyzer must not pass silently as a build warning that leaves the assembly without a resolver. (inferred)"
+    },
+    {
+      "id": "N2",
+      "text": "Behaviour for generic classes, non-generic structs and types declared in the same project does not change. (inferred)"
+    }
+  ],
+  "derivedFrom": {
+    "kind": "github-issue",
+    "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2283",
+    "note": "Derived by the engine lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
+  }
+}
