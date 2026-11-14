@@ -7,12 +7,13 @@
 //
 // Env: BASE_SHA (origin/main when unset, for local runs). Needs full git history, like the other checks.
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const VERSION_FILE = "src/pipeline/assembleReview.ts";
 
 /** Files besides src/prompts/ whose text reaches a prompt: A3's checklists and the refusal rules it is shown. */
-const POLICY_FILES_IN_PROMPTS = ["src/policy/areaChecklists.ts", "src/policy/refusals.ts"];
+const POLICY_FILES_IN_PROMPTS = new Set(["src/policy/areaChecklists.ts", "src/policy/refusals.ts"]);
 
 /**
  * Whether a changed file can alter what the model is asked.
@@ -21,7 +22,7 @@ const POLICY_FILES_IN_PROMPTS = ["src/policy/areaChecklists.ts", "src/policy/ref
  */
 export function readsIntoPrompt(file) {
   if (file.endsWith(".test.ts")) return false;
-  return file.startsWith("src/prompts/") || POLICY_FILES_IN_PROMPTS.includes(file);
+  return file.startsWith("src/prompts/") || POLICY_FILES_IN_PROMPTS.has(file);
 }
 
 /**
@@ -40,8 +41,15 @@ export function findVersionProblem(changedFiles, versionFileDiff) {
   );
 }
 
+// git by absolute path, as in checkTree.mjs: a bare "git" is looked up on PATH, where a writable
+// folder early on it could put another program in its place and run it with this script's rights.
+const GIT_LOCATIONS = ["/usr/bin/git", "/usr/local/bin/git", "C:/Program Files/Git/cmd/git.exe"];
+
 function git(...args) {
-  return execFileSync("git", args, { encoding: "utf8" });
+  const gitPath = GIT_LOCATIONS.find((location) => existsSync(location));
+  if (gitPath === undefined)
+    throw new Error(`git not found in ${GIT_LOCATIONS.join(", ")}. Install git.`);
+  return execFileSync(gitPath, args, { encoding: "utf8" });
 }
 
 function main() {

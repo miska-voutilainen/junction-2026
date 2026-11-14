@@ -125,7 +125,8 @@ function summaryLine(review: Review): string {
   return [
     review.changeId,
     routing.tier,
-    `read ${routing.readHunks} of ${routing.totalHunks} hunks${generatedHunks > 0 ? ` · ${generatedHunks} generated` : ""}`,
+    `read ${routing.readHunks} of ${routing.totalHunks} hunks`,
+    ...(generatedHunks > 0 ? [`${generatedHunks} generated`] : []),
     `${review.claims.length} claims`,
     `${review.findings.length} findings`,
     `${review.refusals.length} refused`,

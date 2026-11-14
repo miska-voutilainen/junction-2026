@@ -88,7 +88,7 @@ function capitalise(word: string): string {
 /** One line, and a blank after it, when the reviewer is not the model the eval measured; nothing otherwise. */
 function unmeasuredModelLine(reviewerModel: string, measuredModel: string | null): string[] {
   if (reviewerModel === measuredModel) return [];
-  const measured = measuredModel === null ? "no model" : measuredModel;
+  const measured = measuredModel ?? "no model";
   return [
     `**Reviewer not measured:** the report card measured ${measured}; this review ran on ${reviewerModel}, so every area routes as Shadow.`,
     "",
