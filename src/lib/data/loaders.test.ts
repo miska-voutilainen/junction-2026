@@ -2,7 +2,7 @@ import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadChange, loadChanges, loadReceipt, loadReportCard, loadReview } from "./loaders";
+import { loadChange, loadChanges, loadReceipt, loadReceiptText, loadReportCard, loadReview } from "./loaders";
 
 let root: string;
 
@@ -91,5 +91,19 @@ describe("loaders", () => {
   it("returns missing when there are no changes anywhere", async () => {
     await rm(path.join(root, "fixtures", "sample", "changes"), { recursive: true });
     expect(await loadChanges(root)).toEqual({ status: "missing" });
+  });
+});
+
+describe("loadReceiptText", () => {
+  it("returns the file's exact text, recorded before fixture", async () => {
+    const fixtureText = await readFile(path.join(root, "fixtures", "receipts", "mp-2283.json"), "utf8");
+    expect(await loadReceiptText("mp-2283", root)).toBe(fixtureText);
+    await record("receipts/mp-2283.json", (text) => text.replace("rv1", "rv2"));
+    expect(await loadReceiptText("mp-2283", root)).toBe(fixtureText.replace("rv1", "rv2"));
+  });
+
+  it("returns null when there is no receipt or the id could leave data/", async () => {
+    expect(await loadReceiptText("mp-2234", root)).toBeNull();
+    expect(await loadReceiptText("../secrets", root)).toBeNull();
   });
 });

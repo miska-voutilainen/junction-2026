@@ -22,7 +22,7 @@ export function MobileHeader({ title, backHref, escapeSlot }: { title: string; b
   const searchRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <header className="flex h-topbar shrink-0 items-center gap-2 border-b border-border-subtle bg-surface-raised pr-1.5 pl-4 compact:hidden">
+    <header className="flex h-topbar shrink-0 items-center gap-2 border-b border-border-subtle bg-surface-raised pr-1.5 pl-4 compact:hidden print:hidden">
       {backHref ? (
         <Link href={backHref} aria-label="Back" className={`${TOUCH_TARGET} -ml-3`}>
           <ArrowLeft aria-hidden="true" className="size-4.5" />

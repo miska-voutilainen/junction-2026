@@ -42,7 +42,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
     <div className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
         {heading ?? <span className="truncate text-xs text-text-muted">{label}</span>}
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5 print:hidden">
           {actions}
           <WrapButton isWrapped={isWrapped} onToggle={() => setIsWrapped(!isWrapped)} />
           <CopyButton text={text} label={`Copy ${label}`} />
@@ -55,7 +55,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
           !isFlush && "p-3",
           isWrapped
             ? "[overflow-wrap:anywhere] whitespace-pre-wrap [&_pre]:whitespace-pre-wrap"
-            : "overflow-x-auto whitespace-pre",
+            : "overflow-x-auto whitespace-pre print:overflow-visible print:whitespace-pre-wrap print:[overflow-wrap:anywhere]",
         )}
       >
         {children ?? <pre className="font-[inherit]">{text}</pre>}

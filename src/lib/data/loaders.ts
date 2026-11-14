@@ -145,6 +145,22 @@ export function loadReportCard(root: string = defaultDataRoot): Promise<LoadResu
   return loadFile("eval/report-card.json", ReportCardSchema, root);
 }
 
+/**
+ * The receipt file's exact text, recorded file first and then the fixture, or null when neither exists.
+ * "Copy JSON" on the receipt page copies this, so the copy is byte-for-byte what is in git.
+ */
+export async function loadReceiptText(changeId: string, root: string = defaultDataRoot): Promise<string | null> {
+  if (!safeId.test(changeId)) return null;
+  for (const folder of ["", fixtureFolder]) {
+    try {
+      return await readFile(path.join(root, folder, "receipts", `${changeId}.json`), "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  }
+  return null;
+}
+
 /** The exported signed receipt of a change; "missing" means nobody has signed it. */
 export function loadReceipt(changeId: string, root: string = defaultDataRoot): Promise<LoadResult<ReceiptRecord>> {
   return loadById(changeId, (id) => `receipts/${id}.json`, ReceiptRecordSchema, root);

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReceiptStatus } from "@/components/ReceiptStatus";
 import { SyntheticTag } from "@/components/SyntheticTag";
 import type { ChangeInput, Review } from "@/contracts";
@@ -10,6 +11,7 @@ const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "sh
  * the branch, size and which reviewer recorded the review. Everything the AI
  * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
  *
+ * @param receiptHref Where the full receipt page is; set whenever a receipt file exists, whatever its status.
  * @param review The recorded review; absent while it is missing or unreadable, so only the change's own facts show.
  */
 export function ReviewHeader({
@@ -17,11 +19,13 @@ export function ReviewHeader({
   review,
   receiptStatus,
   signedBy,
+  receiptHref,
 }: {
   change: ChangeInput;
   review?: Review;
   receiptStatus?: ReceiptStatusValue;
   signedBy?: string;
+  receiptHref?: string;
 }) {
   return (
     <header className="flex flex-col gap-2">
@@ -34,6 +38,11 @@ export function ReviewHeader({
         <span>{change.authorAgent}</span>
         {change.authorDescription.synthetic && <SyntheticTag />}
         {receiptStatus && <ReceiptStatus status={receiptStatus} owner={signedBy} />}
+        {receiptHref && (
+          <Link href={receiptHref} className="rounded-item text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring">
+            View full receipt
+          </Link>
+        )}
       </p>
       {review && <MetaRow change={change} review={review} />}
     </header>
