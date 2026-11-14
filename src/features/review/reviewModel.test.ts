@@ -34,7 +34,7 @@ async function load(changeId: string): Promise<Review> {
 async function readableCard(): Promise<ReportCardInput> {
   const reportCard = await loadReportCard(fixtureRoot);
   if (reportCard.status !== "ok") throw new Error("report card fixture did not load");
-  return { state: "ok", data: reportCard.data };
+  return { state: "ok", data: reportCard.data, source: reportCard.source };
 }
 
 async function sectionsOf(review: Review, reportCard: ReportCardInput, escapes = {}) {
