@@ -9,9 +9,8 @@ function watchConsole(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
-    // Links to /reviewer (S3) and /changes/<id> (S2) prefetch pages that 404 until those PRs merge;
-    // delete this line with the S3 and S2 PRs.
-    if (/\/(reviewer|changes\/[\w-]+)\?_rsc=/.test(message.location().url)) return;
+    // Links to /changes/<id> prefetch a page that 404s until the S2 PR merges; delete this line with it.
+    if (/\/changes\/[\w-]+\?_rsc=/.test(message.location().url)) return;
     problems.push(`${message.type()}: ${message.text()} ${message.location().url}`);
   });
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 // "g" then a letter must come as one gesture; a second later it is forgotten.
 const GO_SEQUENCE_MS = 1000;
 
-const GO_TARGETS: Record<string, string> = { i: "/", r: "/reviewer" };
+const GO_TARGETS: Record<string, string> = { i: "/", d: "/dashboard", r: "/reviewer" };
 
 /** The page-level shortcuts that exist, in the order the nav lists them, after the search shortcut (its key depends on the platform, see `useSearchShortcutLabel`). */
 export const SHORTCUT_LIST = [
@@ -14,6 +14,7 @@ export const SHORTCUT_LIST = [
   { keys: ["j", "k"], label: "Move" },
   { keys: ["↵"], label: "Open" },
   { keys: ["g", "i"], label: "Inbox" },
+  { keys: ["g", "d"], label: "Dashboard" },
   { keys: ["g", "r"], label: "Reviewer report card" },
 ] as const;
 

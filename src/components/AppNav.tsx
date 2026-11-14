@@ -4,7 +4,7 @@ import { useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
-import { Gauge, Inbox, Keyboard } from "lucide-react";
+import { Gauge, Inbox, Keyboard, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
 import { Kbd } from "@/components/ui/kbd";
@@ -16,7 +16,13 @@ type NavItem = { label: string; href: string; icon: LucideIcon; hasBadge?: boole
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   { label: "Review", items: [{ label: "Inbox", href: "/", icon: Inbox, hasBadge: true }] },
-  { label: "Insights", items: [{ label: "Reviewer", href: "/reviewer", icon: Gauge }] },
+  {
+    label: "Insights",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Reviewer", href: "/reviewer", icon: Gauge },
+    ],
+  },
 ];
 
 /** Inbox is the home of `/` and of every `/changes/<id>`; the other items match their own path. */
