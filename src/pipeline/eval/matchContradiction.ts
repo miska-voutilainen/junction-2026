@@ -18,6 +18,8 @@ export const STATEMENT_TOKEN_OVERLAP_MIN = 0.8;
 
 /** True when the statement is the plant sentence (ignoring case and spacing) or covers enough of its words. */
 export function statementMatches(statement: string, plantSentence: string): boolean {
+  // Spec 9.1 names both rules. Equal text always has overlap 1, so equality
+  // only decides the result for a sentence with no words, where overlap is 0.
   if (normalise(statement) === normalise(plantSentence)) return true;
   return tokenOverlap(plantSentence, statement) >= STATEMENT_TOKEN_OVERLAP_MIN;
 }

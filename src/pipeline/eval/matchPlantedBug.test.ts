@@ -56,6 +56,12 @@ describe("isPlantedBugMatch", () => {
     expect(PLANT_LINE_TOLERANCE).toBe(3);
     expect(isPlantedBugMatch(finding({ citations: [cite(17, 17)] }), key())).toBe(true);
     expect(isPlantedBugMatch(finding({ citations: [cite(28, 28)] }), key())).toBe(true);
+    expect(isPlantedBugMatch(finding({ citations: [cite(10, 17)] }), key())).toBe(true);
+    expect(isPlantedBugMatch(finding({ citations: [cite(28, 40)] }), key())).toBe(true);
+  });
+
+  it("never matches a contradiction key, even one with an area and lines", () => {
+    expect(isPlantedBugMatch(finding(), key({ kind: "contradiction" }))).toBe(false);
   });
 
   it("does not match one line past the tolerance", () => {

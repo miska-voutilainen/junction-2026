@@ -19,7 +19,8 @@ function tokenSet(text: string): Set<string> {
   return new Set(
     text
       .toLowerCase()
-      .split(/[^a-z0-9]+/)
+      // Any Unicode letter or digit is part of a word, so "naïve" stays one token.
+      .split(/[^\p{L}\p{N}]+/u)
       .filter((token) => token.length > 0),
   );
 }

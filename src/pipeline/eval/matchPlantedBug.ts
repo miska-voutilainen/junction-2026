@@ -19,10 +19,11 @@ const BUG_KINDS: ReadonlyArray<Finding["kind"]> = ["defect", "missing"];
 
 /**
  * True when a defect or missing finding is in the key's area and cites the
- * planted lines (new side, same file, within the tolerance). Keys without an
- * area, file or lines never match.
+ * planted lines (new side, same file, within the tolerance). Contradiction keys
+ * and keys without an area, file or lines never match.
  */
 export function isPlantedBugMatch(finding: Finding, key: AnswerKey): boolean {
+  if (key.kind !== "planted-bug") return false;
   if (!BUG_KINDS.includes(finding.kind)) return false;
   if (finding.area === null || finding.area !== key.area) return false;
   const { file, startLine, endLine } = key;
@@ -49,7 +50,9 @@ export function findPlantedBugMatch(
 
 /**
  * Counts the run's defect and missing findings and how many of them hit the
- * plant; the rest are candidates for false positives.
+ * plant; the rest are candidates for false positives. Each planted-bug variant
+ * carries exactly one plant, so a run is scored against its one key; the report
+ * card's `findingsOnPlants` is the sum over runs.
  */
 export function countFindingsOnPlants(
   findings: readonly Finding[],
