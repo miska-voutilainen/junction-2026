@@ -23,9 +23,14 @@ const EMPTY_FILTER_TEXT: Record<StatusFilter, string> = {
  * as three short lists (below). The model arrives already routed with the
  * current simulated escapes (see `InboxScreen`).
  *
+ * @param highlightedIds Changes the last simulated escape re-routed; their rows are tinted for a moment.
  * @param notice A line shown above the list, e.g. that the report card is unreadable.
  */
-export function InboxView({ model, notice }: Readonly<{ model: InboxModel; notice: string | null }>) {
+export function InboxView({
+  model,
+  notice,
+  highlightedIds,
+}: Readonly<{ model: InboxModel; notice: string | null; highlightedIds: ReadonlySet<string> }>) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   useRowNavigation();
 
@@ -42,7 +47,7 @@ export function InboxView({ model, notice }: Readonly<{ model: InboxModel; notic
         <InboxMobile sections={mobileSections(model.rows)} />
       </div>
       <div className="hidden flex-col gap-4 compact:flex">
-        <DesktopList rows={model.rows} filter={filter} onFilterChange={setFilter} />
+        <DesktopList rows={model.rows} highlightedIds={highlightedIds} filter={filter} onFilterChange={setFilter} />
       </div>
     </div>
   );
@@ -50,10 +55,12 @@ export function InboxView({ model, notice }: Readonly<{ model: InboxModel; notic
 
 function DesktopList({
   rows,
+  highlightedIds,
   filter,
   onFilterChange,
 }: Readonly<{
   rows: InboxRow[];
+  highlightedIds: ReadonlySet<string>;
   filter: StatusFilter;
   onFilterChange: (filter: StatusFilter) => void;
 }>) {
@@ -78,7 +85,7 @@ function DesktopList({
         ]}
         className="self-start"
       />
-      <InboxTable rows={listed} label="Changes" emptyText={EMPTY_FILTER_TEXT[filter]} />
+      <InboxTable rows={listed} highlightedIds={highlightedIds} label="Changes" emptyText={EMPTY_FILTER_TEXT[filter]} />
       {folded.length > 0 && (
         <Disclosure
           title={
@@ -87,7 +94,7 @@ function DesktopList({
             </span>
           }
         >
-          <InboxTable rows={folded} label="Signed changes" emptyText="" withHeader={false} />
+          <InboxTable rows={folded} highlightedIds={highlightedIds} label="Signed changes" emptyText="" withHeader={false} />
         </Disclosure>
       )}
     </>

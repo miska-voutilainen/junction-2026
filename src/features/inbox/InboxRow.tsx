@@ -19,8 +19,9 @@ import type { InboxRow as Row, ReviewedRow } from "./inboxModel";
  * row can still hold other text. Rows fade up in turn (30 ms apart, capped).
  *
  * @param index Position in the list, for the entrance stagger.
+ * @param isHighlighted Tints the row: the last simulated escape re-routed it.
  */
-export function InboxRow({ row, index }: Readonly<{ row: Row; index: number }>) {
+export function InboxRow({ row, index, isHighlighted }: Readonly<{ row: Row; index: number; isHighlighted: boolean }>) {
   const entrance = useStaggeredPreset(fadeUpItem, index);
 
   return (
@@ -28,7 +29,7 @@ export function InboxRow({ row, index }: Readonly<{ row: Row; index: number }>) 
       role="row"
       initial={entrance.initial}
       animate={entrance.animate}
-      className={`group relative ${ROW_GRID} gap-y-1 border-t border-border-subtle py-3 first:border-t-0 hover:bg-surface-hover has-focus-visible:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-focus-ring`}
+      className={`group relative ${ROW_GRID} gap-y-1 transition-colors duration-(--duration-slow) motion-reduce:transition-none ${isHighlighted ? "bg-rose/15" : ""} border-t border-border-subtle py-3 first:border-t-0 hover:bg-surface-hover has-focus-visible:bg-surface-hover has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-focus-ring`}
     >
       <div role="cell">
         <StatusIcon row={row} />
@@ -51,7 +52,7 @@ function ChangeCell({ row }: Readonly<{ row: Row }>) {
       <Link
         href={`/changes/${row.id}`}
         data-inbox-row-link
-        className="block truncate text-base font-medium text-text-primary outline-none after:absolute after:inset-0"
+        className="line-clamp-2 text-base font-medium text-text-primary outline-none after:absolute after:inset-0"
       >
         {row.title}
       </Link>

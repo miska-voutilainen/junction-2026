@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import { useEscapes } from "@/lib/simulation/escapes";
+import { takeRerouted, useEscapes } from "@/lib/simulation/escapes";
 import { InboxView } from "./InboxView";
 import { buildInboxModel, reportCardNotice, toShellChanges } from "./inboxModel";
 import type { InboxSource, ReportCardInput } from "./inboxModel";
@@ -29,6 +29,7 @@ export function InboxScreen({
 }>) {
   const { escapes } = useEscapes();
   const model = useMemo(() => buildInboxModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
+  const highlightedIds = useRecentlyRerouted();
   const hasAnyReview = sources.some((source) => source.review.state === "ok");
 
   return (
@@ -41,7 +42,7 @@ export function InboxScreen({
     >
       {usesFixture && <MockDataBanner />}
       {hasAnyReview ? (
-        <InboxView model={model} notice={reportCardNotice(reportCard)} />
+        <InboxView model={model} highlightedIds={highlightedIds} notice={reportCardNotice(reportCard)} />
       ) : (
         <EmptyState
           title="No recorded reviews yet."
@@ -51,4 +52,22 @@ export function InboxScreen({
       )}
     </AppShell>
   );
+}
+
+/** How long the rows re-routed by the last escape stay highlighted; long enough to see after arriving from S3. */
+const HIGHLIGHT_MS = 2400;
+
+/**
+ * Ids of the changes the last recorded escape re-routed, for a few seconds after
+ * the inbox opens. They exist only after a client-side visit from S3, so the
+ * first render never differs from the server's HTML (which has none).
+ */
+function useRecentlyRerouted(): ReadonlySet<string> {
+  const [ids, setIds] = useState<ReadonlySet<string>>(() => new Set(takeRerouted()));
+  useEffect(() => {
+    if (ids.size === 0) return;
+    const timer = setTimeout(() => setIds(new Set()), HIGHLIGHT_MS);
+    return () => clearTimeout(timer);
+  }, [ids]);
+  return ids;
 }

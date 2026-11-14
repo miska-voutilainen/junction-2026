@@ -124,7 +124,7 @@ test("the phone shows the hunks to read read-only, behind one button", async ({ 
 test("mp-2297 lists its generated hunks apart from the reading count", async ({ page }, testInfo) => {
   await page.goto("/changes/mp-2297");
   await expect(page.getByText("read 2 of 5 hunks · 2 generated")).toBeVisible();
-  await expect(page.getByText(/^2 are generated snapshots: read the template change that produces them/)).toBeVisible();
+  await expect(page.getByText(/^2 are generated snapshots: read the template that produces them/)).toBeVisible();
   if (testInfo.project.name === "mobile") {
     // The note sits above the sticky Sign bar once the page is scrolled to its end.
     const note = page.getByText("Generated: 2 hunks, not in the reading count");

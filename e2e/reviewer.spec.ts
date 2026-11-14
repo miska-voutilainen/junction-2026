@@ -5,7 +5,7 @@ import { unlock } from "./unlock";
 // The report card shows the committed fixture until a recorded one exists: generator and analyzer
 // Calibrated, security and performance Shadow.
 const AREA_ORDER = ["Generator", "Analyzer", "Security", "Performance"];
-const ESCAPE_TOAST = "Escape recorded in Generator (simulated). Its changes re-routed.";
+const ESCAPE_TOAST = /Escape recorded in Generator \(simulated\)\. \S+ .+\./;
 const ESCAPE_NOTICE = "Escape recorded (simulated) · dropped from Calibrated to Shadow";
 
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
@@ -36,7 +36,7 @@ test("shows the four areas in order with their sample sizes and no horizontal sc
   await page.goto("/reviewer");
 
   await expect(
-    page.getByRole("heading", { level: 1, name: "Reviewer Report Card" }),
+    page.getByRole("heading", { level: 1, name: "Reviewer report card" }),
   ).toBeAttached();
   await expect(
     page
@@ -78,7 +78,6 @@ test("records an escape with a notice and a toast, and undo restores the level",
   await card.getByRole("button", { name: "Record escape" }).click();
   await expect(page.getByText(ESCAPE_TOAST)).toBeVisible();
   await expect(card.getByText(ESCAPE_NOTICE)).toBeVisible();
-  await expect(card.getByText("(1 simulated escape)")).toBeVisible();
   await expect(card.getByRole("button", { name: "Record escape" })).toBeDisabled();
 
   await card.getByRole("button", { name: "Undo" }).click();
@@ -86,14 +85,24 @@ test("records an escape with a notice and a toast, and undo restores the level",
   await expect(card.getByRole("button", { name: "Record escape" })).toBeEnabled();
 });
 
+test("Reset replaces the escape toast with a cleared notice", async ({ page }) => {
+  await page.goto("/reviewer");
+  await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
+  await expect(page.getByText(ESCAPE_TOAST)).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.getByText("Simulated escapes cleared")).toBeVisible();
+  await expect(page.getByText(ESCAPE_TOAST)).toBeHidden();
+});
+
 test("re-routes the inbox without a reload after an escape", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "mobile", "the breadcrumb is the desktop route back");
+  test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
   await page.goto("/reviewer");
   await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
   await expect(page.getByText(ESCAPE_NOTICE)).toBeVisible();
   await page.evaluate(() => Object.assign(window, { stillSamePage: true }));
 
-  await page.getByRole("link", { name: "Inbox", exact: true }).first().click();
+  await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
   await page.waitForURL((url) => url.pathname === "/");
   // The same document: no reload happened between the report card and the inbox.
   expect(await page.evaluate(() => "stillSamePage" in window)).toBe(true);

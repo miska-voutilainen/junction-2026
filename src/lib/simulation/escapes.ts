@@ -115,3 +115,19 @@ export function useEscapes(): EscapesApi {
     [escapes, record, undo, reset],
   );
 }
+
+// Ids re-routed by the last recorded escape, waiting for S1 to highlight them.
+// Memory only: a reload or a second visit shows no highlight.
+let pendingReroutedIds: string[] = [];
+
+/** Remembers which changes the latest escape re-routed, for the inbox's brief highlight. */
+export function markRerouted(changeIds: string[]): void {
+  pendingReroutedIds = changeIds;
+}
+
+/** The ids `markRerouted` stored, once: the next call returns none, so the highlight plays one time. */
+export function takeRerouted(): string[] {
+  const ids = pendingReroutedIds;
+  pendingReroutedIds = [];
+  return ids;
+}
