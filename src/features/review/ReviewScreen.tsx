@@ -9,7 +9,7 @@ import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import { ReviewBody } from "./ReviewBody";
 import { ReviewHeader } from "./ReviewHeader";
 import { ReviewMissing, ReviewUnreadable } from "./ReviewStates";
-import { SelectedClaimProvider } from "./SelectedClaim";
+import { SelectionProvider } from "./SelectionProvider";
 import { ReviewStepProvider } from "./steps/ReviewStep";
 import type { HighlightedHunks } from "./highlightHunks";
 import { useShellChanges } from "@/components/useShellChanges";
@@ -44,7 +44,7 @@ export function ReviewScreen({
 }>) {
   const shellChanges = useShellChanges(sources, reportCard);
   const current = sources.find((source) => source.change.id === currentId);
-  if (!current) throw new Error(`No change with id ${currentId} among the loaded sources.`);
+  if (!current) throw new Error(`No change with id ${currentId} among the loaded sources. The page must call notFound() for an unknown id before rendering ReviewScreen.`);
   const { change, review, receipt } = current;
   const record = receipt === "unreadable" ? null : receipt;
   const isReceiptUnreadable = receipt === "unreadable";
@@ -60,7 +60,7 @@ export function ReviewScreen({
       isNavRail
     >
       {usesFixture && <MockDataBanner />}
-      <SelectedClaimProvider>
+      <SelectionProvider>
         <ReviewStepProvider>
         <div className="mx-auto flex w-full max-w-content flex-col gap-4 px-4 py-6 compact:px-8 compact:py-7 wide:max-w-review">
           <ReviewHeader
@@ -76,7 +76,7 @@ export function ReviewScreen({
           {review.state === "ok" && <ReviewBody change={change} review={review.data} reportCard={reportCard} record={record} isReceiptUnreadable={isReceiptUnreadable} tokens={tokens} />}
         </div>
         </ReviewStepProvider>
-      </SelectedClaimProvider>
+      </SelectionProvider>
     </AppShell>
   );
 }

@@ -7,7 +7,7 @@
  * Pure functions, no React. Spec section 3, S4.
  */
 import type { Coverage, ReceiptRecord, Review } from "@/contracts";
-import { tierLabel } from "@/contracts";
+import { checkedByLabel, tierLabel } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
 import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import type { SignerState } from "@/lib/data/receiptStatus";
@@ -15,6 +15,9 @@ import { refusalRules } from "@/policy/refusals";
 import { verifyLine } from "@/lib/receiptCopy";
 import { COVERAGE_READING_ORDER } from "@/features/review/reviewModel";
 import { countGenerated } from "@/rules/route";
+import { countOf } from "@/lib/countOf";
+import { countersignCommand } from "@/lib/countersignCommand";
+import { formatSignedAt } from "@/lib/formatSignedAt";
 
 /**
  * Whether the receipt vouches for this diff. Only "signed" does. "unchecked":
@@ -99,13 +102,6 @@ export interface ReceiptDocumentView {
   recordJson: string;
 }
 
-const BY_LABEL = { tool: "Tool", "ai-supported": "AI, supported", human: "Human" } as const;
-
-/** The command that signs a fresh receipt for a change. */
-function signCommand(changeId: string): string {
-  return `pnpm countersign sign ${changeId}`;
-}
-
 /**
  * Decides which state the receipt page is in and gathers what each state shows.
  *
@@ -121,7 +117,7 @@ export function buildReceiptView(
   receiptError: string | null,
   receiptText: string | null,
 ): ReceiptView {
-  if (receiptFile === null) return { kind: "none", changeId: change.id, signCommand: signCommand(change.id) };
+  if (receiptFile === null) return { kind: "none", changeId: change.id, signCommand: countersignCommand("sign", change.id) };
   if (receiptFile === "unreadable") {
     return { kind: "invalid", changeId: change.id, error: receiptError ?? `data/receipts/${change.id}.json failed validation.` };
   }
@@ -138,18 +134,18 @@ export function buildReceiptView(
     requirementId: receipt.requirementId,
     summary: status === "signed" && review !== null ? readingSummary(review) : null,
     identity: identityRows(record),
-    checked: receipt.checked.map(({ item, by }) => ({ item, by: BY_LABEL[by] })),
+    checked: receipt.checked.map(({ item, by }) => ({ item, by: checkedByLabel[by] })),
     notChecked: receipt.notChecked,
     residualRisk: { text: receipt.residualRisk.text, accepted: acceptedRefusals(record, review) },
     ledger: hunkLedger(receipt.hunks),
     roles: { authorAgent: change.authorAgent, reviewerVersion: receipt.reviewerVersion, signer: signerOf(record) },
     owner: receipt.owner,
-    signedAt: formatUtc(receipt.signedAt),
+    signedAt: formatSignedAt(receipt.signedAt),
     verifyCommand: verify.command,
     verifyText: `$ ${verify.command}\n${verify.output}`,
     verifyLine: verifyLine(status),
     staleHashes: status === "stale" && review !== null ? { signedDiff: shortHash(receipt.diffSha256), reviewedDiff: shortHash(review.diff.diffSha256) } : null,
-    signCommand: signCommand(change.id),
+    signCommand: countersignCommand("sign", change.id),
     recordJson: receiptText ?? JSON.stringify(record, null, 2),
   };
 }
@@ -165,7 +161,7 @@ function statusOf(review: Review | null, record: ReceiptRecord): ReceiptDocument
 export function readingSummary({ routing }: Review): string {
   const generated = countGenerated(routing.coverage);
   const covered = routing.totalHunks - routing.readHunks - generated;
-  const generatedNote = generated > 0 ? ` ${generated} generated ${generated === 1 ? "hunk was" : "hunks were"} not read.` : "";
+  const generatedNote = generated > 0 ? ` ${countOf(generated, "generated hunk")} ${generated === 1 ? "was" : "were"} not read.` : "";
   return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.${generatedNote}`;
 }
 
@@ -204,7 +200,3 @@ function hunkLedger(signedHunks: ReceiptRecord["receipt"]["hunks"]): LedgerRow[]
   return COVERAGE_READING_ORDER.flatMap((coverage) => signedHunks.filter((hunk) => hunk.coverage === coverage));
 }
 
-/** "2026-11-14 09:40 UTC", formatted without locale so the server and the browser agree. */
-export function formatUtc(timestamp: string): string {
-  return `${new Date(timestamp).toISOString().slice(0, 16).replace("T", " ")} UTC`;
-}

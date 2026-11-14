@@ -5,6 +5,7 @@ import { SyntheticTag } from "@/components/SyntheticTag";
 import type { ChangeInput, Review } from "@/contracts";
 import type { ReceiptStatusValue, SignerState } from "@/lib/data/receiptStatus";
 import { SignButton } from "./steps/SignButton";
+import { countOf } from "@/lib/countOf";
 
 const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
@@ -71,7 +72,7 @@ function MetaRow({ change, review }: Readonly<{ change: ChangeInput; review: Rev
         <span className="font-mono">
           +{diff.linesAdded} −{diff.linesRemoved}
         </span>{" "}
-        · {diff.filesChanged} {diff.filesChanged === 1 ? "file" : "files"}
+        · {countOf(diff.filesChanged, "file")}
       </span>
       <span>
         <span className="font-mono [overflow-wrap:anywhere]">{reviewer.model}</span> · {reviewedOn.format(new Date(run.finishedAt))}

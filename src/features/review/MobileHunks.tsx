@@ -7,6 +7,7 @@ import type { HighlightedHunks } from "./highlightHunks";
 import { coveredSummary, fileName, hunkRawText } from "./reviewModel";
 import type { HighlightedLines } from "./citationHighlights";
 import type { HunkEntry, HunkSections } from "./reviewModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * The phone's view of the diff: reading code works best on a desktop, so the
@@ -37,12 +38,12 @@ export function MobileHunks({
       )}
       {covered.length > 0 && (
         <p className="text-base text-text-muted">
-          Covered by evidence: {covered.length} {covered.length === 1 ? "hunk" : "hunks"} · {coveredSummary(covered)}
+          Covered by evidence: {countOf(covered.length, "hunk")} · {coveredSummary(covered)}
         </p>
       )}
       {sections.generated.length > 0 && (
         <p className="text-base text-text-muted">
-          Generated: {sections.generated.length} {sections.generated.length === 1 ? "hunk" : "hunks"}, not in the reading count
+          Generated: {countOf(sections.generated.length, "hunk")}, not in the reading count
         </p>
       )}
     </div>

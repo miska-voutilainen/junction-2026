@@ -55,10 +55,10 @@ export interface FixedRefusal {
 
 /**
  * Triggers that need no model: a change to the declared public API or to the
- * public attributes is a public-contract decision (R7). When A3 runs, the
- * pipeline merges in a `source: "rule"` refusal for the hunks each glob matches,
- * so a model that misses them cannot let them through unread. Runs without A3
- * (the blind-vs-anchored comparison runs) get no rule refusal.
+ * public attributes is a public-contract decision (R7). On every run,
+ * whether or not A3 ran, the pipeline adds a `source: "rule"` refusal for the
+ * hunks each glob matches, so a model that misses them cannot let them through
+ * unread.
  */
 export const fixedRefusals: FixedRefusal[] = [
   { ruleId: "R7", glob: "**/PublicAPI.Unshipped.txt", reason: "Changes the declared public API" },

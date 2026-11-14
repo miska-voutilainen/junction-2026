@@ -1,22 +1,26 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Copy, FileDiff, Gauge, Inbox, LayoutDashboard } from "lucide-react";
+import { ArrowRight, Copy, FileDiff } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
+import { countersignCommand } from "@/lib/countersignCommand";
+import { PAGES } from "@/lib/pages";
+import { COPY_ANNOUNCEMENT, useCopy } from "@/lib/useCopy";
+import type { CopyStatus } from "@/lib/useCopy";
 import { useShortcuts } from "@/lib/useShortcuts";
 import type { ShellChange } from "./shellChange";
 
-const COPIED_MS = 1500;
-// The dialog is centred, at most this wide and 1/3 down; used to aim the entrance at the trigger.
+// The dialog is centred, at most this wide, and sits this far down the viewport; both the placement and the aim of the entrance at the trigger read it.
 const MENU_MAX_WIDTH_PX = 640;
-const MENU_TOP_FRACTION = 1 / 3;
+const MENU_TOP_DVH = 15;
+const MENU_TOP_FRACTION = MENU_TOP_DVH / 100;
 const MENU_SIDE_MARGIN_PX = 32;
 
 type CommandMenuState = {
@@ -81,7 +85,7 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
   // "Copy sign command" targets the change on screen, else the next one to review.
   const changeInView = changes.find((change) => pathname === `/changes/${change.id}`) ?? nextChange;
   const needsReviewCount = changes.filter((change) => change.needsReview).length;
-  const { copiedNote, copy } = useCopyNote();
+  const { status: copyStatus, copy } = useCopy();
   const menuEntrance = useMotionPreset(popover);
 
   // While open, the shortcut closes the menu: re-opening would make the search box the "trigger"
@@ -124,7 +128,8 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
     { heading: "Go to", rows: buildPages(needsReviewCount) },
     { heading: "Changes", rows: changeRows },
   ].filter((group) => group.rows.length > 0);
-  let rowIndex = 0;
+  // Each group's first row number, so the staggered entrance counts rows across groups without mutating a counter while rendering.
+  const firstRowOfGroup = groups.map((_, index) => groups.slice(0, index).reduce((rows, group) => rows + group.rows.length, 0));
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -132,7 +137,8 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
         showCloseButton={false}
         aria-describedby={undefined}
         // The entrance is the motion element below; the exit is the dialog's own shorter fade.
-        className="top-[15dvh] max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
+        style={{ top: `${MENU_TOP_DVH}dvh` }}
+        className="max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
         onCloseAutoFocus={(event) => {
           // Return focus to the button that opened the menu, not whatever Radix remembered.
           if (trigger?.isConnected) {
@@ -152,32 +158,20 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
               placeholder="Search changes or type a command…"
               aria-label="Search or run a command"
             />
-            {/* The list takes what is left under the 15dvh offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
-            <CommandList className="max-h-[min(25rem,calc(100dvh-15dvh-9rem))] p-1">
+            {/* The list takes what is left under the top offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
+            <CommandList className="p-1" style={{ maxHeight: `min(25rem, calc(100dvh - ${MENU_TOP_DVH}dvh - 9rem))` }}>
               <CommandEmpty className="px-3 py-7 text-text-muted">
                 No match for “{query}”. Try a change id, a requirement or a page.
               </CommandEmpty>
-              {groups.map((group) => (
+              {groups.map((group, groupIndex) => (
                 <CommandGroup key={group.heading} heading={group.heading} className="p-1.5">
-                  {group.rows.map((row) => (
-                    <MenuRow key={row.id} row={row} index={rowIndex++} onChoose={choose} />
+                  {group.rows.map((row, rowIndex) => (
+                    <MenuRow key={row.id} row={row} index={firstRowOfGroup[groupIndex] + rowIndex} onChoose={choose} />
                   ))}
                 </CommandGroup>
               ))}
             </CommandList>
-            <div className="flex h-9.5 items-center gap-3.5 border-t border-border-subtle bg-surface-raised px-3.5 text-xs text-text-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd> move
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Kbd>↵</Kbd> open
-              </span>
-              <span className="flex-1" />
-              <span role="status" aria-live="polite">
-                {copiedNote}
-              </span>
-            </div>
+            <MenuFooter copyStatus={copyStatus} />
           </Command>
         </motion.div>
       </DialogContent>
@@ -185,21 +179,23 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
   );
 }
 
-/** Copies text and keeps a short "Copied" note for the live region; says so when the browser refuses. */
-function useCopyNote() {
-  const [copiedNote, setCopiedNote] = useState("");
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const copy = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedNote("Copied");
-    } catch {
-      setCopiedNote("Copy failed. Select the command and copy it by hand.");
-    }
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopiedNote(""), COPIED_MS);
-  }, []);
-  return { copiedNote, copy };
+/** The key hints under the list, and the live region that says whether a copy worked. */
+function MenuFooter({ copyStatus }: Readonly<{ copyStatus: CopyStatus }>) {
+  return (
+    <div className="flex h-9.5 items-center gap-3.5 border-t border-border-subtle bg-surface-raised px-3.5 text-xs text-text-muted">
+      <span className="inline-flex items-center gap-1.5">
+        <Kbd>↑</Kbd>
+        <Kbd>↓</Kbd> move
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Kbd>↵</Kbd> open
+      </span>
+      <span className="flex-1" />
+      <span role="status" aria-live="polite">
+        {COPY_ANNOUNCEMENT[copyStatus]}
+      </span>
+    </div>
+  );
 }
 
 function buildQuickActions(
@@ -220,18 +216,28 @@ function buildQuickActions(
     });
   }
   if (changeInView) {
-    const command = `pnpm countersign sign ${changeInView.id}`;
+    const command = countersignCommand("sign", changeInView.id);
     rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
   }
   return rows;
 }
 
+/** What each page's menu row says under its title. */
+const PAGE_MENU_NOTE: Record<(typeof PAGES)[number]["id"], (needsReviewCount: number) => string> = {
+  inbox: (needsReviewCount) => `${needsReviewCount} need review`,
+  dashboard: () => "Signed, accepted risk, open decisions",
+  reviewer: () => "Trust by area",
+};
+
 function buildPages(needsReviewCount: number): Row[] {
-  return [
-    { id: "go-inbox", label: "Inbox", meta: `${needsReviewCount} need review`, icon: Inbox, shortcut: ["g", "i"], href: "/" },
-    { id: "go-dashboard", label: "Dashboard", meta: "Signed, accepted risk, open decisions", icon: LayoutDashboard, shortcut: ["g", "d"], href: "/dashboard" },
-    { id: "go-reviewer", label: "Reviewer report card", meta: "Trust by area", icon: Gauge, shortcut: ["g", "r"], href: "/reviewer" },
-  ];
+  return PAGES.map((page) => ({
+    id: `go-${page.id}`,
+    label: page.title,
+    meta: PAGE_MENU_NOTE[page.id](needsReviewCount),
+    icon: page.icon,
+    shortcut: ["g", page.goKey],
+    href: page.href,
+  }));
 }
 
 function MenuRow({ row, index, onChoose }: Readonly<{ row: Row; index: number; onChoose: (row: Row) => void }>) {

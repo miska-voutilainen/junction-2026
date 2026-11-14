@@ -5,6 +5,7 @@
  * sent to lines the AI misquoted. Pure functions, no React.
  */
 import type { Citation, Review } from "@/contracts";
+import type { Selection } from "./SelectionProvider";
 import type { HunkSections } from "./reviewModel";
 
 type Hunk = Review["hunks"][number];
@@ -74,7 +75,7 @@ function isSameLocation(a: HighlightedLines, b: HighlightedLines): boolean {
  * was found. A retracted claim highlights nothing, because the review no
  * longer stands behind it.
  */
-export function highlightedLinesOfSelection(review: Review, selection: { kind: "claim" | "finding"; id: string } | null): HighlightedLines[] {
+export function highlightedLinesOfSelection(review: Review, selection: Selection | null): HighlightedLines[] {
   if (selection === null) return [];
   if (selection.kind === "claim") {
     const claim = review.claims.find((candidate) => candidate.id === selection.id);

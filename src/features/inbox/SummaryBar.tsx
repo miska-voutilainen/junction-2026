@@ -1,4 +1,5 @@
 import type { InboxSummary } from "./inboxModel";
+import { countOf } from "@/lib/countOf";
 
 /**
  * One row, wrapping on narrow screens: signed-share pips, the counts by tier,
@@ -19,7 +20,7 @@ export function SummaryBar({ summary }: Readonly<{ summary: InboxSummary }>) {
           ))}
         </span>
         <span>
-          <b className="font-semibold text-text-primary">{changes === 1 ? "1 change" : `${changes} changes`}</b> ·{" "}
+          <b className="font-semibold text-text-primary">{countOf(changes, "change")}</b> ·{" "}
           {tierCounts.light} Light · {tierCounts.focused} Focused · {tierCounts.full} Full · {signed} signed
         </span>
       </div>

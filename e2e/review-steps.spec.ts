@@ -234,3 +234,12 @@ test("screenshots of the steps panel", async ({ page }, testInfo) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `.review/review-steps-${width}.png`, fullPage: true });
 });
+
+test("signed change offers no Sign button at 375 px, in the panel or the sign bar", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto(SIGNED);
+  await openStep(page, /Sign/);
+  await expect(page.getByRole("tabpanel")).toContainText("Signature verified");
+  await expect(page.getByRole("button", { name: /^(Re-)?sign$/i })).toHaveCount(0);
+  expect(await hasHorizontalScroll(page)).toBe(false);
+});

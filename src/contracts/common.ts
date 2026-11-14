@@ -74,6 +74,13 @@ export type Citation = z.infer<typeof CitationSchema>;
 /** Who checked a receipt item. Shared by Review.receiptDraft and Receipt (producers: engine, evidence). */
 export const CheckedBySchema = z.enum(["tool", "ai-supported", "human"]);
 
+/** UI labels for CheckedBy. */
+export const checkedByLabel: Record<z.infer<typeof CheckedBySchema>, string> = {
+  tool: "Tool",
+  "ai-supported": "AI, supported",
+  human: "Human",
+};
+
 /** The checked, notChecked and residualRisk block of a receipt draft and a signed receipt. */
 export const ReceiptBodySchema = z.strictObject({
   checked: z.array(z.strictObject({ item: z.string(), by: CheckedBySchema })),

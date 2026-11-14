@@ -47,3 +47,44 @@ export const routingPolicy: RoutingPolicy = {
     { glob: "src/MessagePack/**", label: "the runtime serializer" },
   ],
 };
+
+/**
+ * The routing rules S5 counts by name: route()'s rules plus `R-no-track-record`,
+ * which decideChange() adds when no report card is readable. `R-generated` is
+ * left out on purpose: its reason text carries the count of generated hunks,
+ * so S5 shows that text instead of a name.
+ */
+export type RoutingRuleId =
+  | "R-size"
+  | "R-read-share"
+  | "R-escape"
+  | "R-refusal"
+  | "R-contradiction"
+  | "R-defect"
+  | "R-sensitive-path"
+  | "R-area-level"
+  | "R-unread"
+  | "R-no-track-record";
+
+// route() reasons carry sentences with the numbers in them ("3 items refused");
+// counting by rule id needs one stable name per rule. Typed by RoutingRuleId, so
+// an id added to the union without a name here does not compile. The link back
+// to route() is not typed: a new rule there needs an entry here, or S5 falls
+// back to its reason text.
+const ROUTING_RULE_LABEL: Record<RoutingRuleId, string> = {
+  "R-size": "Large change outside generated files",
+  "R-read-share": "Most hunks need a human",
+  "R-escape": "A bug escaped in this area",
+  "R-refusal": "Refused item: a human decides",
+  "R-contradiction": "Description contradicts the code",
+  "R-defect": "Defect found",
+  "R-sensitive-path": "Touches a sensitive path",
+  "R-area-level": "Area not yet Trusted",
+  "R-unread": "Hunks without checked evidence",
+  "R-no-track-record": "No readable report card",
+};
+
+/** The stable name of a routing rule, or undefined for an id without one (`R-generated`, or a recorded reason from an older rule set). */
+export function routingRuleLabel(ruleId: string): string | undefined {
+  return ruleId in ROUTING_RULE_LABEL ? ROUTING_RULE_LABEL[ruleId as RoutingRuleId] : undefined;
+}
