@@ -90,15 +90,11 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   });
   const readSide = cachedReader(repoDir, change);
   const isAnchored = mode === "anchored";
-  const steps = new Set(input.steps ?? (isAnchored ? anchoredSteps : allSteps));
-  if (steps.has("a3") && !steps.has("a1"))
-    throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
-  if (steps.has("a5") && !steps.has("a1"))
-    throw new Error("A5 needs A1's expectation. Add a1 to the steps or drop a5.");
-  if (isAnchored && steps.has("a1"))
-    throw new Error("Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.");
+  const steps = checkedSteps(input.steps, isAnchored);
 
-  const expectation = steps.has("a1") ? await writeBlindExpectation(client, requirement, runIndex) : null;
+  const expectation = steps.has("a1")
+    ? await writeBlindExpectation(client, requirement, runIndex)
+    : null;
   const answer = await writeChangeStory(client, {
     requirement,
     hunks: loadedDiff.hunks,
@@ -117,23 +113,15 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   );
   const { claims, quoteCheck } = checkedClaims;
 
-  const areaReview =
-    expectation === null || !steps.has("a3")
-      ? null
-      : await writeAreaReview(client, {
-          requirement,
-          hunks: loadedDiff.hunks,
-          context,
-          expectation,
-          claims,
-          runIndex,
-        });
-  const areaFindings = areaReview
-    ? await checkAreaFindings(areaReview.findings, readSide, quoteCheck)
-    : [];
-  const refusals = areaReview
-    ? mergeFixedRefusals(checkRefusals(areaReview.refusals, quoteCheck), fixedRefusalsFor(loadedDiff.hunks))
-    : [];
+  const didRunA3 = expectation !== null && steps.has("a3");
+  const { areaFindings, refusals } = didRunA3
+    ? await reviewAreas(
+        client,
+        { requirement, hunks: loadedDiff.hunks, context, expectation, claims, runIndex },
+        readSide,
+        quoteCheck,
+      )
+    : { areaFindings: [], refusals: [] };
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {
@@ -144,7 +132,13 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       })
     : null;
   const contradictions = description
-    ? await checkContradictions(description.statements, claims, loadedDiff.hunks, readSide, quoteCheck)
+    ? await checkContradictions(
+        description.statements,
+        claims,
+        loadedDiff.hunks,
+        readSide,
+        quoteCheck,
+      )
     : [];
 
   // The tests run last: they need the quote-checked claims, and only a claim that passed that check can become Verified.
@@ -183,7 +177,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     promptVersions: {
       a1: expectation ? a1.version : "none",
       a2: a2.version,
-      a3: areaReview ? a3.version : "none",
+      a3: didRunA3 ? a3.version : "none",
       a4: description ? a4.version : "none",
       a5: tests?.didRun ? a5.version : "none",
     },
@@ -199,6 +193,46 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
 }
 
 /**
+ * The steps to run, after checking they make sense together.
+ * @throws when a step lacks what it needs (A3 and A5 need A1; anchored mode can't run A1).
+ */
+function checkedSteps(
+  requested: readonly ModelStep[] | undefined,
+  isAnchored: boolean,
+): Set<ModelStep> {
+  const steps = new Set(requested ?? (isAnchored ? anchoredSteps : allSteps));
+  if (steps.has("a3") && !steps.has("a1"))
+    throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
+  if (steps.has("a5") && !steps.has("a1"))
+    throw new Error("A5 needs A1's expectation. Add a1 to the steps or drop a5.");
+  if (isAnchored && steps.has("a1"))
+    throw new Error(
+      "Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.",
+    );
+  return steps;
+}
+
+/** A3, then the quote check on its findings and refusals, with the fixed rule refusals merged in. */
+async function reviewAreas(
+  client: Parameters<typeof writeAreaReview>[0],
+  areaInput: Parameters<typeof writeAreaReview>[1],
+  readSide: Parameters<typeof checkAreaFindings>[1],
+  quoteCheck: Parameters<typeof checkAreaFindings>[2],
+): Promise<{
+  areaFindings: Awaited<ReturnType<typeof checkAreaFindings>>;
+  refusals: ReturnType<typeof mergeFixedRefusals>;
+}> {
+  const areaReview = await writeAreaReview(client, areaInput);
+  return {
+    areaFindings: await checkAreaFindings(areaReview.findings, readSide, quoteCheck),
+    refusals: mergeFixedRefusals(
+      checkRefusals(areaReview.refusals, quoteCheck),
+      fixedRefusalsFor(areaInput.hunks),
+    ),
+  };
+}
+
+/**
  * The AI's refusals plus the fixed ones, without counting one decision twice:
  * a rule refusal is added only for the matched hunks no AI refusal with the
  * same rule id already lists (spec section 5, Policy). An AI R7 on the hunk a
@@ -210,7 +244,9 @@ export function mergeFixedRefusals(
 ): UnnumberedRefusal[] {
   const addedFixed = fixedRefusals.flatMap((fixed) => {
     const listed = new Set(
-      aiRefusals.filter((refusal) => refusal.ruleId === fixed.ruleId).flatMap((refusal) => refusal.hunkIds),
+      aiRefusals
+        .filter((refusal) => refusal.ruleId === fixed.ruleId)
+        .flatMap((refusal) => refusal.hunkIds),
     );
     const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
     return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];

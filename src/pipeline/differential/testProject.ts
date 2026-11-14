@@ -48,7 +48,8 @@ export function chooseStyleExample(
   if (changed !== undefined) return changed.path;
   const inProject = basePaths
     .filter((path) => path.startsWith(`${projectDir}/`) && path.endsWith("Tests.cs"))
-    .sort();
+    // Ordinal, not locale order: the same style example on every machine keeps A5's prompt, and so its recording key, stable.
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   return inProject[0] ?? null;
 }
 
