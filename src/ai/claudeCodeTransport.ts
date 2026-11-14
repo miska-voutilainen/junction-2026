@@ -185,10 +185,11 @@ function runClaude(
     child.stderr.on("data", (chunk: string) => (stderr += chunk));
     child.on("error", (error) => reject(explainSpawnError(error)));
     child.on("close", (code) => resolve({ code, stdout, stderr }));
-    // If claude exits before reading stdin, the write fails with EPIPE; the close event then
-    // reports the exit code and stderr, which is the useful error. Any other failure is real.
+    // If claude exits before reading stdin, the write fails with EPIPE (EOF on Windows, where
+    // libuv maps ERROR_BROKEN_PIPE to it); the close event then reports the exit code and
+    // stderr, which is the useful error. Any other failure is real.
     child.stdin.on("error", (error: NodeJS.ErrnoException) => {
-      if (error.code !== "EPIPE") reject(error);
+      if (error.code !== "EPIPE" && error.code !== "EOF") reject(error);
     });
     child.stdin.end(stdin);
   });
