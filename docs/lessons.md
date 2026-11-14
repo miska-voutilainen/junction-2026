@@ -2,6 +2,12 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-14 · Security caught 0 of 3 planted bugs: all three are real misses
+
+- **What happened:** The eval scored v03, v06 and v10, the three security plants, as missed (one run each). Miska, who can read the answer keys, compared each key with its run's findings using the eval's own matching rule. In all three runs no defect or missing finding cites the planted file at all. They are not near misses: no finding sits a few lines off or carries the wrong area.
+- **What it means:** On this sample, A3 does not find security defects on its own, so the measured level is right. Security stays at Shadow: the AI's output routes nothing in that area, and every security hunk stays on the reading list. This is the trust ladder doing its job, and the pitch says so with the number: 0 of 3.
+- **What we changed:** Nothing in the scoring or the prompts. A prompt tuned to these three plants would score better and measure nothing. Three plants is a small sample: a fairer measure needs more security plants written blind, scored at 2 runs each.
+
 ## 2026-11-14 · A5 on mp-2129, mp-2234 and mp-2297: tests that did not build on the base left two reviews all Supported
 
 - **What happened:** With `a5.v2` in Docker, no claim was retracted on any of the three changes. mp-2297 has 7 claims Verified and 6 Supported; 4 test methods tell the versions apart and none fail on the head. mp-2129 and mp-2234 add new API, so the tests of the feature, A5's and the pull request's, do not compile on the base commit and get no verdict under the rule. mp-2129: 17 claims, all Supported; 7 A5 and 7 PR test methods have a build error on the base, and 4 PR test files sit in another test project. mp-2234: 10 claims, all Supported; 2 PR test methods have a build error on the base and 1 test file sits in another test project. The build errors are `CS0117` and `CS0535`: the tests call members the base version does not have.
