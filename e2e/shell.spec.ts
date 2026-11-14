@@ -71,7 +71,10 @@ test.describe("navigation sheet", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Open navigation" }).locator("visible=true").click();
-    await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
+    const sheet = page.getByRole("dialog", { name: "Navigation" });
+    await expect(sheet).toBeVisible();
+    // A click while the sheet is still sliding in does not dismiss it, so wait for the animation to end.
+    await sheet.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
     await page.mouse.click(360, 400);
     await expect(page.getByRole("dialog", { name: "Navigation" })).toBeHidden();
   });
