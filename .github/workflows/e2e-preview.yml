@@ -1,0 +1,90 @@
+# Runs the Playwright demo path against a finished Vercel deployment, preview or production
+# (docs/setup.md section 6). Informational: nothing requires it yet. A deployment_status
+# workflow always runs from the default branch's copy of this file.
+name: e2e-preview
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.event.deployment_status.environment_url }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      # Without its secret the run cannot reach the site, so it says so and ends green:
+      # an informational check that fails for a missing setting is noise.
+      - name: Check the secrets this deployment needs
+        id: gate
+        env:
+          ENVIRONMENT: ${{ github.event.deployment_status.environment }}
+          URL: ${{ github.event.deployment_status.environment_url }}
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::notice::The deployment reports no URL; nothing to test."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ "$ENVIRONMENT" = "Production" ] && [ -z "$ACCESS_CODE" ]; then
+            echo "::notice::Skipped: add the ACCESS_CODE repository secret (the production access gate is on)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ "$ENVIRONMENT" != "Production" ] && [ -z "$BYPASS_SECRET" ]; then
+            echo "::notice::Skipped: add the VERCEL_AUTOMATION_BYPASS_SECRET repository secret (previews sit behind Vercel Authentication)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.run == 'true'
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.gate.outputs.run == 'true'
+
+      - name: Cache Playwright browsers
+        id: browsers
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # A cache hit restores the browser but not the system libraries it needs.
+      - name: Install Chromium
+        if: steps.gate.outputs.run == 'true'
+        env:
+          CACHE_HIT: ${{ steps.browsers.outputs.cache-hit }}
+        run: |
+          if [ "$CACHE_HIT" = "true" ]; then
+            pnpm exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      # The desktop (1440 px) and mobile (375 px) projects. real-data reads the committed
+      # data/ and would compare it with a deployment that may be built from other data.
+      - name: Playwright
+        if: steps.gate.outputs.run == 'true'
+        env:
+          E2E_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: pnpm e2e --project=desktop --project=mobile

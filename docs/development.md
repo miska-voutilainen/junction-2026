@@ -50,6 +50,10 @@
 - **Harness hooks:** `pnpm test:hooks` runs the `node --test` suites in `.claude/hooks/`.
 - **Evals:** `pnpm evals` is the planted-bug eval. It calls the model and costs credits. Its scoring is built (`src/pipeline/eval/`); the command is not yet.
 
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`, as one job in this order: message check (no emoji or AI trailer in the title, body or commits), lane check (the PR touches only its author's lanes, or carries `cross-lane`), tree check, hook and CI-script tests, lint, typecheck, unit tests, build, gitleaks. The scripts are in `.github/scripts/`; run one locally with its env vars, for example `PR_AUTHOR=Kasanen PR_LABELS='[]' node .github/scripts/checkLanes.mjs`. A PR that changes only Markdown skips lint to build. `.github/workflows/e2e-preview.yml` runs the Playwright demo path against each finished Vercel deployment; it needs the repository secrets `VERCEL_AUTOMATION_BYPASS_SECRET` (previews) and `ACCESS_CODE` (production) and skips with a notice when one is missing. It is informational.
+
 ## Deploying
 
 Vercel's Git integration deploys: every pull request gets a preview, and a merge to `main` goes to production at https://countersign-junction.com (`www` and `http` redirect to it; DNS is on Cloudflare as DNS-only records pointing at Vercel). The Vercel project is "junction-2026" in the team "junction". `vercel.json` sets the Next.js framework, `pnpm install --frozen-lockfile` and `pnpm build`.

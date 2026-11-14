@@ -6,6 +6,8 @@ const port = process.env.PORT ?? "3000";
 // The real-data project gets its own server, one port up.
 const realDataPort = String(Number(port) + 1);
 const externalBaseUrl = process.env.E2E_BASE_URL;
+// Preview URLs sit behind Vercel Authentication; the e2e-preview workflow sends this header to pass it.
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 // The behaviour specs run on fixture data so they stay deterministic while the
 // recorded data changes. The loaders look in `<root>/fixtures`, so the fixture
@@ -20,7 +22,10 @@ if (process.env.TEST_WORKER_INDEX === undefined && !externalBaseUrl) {
 
 export default defineConfig({
   testDir: "e2e",
-  use: { baseURL: externalBaseUrl ?? `http://localhost:${port}` },
+  use: {
+    baseURL: externalBaseUrl ?? `http://localhost:${port}`,
+    extraHTTPHeaders: bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : undefined,
+  },
   projects: [
     {
       name: "desktop",
