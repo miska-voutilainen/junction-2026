@@ -54,10 +54,10 @@ export async function loadRecordedReview(changeId: string): Promise<Review> {
   return readJson(file, ReviewSchema);
 }
 
-/** Which comparison run a review is: data/runs/<changeId>/<mode>/<k>.json. */
+/** Which comparison run a review is: data/runs/<changeId>/<mode>/<runNumber>.json. */
 export interface ComparisonRun {
   mode: "anchored" | "blind";
-  k: number;
+  runNumber: number;
 }
 
 /**
@@ -69,7 +69,7 @@ export async function writeRecordedReview(
   comparison?: ComparisonRun,
 ): Promise<string> {
   const file = comparison
-    ? path.join(RUNS, review.changeId, comparison.mode, `${comparison.k}.json`)
+    ? path.join(RUNS, review.changeId, comparison.mode, `${comparison.runNumber}.json`)
     : reviewPath(review.changeId);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(insideData(file), `${JSON.stringify(review, null, 2)}\n`);

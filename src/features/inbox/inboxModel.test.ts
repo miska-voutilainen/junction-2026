@@ -15,7 +15,7 @@ beforeAll(async () => {
   const changes = await loadChanges(fixtureRoot);
   const reportCard = await loadReportCard(fixtureRoot);
   if (changes.status !== "ok" || reportCard.status !== "ok") throw new Error("fixtures are missing");
-  card = { state: "ok", data: reportCard.data };
+  card = { state: "ok", data: reportCard.data, source: "fixture" };
   sources = await Promise.all(
     changes.data.map(async (change) => {
       const review = await loadReview(change.id, fixtureRoot);
@@ -184,7 +184,7 @@ describe("unreadable data", () => {
   it("explains an unreadable report card and routes every area as Shadow", () => {
     expect(reportCardNotice({ state: "unreadable" })).toBe(REPORT_CARD_NOTICE);
     expect(reportCardNotice({ state: "missing" })).toBe(REPORT_CARD_MISSING_NOTICE);
-    expect(reportCardNotice({ state: "ok", data: {} as never })).toBeNull();
+    expect(reportCardNotice({ state: "ok", data: {} as never, source: "fixture" })).toBeNull();
     expect(Object.values(inboxLevels({ state: "unreadable" }, {})).every((level) => level === "shadow")).toBe(true);
   });
 

@@ -20,6 +20,7 @@ import {
 import { CALL_TIMEOUT_MS, MAX_VALIDATION_RETRIES, MODEL } from "./limits";
 import {
   readRecording,
+  type Recording,
   recordingKey,
   recordingPath,
   writeRecording,
@@ -69,10 +70,18 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
   return {
     async call<T>(request: TypedRequest<T>): Promise<T> {
       const runIndex = request.runIndex ?? 0;
-      const key = recordingKey(request.promptVersion, request.prompt, runIndex);
+      const key = recordingKey(request, runIndex);
       const file = recordingPath(directory, request.promptVersion, key);
 
       if (options.mode === "replay") return replay(request, file, logUsage);
+
+      // Same prompt, model and run index is the same input, so a recording already
+      // there is the answer: A1's prompt is only the requirement, so changes that
+      // share a requirement share A1's answer instead of paying for it again.
+      if (options.mode === "record") {
+        const existing = await reuseRecording(request, file, logUsage);
+        if (existing !== null) return existing.answer;
+      }
 
       const accepted = await askUntilValid(
         options.transport,
@@ -146,6 +155,30 @@ async function replay<T>(
   // Same check as a fresh answer. A failure means the schema changed without a prompt version bump.
   const checked = validateAnswer(recording.rawAnswer, request.schema);
   if (!checked.ok) throw new RecordingStaleError(request.promptVersion, file);
+  logReplayed(request, recording, logUsage);
+  return checked.value;
+}
+
+/**
+ * Record mode: the answer already recorded under this key, or null when there is
+ * none or it no longer passes the schema (then the model is asked and the file
+ * overwritten). One stderr line says the model was not called.
+ */
+async function reuseRecording<T>(
+  request: TypedRequest<T>,
+  file: string,
+  logUsage: UsageSink,
+): Promise<{ answer: T } | null> {
+  const recording = await readRecording(file);
+  if (!recording) return null;
+  const checked = validateAnswer(recording.rawAnswer, request.schema);
+  if (!checked.ok) return null;
+  console.error(`${request.promptVersion}: reusing the recording ${path.basename(file)}, no model call`);
+  logReplayed(request, recording, logUsage);
+  return { answer: checked.value };
+}
+
+function logReplayed<T>(request: TypedRequest<T>, recording: Recording, logUsage: UsageSink): void {
   logUsage({
     model: recording.model,
     promptVersion: request.promptVersion,
@@ -157,7 +190,6 @@ async function replay<T>(
     source: "replay",
     requests: recording.attempts ?? 1,
   });
-  return checked.value;
 }
 
 interface AcceptedAnswer<T> {

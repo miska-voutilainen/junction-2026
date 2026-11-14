@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -186,6 +186,34 @@ describe("model client", () => {
     });
   });
 
+  it("reuses a recording with the same key in record mode instead of calling the model", async () => {
+    const first = answering('{"verdict":"ok"}');
+    await createModelClient({ mode: "record", transport: first.transport, recordingsDirectory: directory, usageSink }).call(request);
+    const stderr = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const second = vi.fn<Transport>();
+    const reused = await createModelClient({ mode: "record", transport: second, recordingsDirectory: directory, usageSink }).call(request);
+
+    expect(reused).toEqual({ verdict: "ok" });
+    expect(second).not.toHaveBeenCalled();
+    expect(stderr).toHaveBeenCalledTimes(1);
+    expect(String(stderr.mock.calls[0][0])).toContain("reusing the recording");
+    expect(entries.at(-1)).toMatchObject({ source: "replay" });
+    stderr.mockRestore();
+  });
+
+  it("asks the model again in record mode when the recording no longer passes the schema", async () => {
+    const stale = answering('{"verdict":"ok"}');
+    await createModelClient({ mode: "record", transport: stale.transport, recordingsDirectory: directory, usageSink }).call(request);
+    const stricterSchema = z.object({ verdict: z.enum(["bad"]) });
+
+    const fresh = answering('{"verdict":"bad"}');
+    const answer = await createModelClient({ mode: "record", transport: fresh.transport, recordingsDirectory: directory, usageSink }).call({ ...request, schema: stricterSchema });
+
+    expect(answer).toEqual({ verdict: "bad" });
+    expect(fresh.prompts).toHaveLength(1);
+  });
+
   it("replays a call that needed a retry as the same number of requests", async () => {
     const { transport } = answering('{"verdict":"maybe"}', '{"verdict":"ok"}');
     await createModelClient({
@@ -219,8 +247,15 @@ describe("model client", () => {
   });
 
   it("keys runs apart by run index and repeats the key for the same inputs", () => {
-    expect(recordingKey("t.v1", "p", 0)).not.toBe(recordingKey("t.v1", "p", 1));
-    expect(recordingKey("t.v1", "p", 0)).toBe(recordingKey("t.v1", "p", 0));
+    expect(recordingKey(request, 0)).not.toBe(recordingKey(request, 1));
+    expect(recordingKey(request, 0)).toBe(recordingKey(request, 0));
+  });
+
+  it("changes the key when only the system text or only the schema changes", () => {
+    const reworded = { ...request, system: "a different system text" };
+    const reshaped = { ...request, schema: z.object({ verdict: z.enum(["ok"]) }) };
+    expect(recordingKey(reworded, 0)).not.toBe(recordingKey(request, 0));
+    expect(recordingKey(reshaped, 0)).not.toBe(recordingKey(request, 0));
   });
 
   it("stores the raw answer text and replays it through the same validation", async () => {
@@ -237,17 +272,18 @@ describe("model client", () => {
       "```json",
     );
 
-    const stricter = {
-      ...request,
-      schema: z.object({ verdict: z.literal("bad") }),
-    };
+    // A recording that no longer passes its own schema, e.g. a hand edit or a schema change that kept the key.
+    const file = path.join(directory, name);
+    const saved = JSON.parse(await readFile(file, "utf8"));
+    await writeFile(file, JSON.stringify({ ...saved, rawAnswer: '{"verdict":"maybe"}' }), "utf8");
+
     const replayed = createModelClient({
       mode: "replay",
       transport: vi.fn<Transport>(),
       recordingsDirectory: directory,
       usageSink,
     });
-    await expect(replayed.call(stricter)).rejects.toBeInstanceOf(
+    await expect(replayed.call(request)).rejects.toBeInstanceOf(
       RecordingStaleError,
     );
   });
@@ -297,10 +333,12 @@ describe("cost", () => {
 });
 
 describe("recording key", () => {
+  const smokeSystem = "Answer with only the JSON object.";
   it("matches the committed smoke recording (golden)", async () => {
     // Changing the key derivation orphans every committed recording; this test says so first.
     const prompt = 'Return {"greeting": "hello", "sum": <the sum of 2 and 3>}.';
-    const key = recordingKey("smoke.v1", prompt, 0);
+    const smokeSchema = z.object({ greeting: z.string(), sum: z.number() });
+    const key = recordingKey({ promptVersion: "smoke.v1", system: smokeSystem, prompt, schema: smokeSchema }, 0);
     const file = path.join(
       "data",
       "recordings",

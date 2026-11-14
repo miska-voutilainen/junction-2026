@@ -11,8 +11,7 @@ import { CitationSchema } from "../contracts";
 import type { PromptContext } from "../pipeline/promptContext";
 import { areaChecklists, checklistSource } from "../policy/areaChecklists";
 import { refusalRules, type RefusalRule } from "../policy/refusals";
-import { MAX_CITATION_LINES } from "./a2";
-import { citationRangeProblem } from "./citationRange";
+import { MAX_CITATION_LINES, citationRangeProblem } from "./citationRange";
 
 type Hunk = Review["hunks"][number];
 
@@ -24,7 +23,7 @@ export const system = `You review a code change against the requirement and repo
 
 Findings, each one of:
 - defect: the code does something wrong, unsafe or inconsistent with what the requirement or the surrounding code needs. Use the checklists as the questions to ask of the hunks they apply to.
-- missing: for every requirement item, compare the expectation's expectedBehaviours and expectedTests with the change (hunks, files and claims). Report each behaviour or test the change does not show as a missing finding, and cite the closest relevant code: the code that should have it, or the test file that lacks the case. Also report anything the change itself makes necessary that it leaves out (a case, a document, an update elsewhere).
+- missing: for every requirement item, compare the expectation's expectedBehaviours and expectedTests with the change (hunks, files and claims). Report each behaviour the change does not show as a missing finding. Report a missing test only when no test in the change exercises that requirement item; a test that already covers the item, even through a different case, is not missing. Cite the closest relevant code, source file first: the code that should have the behaviour, or the code the missing test would exercise. Cite a test file first only when no source file is relevant. Also report anything the change itself makes necessary that it leaves out (a case, a document, an update elsewhere).
 - scope-creep: the change does something the requirement does not ask for.
 
 Each finding has:
@@ -32,7 +31,7 @@ Each finding has:
 - title: under 12 words. detail: what is wrong, where, and what would happen.
 - hunkIds: every hunk the finding is about.
 - citations: the code that shows the problem. For a missing item, cite the closest code that should have handled it. file and side: "new" for the head file, "old" for the base file. startLine and endLine are inclusive and are the numbers printed in the text; the range is at most ${MAX_CITATION_LINES} lines. quote is 1 to 3 lines copied exactly from those lines, without the line numbers and the +/- marker. A pipeline step compares each quote with the file mechanically (whitespace ignored, case matters); a finding with no matching quote is thrown away, so quote only what you can see.
-- Do not choose an area. The pipeline takes it from the file you cite first.
+- Do not choose an area. The pipeline takes it from the file you cite first, so list the source file before any test file; a finding whose first citation is a test file gets no area.
 
 Report only findings you can point at. A review with no findings is a valid answer. Go through the expectation item by item before you answer. Do not restate claims that are already correct, and do not report style preferences.
 
@@ -84,7 +83,8 @@ function refusalPolicyBlock(rules: readonly RefusalRule[]): string {
 
 const nonEmptyText = z.string().min(1);
 
-const FindingDraftSchema = z.object({
+// Strict, so a finding that names an area is rejected: the area comes from the cited path.
+const FindingDraftSchema = z.strictObject({
   kind: z.enum(["defect", "missing", "scope-creep"]),
   severity: z.enum(["high", "medium", "low"]),
   title: nonEmptyText,

@@ -184,7 +184,7 @@ export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
 /** A refusal struck because the rule id it named is not in the refusal policy: the AI invented a rule. */
 export interface UnknownRuleRefusal {
   changeId: string;
-  /** The refusal's id in its review, e.g. "r3". */
+  /** The quote check's item id for the refusal: "a3-r<n>", the n-th refusal A3 wrote (not the refusal's id in the review). */
   itemId: string;
 }
 
