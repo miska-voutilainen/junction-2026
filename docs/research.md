@@ -1,6 +1,6 @@
 # Research
 
-What we checked before committing to the eight ideas, and the only figures our pitch, concept card and idea pages quote. Each figure names its sample and source; "checked" means we read the source's abstract ourselves, not only a summary of it.
+What we checked before committing to the nine ideas, and the only figures our pitch, concept card and idea pages quote. Each figure names its sample and source; "checked" means we read the source's abstract ourselves, not only a summary of it.
 
 We ran four research passes on Sat 14.11 (Gemini Deep Research): two looked for better ideas, one gathered evidence on how agent-written pull requests fail, and one attacked our concept the way a sceptical Tieto engineer or investor would. Outcome: no idea replaced, six sharpened ([decisions.md](decisions.md), 2026-11-14). A fifth pass the same day audited all eight ideas; its raw output is in [research/gemini-deep-research-2026-11-14.md](research/gemini-deep-research-2026-11-14.md), unverified.
 

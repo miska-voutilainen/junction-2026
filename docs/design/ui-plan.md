@@ -68,7 +68,7 @@ Spacing stays on Tailwind's 4 px scale. The gate's one-off sizes (`text-[40px]`,
 | Component | What it is |
 | --- | --- |
 | `AppShell`, `TopBar`, `AppNav`, `MobileHeader`, `CommandMenu`, `Wordmark` | Shell, above |
-| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All eight ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "Separation of duties" |
+| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All nine ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "Separation of duties", idea 9 "Legacy guard" |
 | `EvidenceMark` + `EvidenceBadge` | Verified: filled dot. Supported: ring. Unverified: amber dashed ring. Refused: ring with slash. Always with the text label |
 | `CoverageMark` | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid) |
 | `TierBadge` | Signal bars (1–3) and "Light", "Focused" or "Full" |

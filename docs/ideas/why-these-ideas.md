@@ -1,4 +1,4 @@
-# Why these eight ideas
+# Why these nine ideas
 
 What each idea is, how it works, what it does that a typical AI code reviewer doesn't, and why its design is finished for the reference. One-page versions of each idea are linked in the [index](README.md).
 
@@ -11,6 +11,7 @@ A typical AI reviewer posts a summary and a confidence score, and a person click
 | What was checked?          | 2 Blind-first, 4 Quote check, 6 Evidence levels            |
 | What still has to be read? | 3 Coverage map, 1 Trust ladder                             |
 | Who is accountable?        | 5 Refusal policy, 7 Signed receipt, 8 Separation of duties |
+| Does it break old code?    | 9 Legacy guard                                             |
 
 ## The ideas
 
@@ -64,7 +65,7 @@ A typical AI reviewer posts a summary and a confidence score, and a person click
 
 ### 5. A written refusal policy
 
-**What it is.** Seven rules, versioned, for what the AI never decides, each naming the role that does: requirement intent, security design, data handling, irreversible changes, new dependencies, untraceable changes, public contract.
+**What it is.** Seven rules the model reads, versioned, for what the AI never decides, each naming the role that does: requirement intent, security design, data handling, irreversible changes, new dependencies, untraceable changes, public contract. An eighth, R8 (legacy contract), is raised by code only ([idea 9](legacy-guard.md)).
 
 **How it works.** The reviewer reads the list and outputs a refusal (rule id, reason, hunks) instead of an opinion. Some rules are fixed by path, so a change to `PublicAPI.Unshipped.txt` reaches a human whatever the model says. A refusal sends the change to at least Focused review and appears in the receipt as residual risk the owner accepts in writing.
 
@@ -72,7 +73,7 @@ A typical AI reviewer posts a summary and a confidence score, and a person click
 
 **Why it's relevant.** It is the cheapest idea to adopt (a list and a prompt paragraph) and the one a compliance reader understands at once. The MP-2283 example is real: a fix that silently drops a documented diagnostic should be refused, not approved.
 
-**Why the design is finished.** Seven rules, each with an owner, is the right size; more becomes noise. AI rules and path rules cover both what a model can judge and what it must not. The limit is stated: the model decides when an AI rule applies, and seeding "should refuse" cases is how to measure it next.
+**Why the design is finished.** Seven rules for the model, each with an owner, is the right size; more becomes noise. AI rules and path rules cover both what a model can judge and what it must not. The limit is stated: the model decides when an AI rule applies, and seeding "should refuse" cases is how to measure it next.
 
 ### 6. Evidence levels instead of confidence
 
@@ -109,6 +110,18 @@ A typical AI reviewer posts a summary and a confidence score, and a person click
 **Why it's relevant.** It is separation of duties, an old rule in audit (PCI DSS 6.2.3.1 asks for review by someone other than the author), applied to the new case where the author is an agent.
 
 **Why the design is finished.** It costs no model calls and applies the same rule in four places. It admits what it doesn't solve: two agents of one model family share blind spots, and blind planting is enforced by lane, not by code.
+
+### 9. The legacy guard
+
+**What it is.** Every place a change touches what old systems rely on becomes a touch point with a kind, a named owner and a guard: the evidence that the touch is safe. Page: [legacy-guard.md](legacy-guard.md).
+
+**How it works.** Code, not the model, finds the touches: legacy zones, `#if` on old platforms, consumer contracts, build files. A guard is a test that existed before the change, so the authoring agent didn't write it. A touch stays on the reading list; one without a guard raises the tier. On `mp-2297`, 11 hunks behind `#if !NETSTANDARD2_0 && !NETFRAMEWORK` are Unguarded because every test project targets net8.0.
+
+**Why it stands out.** CI on modern targets can't notice that no test ever runs the branch an old target compiles. Path ownership says who must approve a path, not what covers the touch.
+
+**Why it's relevant.** Tieto's engineer named it: new agent code that breaks old code is the main risk.
+
+**Why the design is finished.** It costs no model calls and never takes a hunk off the reading list. Limits are named: a test that mentions a symbol may not test it, and the zone map is ours, not Tieto's.
 
 ## Why they work as a set
 
