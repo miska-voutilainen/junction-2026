@@ -35,6 +35,37 @@ const HunkSchema = z.strictObject({
   lines: z.array(HunkLineSchema),
 });
 
+export const LegacyTouchKindSchema = z.enum([
+  "legacy-code",
+  "old-platform",
+  "consumer-contract",
+  "build",
+]);
+export type LegacyTouchKind = z.infer<typeof LegacyTouchKindSchema>;
+
+/**
+ * A place the change touches what old systems rely on, with who decides and
+ * what covers it. Producer: engine, findLegacyTouchPoints (git and path rules,
+ * no model). One per kind and detail; a guard never removes a hunk from the
+ * reading list, it tells the owner what covers the touch.
+ */
+export const LegacyTouchPointSchema = z.strictObject({
+  kind: LegacyTouchKindSchema,
+  hunkIds: z.array(z.string()),
+  /** What is touched, e.g. "#if !NETSTANDARD2_0 && !NETFRAMEWORK". */
+  detail: z.string(),
+  /** The named owner who decides, e.g. "runtime owner (the maintainers)". */
+  owner: z.string(),
+  guard: z.strictObject({
+    /** guarded: evidence covers it; partly: covers some targets; unguarded: none; owner-read: no mechanical evidence exists for this kind. */
+    status: z.enum(["guarded", "partly", "unguarded", "owner-read"]),
+    /** One sentence saying what covers the touch, or that nothing does. */
+    evidence: z.string(),
+    files: z.array(z.string()),
+  }),
+});
+export type LegacyTouchPoint = z.infer<typeof LegacyTouchPointSchema>;
+
 const ClaimSchema = z.strictObject({
   id: z.string(), // "c1"
   requirementItemId: z.string().nullable(),
@@ -191,6 +222,8 @@ export const ReviewSchema = z.strictObject({
     )
     .optional(),
   receiptDraft: ReceiptBodySchema,
+  // Optional so reviews recorded before the legacy guard stay valid.
+  legacyTouchPoints: z.array(LegacyTouchPointSchema).optional(),
   // route() at record time, with the levels from the report card then
   routing: TierDecisionSchema,
 });

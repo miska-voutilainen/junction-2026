@@ -421,4 +421,51 @@ describe("legacy guard", () => {
       "Refusal r1 (R8): Edits legacy code in Wire format: the runtime owner (the maintainers) decides",
     );
   });
+  describe("R-legacy-guard", () => {
+    type Status = "guarded" | "partly" | "unguarded" | "owner-read";
+    function routeWith(status: Status) {
+      const touch = {
+        kind: "old-platform" as const,
+        hunkIds: ["h1"],
+        detail: "#if !NETFRAMEWORK",
+        owner: "platform owner (the maintainers)",
+        guard: { status, evidence: "no test runs it on .NET Framework", files: [] },
+      };
+      const review = {
+        ...makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") }),
+        legacyTouchPoints: [touch],
+      };
+      return route(review, trustedEverywhere);
+    }
+
+    it("asks for Full when the touch is unguarded, naming the owner", () => {
+      const decision = routeWith("unguarded");
+      expect(decision.reasons).toContainEqual({
+        ruleId: "R-legacy-guard",
+        tier: "full",
+        text: "Old platform: #if !NETFRAMEWORK in 1 hunk, no test runs it on .NET Framework; the platform owner (the maintainers) decides",
+      });
+      expect(decision.tier).toBe("full");
+    });
+
+    it("asks for Focused when the guard is partial or only the owner can read", () => {
+      expect(routeWith("partly").tier).toBe("focused");
+      expect(routeWith("owner-read").tier).toBe("focused");
+    });
+
+    it("shows a guarded touch at Light without raising the tier", () => {
+      const decision = routeWith("guarded");
+      expect(decision.reasons.find((reason) => reason.ruleId === "R-legacy-guard")?.tier).toBe(
+        "light",
+      );
+      expect(decision.tier).toBe("light");
+    });
+
+    it("decides a review without touch points as before", () => {
+      const review = makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") });
+      expect(route({ ...review, legacyTouchPoints: [] }, trustedEverywhere)).toEqual(
+        route(review, trustedEverywhere),
+      );
+    });
+  });
 });

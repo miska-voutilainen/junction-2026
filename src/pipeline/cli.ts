@@ -21,11 +21,13 @@ import {
 } from "./reviewFiles";
 import { runEvalCommand } from "./eval/evalCommand";
 import { blindComparisonSteps, reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
+import { addLegacyGuard } from "./addLegacyGuard";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
   pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
   pnpm review check <changeId>
+  pnpm review legacy <changeId>
   pnpm review comment <changeId> [--receipt-exit <code>]
   pnpm evals [--runs <n>] [--score-only]`;
 
@@ -48,7 +50,7 @@ async function main(argv: string[]): Promise<void> {
     },
   });
   const [command, changeId] = positionals;
-  if (!changeId || (command !== "run" && command !== "check" && command !== "comment")) fail(usage);
+  if (!changeId || (command !== "run" && command !== "check" && command !== "comment" && command !== "legacy")) fail(usage);
 
   if (command === "comment") {
     const receiptExit = receiptExitFrom(values["receipt-exit"]);
@@ -58,6 +60,8 @@ async function main(argv: string[]): Promise<void> {
     );
     return;
   }
+
+  if (command === "legacy") return legacyCommand(changeId);
 
   if (command === "check") {
     const review = await loadRecordedReview(changeId);
@@ -72,6 +76,22 @@ async function main(argv: string[]): Promise<void> {
     runNumber,
     runsTests: values["no-tests"] !== true,
   });
+}
+
+/** `legacy`: adds the legacy guard to the recorded review in place, with no model call. */
+async function legacyCommand(changeId: string): Promise<void> {
+  if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
+  const repoDir = process.env.SAMPLE_REPO_DIR;
+  if (!repoDir) fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
+  const before = await loadRecordedReview(changeId);
+  const after = await addLegacyGuard(before, repoDir, levelsForReviewer(await loadReportCard(), MODEL));
+  await writeRecordedReview(after);
+  const points = after.legacyTouchPoints ?? [];
+  console.log(
+    `${changeId} · ${before.routing.tier} -> ${after.routing.tier} · ${points.length} touch points` +
+      points.map((point) => `
+  ${point.kind} · ${point.guard.status} · ${point.hunkIds.length} hunks · ${point.detail}`).join(""),
+  );
 }
 
 /** How a run is recorded: the plain run is the change's review; --anchored or --run <k> is a comparison run. */
