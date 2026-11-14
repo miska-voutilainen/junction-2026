@@ -7,6 +7,7 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  mergeFixedRefusals,
 } from "./checkFindings";
 import type { SideReader } from "./quoteCheck";
 
@@ -128,7 +129,11 @@ describe("checkContradictions", () => {
   it("routes a contradiction cited on the old side to the hunk that removed those lines", async () => {
     const removing = { ...hunk, id: "h2", oldStart: 1, oldLines: 3, newStart: 50, newLines: 0 };
     const [finding] = await checkContradictions(
-      [statement({ citations: [{ ...cite("src/MessagePack/Reader.cs", "line one", 1, 1), side: "old" }] })],
+      [
+        statement({
+          citations: [{ ...cite("src/MessagePack/Reader.cs", "line one", 1, 1), side: "old" }],
+        }),
+      ],
       [],
       [hunk, removing],
       readSide,
@@ -162,7 +167,9 @@ describe("checkContradictions", () => {
     );
     expect(findings).toMatchObject([{ kind: "contradiction", severity: "high", citations: [] }]);
     expect(check.dropped).toBe(0);
-    expect(check.failures).toMatchObject([{ itemId: "a4-s1", reason: expect.stringContaining("quote not found") }]);
+    expect(check.failures).toMatchObject([
+      { itemId: "a4-s1", reason: expect.stringContaining("quote not found") },
+    ]);
   });
 });
 
@@ -178,7 +185,9 @@ describe("refusals", () => {
     );
     expect(refusals.map((refusal) => refusal.ruleId)).toEqual(["R7"]);
     expect(refusals[0].source).toBe("ai");
-    expect(check.failures).toEqual([{ itemId: "a3-r2", citation: null, reason: 'unknown rule id "R8"' }]);
+    expect(check.failures).toEqual([
+      { itemId: "a3-r2", citation: null, reason: 'unknown rule id "R8"' },
+    ]);
   });
 
   it("adds a rule refusal for each fixed trigger a hunk matches", () => {
@@ -199,5 +208,38 @@ describe("refusals", () => {
     expect(
       fixedRefusalsFor([{ id: "h1", file: "src/MessagePack/Reader.cs" }] as Review["hunks"]),
     ).toEqual([]);
+  });
+});
+
+describe("mergeFixedRefusals", () => {
+  const ai = (ruleId: string, hunkIds: string[]) => ({
+    ruleId,
+    source: "ai" as const,
+    reason: "a",
+    hunkIds,
+  });
+  const fixed = (ruleId: string, hunkIds: string[]) => ({
+    ruleId,
+    source: "rule" as const,
+    reason: "f",
+    hunkIds,
+  });
+
+  it("adds a rule refusal only for matched hunks no AI refusal of that rule lists", () => {
+    const merged = mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2", "h3"])]);
+    expect(merged).toEqual([ai("R7", ["h2"]), fixed("R7", ["h3"])]);
+  });
+
+  it("adds nothing when the AI already refused every matched hunk", () => {
+    expect(mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2"])])).toEqual([
+      ai("R7", ["h2"]),
+    ]);
+  });
+
+  it("ignores an AI refusal under another rule id", () => {
+    expect(mergeFixedRefusals([ai("R1", ["h2"])], [fixed("R7", ["h2"])])).toEqual([
+      ai("R1", ["h2"]),
+      fixed("R7", ["h2"]),
+    ]);
   });
 });

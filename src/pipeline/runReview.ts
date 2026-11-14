@@ -3,9 +3,10 @@
  * requirement alone, A2 reads the code and makes claims, the quote check tests
  * every quote, A3 reviews the area checklists and refuses what belongs to a
  * person, and only then does A4 read the author's description and test it
- * against the claims. Anchored (the comparison): A2 reads the description first,
- * with no A1, and A3 is skipped (a step list can switch steps off). The order is the idea: in blind-first mode
- * nothing the author said reaches A1, A2 or A3. Spec section 6.
+ * against the claims. A5 (differential tests on .NET) is opt-in and runs last.
+ * Anchored (the comparison): A2 reads the description first, with no A1, and A3
+ * is skipped. The order is the idea: in blind-first mode nothing the author
+ * said reaches A1, A2 or A3. Spec section 6.
  */
 import type { ModelClient } from "../ai/client";
 import type { ChangeInput, LadderLevel, Area, Requirement, Review } from "../contracts";
@@ -21,6 +22,8 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  mergeFixedRefusals,
+  type UnnumberedFinding,
   type UnnumberedRefusal,
 } from "./checkFindings";
 import { dockerDotnetRunner, type DotnetRunner } from "./differential/dotnetRunner";
@@ -43,7 +46,15 @@ export const reviewStepsWithTests: readonly ModelStep[] = ["a1", "a2", "a3", "a4
 
 // A5 is opt-in: it needs .NET and minutes per run, so only a caller that has them lists it.
 const allSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
-const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
+
+/**
+ * The blind comparison runs: A3 is most of a
+ * run's cost and is not what they compare, so they skip it.
+ */
+export const blindComparisonSteps: readonly ModelStep[] = ["a1", "a2", "a4"];
+
+/** The anchored comparison: A2 reads the description first, so there is no A1, and A3 is skipped for the same cost reason. */
+export const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
 
 /** What a run needs besides the model. */
 export interface RunReviewInput {
@@ -57,10 +68,9 @@ export interface RunReviewInput {
   /** "anchored" shows A2 the description first and skips A1 and A3. Defaults to "blind-first". */
   mode?: Review["mode"];
   /**
-   * The model steps to run; A2 always runs. Defaults to every step for
-   * blind-first and A2 and A4 for anchored. The blind comparison runs are
-   * A1, A2 and A4: A3 is most of the cost and is not what they compare.
-   * A3 needs A1's expectation.
+   * The model steps to run; A2 always runs. Defaults to A1 to A4 for
+   * blind-first (A5 is opt-in, see `reviewStepsWithTests`) and to
+   * `anchoredSteps` for anchored. A3 and A5 need A1's expectation.
    */
   steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
@@ -108,20 +118,24 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   const drafts = answer.claims.map((claim, index) => ({ ...claim, id: `c${index + 1}` }));
   const checkedClaims = await checkClaims(drafts, loadedDiff.hunks, readSide);
   // The Review contract has no field for this count, so it goes to the log only.
-  console.error(
-    `quote check removed ${checkedClaims.hunkIdsRemoved} hunk ids that no passing citation lay in`,
-  );
+  if (checkedClaims.hunkIdsRemoved > 0) {
+    console.error(
+      `quote check removed ${checkedClaims.hunkIdsRemoved} hunk ids that no passing citation lay in`,
+    );
+  }
   const { claims, quoteCheck } = checkedClaims;
 
   const didRunA3 = expectation !== null && steps.has("a3");
-  const { areaFindings, refusals } = didRunA3
+  const areaReview = didRunA3
     ? await reviewAreas(
         client,
         { requirement, hunks: loadedDiff.hunks, context, expectation, claims, runIndex },
         readSide,
         quoteCheck,
       )
-    : { areaFindings: [], refusals: [] };
+    : { areaFindings: [], aiRefusals: [] };
+  // A path rule needs no model call, so it applies on every run, A3 or not.
+  const refusals = mergeFixedRefusals(areaReview.aiRefusals, fixedRefusalsFor(loadedDiff.hunks));
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {
@@ -158,7 +172,6 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
         })
       : null;
 
-  const finishedAt = new Date();
   return assembleReview({
     change,
     requirement,
@@ -169,27 +182,55 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     retractions: tests?.retractions ?? [],
     inconclusiveTests: tests?.didRun ? tests.inconclusiveTests : undefined,
     mode,
-    findings: [...areaFindings, ...contradictions].map((finding, index) => ({
-      ...finding,
-      id: `f${index + 1}`,
-    })),
-    refusals: refusals.map((refusal, index) => ({ ...refusal, id: `r${index + 1}` })),
-    promptVersions: {
-      a1: expectation ? a1.version : "none",
-      a2: a2.version,
-      a3: didRunA3 ? a3.version : "none",
-      a4: description ? a4.version : "none",
-      a5: tests?.didRun ? a5.version : "none",
-    },
+    ...numberFindingsAndRefusals([...areaReview.areaFindings, ...contradictions], refusals),
+    promptVersions: promptVersionsFor({
+      ranA1: expectation !== null,
+      ranA3: didRunA3,
+      ranA4: description !== null,
+      ranA5: tests?.didRun === true,
+    }),
     levels: input.levels,
-    run: {
-      id: runId(startedAt),
-      startedAt: startedAt.toISOString(),
-      finishedAt: finishedAt.toISOString(),
-      durationMs: finishedAt.getTime() - startedAt.getTime(),
-      usage: input.usage.totals(),
-    },
+    run: runMetadata(startedAt, input.usage),
   });
+}
+
+/** Ids follow output order: f1, f2, ... and r1, r2, ... */
+function numberFindingsAndRefusals(
+  findings: readonly UnnumberedFinding[],
+  refusals: readonly UnnumberedRefusal[],
+): { findings: Review["findings"]; refusals: Review["refusals"] } {
+  return {
+    findings: findings.map((finding, index) => ({ ...finding, id: `f${index + 1}` })),
+    refusals: refusals.map((refusal, index) => ({ ...refusal, id: `r${index + 1}` })),
+  };
+}
+
+/** The prompt version each step ran with; "none" for a step that did not run. A2 always runs. */
+function promptVersionsFor(ran: {
+  ranA1: boolean;
+  ranA3: boolean;
+  ranA4: boolean;
+  ranA5: boolean;
+}): Review["reviewer"]["promptVersions"] {
+  return {
+    a1: ran.ranA1 ? a1.version : "none",
+    a2: a2.version,
+    a3: ran.ranA3 ? a3.version : "none",
+    a4: ran.ranA4 ? a4.version : "none",
+    a5: ran.ranA5 ? a5.version : "none",
+  };
+}
+
+/** When the run started and ended, how long it took and what it cost. */
+function runMetadata(startedAt: Date, usage: UsageTally): Review["run"] {
+  const finishedAt = new Date();
+  return {
+    id: runId(startedAt),
+    startedAt: startedAt.toISOString(),
+    finishedAt: finishedAt.toISOString(),
+    durationMs: finishedAt.getTime() - startedAt.getTime(),
+    usage: usage.totals(),
+  };
 }
 
 /**
@@ -212,7 +253,7 @@ function checkedSteps(
   return steps;
 }
 
-/** A3, then the quote check on its findings and refusals, with the fixed rule refusals merged in. */
+/** A3, then the quote check on its findings and refusals. */
 async function reviewAreas(
   client: Parameters<typeof writeAreaReview>[0],
   areaInput: Parameters<typeof writeAreaReview>[1],
@@ -220,38 +261,13 @@ async function reviewAreas(
   quoteCheck: Parameters<typeof checkAreaFindings>[2],
 ): Promise<{
   areaFindings: Awaited<ReturnType<typeof checkAreaFindings>>;
-  refusals: ReturnType<typeof mergeFixedRefusals>;
+  aiRefusals: UnnumberedRefusal[];
 }> {
   const areaReview = await writeAreaReview(client, areaInput);
   return {
     areaFindings: await checkAreaFindings(areaReview.findings, readSide, quoteCheck),
-    refusals: mergeFixedRefusals(
-      checkRefusals(areaReview.refusals, quoteCheck),
-      fixedRefusalsFor(areaInput.hunks),
-    ),
+    aiRefusals: checkRefusals(areaReview.refusals, quoteCheck),
   };
-}
-
-/**
- * The AI's refusals plus the fixed ones, without counting one decision twice:
- * a rule refusal is added only for the matched hunks no AI refusal with the
- * same rule id already lists (spec section 5, Policy). An AI R7 on the hunk a
- * fixed R7 matches already makes the person decide it.
- */
-export function mergeFixedRefusals(
-  aiRefusals: readonly UnnumberedRefusal[],
-  fixedRefusals: readonly UnnumberedRefusal[],
-): UnnumberedRefusal[] {
-  const addedFixed = fixedRefusals.flatMap((fixed) => {
-    const listed = new Set(
-      aiRefusals
-        .filter((refusal) => refusal.ruleId === fixed.ruleId)
-        .flatMap((refusal) => refusal.hunkIds),
-    );
-    const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
-    return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];
-  });
-  return [...aiRefusals, ...addedFixed];
 }
 
 /** `YYYYMMDDTHHMMSSZ` in UTC, e.g. 20261114T093005Z. */

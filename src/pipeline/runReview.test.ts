@@ -7,7 +7,7 @@ import type { ModelClient } from "../ai/client";
 import { ReviewSchema, type ChangeInput, type Requirement } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
 import { checkReview } from "./checkReview";
-import { mergeFixedRefusals, runReview, type ModelStep } from "./runReview";
+import { runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const requirement: Requirement = {
@@ -167,18 +167,23 @@ const invented = {
 describe("runReview with a fake model", () => {
   async function review(
     claims: unknown[],
-    options: { mode?: "anchored"; runIndex?: number; steps?: ModelStep[] } = {},
+    options: {
+      mode?: "anchored";
+      runIndex?: number;
+      steps?: ModelStep[];
+      change?: ChangeInput;
+    } = {},
   ) {
     const { client, prompts, runIndexes } = fakeClient(claims);
     const tally = createUsageTally();
     const result = await runReview({
-      change,
+      ...options,
+      change: options.change ?? change,
       requirement,
       repoDir,
       client,
       usage: tally,
       levels: levelsFromReportCard(null),
-      ...options,
     });
     return { result, prompts, runIndexes };
   }
@@ -228,7 +233,13 @@ describe("runReview with a fake model", () => {
   it("keeps a refusal with a known rule id and records the unknown one", async () => {
     const { result } = await review([goodClaim]);
     expect(result.refusals).toEqual([
-      { id: "r1", ruleId: "R7", source: "ai", reason: "Changes documented behaviour.", hunkIds: ["h2"] },
+      {
+        id: "r1",
+        ruleId: "R7",
+        source: "ai",
+        reason: "Changes documented behaviour.",
+        hunkIds: ["h2"],
+      },
     ]);
     expect(result.quoteCheck.failures.at(-1)).toMatchObject({
       itemId: "a3-r2",
@@ -274,6 +285,23 @@ describe("runReview with a fake model", () => {
     expect(prompts["a3.v1"]).toBeUndefined();
     expect(result.reviewer.promptVersions).toMatchObject({ a1: "a1.v1", a3: "none", a4: "a4.v1" });
     expect(result.refusals).toEqual([]);
+  });
+
+  it("adds the fixed R7 refusal on a run without A3", async () => {
+    mkdirSync(join(repoDir, "src", "Lib"), { recursive: true });
+    writeFileSync(join(repoDir, "src", "Lib", "PublicAPI.Unshipped.txt"), "Resolver.Count\n");
+    git("add", ".");
+    git("commit", "-qm", "public api");
+    const publicApiChange = { ...change, headSha: git("rev-parse", "HEAD") };
+    const { result, prompts } = await review([{ ...goodClaim, hunkIds: ["h3"] }], {
+      change: publicApiChange,
+      steps: ["a1", "a2", "a4"],
+    });
+    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(result.hunks.map((hunk) => hunk.file)).toContain("src/Lib/PublicAPI.Unshipped.txt");
+    expect(result.refusals).toEqual([
+      expect.objectContaining({ id: "r1", ruleId: "R7", source: "rule", hunkIds: ["h2"] }),
+    ]);
   });
 
   it("an explicit steps list can turn A4 off", async () => {
@@ -350,23 +378,5 @@ describe("runReview with a fake model", () => {
       ["A1 covers every requirement item exactly once", true],
       ["A2 lists every hunk of a non-docs, non-generated file in a claim", true],
     ]);
-  });
-});
-
-describe("mergeFixedRefusals", () => {
-  const ai = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "ai" as const, reason: "a", hunkIds });
-  const fixed = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "rule" as const, reason: "f", hunkIds });
-
-  it("adds a rule refusal only for matched hunks no AI refusal of that rule lists", () => {
-    const merged = mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2", "h3"])]);
-    expect(merged).toEqual([ai("R7", ["h2"]), fixed("R7", ["h3"])]);
-  });
-
-  it("adds nothing when the AI already refused every matched hunk", () => {
-    expect(mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R7", ["h2"])]);
-  });
-
-  it("ignores an AI refusal under another rule id", () => {
-    expect(mergeFixedRefusals([ai("R1", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R1", ["h2"]), fixed("R7", ["h2"])]);
   });
 });

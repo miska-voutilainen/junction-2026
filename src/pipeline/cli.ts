@@ -17,7 +17,7 @@ import {
   writeRecordedReview,
 } from "./reviewFiles";
 import { runEvalCommand } from "./eval/evalCommand";
-import { reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
+import { blindComparisonSteps, reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
@@ -88,7 +88,6 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     usage: tally,
     levels: levelsFromReportCard(await loadReportCard()),
     mode: options.isAnchored ? "anchored" : "blind-first",
-    // Comparison runs are A1, A2 and A4: A3 is most of a run's cost and not what they compare.
     steps: stepsFor(options, isComparison),
     runIndex: isComparison ? runNumber : 0,
   });
@@ -100,17 +99,18 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
 /** The steps of a run: comparison runs and --no-tests skip A5; the recorded review runs it (spec section 5). */
 function stepsFor(options: RunOptions, isComparison: boolean): readonly ModelStep[] | undefined {
   if (options.isAnchored) return undefined;
-  if (isComparison) return ["a1", "a2", "a4"];
+  if (isComparison) return blindComparisonSteps;
   return options.runsTests ? reviewStepsWithTests : undefined;
 }
 
 /** "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s" */
 function summaryLine(review: Review): string {
   const { routing, run } = review;
+  const generatedHunks = countGenerated(routing.coverage);
   return [
     review.changeId,
     routing.tier,
-    `read ${routing.readHunks} of ${routing.totalHunks} hunks${countGenerated(routing.coverage) > 0 ? ` · ${countGenerated(routing.coverage)} generated` : ""}`,
+    `read ${routing.readHunks} of ${routing.totalHunks} hunks${generatedHunks > 0 ? ` · ${generatedHunks} generated` : ""}`,
     `${review.claims.length} claims`,
     `${review.findings.length} findings`,
     `${review.refusals.length} refused`,
