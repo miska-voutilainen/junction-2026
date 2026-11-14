@@ -1,6 +1,6 @@
 "use client";
 
-import { useSelectedClaim } from "../SelectedClaim";
+import { useSelection } from "../SelectionProvider";
 import { LocationButton } from "./LocationButton";
 import { citationLabel } from "./storyModel";
 import type { FindingView } from "./storyModel";
@@ -13,7 +13,7 @@ import type { FindingView } from "./storyModel";
  * named but not offered: there is nothing in the diff to show.
  */
 export function FindingLocations({ view }: Readonly<{ view: FindingView }>) {
-  const { selection, setSelectedFindingId } = useSelectedClaim();
+  const { selection, setSelectedFindingId } = useSelection();
   if (view.citations.length === 0) return null;
   const isFocusedOn = (citation: (typeof view.citations)[number]["citation"]) =>
     selection?.kind === "finding" && selection.id === view.finding.id && selection.focus === citation;

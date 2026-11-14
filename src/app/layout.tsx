@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+/**
+ * The shell around every page: fonts, the motion provider (reduced-motion
+ * aware), the command menu (Cmd/Ctrl+K from any page) and the toast outlet.
+ */
 export default function RootLayout({ children }: Readonly<LayoutProps<"/">>) {
   return (
     <html

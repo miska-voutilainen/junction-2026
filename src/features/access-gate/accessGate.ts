@@ -23,6 +23,10 @@ export async function accessCookieValue(code: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+// A base for parsing `next` against. The reserved `.invalid` top-level domain can
+// never be a real origin, so a parsed URL that keeps this origin is on our site.
+const SAME_SITE_BASE = "http://gate.invalid";
+
 /**
  * Narrows a `next` query value to a path on this site, so the unlock page
  * cannot be used as an open redirect.
@@ -47,8 +51,6 @@ export function safeNextPath(next: string | null | undefined): string {
 
 // Link-preview crawlers carry no cookie; a redirect to /unlock would leave shared links without an image.
 const SOCIAL_PREVIEW_PATH = "/opengraph-image";
-
-const SAME_SITE_BASE = "http://gate.invalid";
 
 /**
  * The proxy step: lets a request through when the gate is off or the visitor
