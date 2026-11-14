@@ -115,13 +115,13 @@ function ListCard({
 }: {
   title: string;
   count: number;
-  /** Shows the "Idea 4 · Quote check" label beside the heading. */
+  /** Shows the "Idea 4 · Quote check" label at the top of the open card (a link can't sit inside the disclosure button, and the column is too narrow to fit it beside the heading). */
   idea?: boolean;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section className="relative rounded-page border border-border-subtle bg-surface-panel p-3 pb-4">
+    <section className="rounded-page border border-border-subtle bg-surface-panel p-3 pb-4">
       <Disclosure
         defaultOpen={defaultOpen}
         title={
@@ -131,9 +131,11 @@ function ListCard({
           </span>
         }
       >
-        <div className="px-1 pt-2">{children}</div>
+        <div className="px-1 pt-2">
+          {idea && <IdeaLabel n={4} className="mb-2" />}
+          {children}
+        </div>
       </Disclosure>
-      {idea && <IdeaLabel n={4} className="absolute top-3.5 right-3" />}
     </section>
   );
 }
