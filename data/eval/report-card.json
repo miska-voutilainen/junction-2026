@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T06:00:59.375Z",
+  "reviewer": {
+    "version": "rv1",
+    "model": "claude-opus-5-5"
+  },
+  "areas": [
+    {
+      "area": "generator",
+      "planted": 4,
+      "caught": 4,
+      "spotChecksClean": 0,
+      "level": "calibrated",
+      "plants": [
+        {
+          "plantId": "v04",
+          "changeId": "v04",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "For an ignored member the non-public flag is combined with &= instead of |=, so it can never become true there and ignored non-public members no longer count towards serializing non-public members.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/dd737f34be40f6b08b4c94a77f4b701078b1ec41"
+        },
+        {
+          "plantId": "v05",
+          "changeId": "v05",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The check that a keyed member is non-public is inverted (== Public instead of != Public), so a keyed non-public member no longer marks non-public members as serialized.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/082f7a664132a9051c4152197c9fbcec17820537"
+        },
+        {
+          "plantId": "v07",
+          "changeId": "v07",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "Deferred diagnostics for non-public members are reported only when both nonPublicMembersAreSerialized and AllowPrivate hold (&&), instead of when either does.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/dbee4cc8ff96bbbd3220fadeec92fb2c2000dc30"
+        },
+        {
+          "plantId": "v08",
+          "changeId": "v08",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The deserializing constructor is picked by ascending parameter count (ThenBy) instead of descending (ThenByDescending), so with several equally accessible constructors the one with the fewest parameters wins.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/c95ef2e0ede0f44256437f5555816bfe0e754106"
+        }
+      ]
+    },
+    {
+      "area": "analyzer",
+      "planted": 3,
+      "caught": 3,
+      "spotChecksClean": 0,
+      "level": "calibrated",
+      "plants": [
+        {
+          "plantId": "v01",
+          "changeId": "v01",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The nullable-annotation filter matches formatters whose type argument is already annotated (NullableAnnotation.Annotated) instead of those that are not (NotAnnotated).",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/c506292f8ec68e95c58d2058b36f4da1160b1221"
+        },
+        {
+          "plantId": "v02",
+          "changeId": "v02",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The symbol switch collects [MessagePackObject] types only when they are classes (case TypeKind.Class); structs, including record structs, are no longer analysed.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/9e200b7fc128fa28f174cdeef8f706e6c23a3643"
+        },
+        {
+          "plantId": "v09",
+          "changeId": "v09",
+          "caught": true,
+          "findingId": "f1",
+          "defect": "The inaccessible-formatter diagnostic is reported only for formatters excluded from the source-generated resolver (the negation was dropped), instead of for those included in it.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/a98cf821b00b0d92d1348190c877e66b4706a8c7"
+        }
+      ]
+    },
+    {
+      "area": "security",
+      "planted": 3,
+      "caught": 0,
+      "spotChecksClean": 0,
+      "level": "shadow",
+      "plants": [
+        {
+          "plantId": "v03",
+          "changeId": "v03",
+          "caught": false,
+          "findingId": null,
+          "defect": "The UntrustedData preset sets HashCollisionResistant = false instead of true, so data deserialized as untrusted uses the default equality comparer.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/953c2918c7bd7efd18a65dab88556f0f6cdfac02"
+        },
+        {
+          "plantId": "v06",
+          "changeId": "v06",
+          "caught": false,
+          "findingId": null,
+          "defect": "GetEqualityComparer<T> uses the collision-resistant comparer only for types other than string (&& typeof(T) != typeof(string)), so string keys fall back to the default equality comparer even when HashCollisionResistant is on.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/d043c9bb5a698b773426a6d52fe034ead5090afe"
+        },
+        {
+          "plantId": "v10",
+          "changeId": "v10",
+          "caught": false,
+          "findingId": null,
+          "defect": "DepthStep throws only when the depth is greater than the maximum (>) instead of when it reaches it (>=), so MaximumObjectGraphDepth + 1 levels of nesting are accepted.",
+          "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/21f88a5b6825fd31876f79f5908ef746fa945a58"
+        }
+      ]
+    },
+    {
+      "area": "performance",
+      "planted": 0,
+      "caught": 0,
+      "spotChecksClean": 0,
+      "level": "shadow",
+      "plants": []
+    }
+  ],
+  "anchoredVsBlind": {
+    "plants": 5,
+    "runsPerMode": 2,
+    "anchored": {
+      "caught": 10,
+      "total": 10
+    },
+    "blind": {
+      "caught": 10,
+      "total": 10
+    },
+    "perPlant": [
+      {
+        "plantId": "cp0",
+        "changeId": "mp-2283",
+        "statement": "The change also adds a new analyzer diagnostic, MsgPack023, that warns when a member's type comes from a referenced assembly.",
+        "anchoredCaught": 2,
+        "blindCaught": 2,
+        "runs": 2
+      },
+      {
+        "plantId": "cp1",
+        "changeId": "mp-2283",
+        "statement": "The new helper falls back to the location of the containing type when the property has no source declaration.",
+        "anchoredCaught": 2,
+        "blindCaught": 2,
+        "runs": 2
+      },
+      {
+        "plantId": "cp2",
+        "changeId": "mp-2283",
+        "statement": "Diagnostics whose location is outside the compilation being analysed are now reported with no location instead of being dropped, so the consuming project still sees them.",
+        "anchoredCaught": 2,
+        "blindCaught": 2,
+        "runs": 2
+      },
+      {
+        "plantId": "cp3",
+        "changeId": "mp-2234",
+        "statement": "A member with a mismatched key kind is skipped before its diagnostic is reported.",
+        "anchoredCaught": 2,
+        "blindCaught": 2,
+        "runs": 2
+      },
+      {
+        "plantId": "cp4",
+        "changeId": "mp-2129",
+        "statement": "Generic types are supported as long as every type argument is closed.",
+        "anchoredCaught": 2,
+        "blindCaught": 2,
+        "runs": 2
+      }
+    ]
+  },
+  "hallucinations": {
+    "quotesChecked": 790,
+    "quoteFailures": 0,
+    "claimsRetracted": 0,
+    "findingsDropped": 0
+  },
+  "findingsOnPlants": {
+    "total": 40,
+    "matchedPlant": 8
+  },
+  "routingSpread": {
+    "changes": 1,
+    "light": 0,
+    "focused": 0,
+    "full": 1,
+    "readHunks": 7,
+    "totalHunks": 8,
+    "readMinutes": 10,
+    "fullMinutes": 10
+  }
+}
