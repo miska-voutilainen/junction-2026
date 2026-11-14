@@ -9,17 +9,11 @@ import {
   buildSections,
   coverageLineText,
   coveredSummary,
-  evidenceAlert,
   fileName,
-  highlightedLinesOf,
-  highlightedLinesOfSelection,
   hunkRange,
   hunkRawText,
-  isLineHighlighted,
   isOwnTestOnly,
   OWN_TEST_LABEL,
-  scrollTargetOf,
-  splitCitations,
 } from "./reviewModel";
 
 const fixtureRoot = "data/fixtures";
@@ -100,6 +94,15 @@ describe("evidence line", () => {
     const broken = { ...review, files: review.files.filter((file) => file.path !== review.hunks[0].file) };
     const { decision, levels } = decideChange(broken, await readableCard(), {});
     expect(() => buildSections(broken, decision, levels)).toThrow(/mp-2283.*h1.*pnpm review run mp-2283/);
+  });
+});
+
+describe("a covered hunk no claim names", () => {
+  it("throws, naming the hunk and the command that re-records the review", async () => {
+    const review = structuredClone(await load("mp-2283"));
+    const { decision, levels } = decideChange(review, await readableCard(), {});
+    review.claims = [];
+    expect(() => buildSections(review, decision, levels)).toThrow(/hunk h\d+ .*pnpm review run mp-2283/);
   });
 });
 
@@ -229,17 +232,6 @@ describe("one decision for every screen", () => {
       expect(decision.reasons.some((reason) => reason.ruleId === "R-read-share" || reason.ruleId === "R-unread")).toBe(false);
     }
   });
-
-  it("words the alert for a missing and an unreadable card", async () => {
-    const { decision } = decideChange(await load("mp-2283"), { state: "missing" }, {});
-    expect(evidenceAlert("missing", decision)).toEqual({
-      title: "No report card yet",
-      verb: "Run",
-      command: "pnpm evals",
-      consequence: "Until then nothing counts as covered, so this change is Full: read 8 of 8 hunks.",
-    });
-    expect(evidenceAlert("unreadable", decision)).toMatchObject({ title: "Couldn't read the report card", verb: "Re-run" });
-  });
 });
 
 describe("hunk text and highlights", () => {
@@ -256,55 +248,5 @@ describe("hunk text and highlights", () => {
     expect(hunkRange(review.hunks[0])).toBe("735–743");
     expect(hunkRange({ ...review.hunks[0], newLines: 0 })).toBe("735");
     expect(fileName("a/b/Foo.cs")).toBe("Foo.cs");
-  });
-
-  it("marks the lines a claim cites on the cited side only", async () => {
-    const review = await load("mp-2283");
-    const hunk = review.hunks[0];
-    const added = hunk.lines.find((line) => line.kind === "add");
-    const removed = hunk.lines.find((line) => line.kind === "del");
-    if (!added?.newLine || !removed?.oldLine) throw new Error("fixture hunk has no added and removed line");
-    const highlights = highlightedLinesOf([
-      { file: hunk.file, side: "new", startLine: added.newLine, endLine: added.newLine, quote: "" },
-    ]);
-
-    expect(isLineHighlighted(hunk, added, highlights)).toBe(true);
-    expect(isLineHighlighted(hunk, removed, highlights)).toBe(false);
-    expect(isLineHighlighted({ ...hunk, file: "other.cs" }, added, highlights)).toBe(false);
-  });
-});
-
-describe("selection highlights", () => {
-  it("highlights a claim's found citations and nothing for a retracted claim", async () => {
-    const review = await load("mp-2283");
-    const claim = review.claims[0];
-    expect(highlightedLinesOfSelection(review, { kind: "claim", id: claim.id })).toEqual(highlightedLinesOf(claim.citations));
-    expect(highlightedLinesOfSelection(review, { kind: "claim", id: "c8" })).toEqual([]);
-    expect(highlightedLinesOfSelection(review, null)).toEqual([]);
-  });
-
-  it("leaves out a citation whose quote the quote check did not find", async () => {
-    const review = structuredClone(await load("mp-2283"));
-    const finding = review.findings[0];
-    // A3 numbered this finding 2 before the check dropped its first one, so its id (f1) differs from the item id.
-    review.quoteCheck.failures = [{ itemId: "a3-f2", citation: finding.citations[0], reason: "Quote is not in the cited lines." }];
-    expect(splitCitations(review, finding.id, finding.citations)[0].isQuoteFound).toBe(false);
-    expect(highlightedLinesOfSelection(review, { kind: "finding", id: finding.id })).toEqual([]);
-  });
-
-  it("treats a failure without a citation as matching no citation", async () => {
-    const review = structuredClone(await load("mp-2283"));
-    const finding = review.findings[0];
-    review.quoteCheck.failures = [{ itemId: "a3-r1", citation: null, reason: 'unknown rule id "R8"' }];
-    expect(splitCitations(review, finding.id, finding.citations).every((entry) => entry.isQuoteFound)).toBe(true);
-  });
-
-  it("scrolls to the focused citation when it is highlighted, else to the first line", () => {
-    const first = { file: "a.cs", side: "new" as const, startLine: 1, endLine: 2 };
-    const second = { file: "a.cs", side: "new" as const, startLine: 9, endLine: 9 };
-    expect(scrollTargetOf([first, second], { ...second, quote: "" })).toEqual(second);
-    expect(scrollTargetOf([first, second], undefined)).toEqual(first);
-    expect(scrollTargetOf([first], { ...second, quote: "" })).toEqual(first);
-    expect(scrollTargetOf([], undefined)).toBeNull();
   });
 });

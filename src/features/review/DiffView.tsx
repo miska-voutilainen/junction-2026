@@ -5,7 +5,8 @@ import { CoveredRow } from "./CoveredRow";
 import { HunkCard } from "./HunkCard";
 import type { HighlightedHunks } from "./highlightHunks";
 import { coveredSummary } from "./reviewModel";
-import type { HighlightedLines, HunkEntry, HunkSections } from "./reviewModel";
+import type { HighlightedLines } from "./citationHighlights";
+import type { HunkEntry, HunkSections } from "./reviewModel";
 import type { DiffReveal } from "./useDiffReveal";
 
 interface DiffViewProps {
