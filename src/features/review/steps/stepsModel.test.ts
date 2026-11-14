@@ -22,7 +22,7 @@ async function loadFixtureReceipt(changeId: string): Promise<ReceiptRecord | nul
 async function readableCard(): Promise<ReportCardInput> {
   const reportCard = await loadReportCard(fixtureRoot);
   if (reportCard.status !== "ok") throw new Error("report card fixture did not load");
-  return { state: "ok", data: reportCard.data };
+  return { state: "ok", data: reportCard.data, source: reportCard.source };
 }
 
 describe("story", () => {

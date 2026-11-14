@@ -40,7 +40,7 @@ export async function loadInboxData(root?: string): Promise<InboxData> {
   }));
   const reportCard: ReportCardInput =
     reportCardResult.status === "ok"
-      ? { state: "ok", data: reportCardResult.data }
+      ? { state: "ok", data: reportCardResult.data, source: reportCardResult.source }
       : reportCardResult.status === "missing"
         ? { state: "missing" }
         : { state: "unreadable", error: reportCardResult.error };
