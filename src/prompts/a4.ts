@@ -111,8 +111,6 @@ export function outputSchema({ authorDescription, claimIds }: A4Reference): z.Zo
             message,
           });
       });
-      if (statement.verdict === "contradicted" && statement.citations.length === 0)
-        problem("citations", "a contradicted statement needs at least one citation");
     });
   });
 }

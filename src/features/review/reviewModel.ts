@@ -270,12 +270,13 @@ export interface CheckedCitation {
  * The citations of one claim or finding (`itemId`), each marked with the
  * quote check's verdict. A failure matches on the item and the cited file,
  * side and lines; a citation the check never failed counts as found.
+ * A failure with no citation (an unknown rule id) matches none.
  */
 export function splitCitations(review: Review, itemId: string, citations: Citation[]): CheckedCitation[] {
   const failures = review.quoteCheck.failures.filter((failure) => failure.itemId === itemId);
   return citations.map((citation) => ({
     citation,
-    isQuoteFound: !failures.some(({ citation: failed }) => isSameLocation(failed, citation)),
+    isQuoteFound: !failures.some(({ citation: failed }) => failed !== null && isSameLocation(failed, citation)),
   }));
 }
 

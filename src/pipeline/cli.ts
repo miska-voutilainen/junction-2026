@@ -44,6 +44,7 @@ async function main(argv: string[]): Promise<void> {
     return printChecks(review, await loadContradictionKey(changeId));
   }
 
+  if (values["no-tests"]) console.error("--no-tests has no effect until T14: no run includes tests yet.");
   const k = values.run === undefined ? undefined : Number(values.run);
   if (k !== undefined && (!Number.isInteger(k) || k < 1))
     fail(`--run takes a whole number from 1, got "${values.run}".`);
@@ -77,6 +78,8 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     usage: tally,
     levels: levelsFromReportCard(await loadReportCard()),
     mode: options.isAnchored ? "anchored" : "blind-first",
+    // Comparison runs are A1, A2 and A4: A3 is most of a run's cost and not what they compare.
+    steps: isComparison && !options.isAnchored ? ["a1", "a2", "a4"] : undefined,
     runIndex: isComparison ? k : 0,
   });
   await writeRecordedReview(
@@ -108,6 +111,9 @@ function printChecks(review: Review, contradictionKey: AnswerKey | null): void {
       `${result.passed ? "PASS" : "MISS"}  ${result.name}${result.detail ? ` (${result.detail})` : ""}`,
     );
   }
+  // A missing key is not a miss: say the case did not run, so a pass count is not read as complete.
+  if (review.changeId === "mp-2283" && contradictionKey === null)
+    console.log("SKIP  mp-2283: the planted contradiction is caught (answer key not found in this checkout)");
 }
 
 function fail(message: string): never {

@@ -114,6 +114,20 @@ describe("report card lists", () => {
     expect(failedQuotes(reviews).map((quote) => quote.itemId)).toEqual([failure.itemId]);
   });
 
+  it("treats a failure with a null citation as an unknown-rule refusal, not a failed quote", () => {
+    const [failure] = review.quoteCheck.failures;
+    const synthetic = {
+      ...review,
+      quoteCheck: {
+        ...review.quoteCheck,
+        failures: [failure, { itemId: "a3-r2", citation: null, reason: 'unknown rule id "R8"' }],
+      },
+    };
+    const reviews = [{ changeId: "mp-2283", review: synthetic }];
+    expect(unknownRuleRefusals(reviews)).toEqual([{ changeId: "mp-2283", itemId: "a3-r2" }]);
+    expect(failedQuotes(reviews).map((quote) => quote.itemId)).toEqual([failure.itemId]);
+  });
+
   it("finds no unknown-rule refusals in the recorded fixtures", () => {
     expect(unknownRuleRefusals([{ changeId: "mp-2283", review }])).toEqual([]);
   });

@@ -79,7 +79,7 @@ export function assembleReview(parts: ReviewParts): Review {
     parts.levels,
   );
   const routed = { ...unrouted, routing };
-  return ReviewSchema.parse({ ...routed, receiptDraft: buildReceiptDraft(routed) });
+  return ReviewSchema.parse({ ...routed, receiptDraft: buildReceiptDraft(routed, parts.levels) });
 }
 
 const emptyReceiptDraft: Review["receiptDraft"] = {

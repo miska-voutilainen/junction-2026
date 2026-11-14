@@ -298,10 +298,11 @@ describe("a4", () => {
     expect(problems(result)).toContain("not a sentence of the author description");
   });
 
-  it("rejects an unknown claim id and a contradiction without a citation", () => {
+  it("rejects an unknown claim id", () => {
     expect(schema.safeParse({ statements: [statement({ claimIds: ["c9"] })] }).success).toBe(false);
-    expect(schema.safeParse({ statements: [statement({ verdict: "contradicted" })] }).success).toBe(
-      false,
-    );
+  });
+
+  it("accepts a contradiction without a citation: the quote check keeps it, so one bad answer fails no run", () => {
+    expect(schema.safeParse({ statements: [statement({ verdict: "contradicted" })] }).success).toBe(true);
   });
 });

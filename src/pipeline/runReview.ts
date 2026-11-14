@@ -4,7 +4,7 @@
  * every quote, A3 reviews the area checklists and refuses what belongs to a
  * person, and only then does A4 read the author's description and test it
  * against the claims. Anchored (the comparison): A2 reads the description first,
- * with no A1, and A3 is skipped. The order is the idea: in blind-first mode
+ * with no A1, and A3 is skipped (a step list can switch steps off). The order is the idea: in blind-first mode
  * nothing the author said reaches A1, A2 or A3. Spec section 6.
  */
 import type { ModelClient } from "../ai/client";
@@ -20,6 +20,7 @@ import {
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
+  type UnnumberedRefusal,
 } from "./checkFindings";
 import { buildPromptContext } from "./promptContext";
 import { checkClaims, type SideReader } from "./quoteCheck";
@@ -30,6 +31,12 @@ import {
   writeChangeStory,
 } from "./steps";
 import type { UsageTally } from "./usageTally";
+
+/** A model step of the pipeline; A5 (tests) is not a model step here. */
+export type ModelStep = "a1" | "a2" | "a3" | "a4";
+
+const allSteps: readonly ModelStep[] = ["a1", "a2", "a3", "a4"];
+const anchoredSteps: readonly ModelStep[] = ["a2", "a4"];
 
 /** What a run needs besides the model. */
 export interface RunReviewInput {
@@ -42,6 +49,13 @@ export interface RunReviewInput {
   levels: Record<Area, LadderLevel>;
   /** "anchored" shows A2 the description first and skips A1 and A3. Defaults to "blind-first". */
   mode?: Review["mode"];
+  /**
+   * The model steps to run; A2 always runs. Defaults to every step for
+   * blind-first and A2 and A4 for anchored. The blind comparison runs are
+   * A1, A2 and A4: A3 is most of the cost and is not what they compare.
+   * A3 needs A1's expectation.
+   */
+  steps?: readonly ModelStep[];
   /** Keys repeated runs apart in the recordings; 0 for the recorded review. */
   runIndex?: number;
 }
@@ -67,8 +81,13 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   });
   const readSide = cachedReader(repoDir, change);
   const isAnchored = mode === "anchored";
+  const steps = new Set(input.steps ?? (isAnchored ? anchoredSteps : allSteps));
+  if (steps.has("a3") && !steps.has("a1"))
+    throw new Error("A3 needs A1's expectation. Add a1 to the steps or drop a3.");
+  if (isAnchored && steps.has("a1"))
+    throw new Error("Anchored mode shows A2 the description, so A1 cannot run. Drop a1 from the steps.");
 
-  const expectation = isAnchored ? null : await writeBlindExpectation(client, requirement, runIndex);
+  const expectation = steps.has("a1") ? await writeBlindExpectation(client, requirement, runIndex) : null;
   const answer = await writeChangeStory(client, {
     requirement,
     hunks: loadedDiff.hunks,
@@ -87,9 +106,8 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
   );
   const { claims, quoteCheck } = checkedClaims;
 
-  // A3 needs A1's expectation, so the anchored comparison runs skip it.
   const areaReview =
-    expectation === null
+    expectation === null || !steps.has("a3")
       ? null
       : await writeAreaReview(client, {
           requirement,
@@ -103,22 +121,20 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     ? await checkAreaFindings(areaReview.findings, readSide, quoteCheck)
     : [];
   const refusals = areaReview
-    ? [...checkRefusals(areaReview.refusals, quoteCheck), ...fixedRefusalsFor(loadedDiff.hunks)]
+    ? mergeFixedRefusals(checkRefusals(areaReview.refusals, quoteCheck), fixedRefusalsFor(loadedDiff.hunks))
     : [];
 
-  const description = await checkAuthorDescription(client, {
-    authorDescription: change.authorDescription.text,
-    story: answer.story,
-    claims,
-    runIndex,
-  });
-  const contradictions = await checkContradictions(
-    description.statements,
-    claims,
-    loadedDiff.hunks,
-    readSide,
-    quoteCheck,
-  );
+  const description = steps.has("a4")
+    ? await checkAuthorDescription(client, {
+        authorDescription: change.authorDescription.text,
+        story: answer.story,
+        claims,
+        runIndex,
+      })
+    : null;
+  const contradictions = description
+    ? await checkContradictions(description.statements, claims, loadedDiff.hunks, readSide, quoteCheck)
+    : [];
 
   const finishedAt = new Date();
   return assembleReview({
@@ -135,10 +151,10 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
     })),
     refusals: refusals.map((refusal, index) => ({ ...refusal, id: `r${index + 1}` })),
     promptVersions: {
-      a1: isAnchored ? "none" : a1.version,
+      a1: expectation ? a1.version : "none",
       a2: a2.version,
       a3: areaReview ? a3.version : "none",
-      a4: a4.version,
+      a4: description ? a4.version : "none",
       a5: "none",
     },
     levels: input.levels,
@@ -150,6 +166,26 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       usage: input.usage.totals(),
     },
   });
+}
+
+/**
+ * The AI's refusals plus the fixed ones, without counting one decision twice:
+ * a rule refusal is added only for the matched hunks no AI refusal with the
+ * same rule id already lists (spec section 5, Policy). An AI R7 on the hunk a
+ * fixed R7 matches already makes the person decide it.
+ */
+export function mergeFixedRefusals(
+  aiRefusals: readonly UnnumberedRefusal[],
+  fixedRefusals: readonly UnnumberedRefusal[],
+): UnnumberedRefusal[] {
+  const addedFixed = fixedRefusals.flatMap((fixed) => {
+    const listed = new Set(
+      aiRefusals.filter((refusal) => refusal.ruleId === fixed.ruleId).flatMap((refusal) => refusal.hunkIds),
+    );
+    const hunkIds = fixed.hunkIds.filter((id) => !listed.has(id));
+    return hunkIds.length === 0 ? [] : [{ ...fixed, hunkIds }];
+  });
+  return [...aiRefusals, ...addedFixed];
 }
 
 /** `YYYYMMDDTHHMMSSZ` in UTC, e.g. 20261114T093005Z. */

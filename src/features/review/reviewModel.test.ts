@@ -281,6 +281,13 @@ describe("selection highlights", () => {
     expect(highlightedLinesOfSelection(review, { kind: "finding", id: finding.id })).toEqual([]);
   });
 
+  it("treats a failure without a citation as matching no citation", async () => {
+    const review = structuredClone(await load("mp-2283"));
+    const finding = review.findings[0];
+    review.quoteCheck.failures = [{ itemId: finding.id, citation: null, reason: 'unknown rule id "R8"' }];
+    expect(splitCitations(review, finding.id, finding.citations).every((entry) => entry.isQuoteFound)).toBe(true);
+  });
+
   it("scrolls to the focused citation when it is highlighted, else to the first line", () => {
     const first = { file: "a.cs", side: "new" as const, startLine: 1, endLine: 2 };
     const second = { file: "a.cs", side: "new" as const, startLine: 9, endLine: 9 };

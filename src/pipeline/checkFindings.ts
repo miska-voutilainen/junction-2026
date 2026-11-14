@@ -1,6 +1,6 @@
 /**
  * Mechanical quote check for findings and refusals, and the refusals no model
- * is needed for. A finding the code cannot back is struck, not softened: it is
+ * is needed for. An area finding the code cannot back is struck, not softened: it is
  * dropped from the review and recorded in `quoteCheck.failures`, so S2 shows
  * what the model said and why it didn't count. A refusal must name a rule that
  * exists in the policy. The fixed refusals (a change to the public API is always
@@ -26,9 +26,6 @@ export type UnnumberedFinding = Omit<Finding, "id">;
 
 /** A refusal before the pipeline numbers it. */
 export type UnnumberedRefusal = Omit<Refusal, "id">;
-
-/** Where an unknown rule id is recorded: the rule list it should have been in. */
-const refusalPolicyFile = "src/policy/refusals.ts";
 
 /**
  * Keeps the citations that pass and records the rest in `quoteCheck`, which this
@@ -93,10 +90,10 @@ export async function checkAreaFindings(
 
 /**
  * A4's contradicted and unsupported statements as `contradiction` findings (area
- * null; high severity when contradicted, medium when unsupported). A contradicted
- * statement with no passing citation is dropped: a contradiction nobody can see
- * is a claim the reviewer can't check. An unsupported statement is kept without
- * one, because "nothing in the code shows this" has no line to quote.
+ * null; high severity when contradicted, medium when unsupported). Never dropped,
+ * whatever the quote check says: the contradiction is between the author's
+ * sentence and the claims, so it stands without a quote. Citations that fail are
+ * removed from the finding and stay recorded in `quoteCheck.failures`.
  */
 export async function checkContradictions(
   statements: readonly Statement[],
@@ -109,10 +106,6 @@ export async function checkContradictions(
   for (const [index, statement] of statements.entries()) {
     if (statement.verdict === "supported") continue;
     const citations = await passingCitations(`a4-s${index + 1}`, statement.citations, readSide, quoteCheck);
-    if (statement.verdict === "contradicted" && citations.length === 0) {
-      quoteCheck.dropped++;
-      continue;
-    }
     findings.push({
       kind: "contradiction",
       area: null,
@@ -155,8 +148,9 @@ function hunksOfStatement(
 
 /**
  * The model's refusals whose rule id exists in the policy. An unknown id is
- * dropped and recorded with the reason "unknown rule id": a refusal must point at
- * words a person can read in the policy.
+ * dropped and recorded with a null citation (there is no code to check) and the
+ * reason `unknown rule id "R8"`: a refusal must point at words a person can read
+ * in the policy.
  */
 export function checkRefusals(
   drafts: readonly RefusalDraft[],
@@ -168,8 +162,8 @@ export function checkRefusals(
     if (!knownRuleIds.has(draft.ruleId)) {
       quoteCheck.failures.push({
         itemId: `a3-r${index + 1}`,
-        citation: { file: refusalPolicyFile, side: "new", startLine: 1, endLine: 1, quote: draft.ruleId },
-        reason: "unknown rule id",
+        citation: null,
+        reason: `unknown rule id "${draft.ruleId}"`,
       });
       continue;
     }

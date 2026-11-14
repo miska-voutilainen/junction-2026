@@ -136,7 +136,7 @@ describe("checkContradictions", () => {
     expect(finding.severity).toBe("medium");
   });
 
-  it("drops a contradicted statement whose quote does not match and ignores supported ones", async () => {
+  it("keeps a contradicted statement whose quote does not match, without citations and not counted as dropped", async () => {
     const check = freshCheck();
     const findings = await checkContradictions(
       [
@@ -148,8 +148,9 @@ describe("checkContradictions", () => {
       readSide,
       check,
     );
-    expect(findings).toEqual([]);
-    expect(check.dropped).toBe(1);
+    expect(findings).toMatchObject([{ kind: "contradiction", severity: "high", citations: [] }]);
+    expect(check.dropped).toBe(0);
+    expect(check.failures).toMatchObject([{ itemId: "a4-s1", reason: expect.stringContaining("quote not found") }]);
   });
 });
 
@@ -165,7 +166,7 @@ describe("refusals", () => {
     );
     expect(refusals.map((refusal) => refusal.ruleId)).toEqual(["R7"]);
     expect(refusals[0].source).toBe("ai");
-    expect(check.failures).toMatchObject([{ itemId: "a3-r2", reason: "unknown rule id" }]);
+    expect(check.failures).toEqual([{ itemId: "a3-r2", citation: null, reason: 'unknown rule id "R8"' }]);
   });
 
   it("adds a rule refusal for each fixed trigger a hunk matches", () => {

@@ -7,7 +7,7 @@ import type { ModelClient } from "../ai/client";
 import { ReviewSchema, type ChangeInput, type Requirement } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
 import { checkReview } from "./checkReview";
-import { runReview } from "./runReview";
+import { mergeFixedRefusals, runReview, type ModelStep } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const requirement: Requirement = {
@@ -167,7 +167,7 @@ const invented = {
 describe("runReview with a fake model", () => {
   async function review(
     claims: unknown[],
-    options: { mode?: "anchored"; runIndex?: number } = {},
+    options: { mode?: "anchored"; runIndex?: number; steps?: ModelStep[] } = {},
   ) {
     const { client, prompts, runIndexes } = fakeClient(claims);
     const tally = createUsageTally();
@@ -232,14 +232,20 @@ describe("runReview with a fake model", () => {
     ]);
     expect(result.quoteCheck.failures.at(-1)).toMatchObject({
       itemId: "a3-r2",
-      reason: "unknown rule id",
+      citation: null,
+      reason: 'unknown rule id "R99"',
     });
   });
 
   it("builds the receipt draft from the review", async () => {
     const { result } = await review([goodClaim, invented]);
     expect(result.receiptDraft.checked).toHaveLength(1);
-    expect(result.receiptDraft.checked[0].by).toBe("tool");
+    // A Supported claim's quote exists; nothing ran the behaviour, so it is not "tool".
+    expect(result.receiptDraft.checked[0].by).toBe("ai-supported");
+    expect(result.receiptDraft.notChecked.map((item) => item.reason).slice(0, 2)).toEqual([
+      "No Verified or Supported claim covers it",
+      "Finding f1 (defect) names this hunk",
+    ]);
     expect(result.receiptDraft.notChecked.map((item) => item.item)).toEqual([
       "README.md:1 (h1)",
       "src/Resolver.cs:1 (h2)",
@@ -261,6 +267,24 @@ describe("runReview with a fake model", () => {
     );
     expect(result.refusals).toEqual([]);
     expect(result.findings.map((finding) => finding.kind)).toEqual(["contradiction"]);
+  });
+
+  it("blind comparison steps are A1, A2 and A4: A3 never runs", async () => {
+    const { result, prompts } = await review([goodClaim], { steps: ["a1", "a2", "a4"] });
+    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(result.reviewer.promptVersions).toMatchObject({ a1: "a1.v1", a3: "none", a4: "a4.v1" });
+    expect(result.refusals).toEqual([]);
+  });
+
+  it("an explicit steps list can turn A4 off", async () => {
+    const { result, prompts } = await review([goodClaim], { steps: ["a1", "a2", "a3"] });
+    expect(prompts["a4.v1"]).toBeUndefined();
+    expect(result.reviewer.promptVersions.a4).toBe("none");
+    expect(result.findings.some((finding) => finding.kind === "contradiction")).toBe(false);
+  });
+
+  it("refuses a steps list A3 cannot run on", async () => {
+    await expect(review([goodClaim], { steps: ["a2", "a3"] })).rejects.toThrow(/A3 needs A1/);
   });
 
   it("passes the run index to every call", async () => {
@@ -315,5 +339,23 @@ describe("runReview with a fake model", () => {
       ["A1 covers every requirement item exactly once", true],
       ["A2 lists every hunk of a non-docs, non-generated file in a claim", true],
     ]);
+  });
+});
+
+describe("mergeFixedRefusals", () => {
+  const ai = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "ai" as const, reason: "a", hunkIds });
+  const fixed = (ruleId: string, hunkIds: string[]) => ({ ruleId, source: "rule" as const, reason: "f", hunkIds });
+
+  it("adds a rule refusal only for matched hunks no AI refusal of that rule lists", () => {
+    const merged = mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2", "h3"])]);
+    expect(merged).toEqual([ai("R7", ["h2"]), fixed("R7", ["h3"])]);
+  });
+
+  it("adds nothing when the AI already refused every matched hunk", () => {
+    expect(mergeFixedRefusals([ai("R7", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R7", ["h2"])]);
+  });
+
+  it("ignores an AI refusal under another rule id", () => {
+    expect(mergeFixedRefusals([ai("R1", ["h2"])], [fixed("R7", ["h2"])])).toEqual([ai("R1", ["h2"]), fixed("R7", ["h2"])]);
   });
 });

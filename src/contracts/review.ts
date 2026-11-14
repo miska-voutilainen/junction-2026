@@ -164,7 +164,8 @@ export const ReviewSchema = z.strictObject({
     failures: z.array(
       z.strictObject({
         itemId: z.string(),
-        citation: CitationSchema,
+        // null when there was no code to check, e.g. a refusal naming an unknown rule id.
+        citation: CitationSchema.nullable(),
         reason: z.string(),
       }),
     ),

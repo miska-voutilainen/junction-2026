@@ -76,6 +76,29 @@ function coverHunks(
   return coverage;
 }
 
+/**
+ * Why a hunk is in the reading list, in the order coverHunks applies its rule:
+ * a finding, then a refusal, then a Shadow area, else no claim covers it. Only
+ * meaningful for hunks whose coverage is "read".
+ * @example "Finding f1 (defect) names this hunk"
+ */
+export function coverageReason(
+  review: Omit<Review, "receiptDraft">,
+  levels: Record<Area, LadderLevel>,
+  hunkId: string,
+): string {
+  const finding = review.findings.find((item) => item.hunkIds.includes(hunkId));
+  if (finding) return `Finding ${finding.id} (${finding.kind}) names this hunk`;
+  const refusal = review.refusals.find((item) => item.hunkIds.includes(hunkId));
+  if (refusal) return `Refusal ${refusal.id} (${refusal.ruleId}) names this hunk: a person decides`;
+  const hunk = review.hunks.find((item) => item.id === hunkId);
+  const area = review.files.find((file) => file.path === hunk?.file)?.area ?? null;
+  if (area !== null && levels[area] === "shadow") {
+    return `${areaLabel[area]} is at Shadow: the AI's evidence routes nothing here yet`;
+  }
+  return "No Verified or Supported claim covers it";
+}
+
 interface RuleInput {
   review: Review;
   levels: Record<Area, LadderLevel>;
