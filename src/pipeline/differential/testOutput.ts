@@ -128,6 +128,10 @@ const outputNoise = new RegExp(
     "^\\s+\\S+ -> ",
     "^\\s+at (Microsoft|System|Xunit)\\.",
     "--- End of stack trace",
+    // The xUnit runner repeats progress and failures that the console logger prints again, in an order that changes from run to run.
+    "^\\[xUnit\\.net\\]",
+    // Printed on stderr, so its place next to the totals changes from run to run.
+    "^Test Run (Failed|Successful)\\.$",
   ].join("|"),
 );
 
