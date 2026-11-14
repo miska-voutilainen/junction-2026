@@ -75,17 +75,17 @@ export function ReviewSteps({ review, reportCard, record, signState, step, onSte
               tabIndex={isActive ? 0 : -1}
               onClick={() => onStepChange(tab.id)}
               className={cn(
-                "relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-2.5 text-sm transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring",
+                "relative flex min-w-0 flex-col items-center justify-start gap-0.5 px-1 py-2.5 text-sm transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring",
                 isActive ? "text-text-primary" : "text-text-muted hover:text-text-secondary",
               )}
             >
-              <span className="text-center font-medium">
+              <span className="font-medium whitespace-nowrap">
                 <span className="mr-1 text-xs text-text-muted tabular-nums">{tab.number}</span>
                 {tab.label}
               </span>
               <span
                 className={cn(
-                  "text-xs",
+                  "text-xs whitespace-nowrap",
                   tab.tone === "neutral" && "text-text-muted",
                   tab.tone === "amber" && "text-amber-light",
                   tab.tone === "rose" && "text-rose-light",

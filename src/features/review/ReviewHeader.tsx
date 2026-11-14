@@ -41,9 +41,8 @@ export function ReviewHeader({
         {receiptStatus && <SignButton signState={isReceiptUnreadable ? "unreadable" : receiptStatus} />}
       </div>
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
-        <span className="font-mono text-xs text-text-muted [overflow-wrap:anywhere]">{change.id}</span>
-        <span className="rounded-chip border border-border-default px-1.5 py-0.5 font-mono text-xs text-text-secondary">
-          {change.requirementId}
+        <span className="rounded-chip border border-border-default px-1.5 py-0.5 text-xs text-text-secondary">
+          Requirement <span className="font-mono">{change.requirementId}</span>
         </span>
         {change.authorDescription.synthetic && <SyntheticTag />}
         {/* "Signed by" lives in the roles line below; this keeps only the states that ask for action. */}

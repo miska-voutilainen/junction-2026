@@ -18,7 +18,7 @@ export function IdeaLabel({ n, className }: Readonly<{ n: IdeaNumber; className?
       rel="noopener"
       aria-label={`Idea ${n}: ${name}, opens the idea page`}
       className={cn(
-        "inline-flex items-center gap-1 rounded-chip border border-border-default px-1.5 py-0.5 text-xs text-text-muted transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover hover:text-text-secondary",
+        "inline-flex items-center gap-1 rounded-chip max-compact:min-h-11 border border-border-default px-1.5 py-0.5 text-xs text-text-muted transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover hover:text-text-secondary",
         className,
       )}
     >
