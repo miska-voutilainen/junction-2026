@@ -7,12 +7,11 @@
  */
 import { areaLabel, tierLabel } from "@/contracts";
 import type { Area, LadderLevel, Tier } from "@/contracts";
-import { buildInboxModel, inboxLevels, isReviewed } from "@/features/inbox";
+import { buildInboxModel, decideChange, inboxLevels, isReviewed } from "@/features/inbox";
 import type { InboxModel, InboxSource, ReportCardInput } from "@/features/inbox";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
-import { route } from "@/rules/route";
 
 /** Tiers in the order the dashboard lists them: the least reading first. */
 export const TIERS: readonly Tier[] = ["light", "focused", "full"];
@@ -111,6 +110,7 @@ const REASON_LABEL: Record<string, string> = {
   "R-sensitive-path": "Touches a sensitive path",
   "R-area-level": "Area not yet Trusted",
   "R-unread": "Hunks without checked evidence",
+  "R-no-track-record": "No readable report card",
 };
 
 const RISK_ORDER: Record<RiskStatus, number> = { unverified: 0, stale: 1, signed: 2 };
@@ -128,7 +128,7 @@ export function buildDashboardModel(
   escapes: Partial<Record<Area, number>>,
 ): DashboardModel {
   const levels = inboxLevels(reportCard, escapes);
-  const inbox = buildInboxModel(sources, levels);
+  const inbox = buildInboxModel(sources, reportCard, escapes);
   const acceptedRisks = collectAcceptedRisks(sources);
   return {
     inbox,
@@ -137,7 +137,7 @@ export function buildDashboardModel(
     acceptedRisks,
     deciderQueues: collectDeciderQueues(sources),
     attention: collectAttention(inbox),
-    escalationReasons: collectEscalationReasons(sources, levels),
+    escalationReasons: collectEscalationReasons(sources, reportCard, escapes),
     trust: AREAS.map((area) => ({ area, label: areaLabel[area], level: levels[area] })),
   };
 }
@@ -225,11 +225,11 @@ function collectAttention(inbox: InboxModel): TierAttention[] {
 }
 
 /** Rules that asked for more than Light, by the number of changes each fired in, most frequent first. */
-function collectEscalationReasons(sources: InboxSource[], levels: Record<Area, LadderLevel>): EscalationReason[] {
+function collectEscalationReasons(sources: InboxSource[], reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): EscalationReason[] {
   const byRule = new Map<string, { changes: number; text: string; lastChange: string }>();
   for (const { change, review } of sources) {
     if (review.state !== "ok") continue;
-    const escalating = route(review.data, levels).reasons.filter((reason) => reason.tier !== "light");
+    const escalating = decideChange(review.data, reportCard, escapes).decision.reasons.filter((reason) => reason.tier !== "light");
     for (const reason of escalating) {
       const seen = byRule.get(reason.ruleId);
       // R-area-level can fire once per area in one change; count the change once.

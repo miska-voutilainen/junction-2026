@@ -1,0 +1,60 @@
+import { ReceiptStatus } from "@/components/ReceiptStatus";
+import { SyntheticTag } from "@/components/SyntheticTag";
+import type { ChangeInput, Review } from "@/contracts";
+import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
+
+const reviewedOn = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+/**
+ * The change at a glance: title, ids, who wrote it, the receipt state, and
+ * the branch, size and which reviewer recorded the review. Everything the AI
+ * wrote is mono: ids, the branch, the model. Prose and statuses are sans.
+ *
+ * @param review The recorded review; absent while it is missing or unreadable, so only the change's own facts show.
+ */
+export function ReviewHeader({
+  change,
+  review,
+  receiptStatus,
+  signedBy,
+}: {
+  change: ChangeInput;
+  review?: Review;
+  receiptStatus?: ReceiptStatusValue;
+  signedBy?: string;
+}) {
+  return (
+    <header className="flex flex-col gap-2">
+      <h1 className="text-xl font-semibold text-text-primary">{change.title}</h1>
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
+        <span className="font-mono text-xs text-text-muted">{change.id}</span>
+        <span className="rounded-chip border border-border-default px-1.5 py-0.5 font-mono text-xs text-text-secondary">
+          {change.requirementId}
+        </span>
+        <span>{change.authorAgent}</span>
+        {change.authorDescription.synthetic && <SyntheticTag />}
+        {receiptStatus && <ReceiptStatus status={receiptStatus} owner={signedBy} />}
+      </p>
+      {review && <MetaRow change={change} review={review} />}
+    </header>
+  );
+}
+
+function MetaRow({ change, review }: { change: ChangeInput; review: Review }) {
+  const { diff, reviewer, run } = review;
+  return (
+    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+      <span className="font-mono">{change.branch}</span>
+      <span>
+        <span className="font-mono">
+          +{diff.linesAdded} −{diff.linesRemoved}
+        </span>{" "}
+        · {diff.filesChanged} {diff.filesChanged === 1 ? "file" : "files"}
+      </span>
+      <span>
+        Reviewed by <span className="font-mono">{reviewer.version}</span> · <span className="font-mono">{reviewer.model}</span> ·{" "}
+        {reviewedOn.format(new Date(run.finishedAt))}
+      </span>
+    </p>
+  );
+}

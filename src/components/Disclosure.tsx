@@ -13,19 +13,30 @@ import { crossfade, reveal, useMotionPreset } from "@/lib/motion";
  *
  * @param title What the button says; the section's name.
  * @param defaultOpen Start expanded.
+ * @param isOpen Makes the disclosure controlled: the parent decides, e.g. to open it before scrolling to something inside.
+ * @param onOpenChange Called with the next state when the button is pressed; required with `isOpen`.
  */
 export function Disclosure({
   title,
   defaultOpen = false,
+  isOpen: controlledIsOpen,
+  onOpenChange,
   children,
   className,
 }: {
   title: ReactNode;
   defaultOpen?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
   children: ReactNode;
   className?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [ownIsOpen, setOwnIsOpen] = useState(defaultOpen);
+  const isOpen = controlledIsOpen ?? ownIsOpen;
+  const setIsOpen = (next: boolean) => {
+    setOwnIsOpen(next);
+    onOpenChange?.(next);
+  };
   const contentId = useId();
   const iconSwap = useMotionPreset(crossfade);
   const contentReveal = useMotionPreset(reveal);

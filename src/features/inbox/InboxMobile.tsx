@@ -1,5 +1,6 @@
 "use client";
 
+import { SyntheticTag } from "@/components/SyntheticTag";
 import Link from "next/link";
 import { Disclosure } from "@/components/Disclosure";
 import type { ReactNode } from "react";
@@ -98,7 +99,7 @@ function RowMeta({ row }: { row: InboxRow }) {
     <div className="flex flex-col gap-1 text-sm text-text-muted">
       <p>{metaLine(row)}</p>
       {row.hasSyntheticDescription && (
-        <span className="self-start rounded-chip border border-border-default px-1.5 text-xs">synthetic PR description</span>
+        <SyntheticTag className="self-start" />
       )}
     </div>
   );

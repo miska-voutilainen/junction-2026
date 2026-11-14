@@ -18,6 +18,12 @@ interface ConsoleProps {
   /** Which Wrap choice this console shares with others of its kind. */
   kind: ConsoleKind;
   defaultWrap?: boolean;
+  /** Replaces the label text on the toolbar's left, e.g. a hunk's file and header; `label` still names the box. */
+  heading?: ReactNode;
+  /** Extra controls on the toolbar, left of Wrap and Copy. */
+  actions?: ReactNode;
+  /** Drops the content padding so a table can run edge to edge. */
+  isFlush?: boolean;
   /** Rendered content such as highlighted code; `text` in a <pre> when absent. */
   children?: ReactNode;
   className?: string;
@@ -29,14 +35,15 @@ interface ConsoleProps {
  * choice is remembered per `kind`. The scroll region takes focus when it
  * scrolls, so arrow keys work without a mouse. UI plan section 6.
  */
-export function Console({ label, text, kind, defaultWrap = false, children, className }: ConsoleProps) {
+export function Console({ label, text, kind, defaultWrap = false, heading, actions, isFlush = false, children, className }: ConsoleProps) {
   const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
 
   return (
     <div className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
-        <span className="truncate text-xs text-text-muted">{label}</span>
-        <div className="flex items-center gap-0.5">
+        {heading ?? <span className="truncate text-xs text-text-muted">{label}</span>}
+        <div className="flex shrink-0 items-center gap-0.5">
+          {actions}
           <WrapButton isWrapped={isWrapped} onToggle={() => setIsWrapped(!isWrapped)} />
           <CopyButton text={text} label={`Copy ${label}`} />
         </div>
@@ -44,7 +51,8 @@ export function Console({ label, text, kind, defaultWrap = false, children, clas
       <div
         {...(isWrapped ? {} : { role: "region", "aria-label": label, tabIndex: 0 })}
         className={cn(
-          "rounded-b-control p-3 font-mono text-sm text-text-secondary",
+          "rounded-b-control font-mono text-sm text-text-secondary",
+          !isFlush && "p-3",
           isWrapped
             ? "[overflow-wrap:anywhere] whitespace-pre-wrap [&_pre]:whitespace-pre-wrap"
             : "overflow-x-auto whitespace-pre",

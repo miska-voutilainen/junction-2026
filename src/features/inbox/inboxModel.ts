@@ -6,7 +6,7 @@
  */
 import type { ShellChange } from "@/components/ShellChange";
 import { tierLabel } from "@/contracts";
-import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier } from "@/contracts";
+import type { Area, ChangeInput, Coverage, LadderLevel, ReceiptRecord, ReportCard, Review, Tier, TierDecision } from "@/contracts";
 import { receiptStatus } from "@/lib/data/receiptStatus";
 import type { ReceiptStatusValue } from "@/lib/data/receiptStatus";
 import { applyEscapes, levelsFromReportCard } from "@/rules/ladder";
@@ -28,16 +28,70 @@ export type ReportCardInput =
 
 /** The notice shown above the list when the report card file fails validation. */
 export const REPORT_CARD_NOTICE =
-  "The report card couldn't be read, so every area counts as Shadow and changes route as if the reviewer had no track record.";
+  "The report card couldn't be read, so nothing counts as covered and every change is Full. Re-run pnpm evals.";
 
-/** The line to show above the list when the report card is unreadable, else null. */
+/** The notice shown above the list when no report card has been recorded. */
+export const REPORT_CARD_MISSING_NOTICE =
+  "No report card yet, so nothing counts as covered and every change is Full. Run pnpm evals to measure the reviewer.";
+
+/** The line to show above the list when the report card is missing or unreadable, else null. */
 export function reportCardNotice(reportCard: ReportCardInput): string | null {
-  return reportCard.state === "unreadable" ? REPORT_CARD_NOTICE : null;
+  if (reportCard.state === "unreadable") return REPORT_CARD_NOTICE;
+  return reportCard.state === "missing" ? REPORT_CARD_MISSING_NOTICE : null;
 }
 
-/** Trust level per area: the report card (none counts as all Shadow) minus simulated escapes. */
+/** Trust level per area for display: the report card (none counts as all Shadow) minus simulated escapes. */
 export function inboxLevels(reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): Record<Area, LadderLevel> {
   return applyEscapes(levelsFromReportCard(reportCard.state === "ok" ? reportCard.data : null), escapes);
+}
+
+/** How a change is routed right now: the decision, the trust levels behind it, and whether the report card was readable. */
+export interface ChangeDecision {
+  decision: TierDecision;
+  levels: Record<Area, LadderLevel>;
+  isEvidenceAvailable: boolean;
+}
+
+/** Why a change is Full when the report card is missing or unreadable. */
+const NO_TRACK_RECORD_REASON: TierDecision["reasons"][number] = {
+  ruleId: "R-no-track-record",
+  tier: "full",
+  text: "No readable report card: nothing counts as covered, so a person reads every hunk.",
+};
+
+// route() reasons that quote a read count; forcing every hunk to "read" would make them wrong.
+const COVERAGE_COUNT_RULES = new Set(["R-read-share", "R-unread"]);
+
+/**
+ * The one routing decision every screen uses (inbox, shell, dashboard, reviewer, S2).
+ *
+ * - Readable report card: `route()` with its levels minus simulated escapes.
+ * - Missing or unreadable: without a track record nothing counts as covered, so
+ *   the change is Full and every hunk is "Read this". Reasons come from `route()`
+ *   with every area at Shadow, minus those that quote a read count, plus
+ *   `R-no-track-record`.
+ *
+ * @param escapes simulated escapes per area; ignored when there is no report card, as every area is already at the bottom
+ */
+export function decideChange(review: Review, reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): ChangeDecision {
+  if (reportCard.state !== "ok") return decisionWithoutReportCard(review);
+  const levels = applyEscapes(levelsFromReportCard(reportCard.data), escapes);
+  return { decision: route(review, levels), levels, isEvidenceAvailable: true };
+}
+
+function decisionWithoutReportCard(review: Review): ChangeDecision {
+  const levels = levelsFromReportCard(null);
+  const shadow = route(review, levels);
+  const decision: TierDecision = {
+    ...shadow,
+    tier: "full",
+    reasons: [...shadow.reasons.filter((reason) => !COVERAGE_COUNT_RULES.has(reason.ruleId)), NO_TRACK_RECORD_REASON],
+    coverage: Object.fromEntries(review.hunks.map((hunk) => [hunk.id, "read" as const])),
+    readHunks: shadow.totalHunks,
+    readLines: shadow.totalLines,
+    readMinutes: shadow.totalLines > 0 ? shadow.fullMinutes : 0,
+  };
+  return { decision, levels, isEvidenceAvailable: false };
 }
 
 interface RowBase {
@@ -104,10 +158,10 @@ const UNREVIEWED_ORDER = 3;
 /**
  * Routes every change with `levels` and builds the sorted rows and summary.
  *
- * @param levels trust level per area, already adjusted for simulated escapes
+ * @param escapes simulated escapes per area; see `decideChange`
  */
-export function buildInboxModel(sources: InboxSource[], levels: Record<Area, LadderLevel>): InboxModel {
-  const rows = sources.map((source) => buildRow(source, levels)).sort(compareRows);
+export function buildInboxModel(sources: InboxSource[], reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): InboxModel {
+  const rows = sources.map((source) => buildRow(source, reportCard, escapes)).sort(compareRows);
   return {
     rows,
     summary: summarise(rows),
@@ -161,7 +215,7 @@ export function mobileSections(rows: InboxRow[]): MobileSections {
   return sections;
 }
 
-function buildRow({ change, review, receipt }: InboxSource, levels: Record<Area, LadderLevel>): InboxRow {
+function buildRow({ change, review, receipt }: InboxSource, reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): InboxRow {
   const base: RowBase = {
     id: change.id,
     title: change.title,
@@ -171,7 +225,7 @@ function buildRow({ change, review, receipt }: InboxSource, levels: Record<Area,
   };
   if (review.state !== "ok") return { ...base, state: review.state };
 
-  const decision = route(review.data, levels);
+  const { decision } = decideChange(review.data, reportCard, escapes);
   const isReceiptUnreadable = receipt === "unreadable";
   const record = isReceiptUnreadable ? null : receipt;
   const status = receiptStatus(review.data, record);
