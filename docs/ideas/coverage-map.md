@@ -26,7 +26,7 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 
 ## What we measured
 
-**All 4 of Tieto's changes routed Full**, reading 55 of 473 hunks, ~51 of ~119 minutes. MP-2297 read 21 of 423: its 402 generated snapshots left the count (`R-generated`). MP-2129 read 20 of 33 (Full from `R-size`), MP-2234 7 of 9, MP-2283 7 of 8. The 10 planted-bug runs also went Full. Outside the snapshots the map saves little: the reviewer finds something on most hunks.
+Tieto's 4 changes: **0 Light · 0 Focused · 4 Full; read 55 of 473 hunks, ~51 of 119 min**. Per change: MP-2283 read 7 of 8, MP-2129 20 of 33, MP-2234 7 of 9, MP-2297 21 of 423 (402 generated snapshot hunks). All 10 planted-bug runs also went Full. Three changes went Full by `R-read-share` (findings or missing evidence on most hunks), MP-2129 by `R-size` (1043 changed lines). So the tier saves nothing yet; the reading list does, mostly by leaving MP-2297's generated snapshots out.
 
 ## How to adopt it
 

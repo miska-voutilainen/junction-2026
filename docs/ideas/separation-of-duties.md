@@ -22,7 +22,7 @@ Three roles on every change, never the same one twice:
 
 ## What we measured
 
-On Tieto's four changes the PR's own tests back 12 claims (4 on MP-2283, 8 on MP-2297), and all fail on base and pass on head. Counted as proof, they would have made all 12 Verified; capped, 3 stayed Supported, and 9 reached Verified only through A5's tests written from the requirement. With blind plants the reviewer caught 7 of 10 planted bugs ([Idea 1](trust-ladder.md)). We claim no effect size: we have no non-blind plants to compare with.
+On MP-2283 the PR's 3 own tests fail on the base and pass on the head, and back 4 of its 8 claims. Counted as proof, they would have raised all 4 to Verified; capped, 2 stayed Supported, and the other 2 reached Verified only through A5's tests written from the requirement. On MP-2297 its own tests back 8 claims: 7 reached Verified through A5's tests, 1 stayed Supported. With blind plants the reviewer caught 7 of 10 planted bugs ([Idea 1](trust-ladder.md)). We claim no effect size: we have no non-blind plants to compare with.
 
 ## How to adopt it
 
