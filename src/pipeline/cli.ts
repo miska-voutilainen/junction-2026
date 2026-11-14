@@ -18,8 +18,8 @@ import { runReview } from "./runReview";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
-  pnpm pipeline run <changeId> [--no-tests]
-  pnpm pipeline check <changeId>`;
+  pnpm review run <changeId> [--no-tests]
+  pnpm review check <changeId>`;
 
 /** The optional local environment file, loaded the way the seed script does. */
 const localEnvironmentFile = ".env";
@@ -65,8 +65,6 @@ async function recordReview(changeId: string): Promise<void> {
   });
   await writeRecordedReview(review);
   console.log(summaryLine(review));
-  const { checked, passed, downgraded } = review.quoteCheck;
-  console.log(`quote check: ${checked} checked, ${passed} passed, ${downgraded} claims downgraded`);
 }
 
 /** "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s" */

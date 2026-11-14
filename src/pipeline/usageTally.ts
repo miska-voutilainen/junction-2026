@@ -20,7 +20,7 @@ export function createUsageTally(): UsageTally {
       totals.inputTokens += entry.inputTokens;
       totals.outputTokens += entry.outputTokens;
       totals.costUsd += entry.costUsd;
-      totals.calls += 1;
+      totals.calls += entry.requests ?? 1;
       stderrUsageSink(entry);
     },
     totals: () => ({ ...totals }),

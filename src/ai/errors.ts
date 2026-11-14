@@ -28,7 +28,7 @@ export class RecordingMissingError extends Error {
     super(
       `No recording for this prompt, model and run index (${promptVersion}) at ${file}. ` +
         `The prompt or its input changed since the last recording. ` +
-        `Run the step once with AI_MODE=record (for example pnpm pipeline run <changeId>) and commit the new file.`,
+        `Run the step once with AI_MODE=record (for example pnpm review run <changeId>) and commit the new file.`,
     );
     this.name = "RecordingMissingError";
   }

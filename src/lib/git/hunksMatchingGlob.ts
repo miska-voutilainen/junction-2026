@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { Review } from "../contracts";
+import type { Review } from "../../contracts";
 
 type Hunk = Review["hunks"][number];
 

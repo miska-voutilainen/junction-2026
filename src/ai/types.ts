@@ -58,4 +58,6 @@ export interface UsageEntry {
   outcome: "ok" | "refusal" | "invalid" | "timeout";
   /** "replay" lines report the recorded cost, which this run did not spend. */
   source: "model" | "replay";
+  /** Requests this line stands for. Absent means one; a replayed call reports the requests it made when recorded. */
+  requests?: number;
 }

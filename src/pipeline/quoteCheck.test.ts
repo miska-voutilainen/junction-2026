@@ -180,6 +180,69 @@ describe("checkClaims", () => {
     expect(quoteCheck.downgraded).toBe(1);
   });
 
+  describe("hunk coverage by citation", () => {
+    const two = [
+      {
+        ...hunk("h1", "src/Resolver.cs", ["x"]),
+        newStart: 1,
+        newLines: 2,
+        oldStart: 1,
+        oldLines: 2,
+      },
+      {
+        ...hunk("h2", "src/Resolver.cs", ["y"]),
+        newStart: 10,
+        newLines: 3,
+        oldStart: 9,
+        oldLines: 3,
+      },
+    ];
+
+    it("keeps only the hunks a passing citation lies in and counts the ones it removes", async () => {
+      const { claims, hunkIdsRemoved } = await checkClaims(
+        [
+          draft({
+            hunkIds: ["h1", "h2"],
+            citations: [citation({ startLine: 1, endLine: 2, quote: "class Resolver" })],
+          }),
+        ],
+        two,
+        reader,
+      );
+      expect(claims[0].level).toBe("supported");
+      expect(claims[0].hunkIds).toEqual(["h1"]);
+      expect(hunkIdsRemoved).toBe(1);
+    });
+
+    it("uses old-side line numbers for an old-side citation", async () => {
+      // Old line 3 lies in h2 (old 3-3) but not in h1 (old 1-2); new-side numbers are not consulted.
+      const hunksWithOld = [two[0], { ...two[1], oldStart: 3, oldLines: 1 }];
+      const { claims } = await checkClaims(
+        [
+          draft({
+            hunkIds: ["h1", "h2"],
+            citations: [
+              citation({ side: "old", startLine: 3, endLine: 3, quote: "int Count = 1;" }),
+            ],
+          }),
+        ],
+        hunksWithOld,
+        reader,
+      );
+      expect(claims[0].hunkIds).toEqual(["h2"]);
+    });
+
+    it("leaves the hunkIds of an unverified claim as the model wrote them", async () => {
+      const { claims, hunkIdsRemoved } = await checkClaims(
+        [draft({ hunkIds: ["h1", "h2"], citations: [] })],
+        two,
+        reader,
+      );
+      expect(claims[0].hunkIds).toEqual(["h1", "h2"]);
+      expect(hunkIdsRemoved).toBe(0);
+    });
+  });
+
   describe("pathGlob", () => {
     const snapshots = [
       hunk("h1", "tests/A/Resources/a.cs", ["int Count = 0;", "// a"]),
@@ -211,6 +274,45 @@ describe("checkClaims", () => {
         reason: "quote not in the added lines of h2",
       });
       expect(quoteCheck).toMatchObject({ checked: 1, passed: 0, downgraded: 1 });
+    });
+
+    it("downgrades the claim when the first citation is invented, even if a second one passes", async () => {
+      const invented = citation({ quote: "int Count = 42;" });
+      const real = citation();
+      const { claims } = await checkClaims(
+        [draft({ pathGlob: "tests/**/Resources/**", citations: [invented, real] })],
+        snapshots,
+        globReader,
+      );
+      expect(claims[0].level).toBe("unverified");
+      expect(claims[0].citations).toEqual([]);
+    });
+
+    it("downgrades a glob claim that has no citation", async () => {
+      const { claims } = await checkClaims(
+        [draft({ pathGlob: "tests/**/Resources/**", citations: [] })],
+        snapshots,
+        globReader,
+      );
+      expect(claims[0].level).toBe("unverified");
+    });
+
+    it("rejects a quote that spans a gap of unchanged lines between added runs", async () => {
+      const gapped: Hunk = {
+        ...hunk("h1", "tests/A/Resources/a.cs", ["first", "second"]),
+        lines: [
+          { kind: "add", oldLine: null, newLine: 1, text: "first" },
+          { kind: "context", oldLine: 1, newLine: 2, text: "between" },
+          { kind: "add", oldLine: null, newLine: 3, text: "second" },
+        ],
+      };
+      const spanning = citation({ quote: "first second" });
+      const { claims } = await checkClaims(
+        [draft({ pathGlob: "tests/**/Resources/**", citations: [spanning] })],
+        [gapped],
+        globReader,
+      );
+      expect(claims[0].level).toBe("unverified");
     });
 
     it("looks only at added lines, not at context or removed lines", async () => {
