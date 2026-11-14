@@ -7,9 +7,10 @@
  * the API owner's call) are added by path, whatever the model said. Spec section
  * 6, A3 and A4, and 9.1 T12 and T13.
  */
-import type { Citation, Review } from "../contracts";
+import type { Citation, LegacyTouchPoint, Review } from "../contracts";
 import { classifyFile } from "../policy/areas";
 import { legacyZoneOf, legacyZones } from "../policy/legacy";
+import { legacyTouchKindLabel } from "../policy/legacyTouch";
 import { fixedRefusals, refusalRules } from "../policy/refusals";
 import type { FindingDraft, RefusalDraft } from "../prompts/a3";
 import type { Statement } from "../prompts/a4";
@@ -195,6 +196,38 @@ export function legacyRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
         source: "rule" as const,
         reason: `Edits legacy code in ${zone.label} (${zone.contract}): the ${zone.owner} decides`,
         hunkIds: zoneHunks.map((hunk) => hunk.id),
+      },
+    ];
+  });
+}
+
+/**
+ * One `source: "rule"` R8 refusal per touch point, for the hunks that no refusal
+ * already sends to a person for the same decision: one owner decision is counted
+ * once. A zone hunk already has its zone refusal and keeps it. A consumer-contract
+ * touch skips hunks any R7 refusal names (AI or rule), because R7 is the same
+ * API owner's decision; other kinds skip hunks a rule refusal names.
+ * The reason says the kind, the owner and what guards the touch: a guard never
+ * takes the hunk off the reading list, it tells the owner what covers it.
+ */
+export function legacyTouchRefusalsFor(
+  touchPoints: readonly LegacyTouchPoint[],
+  refusals: readonly Pick<UnnumberedRefusal, "ruleId" | "source" | "hunkIds">[],
+): UnnumberedRefusal[] {
+  const namedBy = (isCounted: (refusal: (typeof refusals)[number]) => boolean) =>
+    new Set(refusals.filter(isCounted).flatMap((refusal) => refusal.hunkIds));
+  const namedByRule = namedBy((refusal) => refusal.source === "rule");
+  const namedByR7 = namedBy((refusal) => refusal.ruleId === "R7");
+  return touchPoints.flatMap((touch) => {
+    const named = touch.kind === "consumer-contract" ? new Set([...namedByRule, ...namedByR7]) : namedByRule;
+    const hunkIds = touch.hunkIds.filter((id) => !named.has(id));
+    if (hunkIds.length === 0) return [];
+    return [
+      {
+        ruleId: "R8",
+        source: "rule" as const,
+        reason: `${legacyTouchKindLabel[touch.kind]}: ${touch.detail} (${touch.guard.status}: ${touch.guard.evidence}); the ${touch.owner} decides`,
+        hunkIds,
       },
     ];
   });

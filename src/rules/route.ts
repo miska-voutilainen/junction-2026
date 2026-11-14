@@ -12,11 +12,14 @@
  * that gets through returns inspection to 100% until trust is earned again.
  * Hunks in a declared legacy zone (policy/legacy.ts) carry an R8 refusal, so
  * no claim or ladder level takes them off the list, and R-legacy names the owner.
+ * Touch points (pipeline/legacyTouchPoints.ts) add what R-legacy can't see: R-legacy-guard
+ * says per touch what covers it, and a touch with no guard asks for a Full read.
  * Spec section 5, route().
  */
 import { areaLabel, ladderLevelLabel } from "../contracts";
 import type { Area, Coverage, LadderLevel, Review, Tier, TierDecision } from "../contracts";
 import { globToRegExp } from "../policy/globMatch";
+import { legacyTouchKindLabel } from "../policy/legacyTouch";
 import { legacyTouchFull, legacyZoneOf, legacyZones } from "../policy/legacy";
 import { routingPolicy, type RoutingPolicy } from "../policy/routing";
 
@@ -24,7 +27,7 @@ type Hunk = Review["hunks"][number];
 type Reason = TierDecision["reasons"][number];
 
 /** The parts of a review route() reads; its routing and receipt draft are what it produces or ignores. */
-type RoutedReview = Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals">;
+type RoutedReview = Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals" | "legacyTouchPoints">;
 
 const tierRank: Record<Tier, number> = { light: 0, focused: 1, full: 2 };
 
@@ -154,7 +157,7 @@ function collectReasons(input: RuleInput): Reason[] {
     reasons.push({ ruleId: "R-refusal", tier: "focused", text: `${refusals} ${plural(refusals, "item", "items")} refused: a human decides` });
   }
 
-  reasons.push(...legacyReasons(review));
+  reasons.push(...legacyReasons(review), ...legacyGuardReasons(review));
 
   const contradictions = review.findings.filter((finding) => finding.kind === "contradiction").length;
   if (contradictions > 0) {
@@ -207,6 +210,24 @@ function legacyReasons(review: RoutedReview): Reason[] {
     tier,
     text: `${zone.label}: edits legacy code in ${count} ${plural(count, "hunk", "hunks")}, the ${zone.owner} decides`,
   }));
+}
+
+/**
+ * Rule R-legacy-guard: one reason per touch point, so the owner sees what covers
+ * each touch. Unguarded is Full; partly guarded and owner-read are Focused; a
+ * guarded touch adds a Light reason so the owner sees the guard. Its R8 refusal,
+ * when it has one, still keeps the hunk on the reading list, so the change is at
+ * least Focused: a guard tells the owner what covers the touch, it never removes it.
+ * @example "Old platform: #if !NETFRAMEWORK in 7 hunks, no test runs it on .NET Framework; the platform owner (the maintainers) decides"
+ */
+function legacyGuardReasons(review: RoutedReview): Reason[] {
+  return (review.legacyTouchPoints ?? []).map((touch): Reason => {
+    const { status, evidence } = touch.guard;
+    const where = `${legacyTouchKindLabel[touch.kind]}: ${touch.detail} in ${touch.hunkIds.length} ${plural(touch.hunkIds.length, "hunk", "hunks")}`;
+    if (status === "guarded") return { ruleId: "R-legacy-guard", tier: "light", text: `${where}, guarded: ${evidence}` };
+    const tier: Tier = status === "unguarded" ? "full" : "focused";
+    return { ruleId: "R-legacy-guard", tier, text: `${where}, ${evidence}; the ${touch.owner} decides` };
+  });
 }
 
 /** Rule 3: Full when checked evidence covers so little that the AI saved the reader no effort. */

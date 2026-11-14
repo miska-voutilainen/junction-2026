@@ -9144,6 +9144,30 @@
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [
+    {
+      "kind": "consumer-contract",
+      "hunkIds": [
+        "h7",
+        "h9",
+        "h10",
+        "h11"
+      ],
+      "detail": "Attributes.cs, MsgPack00xMessagePackAnalyzer.cs",
+      "owner": "API owner (the maintainers)",
+      "guard": {
+        "status": "guarded",
+        "evidence": "the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "files": [
+          "doc/analyzers/MsgPack019.md",
+          "doc/analyzers/MsgPack020.md",
+          "doc/analyzers/MsgPack021.md",
+          "doc/analyzers/MsgPack022.md",
+          "doc/analyzers/index.md"
+        ]
+      }
+    }
+  ],
   "routing": {
     "tier": "full",
     "reasons": [
@@ -9156,6 +9180,11 @@
         "ruleId": "R-refusal",
         "text": "1 item refused: a human decides",
         "tier": "focused"
+      },
+      {
+        "ruleId": "R-legacy-guard",
+        "text": "Consumer contract: Attributes.cs, MsgPack00xMessagePackAnalyzer.cs in 4 hunks, guarded: the same change updates MsgPack019.md, MsgPack020.md, MsgPack021.md and 3 more",
+        "tier": "light"
       },
       {
         "ruleId": "R-defect",

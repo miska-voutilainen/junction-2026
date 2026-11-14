@@ -17,12 +17,14 @@ import * as a3 from "../prompts/a3";
 import * as a4 from "../prompts/a4";
 import * as a5 from "../prompts/a5";
 import { assembleReview } from "./assembleReview";
+import { findLegacyTouchPoints } from "./legacyTouchPoints";
 import {
   checkAreaFindings,
   checkContradictions,
   checkRefusals,
   fixedRefusalsFor,
   legacyRefusalsFor,
+  legacyTouchRefusalsFor,
   mergeFixedRefusals,
   type UnnumberedFinding,
   type UnnumberedRefusal,
@@ -132,10 +134,17 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       )
     : { areaFindings: [], refusals: [] };
   // The fixed and legacy rules need no model, so they apply on every run, whichever steps ran.
-  const refusals = mergeFixedRefusals(aiRefusals, [
+  const legacyTouchPoints = await findLegacyTouchPoints({
+    repoDir,
+    baseSha: change.baseSha,
+    files: loadedDiff.files,
+    hunks: loadedDiff.hunks,
+  });
+  const ruleRefusals = mergeFixedRefusals(aiRefusals, [
     ...fixedRefusalsFor(loadedDiff.hunks),
     ...legacyRefusalsFor(loadedDiff.hunks),
   ]);
+  const refusals = [...ruleRefusals, ...legacyTouchRefusalsFor(legacyTouchPoints, ruleRefusals)];
 
   const description = steps.has("a4")
     ? await checkAuthorDescription(client, {
@@ -189,6 +198,7 @@ export async function runReview(input: RunReviewInput): Promise<Review> {
       hasDescription: description !== null,
       didRunA5: tests?.didRun === true,
     }),
+    legacyTouchPoints,
     levels: input.levels,
     run: runMetadata(startedAt, input.usage),
   });

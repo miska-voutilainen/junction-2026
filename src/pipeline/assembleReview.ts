@@ -33,6 +33,8 @@ export interface ReviewParts {
   retractions?: Review["retractions"];
   /** Tests A5 ran that said nothing, with the reason; omitted when A5 did not run. */
   inconclusiveTests?: Review["inconclusiveTests"];
+  /** Places the change touches what old systems rely on; see findLegacyTouchPoints. */
+  legacyTouchPoints?: Review["legacyTouchPoints"];
   /** Versions of the steps that ran; the rest are "none". */
   promptVersions: Review["reviewer"]["promptVersions"];
   run: Review["run"];
@@ -76,6 +78,7 @@ export function assembleReview(parts: ReviewParts): Review {
     refusals: parts.refusals,
     quoteCheck: checkedClaims.quoteCheck,
     retractions: parts.retractions ?? [],
+    ...(parts.legacyTouchPoints ? { legacyTouchPoints: parts.legacyTouchPoints } : {}),
     ...(parts.inconclusiveTests ? { inconclusiveTests: parts.inconclusiveTests } : {}),
   } satisfies Omit<Review, "routing" | "receiptDraft">;
 
