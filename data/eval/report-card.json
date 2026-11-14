@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-14T08:59:13.663Z",
+  "generatedAt": "2026-11-14T09:38:56.871Z",
   "reviewer": {
     "version": "rv1",
     "model": "claude-opus-5-5"
@@ -177,7 +177,7 @@
     ]
   },
   "hallucinations": {
-    "quotesChecked": 790,
+    "quotesChecked": 917,
     "quoteFailures": 0,
     "claimsRetracted": 0,
     "findingsDropped": 0
@@ -187,13 +187,13 @@
     "matchedPlant": 8
   },
   "routingSpread": {
-    "changes": 1,
+    "changes": 4,
     "light": 0,
     "focused": 0,
-    "full": 1,
-    "readHunks": 7,
-    "totalHunks": 8,
-    "readMinutes": 10,
-    "fullMinutes": 10
+    "full": 4,
+    "readHunks": 55,
+    "totalHunks": 473,
+    "readMinutes": 51,
+    "fullMinutes": 119
   }
 }

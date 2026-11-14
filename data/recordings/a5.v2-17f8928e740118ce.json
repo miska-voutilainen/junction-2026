@@ -1,0 +1,12 @@
+{
+  "model": "claude-opus-5-5",
+  "promptVersion": "a5.v2",
+  "runIndex": 0,
+  "rawAnswer": "{\"testFile\":\"tests/MessagePack.SourceGenerator.ExecutionTests/A5_F4_DeclarativeKeysTests.cs\",\"code\":\"// Copyright (c) All contributors. All rights reserved.\\n// Licensed under the MIT license. See LICENSE file in the project root for full license information.\\n\\nusing MessagePack.Formatters;\\n\\npublic class A5_F4_DeclarativeKeysTests(ITestOutputHelper logger)\\n{\\n    private static readonly MessagePackSerializerOptions SerializerOptions = MessagePackSerializerOptions.Standard;\\n\\n    [Fact]\\n    public void A5_F4_TypeWithoutAttributes_RoundtripsThroughGeneratedResolver()\\n    {\\n        var value = new PlainPoint { X = 3, Y = 7, Transient = \\\"skip\\\" };\\n\\n        byte[] serialized = MessagePackSerializer.Serialize(value, SerializerOptions);\\n        logger.WriteLine(MessagePackSerializer.ConvertToJson(serialized, SerializerOptions));\\n        PlainPoint after = MessagePackSerializer.Deserialize<PlainPoint>(serialized, SerializerOptions);\\n\\n        Assert.Equal(value.X, after.X);\\n        Assert.Equal(value.Y, after.Y);\\n    }\\n\\n    [Fact]\\n    public void A5_F4_FormatterIsAvailableForTypeWithoutAttributes()\\n    {\\n        IMessagePackFormatter<PlainPoint>? formatter = null;\\n        Exception? ex = Record.Exception(() => formatter = SerializerOptions.Resolver.GetFormatterWithVerify<PlainPoint>());\\n        Assert.Null(ex);\\n        Assert.NotNull(formatter);\\n    }\\n\\n    /// <summary>\\n    /// A type that carries no MessagePack attributes at all.\\n    /// </summary>\\n    public class PlainPoint\\n    {\\n        public int X { get; set; }\\n\\n        public int Y { get; set; }\\n\\n        public string? Transient { get; set; }\\n    }\\n}\\n\",\"testNames\":[\"A5_F4_TypeWithoutAttributes_RoundtripsThroughGeneratedResolver\",\"A5_F4_FormatterIsAvailableForTypeWithoutAttributes\"],\"requirementItemId\":\"F4\"}",
+  "attempts": 1,
+  "usage": {
+    "inputTokens": 4759,
+    "outputTokens": 3279,
+    "costUsd": 0.1098158
+  }
+}
