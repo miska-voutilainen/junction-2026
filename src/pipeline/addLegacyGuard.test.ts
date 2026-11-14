@@ -1,3 +1,8 @@
+/**
+ * addLegacyGuard on a recorded review (mp-2297, the legacy catch the pitch leads
+ * with): R8 refusals are appended without renumbering what the model raised, and
+ * a re-run replaces stale R8s, so `pnpm review legacy` is safe to run again.
+ */
 import { describe, expect, it, vi } from "vitest";
 import type { Area, LadderLevel, Review } from "../contracts";
 import type { BaseTree } from "../lib/git/baseTree";
