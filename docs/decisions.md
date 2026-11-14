@@ -12,6 +12,13 @@
 - **Limit:** the workflows run against our fork's registered changes and receipts; pointing them at an organisation's own repository is the part not built. The two workflows' YAML has not run on GitHub yet.
 - **PR:** feat/ci-countersign
 
+## 2026-11-14 · mp-2283 re-signed on the rv2 review; the rv1 receipt was removed
+
+- **Context:** The mp-2283 receipt was signed on review run `20261114T074451Z` (rv1, 7 of 8 hunks read). After #200 re-recorded mp-2283 on rv2 (run `20261114T122418Z`, Read 6 of 8), S2 showed the rv2 review while S4 showed the rv1 receipt. The diff was the same, so the receipt still verified and nothing flagged it stale.
+- **Decision (Miska):** The rv1 note under `refs/notes/countersign` on `9df83c38` was removed, and Miska drafted and signed a new receipt on the rv2 run (h4 and h5 left unread, both Generator). `pnpm countersign verify` and `export` passed.
+- **Why:** The demo should show one receipt that matches the review on screen. `sign` refuses to overwrite an existing note (exit 4), so the old note had to be removed by hand.
+- **Rejected:** Keeping the rv1 receipt (S2 and S4 would disagree on the demo path). Letting `sign` replace a note (it would break the append-only rule for every receipt). In a real repository the old receipt would stay, and a second receipt would be signed for the new review.
+
 ## 2026-11-14 · Three runs per planted bug, scored by majority
 
 - **Context:** With one run per planted bug, the security results looked noisy: a single run could miss or catch a plant by luck.
