@@ -6,7 +6,7 @@ A proxy (`src/proxy.ts`) sends every visitor without the right cookie to `/unloc
 
 ## Kill switch
 
-`ACCESS_CODE` empty or unset turns the gate off: every page is open and `/unlock` redirects away. The real code lives only in Vercel's environment settings, never in the repo. Vercel applies an env change only to new deployments: after changing it, redeploy (Deployments, then Redeploy).
+`ACCESS_CODE` empty or unset turns the gate off: every page is open and `/unlock` answers with a 307 to `next`. The real code lives only in Vercel's environment settings, never in the repo. Vercel applies an env change only to new deployments: after changing it, redeploy (Deployments, then Redeploy).
 
 ## Removal
 

@@ -80,4 +80,25 @@ describe("accessGate", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
   });
+
+  it("redirects /unlock to the next path with a 307 when the gate is off", async () => {
+    vi.stubEnv("ACCESS_CODE", "");
+    const response = await accessGate(requestFor("/unlock?next=%2Freviewer"));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/reviewer");
+  });
+
+  it("redirects /unlock to / when the gate is off and next is missing or off-site", async () => {
+    vi.stubEnv("ACCESS_CODE", "");
+    const bare = await accessGate(requestFor("/unlock"));
+    const offSite = await accessGate(requestFor("/unlock?next=%2F%2Fevil.com"));
+    expect(bare.headers.get("location")).toBe("http://localhost:3000/");
+    expect(offSite.headers.get("location")).toBe("http://localhost:3000/");
+  });
+
+  it("lets /unlock load without the cookie when the gate is on", async () => {
+    vi.stubEnv("ACCESS_CODE", "8888");
+    const response = await accessGate(requestFor("/unlock"));
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
 });
