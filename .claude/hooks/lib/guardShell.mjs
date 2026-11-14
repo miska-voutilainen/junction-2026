@@ -142,8 +142,10 @@ export function shellRows(command, ctx, input, add) {
   const { io, lane } = ctx;
   const emojiTexts = [];
   const trailerTexts = [];
+  // A body file resolves where the command runs: the `cd` directory first (a sibling worktree has its
+  // own .scratch/), then the hook's cwd, then the repo root. env.cwd moves with `cd`, hence the closure.
   const readBody = (p) => {
-    for (const base of [input.cwd, ctx.root]) {
+    for (const base of [env.cwd, input.cwd, ctx.root]) {
       if (!base) continue;
       const t = io.readFile(resolve(base, p));
       if (t != null) return t.replace(/^﻿/, "");
