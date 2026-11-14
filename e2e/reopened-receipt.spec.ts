@@ -21,7 +21,8 @@ test("an escape reopens the signed change on S1, S2 and S4, and Reset clears it"
   await expect(page.getByText("Escape recorded (simulated)")).toBeVisible();
 
   await page.goto("/");
-  await expect(page.getByText(REOPENED).first()).toBeVisible();
+  // The inbox renders a table row and a stacked row; only one is visible per viewport.
+  await expect(page.getByText(REOPENED).locator("visible=true").first()).toBeVisible();
   await page.screenshot({ path: shot("s1", testInfo.project.name) });
 
   await page.goto("/changes/mp-2283");
