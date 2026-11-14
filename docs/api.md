@@ -4,18 +4,18 @@ Countersign has no HTTP endpoints. The site is statically generated and reads co
 
 What the parts exchange instead: data files, two pure functions and two command-line tools. The zod schemas in `src/contracts/` are the source of truth; this page describes them for people. Spec section 5 in [spec.md](spec.md) is the agreed interface.
 
-| Contract                                                 | File or entry point                                                      | Status                                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| [`Requirement`](#requirement)                            | `data/sample/requirements/<id>.json`                                     | Schema built; files not in the repo yet                                |
-| [`ChangeInput`](#changeinput), [`AnswerKey`](#answerkey) | `data/sample/changes/<id>.json`, `data/sample/answer-key/<plantId>.json` | Schema built; files not in the repo yet                                |
-| [`Review`](#review)                                      | `data/runs/<changeId>/review.json`                                       | Schema built; recorded runs not yet, fixtures in `data/fixtures/runs/` |
-| [`route()`](#route-and-tierdecision)                     | `src/rules/route.ts`                                                     | Built                                                                  |
-| [Ladder](#trust-ladder)                                  | `src/rules/ladder.ts`                                                    | Built                                                                  |
-| [`ReportCard`](#reportcard)                              | `data/eval/report-card.json`                                             | Schema built; fixture only                                             |
-| [`ReceiptRecord`](#receiptrecord)                        | `data/receipts/<changeId>.json`                                          | Schema built; fixtures only                                            |
-| [Simulated escapes](#simulated-escapes)                  | `useEscapes()` in `src/lib/simulation/escapes.ts`                        | Built                                                                  |
-| [Pipeline CLI](#pipeline-cli)                            | `pnpm review`, `pnpm evals`                                              | `review run`, `review check` built (T12, T13); `evals` specified       |
-| [Receipt CLI](#receipt-cli)                              | `pnpm countersign`                                                       | Built, with unit tests                                                 |
+| Contract                                                 | File or entry point                                                      | Status                                                               |
+| -------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| [`Requirement`](#requirement)                            | `data/sample/requirements/<id>.json`                                     | Built; files in `data/sample/`                                       |
+| [`ChangeInput`](#changeinput), [`AnswerKey`](#answerkey) | `data/sample/changes/<id>.json`, `data/sample/answer-key/<plantId>.json` | Built; files in `data/sample/`                                       |
+| [`Review`](#review)                                      | `data/runs/<changeId>/review.json`                                       | Built; recorded runs, fixtures in `data/fixtures/runs/` for UI tests |
+| [`route()`](#route-and-tierdecision)                     | `src/rules/route.ts`                                                     | Built                                                                |
+| [Ladder](#trust-ladder)                                  | `src/rules/ladder.ts`                                                    | Built                                                                |
+| [`ReportCard`](#reportcard)                              | `data/eval/report-card.json`                                             | Built; recorded by `pnpm evals`                                      |
+| [`ReceiptRecord`](#receiptrecord)                        | `data/receipts/<changeId>.json`                                          | Schema built; fixtures only                                          |
+| [Simulated escapes](#simulated-escapes)                  | `useEscapes()` in `src/lib/simulation/escapes.ts`                        | Built                                                                |
+| [Pipeline CLI](#pipeline-cli)                            | `pnpm review`, `pnpm evals`                                              | `review run`, `review check` built (T12, T13); `evals` specified     |
+| [Receipt CLI](#receipt-cli)                              | `pnpm countersign`                                                       | Built, with unit tests                                               |
 
 All objects are strict: an unknown key fails validation. Lines are 1-based and inclusive. SHAs are 40 lowercase hex characters; timestamps are ISO 8601.
 
@@ -100,8 +100,8 @@ All objects are strict: an unknown key fails validation. Lines are 1-based and i
 | `findings[]`                                                | see below                                                                                         |                                                                                                                                                                  |
 | `refusals[]`                                                | `{ id, ruleId, source: "ai" \| "rule", reason, hunkIds[] }`                                       | `ruleId` is `R1` to `R7`; `source: "rule"` is a fixed trigger in the policy, no model involved                                                                   |
 | `quoteCheck`                                                | `{ checked, passed, downgraded, dropped, failures[] }`                                            | failure: `{ itemId, citation, reason }`                                                                                                                          |
-| `retractions[]`                                             | `{ claimId, reason, output }`                                                                     | claims withdrawn: an A5 test passed on the base and failed on the head                                                                                                                            |
-| `inconclusiveTests[]` (optional)                            | `{ source, requirementItemId, testNames, reason }`                                                | tests that said nothing about the change: build error, no matching test, timeout, or a failure on both versions; `reason` says which                           |
+| `retractions[]`                                             | `{ claimId, reason, output }`                                                                     | claims withdrawn: an A5 test passed on the base and failed on the head                                                                                           |
+| `inconclusiveTests[]` (optional)                            | `{ source, requirementItemId, testNames, reason }`                                                | tests that said nothing about the change: build error, no matching test, timeout, or a failure on both versions; `reason` says which                             |
 | `receiptDraft`                                              | `ReceiptBody`                                                                                     |                                                                                                                                                                  |
 | `routing`                                                   | `TierDecision`                                                                                    | `route()`'s output at record time                                                                                                                                |
 
@@ -132,14 +132,14 @@ route(
 | `readHunks`, `totalHunks`, `readLines`, `totalLines` | number                     | lines are added plus removed                                                 |
 | `readMinutes`, `fullMinutes`                         | number                     | `ceil(lines / 25)`; `readMinutes` is at least 1 when `readLines > 0`, else 0 |
 
-**Coverage per hunk**, first match wins: `read` if a finding or refusal lists the hunk, or its file's area is at `shadow`, or no `verified` or `supported` claim lists it; `verified` if a `verified` claim lists it; otherwise `supported`.
+**Coverage per hunk**, first match wins: `read` if a finding or refusal lists the hunk or its file's area is at `shadow`; `generated` if its file's kind is `generated` (snapshots: visible, never in the reading list); `verified` if a `verified` claim lists it; `supported` if a `supported` claim lists it; otherwise `read`.
 
 **Rules**, in this order. The thresholds are in `src/policy/routing.ts`.
 
 | Rule id            | Fires when                                               | Tier    |
 | ------------------ | -------------------------------------------------------- | ------- |
 | `R-size`           | changed lines outside generated files exceed 400         | full    |
-| `R-read-share`     | read hunks are at least 75% of all hunks                 | full    |
+| `R-read-share`     | read hunks are at least 75% of non-generated hunks       | full    |
 | `R-escape`         | one reason per touched area with `escapes[area] > 0`     | full    |
 | `R-refusal`        | any refusal                                              | focused |
 | `R-contradiction`  | any contradiction finding                                | focused |
@@ -147,6 +147,7 @@ route(
 | `R-sensitive-path` | a hunk is in one of the policy's `sensitivePaths`        | focused |
 | `R-area-level`     | one reason per touched area whose level is not `trusted` | focused |
 | `R-unread`         | a hunk is `read` and no other rule fired                 | focused |
+| `R-generated`      | any hunk is `generated`: says the risk in one line       | light   |
 
 **No readable report card.** `decideChange()` in `src/features/inbox/inboxModel.ts` routes with every area at `shadow`, then forces tier `full` and every hunk `read`, drops `R-read-share` and `R-unread`, and adds `R-no-track-record` ("No readable report card: nothing counts as covered, so a person reads every hunk."), so every screen shows the same decision.
 
@@ -192,7 +193,7 @@ The site shows a receipt as unverified when `verify.ok` is false, and as stale w
 
 ## Diff identity
 
-`computeDiffIdentity(repoDir, baseSha, headSha): Promise<{ baseTree, headTree, diffSha256 }>` in `src/lib/git/diffIdentity.ts` (specified, not built yet). Tree SHAs come from `git rev-parse <sha>^{tree}`; `diffSha256` is the sha256 of the raw output of a fixed `git diff --binary` command run with system and global git config disabled. The review and the receipt call the same function.
+`computeDiffIdentity(repoDir, baseSha, headSha): Promise<{ baseTree, headTree, diffSha256 }>` in `src/lib/git/diffIdentity.ts` (built). Tree SHAs come from `git rev-parse <sha>^{tree}`; `diffSha256` is the sha256 of the raw output of a fixed `git diff --binary` command run with system and global git config disabled. The review and the receipt call the same function.
 
 ## Simulated escapes
 
@@ -207,7 +208,7 @@ Screens that show a tier call `route(review, applyEscapes(levels, escapes), rout
 
 ## Policy
 
-`src/policy/`. `refusals.ts` (built): `refusalPolicyVersion`, the rules `R1` to `R7` (`{ id, title, decider }`) and `fixedRefusals`, the globs that always produce a rule-sourced `R7` refusal. `routing.ts` and `ladder.ts` (built): the thresholds above. `areas.ts` (file kind and area by path, the four area checklists) is specified, not built yet.
+`src/policy/`. `refusals.ts` (built): `refusalPolicyVersion`, the rules `R1` to `R7` (`{ id, title, decider }`) and `fixedRefusals`, the globs that always produce a rule-sourced `R7` refusal. `routing.ts` and `ladder.ts` (built): the thresholds above. `areas.ts` (file kind and area by path) and `areaChecklists.ts` (the four area checklists) are built.
 
 ## Pipeline CLI
 
@@ -223,7 +224,7 @@ Env: `AI_BACKEND`, `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_
 
 ## Receipt CLI
 
-`src/receipt/`, per spec section 5 and 9.1 (T20). It reads `SAMPLE_REPO_DIR`; `COUNTERSIGN_DATA_DIR` and `COUNTERSIGN_ALLOWED_SIGNERS` override `data/` and `data/sample/allowed_signers` (tests use them). On Windows it runs Git for Windows' `ssh-keygen` (`C:/Program Files/Git/usr/bin/ssh-keygen.exe`), elsewhere the one on the PATH. Exit 1 covers input and environment errors (missing draft or key, a key with a passphrase, owner not in `allowed_signers`, stale review).
+`src/receipt/`, per spec section 5 and 9.1 (T20). It reads `SAMPLE_REPO_DIR`; `COUNTERSIGN_DATA_DIR` and `COUNTERSIGN_ALLOWED_SIGNERS` override `data/` and `data/sample/allowed_signers` (tests use them). On Windows it runs Git for Windows' `ssh-keygen` (`C:/Program Files/Git/usr/bin/ssh-keygen.exe`), elsewhere the one on the PATH. Exit 1 covers input and environment errors (missing draft or key, a passphrase-protected key with no terminal to prompt in, owner not in `allowed_signers`, stale review; in a terminal `sign` prompts for the passphrase).
 
 | Command                                                         | What it does                                                                                                                                                                                                                                                                                                                             | Exit codes                                                             |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
