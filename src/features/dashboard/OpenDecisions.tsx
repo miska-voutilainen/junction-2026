@@ -5,7 +5,7 @@ import type { DeciderQueue } from "./dashboardModel";
  * Refusals no signed receipt has accepted, grouped by who the refusal policy
  * says decides. The AI refuses these on purpose (idea 5): a person owns each.
  */
-export function OpenDecisions({ queues }: { queues: DeciderQueue[] }) {
+export function OpenDecisions({ queues }: Readonly<{ queues: DeciderQueue[] }>) {
   return (
     <DashboardSection title="Open decisions" subtitle="Refusals waiting on their decider">
       {queues.length === 0 ? (

@@ -9,7 +9,7 @@ import type { TierAttention } from "./dashboardModel";
  * lighter the tier, the more of the change the evidence carried. Re-routes
  * live when a simulated escape lowers an area's level.
  */
-export function AttentionByTier({ rows }: { rows: TierAttention[] }) {
+export function AttentionByTier({ rows }: Readonly<{ rows: TierAttention[] }>) {
   return (
     <DashboardSection title="Attention by tier" subtitle="Hunks a person read against hunks covered by evidence">
       <ul className="flex flex-col gap-3.5 rounded-page border border-border-subtle bg-surface-panel px-4 py-4">
@@ -35,7 +35,7 @@ export function AttentionByTier({ rows }: { rows: TierAttention[] }) {
   );
 }
 
-function AttentionBar({ row }: { row: TierAttention }) {
+function AttentionBar({ row }: Readonly<{ row: TierAttention }>) {
   const readShare = row.totalHunks === 0 ? 0 : (row.readHunks / row.totalHunks) * 100;
   return (
     <span role="img" aria-label={attentionSummary(row)} className="flex h-2.5 overflow-hidden rounded-chip bg-surface-bg">

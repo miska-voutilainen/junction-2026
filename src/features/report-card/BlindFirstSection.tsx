@@ -7,7 +7,7 @@ import { blindFirstSummary } from "./reportCardModel";
  * description more often when it reads the code before the description? One row
  * per planted contradiction, with both modes' catches over the same runs.
  */
-export function BlindFirstSection({ reportCard }: { reportCard: ReportCard }) {
+export function BlindFirstSection({ reportCard }: Readonly<{ reportCard: ReportCard }>) {
   const { overall, rows } = blindFirstSummary(reportCard);
   return (
     <section aria-labelledby="blind-first-heading" className="flex flex-col gap-3">

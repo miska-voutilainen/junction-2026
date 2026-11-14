@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ErrorState } from "@/components/ErrorState";
 
 /** Last-resort error screen for any route: says what happened, re-renders on "Try again" and links back to the inbox. */
-export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function RouteError({ reset }: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
   return (
     <div className="mx-auto w-full max-w-content px-4 py-6 compact:px-8">
       <ErrorState

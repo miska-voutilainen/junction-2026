@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 /** Temporary access gate page; see src/features/access-gate/README.md. */
-export default async function UnlockPage({ searchParams }: PageProps<"/unlock">) {
+export default async function UnlockPage({ searchParams }: Readonly<PageProps<"/unlock">>) {
   const { next: nextParam } = await searchParams;
   const next = safeNextPath(typeof nextParam === "string" ? nextParam : null);
   const code = readAccessCode();

@@ -15,7 +15,7 @@ import type { InboxRow, MobileSections, ReviewedRow } from "./inboxModel";
  * "Needs a desktop" the Focused and Full ones with a read-only link, and
  * "Signed" folds away. There is no approve button: signing is a git command.
  */
-export function InboxMobile({ sections }: { sections: MobileSections }) {
+export function InboxMobile({ sections }: Readonly<{ sections: MobileSections }>) {
   return (
     <div className="flex flex-col gap-6">
       {sections.signHere.length > 0 && (
@@ -73,7 +73,7 @@ export function InboxMobile({ sections }: { sections: MobileSections }) {
   );
 }
 
-function Section({ title, count, children }: { title: string; count: number; children: ReactNode }) {
+function Section({ title, count, children }: Readonly<{ title: string; count: number; children: ReactNode }>) {
   return (
     <section aria-label={title} className="flex flex-col gap-3">
       <h2 className="flex items-baseline gap-2 text-sm font-semibold">
@@ -84,7 +84,7 @@ function Section({ title, count, children }: { title: string; count: number; chi
   );
 }
 
-function RowTitle({ row, isLink = true, dataRowLink = false }: { row: InboxRow; isLink?: boolean; dataRowLink?: boolean }) {
+function RowTitle({ row, isLink = true, dataRowLink = false }: Readonly<{ row: InboxRow; isLink?: boolean; dataRowLink?: boolean }>) {
   if (!isLink) return <span className="font-medium text-text-primary">{row.title}</span>;
   return (
     <Link href={`/changes/${row.id}`} data-inbox-row-link={dataRowLink || undefined} className="font-medium text-text-primary">
@@ -94,7 +94,7 @@ function RowTitle({ row, isLink = true, dataRowLink = false }: { row: InboxRow; 
 }
 
 /** The row's meta line plus the "synthetic PR description" tag. */
-function RowMeta({ row }: { row: InboxRow }) {
+function RowMeta({ row }: Readonly<{ row: InboxRow }>) {
   return (
     <div className="flex flex-col gap-1 text-sm text-text-muted">
       <p>{metaLine(row)}</p>

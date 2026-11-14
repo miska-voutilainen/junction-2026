@@ -32,12 +32,12 @@ export function DashboardScreen({
   reportCard,
   repo,
   usesFixture,
-}: {
+}: Readonly<{
   sources: InboxSource[];
   reportCard: ReportCardInput;
   repo: string;
   usesFixture: boolean;
-}) {
+}>) {
   const { escapes } = useEscapes();
   const model = useMemo(() => buildDashboardModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
   const { facts } = model;

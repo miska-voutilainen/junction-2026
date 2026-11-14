@@ -16,7 +16,7 @@ function statusOf(row: InboxRow): { label: string; icon: ReactNode } {
 }
 
 /** Receipt state of a row as a small icon with a label: needs review (dot), signed (check), stale (triangle), failed verification (shield with a cross). */
-export function StatusIcon({ row }: { row: InboxRow }) {
+export function StatusIcon({ row }: Readonly<{ row: InboxRow }>) {
   const { label, icon } = statusOf(row);
   return (
     <span role="img" aria-label={label} className="grid size-4 place-items-center">
