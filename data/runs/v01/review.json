@@ -7,26 +7,26 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T054431Z",
-    "startedAt": "2026-11-14T05:44:31.049Z",
-    "finishedAt": "2026-11-14T05:46:18.852Z",
-    "durationMs": 107803,
+    "id": "20261114T122418Z",
+    "startedAt": "2026-11-14T12:24:18.710Z",
+    "finishedAt": "2026-11-14T12:26:38.649Z",
+    "durationMs": 139939,
     "usage": {
-      "inputTokens": 148036,
-      "outputTokens": 12945,
-      "costUsd": 1.9909218000000002,
-      "calls": 3
+      "inputTokens": 304612,
+      "outputTokens": 20062,
+      "costUsd": 3.0906573999999996,
+      "calls": 4
     }
   },
   "diff": {
@@ -2406,8 +2406,8 @@
       "kind": "defect",
       "area": "analyzer",
       "severity": "medium",
-      "title": "MsgPack014 nullable formatter check reversed, unrelated to the crash",
-      "detail": "The where clause in SymbolStartAction now collects IMessagePackFormatter<T> interfaces whose reference-type argument is Annotated instead of NotAnnotated. As a result, formatters that already implement IMessagePackFormatter<T?> get the 'Implement IMessagePackFormatter<T?>' warning, and formatters that implement the non-nullable form are no longer warned. This has nothing to do with closed generic structs from referenced assemblies. It breaks N2 (existing analyzer diagnostics must not change), and builds that treat warnings as errors fail for correct code.",
+      "title": "MsgPack014 nullable formatter check is inverted",
+      "detail": "The requirement does not ask for this change. The MsgPack014 query used to collect IMessagePackFormatter<T> implementations whose reference-type argument is NotAnnotated, which are the formatters that should be told to implement IMessagePackFormatter<T?>. It now collects Annotated ones. As a result, formatters that already implement IMessagePackFormatter<T?> get the 'Implement IMessagePackFormatter<T?>' warning, and formatters that really need it get no warning. This breaks the existing analyzer behaviour (N2), and existing MsgPack014 tests are likely to fail.",
       "statement": null,
       "hunkIds": [
         "h3"
@@ -2419,6 +2419,13 @@
           "startLine": 371,
           "endLine": 376,
           "quote": "iface.TypeArguments is [INamedTypeSymbol { IsReferenceType: true, NullableAnnotation: NullableAnnotation.Annotated } a]"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+          "side": "old",
+          "startLine": 375,
+          "endLine": 375,
+          "quote": "iface.TypeArguments is [INamedTypeSymbol { IsReferenceType: true, NullableAnnotation: NullableAnnotation.NotAnnotated } a]"
         }
       ]
     },
@@ -2427,15 +2434,22 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "BothStringAndIntKeyAreNull silently dropped for positional record properties",
-      "detail": "GetPropertyIdentifierLocation casts the declaring syntax with 'as PropertyDeclarationSyntax'. For a positional record property declared in the user's own project ([property: Key(...)] on a primary-constructor parameter), that syntax is a ParameterSyntax, so the location is null. The new ReportIfLocatedInCompilation filter then drops any diagnostic whose location is not in source. A MsgPack005 error about the user's own code is therefore lost instead of reported. Before this change the hard cast threw, so the problem was at least visible. The MemberNeedsKey path a few lines above already falls back to ParameterSyntax.Identifier; this helper should do the same.",
+      "title": "Source diagnostics with no location are now silently dropped",
+      "detail": "ReportIfLocatedInCompilation drops every diagnostic whose Location is not in source, and that includes Location.None. It does not only drop diagnostics about metadata types. GetPropertyIdentifierLocation returns null whenever the declaring syntax is not a PropertyDeclarationSyntax. One case is a positional record property declared in the project being compiled, whose syntax is a ParameterSyntax; line 926 already handles that case for MemberNeedsKey. So BothStringAndIntKeyAreNull for a source positional record property with [property: Key(null)] is now dropped. Before the change it crashed; now the user gets no error at all. Other source-side diagnostics that can carry a null location are also dropped instead of reported: CollidingMemberNamesInForceMapMode when its location falls back to null, and PartialTypeRequired when primaryLocation is null. This goes against N1 (failures must not pass silently) and N2 (behaviour for same-project types must not change).",
       "statement": null,
       "hunkIds": [
+        "h4",
         "h5",
-        "h7",
-        "h4"
+        "h7"
       ],
       "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        },
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
@@ -2449,13 +2463,6 @@
           "startLine": 925,
           "endLine": 926,
           "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1444,
-          "endLine": 1450,
-          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
         }
       ]
     },
@@ -2463,31 +2470,9 @@
       "id": "f3",
       "kind": "missing",
       "area": "generator",
-      "severity": "medium",
-      "title": "Generator failures can still surface only as a CS8785 warning",
-      "detail": "N1 asks that a generator or analyzer failure not pass as a build warning that leaves the assembly without a resolver. The fix only removes the specific DeclaringSyntaxReferences[0] crash sites. Generator mode (reportDiagnostic is null) has no guard that turns an unexpected exception into an error-level diagnostic, so any other crash on metadata symbols would still produce a CS8785 warning and a missing resolver. Only the new tests assert this; the source has no such guard.",
-      "statement": null,
-      "hunkIds": [
-        "h4",
-        "h6"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 263,
-          "endLine": 272,
-          "quote": "FullModel model = collector.Collect();"
-        }
-      ]
-    },
-    {
-      "id": "f4",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "medium",
-      "title": "No snapshot of generated resolver for cross-assembly generic struct",
-      "detail": "F3 expects the consuming assembly to get a resolver and formatter, as it does when the generic type is declared in the same project. The new tests use TestBehaviors.SkipGeneratedSourcesCheck and only assert that the resolver hint name exists. They never check that the resolver registers a formatter for MyGenericStruct<int> or Item<int>, or that the generated code is right. A resolver missing that registration would still pass.",
+      "severity": "low",
+      "title": "No snapshot or round-trip test of the generated resolver",
+      "detail": "F3 needs the consuming assembly to get a working resolver and formatter, as it does when the generic struct is declared in the same project. The new tests skip the generated-sources check (SkipGeneratedSourcesCheck) and only assert that a source with the resolver hint name exists. Nothing checks the content of the generated formatter for the cross-assembly generic struct, which CollectGeneric collects through OriginalDefinition. Nothing serializes and deserializes an instance through that resolver either. A resolver that omits the formatter or emits a wrong one would still pass these tests.",
       "statement": null,
       "hunkIds": [
         "h9"
@@ -2504,29 +2489,8 @@
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
           "side": "new",
           "startLine": 638,
-          "endLine": 648,
+          "endLine": 641,
           "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
-        }
-      ]
-    },
-    {
-      "id": "f5",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "No round-trip test through the generated resolver",
-      "detail": "No test serializes and deserializes a [MessagePackObject] that has a closed generic struct member from a referenced assembly through the generated resolver, so F3's runtime behaviour is not verified.",
-      "statement": null,
-      "hunkIds": [
-        "h9"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 663,
-          "endLine": 667,
-          "quote": "GenericSerializationInfo genericSerializationInfo = GenericSerializationInfo.Create(type, this.options.Generator.Resolver);"
         },
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
@@ -2536,36 +2500,6 @@
           "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
         }
       ]
-    },
-    {
-      "id": "f6",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "Suppression applies to all rules but is documented only for MsgPack004",
-      "detail": "ReportIfLocatedInCompilation drops every analyzer diagnostic located outside the compilation, including MsgPack005, 007, 003 and others, not only MsgPack004. Only the MsgPack004 help page describes this. The other affected doc/analyzers pages say nothing about it.",
-      "statement": null,
-      "hunkIds": [
-        "h2",
-        "h4",
-        "h7"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 239,
-          "endLine": 239,
-          "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
-        },
-        {
-          "file": "doc/analyzers/MsgPack004.md",
-          "side": "new",
-          "startLine": 49,
-          "endLine": 52,
-          "quote": "This analyzer only reports on members declared in the project being compiled."
-        }
-      ]
     }
   ],
   "refusals": [
@@ -2573,17 +2507,18 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "ai",
-      "reason": "The change decides, and documents in the README and MsgPack004 help page, that analyzer diagnostics about types from referenced assemblies are never reported to the consuming project, which changes the documented behaviour of the analyzer.",
+      "reason": "The change sets and documents a new rule for diagnostics: problems in members of types from referenced assemblies are no longer reported in the consuming project, only in the defining one. That changes documented analyzer behaviour.",
       "hunkIds": [
         "h1",
         "h2",
-        "h4"
+        "h4",
+        "h7"
       ]
     }
   ],
   "quoteCheck": {
-    "checked": 30,
-    "passed": 30,
+    "checked": 27,
+    "passed": 27,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2643,7 +2578,7 @@
       },
       {
         "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Finding f6 (missing) names this hunk"
+        "reason": "Refusal r1 (R7) names this hunk: a person decides"
       },
       {
         "item": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs:372 (h3)",
@@ -2658,20 +2593,16 @@
         "reason": "Finding f2 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h6)",
-        "reason": "Finding f3 (missing) names this hunk"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h7)",
         "reason": "Finding f2 (defect) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h9)",
-        "reason": "Finding f4 (missing) names this hunk"
+        "reason": "Finding f3 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The change decides, and documents in the README and MsgPack004 help page, that analyzer diagnostics about types from referenced assemblies are never reported to the consuming project, which changes the documented behaviour of the analyzer.",
+      "text": "r1 (R7): The change sets and documents a new rule for diagnostics: problems in members of types from referenced assemblies are no longer reported in the consuming project, only in the defining one. That changes documented analyzer behaviour.",
       "acceptedRefusalIds": []
     }
   },
@@ -2680,7 +2611,7 @@
     "reasons": [
       {
         "ruleId": "R-read-share",
-        "text": "Read 8 of 9 hunks: most of the change needs a human",
+        "text": "Read 7 of 9 hunks: most of the change needs a human",
         "tier": "full"
       },
       {
@@ -2695,12 +2626,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
@@ -2710,14 +2641,14 @@
       "h3": "read",
       "h4": "read",
       "h5": "read",
-      "h6": "read",
+      "h6": "supported",
       "h7": "read",
       "h8": "supported",
       "h9": "read"
     },
-    "readHunks": 8,
+    "readHunks": 7,
     "totalHunks": 9,
-    "readLines": 228,
+    "readLines": 226,
     "totalLines": 230,
     "readMinutes": 10,
     "fullMinutes": 10

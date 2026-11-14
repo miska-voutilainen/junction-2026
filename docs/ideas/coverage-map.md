@@ -21,12 +21,12 @@ Every hunk of a change gets exactly one state, Verified, Supported, Read this or
 2. **A tier for the change.** Each rule that fires adds one reason with its id; the tier is the highest asked for, and none means Light.
    - **Full:** `R-size` (over 400 changed lines outside generated files), `R-read-share` (75% or more of the non-generated hunks Read this), `R-escape` (a bug escaped in a touched area, so that area's next changes go to Full).
    - **Focused:** `R-refusal` (the AI refused something), `R-contradiction` (description contradicts code), `R-defect`, `R-sensitive-path` (public attributes, diagnostic IDs, the runtime serializer), `R-area-level` (a touched area isn't Trusted), `R-unread` (some hunks Read this and nothing else fired).
-3. **One honest line on top:** "Full · Read 7 of 8 hunks · ~10 min (full read ~10 min)" (the recorded MP-2283 review), then one line per reason with its id. Reading time assumes 25 changed lines a minute, and the page says so.
+3. **One honest line on top:** "Full · Read 6 of 8 hunks" with the reading time (the recorded MP-2283 review), then one line per reason with its id. Reading time assumes 25 changed lines a minute, and the page says so.
 4. **No model in the routing.** `route()` is pure: the same review and ladder levels give the same tier. It runs in the pipeline and in the browser, so a simulated escape re-routes the page live.
 
 ## What we measured
 
-Tieto's 4 changes: **0 Light · 0 Focused · 4 Full; read 55 of 473 hunks, ~51 of 119 min**. Per change: MP-2283 read 7 of 8, MP-2129 20 of 33, MP-2234 7 of 9, MP-2297 21 of 423 (402 generated snapshot hunks). All 10 planted-bug runs also went Full. Three changes went Full by `R-read-share` (findings or missing evidence on most hunks), MP-2129 by `R-size` (1043 changed lines). So the tier saves nothing yet; the reading list does, mostly by leaving MP-2297's generated snapshots out.
+Tieto's 4 changes: **0 Light · 1 Focused · 3 Full; read 55 of 473 hunks, ~48 of 119 min**. Per change: MP-2283 read 6 of 8, MP-2129 23 of 33, MP-2234 5 of 9, MP-2297 21 of 423 (402 generated snapshot hunks). Two changes went Full by `R-read-share` (MP-2283: 6 of 8 hunks; MP-2297: all 21 non-generated hunks), MP-2129 by `R-size` (1043 changed lines). MP-2234 is Focused: 5 of 9 hunks is under the 75% share. So the tier saves little yet; the reading list does, mostly by leaving MP-2297's generated snapshots out.
 
 ## How to adopt it
 

@@ -1,5 +1,5 @@
 /**
- * `pnpm evals [--runs <n>] [--score-only]`: records the eval's runs (unless
+ * `pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]`: records the eval's runs (unless
  * scoring only), scores them against the answer keys, writes the report card,
  * routes the Tieto reviews again with the levels it measured and logs the
  * anchored-versus-blind result in docs/lessons.md. Spec section 5, Pipeline CLI.
@@ -31,6 +31,13 @@ import { anchoredVsBlindVerdict, scoreReportCard, type ContradictionRuns } from 
 /** Comparison runs per mode and plant when `--runs` is not given (spec section 5). */
 export const DEFAULT_RUNS_PER_MODE = 2;
 
+/**
+ * Blind runs per planted bug when `--plant-runs` is not given. One run flips on
+ * security plants (A3 catches them in some runs and not others); three give a
+ * majority vote and a per-plant rate for about 20 extra runs' cost.
+ */
+export const DEFAULT_PLANT_RUNS = 3;
+
 /** The four Tieto changes: re-routed with the measured levels, and counted in the hallucination totals. */
 const TIETO_CHANGE_IDS = ["mp-2129", "mp-2234", "mp-2283", "mp-2297"];
 
@@ -39,25 +46,36 @@ const LESSONS_FILE = "docs/lessons.md";
 /** The most comparison runs per mode `--score-only` looks for; far above what the eval records. */
 const MAX_RUNS_SCANNED = 50;
 
-const usage = "Usage: pnpm evals [--runs <n>] [--score-only]";
+const usage = "Usage: pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]";
 
 /** Runs the eval. @throws when the answer keys, runs or report card can't be read or written. */
 export async function runEvalCommand(argv: string[]): Promise<void> {
   const { values } = parseArgs({
     args: argv,
-    options: { runs: { type: "string" }, "score-only": { type: "boolean" } },
+    options: {
+      runs: { type: "string" },
+      "plant-runs": { type: "string" },
+      "score-only": { type: "boolean" },
+    },
   });
   const isScoreOnly = values["score-only"] === true;
   const requestedRuns = values.runs === undefined ? DEFAULT_RUNS_PER_MODE : Number(values.runs);
   if (!Number.isInteger(requestedRuns) || requestedRuns < 1)
     throw new Error(`--runs takes a whole number from 1, got "${values.runs}". ${usage}`);
+  const requestedPlantRuns =
+    values["plant-runs"] === undefined ? DEFAULT_PLANT_RUNS : Number(values["plant-runs"]);
+  if (!Number.isInteger(requestedPlantRuns) || requestedPlantRuns < 1)
+    throw new Error(
+      `--plant-runs takes a whole number from 1, got "${values["plant-runs"]}". ${usage}`,
+    );
 
   const startedAt = Date.now();
   const keys = await loadAnswerKeys();
-  const costUsd = isScoreOnly ? 0 : await recordRuns(keys, requestedRuns);
+  const costUsd = isScoreOnly ? 0 : await recordRuns(keys, requestedRuns, requestedPlantRuns);
   const runsPerMode = isScoreOnly ? await measuredRunsPerMode(keys) : requestedRuns;
+  const plantRuns = isScoreOnly ? await measuredPlantRuns(keys) : requestedPlantRuns;
 
-  const card = await scoreAndReroute(keys, runsPerMode, !isScoreOnly);
+  const card = await scoreAndReroute(keys, runsPerMode, plantRuns, !isScoreOnly);
   const verdict = anchoredVsBlindVerdict(card.anchoredVsBlind);
   await appendLessonsEntry(LESSONS_FILE, {
     title: "Anchored versus blind-first",
@@ -68,7 +86,11 @@ export async function runEvalCommand(argv: string[]): Promise<void> {
 }
 
 /** Records every missing run; returns what the new ones cost. */
-async function recordRuns(keys: readonly AnswerKey[], runsPerMode: number): Promise<number> {
+async function recordRuns(
+  keys: readonly AnswerKey[],
+  runsPerMode: number,
+  plantRuns: number,
+): Promise<number> {
   if (existsSync(".env")) process.loadEnvFile(".env");
   const repoDir = process.env.SAMPLE_REPO_DIR;
   if (!repoDir)
@@ -77,7 +99,7 @@ async function recordRuns(keys: readonly AnswerKey[], runsPerMode: number): Prom
     );
   const levels = levelsFromReportCard(await loadReportCard());
   const store = modelStore(repoDir, levels);
-  const groups = planEvalJobs(keys, runsPerMode, changeInputIdOf);
+  const groups = planEvalJobs(keys, runsPerMode, plantRuns, changeInputIdOf);
   const outcomes = await runEvalJobs(groups, store, (outcome) =>
     console.log(
       `${outcome.job.label} · ${outcome.status === "failed" ? "run failed" : outcome.status}`,
@@ -106,7 +128,8 @@ function modelStore(repoDir: string, levels: Record<Area, LadderLevel>): EvalSto
         levels,
         mode: job.mode,
         steps: job.steps,
-        // Comparison runs number from 1; the planted-bug run is run index 0.
+        // Comparison runs number from 1; a planted bug's first run is run index 0. The
+        // index is part of the recording key, so runs 2..n are new model calls.
         runIndex: job.comparison?.runNumber ?? 0,
       });
       await writeRecordedReview(review, job.comparison);
@@ -132,10 +155,27 @@ async function measuredRunsPerMode(keys: readonly AnswerKey[]): Promise<number> 
   return highest;
 }
 
+/** The most blind runs any planted bug has on disk (run 1 is review.json), so a score-only card says "of 3" after three runs. */
+async function measuredPlantRuns(keys: readonly AnswerKey[]): Promise<number> {
+  const plantKeys = keys.filter((key) => key.kind === "planted-bug");
+  const hasFirstRun = (await Promise.all(plantKeys.map((key) => loadRecordedRun(key.plantId)))).some(
+    (run) => run !== null,
+  );
+  let highest = hasFirstRun ? 1 : 0;
+  for (let k = 2; k <= MAX_RUNS_SCANNED; k++) {
+    const runs = await Promise.all(
+      plantKeys.map((key) => loadRecordedRun(key.plantId, { mode: "blind", runNumber: k })),
+    );
+    if (runs.some((run) => run !== null)) highest = k;
+  }
+  return highest;
+}
+
 /** Scores the runs on disk, writes the card, then re-routes the Tieto reviews with the card's levels. */
 async function scoreAndReroute(
   keys: readonly AnswerKey[],
   runsPerMode: number,
+  plantRuns: number,
   dropStaleRuns: boolean,
 ): Promise<ReportCard> {
   const plantedBugs = await Promise.all(
@@ -144,7 +184,7 @@ async function scoreAndReroute(
       .map(async (key) => ({
         key,
         change: await loadChangeInput(key.plantId),
-        review: await loadEvalRun(key.plantId, undefined, dropStaleRuns),
+        reviews: await loadPlantRuns(key.plantId, plantRuns, dropStaleRuns),
       })),
   );
   const contradictions: ContradictionRuns[] = await Promise.all(
@@ -175,6 +215,23 @@ async function scoreAndReroute(
   await writeReportCard(card);
   for (const review of rerouted) await writeRecordedReview(review);
   return card;
+}
+
+/** A planted bug's runs: run 1 is review.json, run k >= 2 is blind/<k>.json. */
+function loadPlantRuns(
+  plantId: string,
+  count: number,
+  dropStaleRuns: boolean,
+): Promise<(Review | null)[]> {
+  return Promise.all(
+    Array.from({ length: count }, (_, index) =>
+      loadEvalRun(
+        plantId,
+        index === 0 ? undefined : { mode: "blind", runNumber: index + 1 },
+        dropStaleRuns,
+      ),
+    ),
+  );
 }
 
 function loadRuns(

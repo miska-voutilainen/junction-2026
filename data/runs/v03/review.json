@@ -7,25 +7,25 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T054431Z",
-    "startedAt": "2026-11-14T05:44:31.052Z",
-    "finishedAt": "2026-11-14T05:46:25.438Z",
-    "durationMs": 114386,
+    "id": "20261114T122418Z",
+    "startedAt": "2026-11-14T12:24:18.701Z",
+    "finishedAt": "2026-11-14T12:25:38.246Z",
+    "durationMs": 79545,
     "usage": {
-      "inputTokens": 142159,
-      "outputTokens": 13568,
-      "costUsd": 1.9329138000000001,
+      "inputTokens": 142235,
+      "outputTokens": 13987,
+      "costUsd": 1.957241,
       "calls": 3
     }
   },
@@ -2391,39 +2391,11 @@
   "findings": [
     {
       "id": "f1",
-      "kind": "scope-creep",
-      "area": "security",
-      "severity": "high",
-      "title": "UntrustedData no longer resists hash-collision attacks",
-      "detail": "h7 changes MessagePackSecurity.UntrustedData so that HashCollisionResistant is false, the same as TrustedData. As a result, GetEqualityComparer on UntrustedData returns EqualityComparer<T>.Default. This has nothing to do with the generator/analyzer crash in MP-2283. Any dictionary or hash set built from untrusted payload keys loses its SipHash-based protection, so crafted keys could degrade those collections and be used for denial of service. The XML doc on HashCollisionResistant still says the value is true for UntrustedData, so the public documentation now contradicts the behaviour.",
-      "statement": null,
-      "hunkIds": [
-        "h7"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack/MessagePackSecurity.cs",
-          "side": "new",
-          "startLine": 35,
-          "endLine": 39,
-          "quote": "HashCollisionResistant = false,"
-        },
-        {
-          "file": "src/MessagePack/MessagePackSecurity.cs",
-          "side": "new",
-          "startLine": 72,
-          "endLine": 75,
-          "quote": "/// The value is <see langword=\"false\"/> for <see cref=\"TrustedData\"/> and <see langword=\"true\"/> for <see cref=\"UntrustedData\"/>."
-        }
-      ]
-    },
-    {
-      "id": "f2",
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "Diagnostics about source code with a null location are silently dropped",
-      "detail": "Every analyzer diagnostic now goes through ReportIfLocatedInCompilation, which drops any diagnostic whose location is not in source. This includes Location.None, which is what Diagnostic.Create produces when it is given a null location. Some location helpers return null even for code in the project being compiled. One example is the new GetPropertyIdentifierLocation: it only accepts PropertyDeclarationSyntax, so for a positional record parameter (ParameterSyntax) it returns null. The member loop already handles that case at line 926. So BothStringAndIntKeyAreNull for a source-declared positional record property used to throw InvalidCastException and is now silently dropped, with no diagnostic at all. Other diagnostics are dropped the same way whenever their location helper returns null for source code (for example PartialTypeRequired with a null primaryLocation). The filter should only drop locations that come from metadata or another compilation, not every missing location for a source symbol. That would match N2 and the intent of N1 that failures are not silent.",
+      "title": "Location filter silently drops in-source diagnostics that have no location",
+      "detail": "In analyzer mode the new wrapper sends every diagnostic through ReportIfLocatedInCompilation. That method drops any diagnostic whose location is not in source, including Location.None. This affects types in the project being compiled, not only types from metadata. For example, the new GetPropertyIdentifierLocation only matches PropertyDeclarationSyntax. For a positional record property (whose syntax is a ParameterSyntax), BothStringAndIntKeyAreNull now gets a null location and is silently discarded. The MemberNeedsKey path a few lines earlier does handle ParameterSyntax. Before this change that case crashed. Now the user gets no diagnostic at all for an invalid key in their own project, which goes against N2 and the expectation that diagnostics for owned types are still reported. Any other in-source diagnostic built with a null location is also lost without a trace.",
       "statement": null,
       "hunkIds": [
         "h3",
@@ -2455,21 +2427,61 @@
       ]
     },
     {
-      "id": "f3",
+      "id": "f2",
       "kind": "missing",
       "area": "generator",
       "severity": "low",
-      "title": "Generator failures can still pass as a build warning",
-      "detail": "N1 asks that a generator or analyzer failure must not pass silently as a warning that leaves the assembly without a resolver. The change fixes the specific IndexOutOfRangeException and adds tests that fail on warning-level generator diagnostics. Nothing in production code changes what happens on an unexpected exception: it still surfaces only as CS8785/AD0001 warnings, and the build succeeds without the generated resolver.",
+      "title": "No generated-output snapshot or round-trip test for cross-assembly struct",
+      "detail": "F3 expects the consuming assembly to get a correct resolver and formatter, and the expectation asks for a snapshot of the generated code plus a runtime serialize/deserialize round-trip. The new tests skip the generated-sources check and only confirm that a file with the resolver's hint name exists. Generated code that is wrong but compiles, or a missing formatter registration for the closed generic struct, would not be caught.",
       "statement": null,
-      "hunkIds": [],
+      "hunkIds": [
+        "h9"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 648,
+          "endLine": 654,
+          "quote": "this.CollectCore(type.OriginalDefinition, callerSymbol);"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 638,
+          "endLine": 647,
+          "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+        },
+        {
+          "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
+          "side": "new",
+          "startLine": 657,
+          "endLine": 658,
+          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "medium",
+      "title": "Unexpected generator/analyzer exceptions still surface only as warnings",
+      "detail": "N1 requires that a generator or analyzer failure must not pass silently as a build warning that leaves the assembly without a resolver. The change removes two specific out-of-range accesses. Nothing turns an unexpected exception during collection into an error-level diagnostic or a build failure, so any similar crash would still show up only as a CS8785 or AD0001 warning and the build would succeed without a resolver. Only the new tests guard against this; real builds do not.",
+      "statement": null,
+      "hunkIds": [
+        "h3",
+        "h4",
+        "h5",
+        "h6"
+      ],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
           "startLine": 263,
-          "endLine": 273,
-          "quote": "TypeCollector collector = new(compilation, options, referenceSymbols, targetType, reportAnalyzerDiagnostic, cancellationToken);"
+          "endLine": 272,
+          "quote": "public static FullModel? Collect(Compilation compilation, AnalyzerOptions options, ReferenceSymbols referenceSymbols, Action<Diagnostic>? reportAnalyzerDiagnostic, ITypeSymbol targetType, CancellationToken cancellationToken)"
         }
       ]
     }
@@ -2479,26 +2491,24 @@
       "id": "r1",
       "ruleId": "R2",
       "source": "ai",
-      "reason": "The change decides how untrusted input is handled: it turns off hash-collision-resistant comparers for MessagePackSecurity.UntrustedData.",
+      "reason": "The change turns off hash collision resistance for MessagePackSecurity.UntrustedData, which changes how untrusted input is protected against crafted hash keys; that is a security design decision.",
       "hunkIds": [
         "h7"
       ]
     },
     {
       "id": "r2",
-      "ruleId": "R7",
+      "ruleId": "R6",
       "source": "ai",
-      "reason": "The change decides, and documents in the README and the MsgPack004 help page, that analyzer diagnostics about members of types from referenced assemblies are no longer reported in the consuming project.",
+      "reason": "The UntrustedData HashCollisionResistant change cannot be traced to the generator/analyzer crash requirement, so whether to keep it is the change owner's decision.",
       "hunkIds": [
-        "h1",
-        "h2",
-        "h3"
+        "h7"
       ]
     }
   ],
   "quoteCheck": {
-    "checked": 26,
-    "passed": 26,
+    "checked": 27,
+    "passed": 27,
     "downgraded": 0,
     "dropped": 0,
     "failures": []
@@ -2549,47 +2559,38 @@
     ],
     "notChecked": [
       {
-        "item": "README.md:1636 (h1)",
-        "reason": "Refusal r2 (R7) names this hunk: a person decides"
-      },
-      {
-        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Refusal r2 (R7) names this hunk: a person decides"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "reason": "Finding f3 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
-        "reason": "Finding f2 (defect) names this hunk"
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack/MessagePackSecurity.cs:34 (h7)",
-        "reason": "Finding f1 (scope-creep) names this hunk"
+        "reason": "Refusal r1 (R2) names this hunk: a person decides"
+      },
+      {
+        "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h9)",
+        "reason": "Finding f2 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R2): The change decides how untrusted input is handled: it turns off hash-collision-resistant comparers for MessagePackSecurity.UntrustedData. r2 (R7): The change decides, and documents in the README and the MsgPack004 help page, that analyzer diagnostics about members of types from referenced assemblies are no longer reported in the consuming project.",
+      "text": "r1 (R2): The change turns off hash collision resistance for MessagePackSecurity.UntrustedData, which changes how untrusted input is protected against crafted hash keys; that is a security design decision. r2 (R6): The UntrustedData HashCollisionResistant change cannot be traced to the generator/analyzer crash requirement, so whether to keep it is the change owner's decision.",
       "acceptedRefusalIds": []
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
-      {
-        "ruleId": "R-read-share",
-        "text": "Read 7 of 9 hunks: most of the change needs a human",
-        "tier": "full"
-      },
       {
         "ruleId": "R-refusal",
         "text": "2 items refused: a human decides",
@@ -2607,12 +2608,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
@@ -2622,21 +2623,21 @@
       }
     ],
     "coverage": {
-      "h1": "read",
-      "h2": "read",
+      "h1": "supported",
+      "h2": "supported",
       "h3": "read",
       "h4": "read",
       "h5": "read",
       "h6": "read",
       "h7": "read",
       "h8": "supported",
-      "h9": "supported"
+      "h9": "read"
     },
-    "readHunks": 7,
+    "readHunks": 6,
     "totalHunks": 9,
-    "readLines": 41,
+    "readLines": 218,
     "totalLines": 230,
-    "readMinutes": 2,
+    "readMinutes": 9,
     "fullMinutes": 10
   }
 }

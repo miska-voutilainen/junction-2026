@@ -7,7 +7,7 @@
   "kind": "contradiction-plant",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T055416Z",
-    "startedAt": "2026-11-14T05:54:16.141Z",
-    "finishedAt": "2026-11-14T05:54:32.855Z",
-    "durationMs": 16714,
+    "id": "20261114T122826Z",
+    "startedAt": "2026-11-14T12:28:26.167Z",
+    "finishedAt": "2026-11-14T12:28:28.758Z",
+    "durationMs": 2591,
     "usage": {
       "inputTokens": 132299,
       "outputTokens": 12825,
@@ -2377,14 +2377,6 @@
         "reason": "Finding f1 (contradiction) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
         "reason": "Finding f1 (contradiction) names this hunk"
       },
@@ -2399,13 +2391,8 @@
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
-      {
-        "ruleId": "R-read-share",
-        "text": "Read 7 of 8 hunks: most of the change needs a human",
-        "tier": "full"
-      },
       {
         "ruleId": "R-contradiction",
         "text": "The PR description contradicts the code in 1 place",
@@ -2413,12 +2400,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
@@ -2426,17 +2413,17 @@
       "h1": "read",
       "h2": "read",
       "h3": "read",
-      "h4": "read",
-      "h5": "read",
+      "h4": "supported",
+      "h5": "supported",
       "h6": "read",
       "h7": "supported",
       "h8": "read"
     },
-    "readHunks": 7,
+    "readHunks": 5,
     "totalHunks": 8,
-    "readLines": 226,
+    "readLines": 222,
     "totalLines": 228,
-    "readMinutes": 10,
+    "readMinutes": 9,
     "fullMinutes": 10
   }
 }

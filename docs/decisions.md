@@ -2,6 +2,13 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Three runs per planted bug, scored by majority
+
+- **Context:** With one run per planted bug, the security results looked noisy: a single run could miss or catch a plant by luck.
+- **Decision:** `pnpm evals` runs each planted bug 3 times; a plant counts as caught when at least 2 of 3 runs catch it (spec updated in `e5e2263`). rv2 result: 8 of 10 plants, 24 of 30 runs; the report card keeps `runs` and `caughtRuns` per plant.
+- **Why:** A majority rule is stable against one lucky or unlucky run and costs 3x the plant runs, not more.
+- **Rejected:** One run per plant (noisy on security); scoring any-of-3 (rewards luck); changing the scorer to count `scope-creep` findings (moves the goalposts after seeing the results; the fix went into the prompt, `a3.v2`, instead).
+
 ## 2026-11-14 · T16: 2 runs per mode, blind runs shared by prompt, counts are the measured n
 
 - **Context:** The spec asked for 3 anchored and 3 blind runs of each of the 5 contradiction plants, about 30 more reviews of a shared credit budget. Stage 1 ran 2 per mode and both modes caught 10 of 10.

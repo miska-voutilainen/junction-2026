@@ -7,7 +7,7 @@
   "kind": "contradiction-plant",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T055310Z",
-    "startedAt": "2026-11-14T05:53:10.531Z",
-    "finishedAt": "2026-11-14T05:53:25.386Z",
-    "durationMs": 14855,
+    "id": "20261114T122837Z",
+    "startedAt": "2026-11-14T12:28:37.685Z",
+    "finishedAt": "2026-11-14T12:28:39.609Z",
+    "durationMs": 1924,
     "usage": {
       "inputTokens": 67986,
       "outputTokens": 8652,
@@ -2408,22 +2408,6 @@
     ],
     "notChecked": [
       {
-        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Analyzer is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
         "reason": "Finding f1 (contradiction) names this hunk"
       },
@@ -2438,13 +2422,8 @@
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
-      {
-        "ruleId": "R-read-share",
-        "text": "Read 6 of 8 hunks: most of the change needs a human",
-        "tier": "full"
-      },
       {
         "ruleId": "R-contradiction",
         "text": "The PR description contradicts the code in 1 place",
@@ -2452,28 +2431,28 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       }
     ],
     "coverage": {
       "h1": "supported",
-      "h2": "read",
-      "h3": "read",
-      "h4": "read",
-      "h5": "read",
+      "h2": "supported",
+      "h3": "supported",
+      "h4": "supported",
+      "h5": "supported",
       "h6": "read",
       "h7": "supported",
       "h8": "read"
     },
-    "readHunks": 6,
+    "readHunks": 2,
     "totalHunks": 8,
-    "readLines": 221,
+    "readLines": 210,
     "totalLines": 228,
     "readMinutes": 9,
     "fullMinutes": 10

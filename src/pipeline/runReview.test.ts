@@ -133,7 +133,7 @@ function fakeClient(a2Claims: unknown[]): {
   const answers: Record<string, unknown> = {
     "a1.v1": expectation,
     "a2.v1": { story, claims: a2Claims },
-    "a3.v1": areaReview,
+    "a3.v2": areaReview,
     "a4.v1": descriptionCheck,
   };
   const client: ModelClient = {
@@ -191,7 +191,7 @@ describe("runReview with a fake model", () => {
     expect(result.reviewer.promptVersions).toEqual({
       a1: "a1.v1",
       a2: "a2.v1",
-      a3: "a3.v1",
+      a3: "a3.v2",
       a4: "a4.v1",
       a5: "none",
     });
@@ -261,7 +261,7 @@ describe("runReview with a fake model", () => {
     expect(result.expectation).toBeNull();
     expect(result.reviewer.promptVersions).toMatchObject({ a1: "none", a3: "none", a4: "a4.v1" });
     expect(prompts["a1.v1"]).toBeUndefined();
-    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(prompts["a3.v2"]).toBeUndefined();
     expect(prompts["a2.v1"].indexOf("AUTHOR-DESCRIPTION-TEXT")).toBeLessThan(
       prompts["a2.v1"].indexOf("<requirement"),
     );
@@ -271,7 +271,7 @@ describe("runReview with a fake model", () => {
 
   it("blind comparison steps are A1, A2 and A4: A3 never runs", async () => {
     const { result, prompts } = await review([goodClaim], { steps: ["a1", "a2", "a4"] });
-    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(prompts["a3.v2"]).toBeUndefined();
     expect(result.reviewer.promptVersions).toMatchObject({ a1: "a1.v1", a3: "none", a4: "a4.v1" });
     expect(result.refusals).toEqual([]);
   });
@@ -309,7 +309,7 @@ describe("runReview with a fake model", () => {
       levels: levelsFromReportCard(null),
       steps: ["a1", "a2", "a4"],
     });
-    expect(prompts["a3.v1"]).toBeUndefined();
+    expect(prompts["a3.v2"]).toBeUndefined();
     expect(result.refusals).toHaveLength(1);
     expect(result.refusals[0]).toMatchObject({ source: "rule", ruleId: "R7" });
     expect(result.refusals[0]?.hunkIds).toHaveLength(1);
@@ -365,7 +365,7 @@ describe("runReview with a fake model", () => {
 
   it("sends the author description to A4 only, after the code was described without it", async () => {
     const { prompts } = await review([goodClaim]);
-    for (const version of ["a1.v1", "a2.v1", "a3.v1"])
+    for (const version of ["a1.v1", "a2.v1", "a3.v2"])
       expect(prompts[version]).not.toContain("AUTHOR-DESCRIPTION-TEXT");
     expect(prompts["a4.v1"]).toContain("AUTHOR-DESCRIPTION-TEXT");
   });

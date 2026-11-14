@@ -1,7 +1,10 @@
 /**
  * Planted-bug calibration, measured: scores recorded runs against the answer
  * keys and returns the report card. A planted-bug run is caught when a finding
- * sits in the plant's area on its lines; a contradiction run is caught when A4
+ * sits in the plant's area on its lines; a plant counts as caught when a strict
+ * majority of its runs caught it (2 of 3), because one run flips on security
+ * plants and the ladder's per-plant meaning ("caught") should not depend on luck.
+ * The card also keeps each plant's `caughtRuns` of `runs`. A contradiction run is caught when A4
  * flags the planted false sentence. Catch rates per area set the trust ladder's
  * levels, and the blind-versus-anchored count says whether reading the code
  * before the description buys anything. Pure: files and models are the caller's
@@ -21,11 +24,15 @@ import { reviewerVersion } from "../assembleReview";
 import { findContradictionMatch } from "./matchContradiction";
 import { countFindingsOnPlants, findPlantedBugMatch } from "./matchPlantedBug";
 
-/** One planted-bug variant: its key, its change input (for the commit link) and its blind run, null when the run is missing. */
+/**
+ * One planted-bug variant: its key, its change input (for the commit link) and
+ * its blind runs. Index k-1 holds run k; null is a run that failed or was never
+ * made, which counts as not caught. The array length is the runs planned.
+ */
 export interface PlantedBugRun {
   key: AnswerKey;
   change: ChangeInput;
-  review: Review | null;
+  reviews: ReadonlyArray<Review | null>;
 }
 
 /**
@@ -56,7 +63,7 @@ export interface EvalInput {
  */
 export function scoreReportCard(input: EvalInput): Omit<ReportCard, "routingSpread"> {
   const runs = [
-    ...input.plantedBugs.map((plant) => plant.review),
+    ...input.plantedBugs.flatMap((plant) => plant.reviews),
     ...input.contradictions.flatMap((plant) => [...plant.anchored, ...plant.blind]),
   ].filter((review): review is Review => review !== null);
 
@@ -84,13 +91,18 @@ function reviewerOf(runs: readonly Review[]): ReportCard["reviewer"] {
 function scoreArea(area: Area, plantedBugs: readonly PlantedBugRun[]): ReportCard["areas"][number] {
   const plants = plantedBugs
     .filter((plant) => plant.key.area === area)
-    .map(({ key, change, review }) => {
-      const match = review ? findPlantedBugMatch(review.findings, key) : null;
+    .map(({ key, change, reviews }) => {
+      const matches = reviews.map((review) => (review ? findPlantedBugMatch(review.findings, key) : null));
+      const caughtRuns = matches.filter((match) => match !== null).length;
+      // Strict majority: 2 of 3 caught, 1 of 3 not; a tie (1 of 2) is not caught.
+      const isCaught = caughtRuns * 2 > reviews.length;
       return {
         plantId: key.plantId,
         changeId: key.changeId,
-        caught: match !== null,
-        findingId: match?.id ?? null,
+        caught: isCaught,
+        runs: reviews.length,
+        caughtRuns,
+        findingId: matches.find((match) => match !== null)?.id ?? null,
         defect: key.defect,
         variantUrl: `https://github.com/${change.repo}/commit/${change.headSha}`,
       };
@@ -149,11 +161,13 @@ function sumFindingsOnPlants(
 ): ReportCard["findingsOnPlants"] {
   let total = 0;
   let matchedPlant = 0;
-  for (const { key, review } of plantedBugs) {
-    if (!review) continue;
-    const counts = countFindingsOnPlants(review.findings, key);
-    total += counts.total;
-    matchedPlant += counts.matchedPlant;
+  for (const { key, reviews } of plantedBugs) {
+    for (const review of reviews) {
+      if (!review) continue;
+      const counts = countFindingsOnPlants(review.findings, key);
+      total += counts.total;
+      matchedPlant += counts.matchedPlant;
+    }
   }
   return { total, matchedPlant };
 }

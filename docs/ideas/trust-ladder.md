@@ -26,19 +26,19 @@ The numbers 3, 60% and 5 live in one policy file, so a team can argue about them
 
 ## What we measured
 
-From the report card, one blind run per planted bug:
+From the report card (reviewer rv2), three runs per planted bug; a plant counts as caught when at least 2 of 3 runs catch it:
 
-- **Generator:** 4 of 4 caught. Calibrated.
-- **Analyzer:** 3 of 3 caught. Calibrated.
-- **Security:** 0 of 3 caught, all real misses ([lessons](../lessons.md#2026-11-14--security-caught-0-of-3-planted-bugs-all-three-are-real-misses)). Shadow: a human reads every security hunk.
+- **Generator:** 4 of 4 caught, in every run (12 of 12). Calibrated.
+- **Analyzer:** 3 of 3 caught, in every run (9 of 9). Calibrated.
+- **Security:** 1 of 3 caught: v06 in 3 of 3 runs, v03 and v10 in 0 of 3 (no finding at all). Shadow: a human reads every security hunk ([lessons](../lessons.md#correction-2026-11-14)).
 - **Performance:** no planted bugs, so Shadow; its catch rate is not measured yet.
 
-No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 40 findings across the 10 runs, 8 matched a plant; the rest aren't scored.
+No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. Of 117 findings across the 30 runs, 24 matched a plant (24 of 30 runs caught theirs); the rest aren't scored.
 
 ## How to adopt it
 
 - **You need:** areas with path rules, a planter who never sees the prompts, an answer key per bug.
-- **It costs:** one reviewer run per plant, plus writing the plants. Our 10 plant runs cost $1.78 to $3.59 each ($22.14 in all) and took 2 to 4 minutes each.
+- **It costs:** one reviewer run per plant, plus writing the plants. Our first 10 plant runs (rv1, before the three-run scoring) cost $1.78 to $3.59 each ($22.14 in all) and took 2 to 4 minutes each.
 - **First step:** start every area in Shadow, plant three bugs in the area you care about most, and publish the catch rate with its sample size.
 
 ## Limits and failure modes

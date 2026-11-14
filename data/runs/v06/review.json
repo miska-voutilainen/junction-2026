@@ -7,25 +7,25 @@
   "kind": "planted-bug",
   "mode": "blind-first",
   "reviewer": {
-    "version": "rv1",
+    "version": "rv2",
     "model": "claude-opus-5-5",
     "promptVersions": {
       "a1": "a1.v1",
       "a2": "a2.v1",
-      "a3": "a3.v1",
+      "a3": "a3.v2",
       "a4": "none",
       "a5": "none"
     }
   },
   "run": {
-    "id": "20261114T054625Z",
-    "startedAt": "2026-11-14T05:46:25.459Z",
-    "finishedAt": "2026-11-14T05:48:14.703Z",
-    "durationMs": 109244,
+    "id": "20261114T122538Z",
+    "startedAt": "2026-11-14T12:25:38.301Z",
+    "finishedAt": "2026-11-14T12:26:43.719Z",
+    "durationMs": 65418,
     "usage": {
-      "inputTokens": 142114,
-      "outputTokens": 12951,
-      "costUsd": 1.9051418,
+      "inputTokens": 142189,
+      "outputTokens": 12393,
+      "costUsd": 1.8939499999999998,
       "calls": 3
     }
   },
@@ -2357,29 +2357,21 @@
     {
       "id": "f1",
       "kind": "defect",
-      "area": "generator",
-      "severity": "medium",
-      "title": "Filter drops warnings about the consumer's own types reached via metadata members",
-      "detail": "TypeMustBeMessagePackObject is placed at callerSymbol.Locations[0]. Take a consumer that uses Item<Foo>, where Item<T> comes from a referenced assembly and Foo is the consumer's own type without [MessagePackObject]. CollectCore(Foo) is reached through Item's member, so callerSymbol is that metadata property and its location is in metadata. ReportIfLocatedInCompilation then throws the warning away. The problem is in the consuming project, and the defining assembly can never report it. The user gets no MsgPack003-style warning and the type silently gets no formatter.",
+      "area": "security",
+      "severity": "high",
+      "title": "String keys lose collision-resistant hashing under UntrustedData",
+      "detail": "GetEqualityComparer<T> now returns EqualityComparer<T>.Default for string even when HashCollisionResistant is true. Before, it returned the SipHash-based StringEqualityComparer. Any dictionary or hash set deserialized with UntrustedData and string keys is therefore open again to hash-flooding denial of service. The change also contradicts the method's own remarks, which promise a collision-resistant comparer when HashCollisionResistant is active. The requirement does not ask for this: it is a runtime library change with no link to the generator or analyzer crash.",
       "statement": null,
       "hunkIds": [
-        "h3",
-        "h6"
+        "h7"
       ],
       "citations": [
         {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "file": "src/MessagePack/MessagePackSecurity.cs",
           "side": "new",
-          "startLine": 1339,
-          "endLine": 1345,
-          "quote": "Location location = callerSymbol is not null ? callerSymbol.Locations[0] : formattedType.Locations[0];"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1444,
-          "endLine": 1450,
-          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+          "startLine": 128,
+          "endLine": 135,
+          "quote": "return this.HashCollisionResistant && typeof(T) != typeof(string) ? GetHashCollisionResistantEqualityComparer<T>() : EqualityComparer<T>.Default;"
         }
       ]
     },
@@ -2388,38 +2380,8 @@
       "kind": "defect",
       "area": "generator",
       "severity": "medium",
-      "title": "BothStringAndIntKeyAreNull is lost for positional record properties",
-      "detail": "GetPropertyIdentifierLocation only accepts PropertyDeclarationSyntax. A positional record property such as [property: Key(...)] declared in source has a ParameterSyntax declaration, so the helper returns null. The new filter then drops the diagnostic because Location.None is not in source. The old code threw here; the new code says nothing for a real problem in the user's own code. The MemberNeedsKey path just above already handles ParameterSyntax, and this helper should do the same.",
-      "statement": null,
-      "hunkIds": [
-        "h4",
-        "h6",
-        "h3"
-      ],
-      "citations": [
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 1434,
-          "endLine": 1434,
-          "quote": "private static Location? GetPropertyIdentifierLocation(IPropertySymbol property) => (property.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as PropertyDeclarationSyntax)?.Identifier.GetLocation();"
-        },
-        {
-          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
-          "side": "new",
-          "startLine": 925,
-          "endLine": 926,
-          "quote": "var identifier = (syntax as PropertyDeclarationSyntax)?.Identifier ?? (syntax as ParameterSyntax)?.Identifier;"
-        }
-      ]
-    },
-    {
-      "id": "f3",
-      "kind": "missing",
-      "area": "generator",
-      "severity": "low",
-      "title": "Generator and analyzer failures still surface only as warnings",
-      "detail": "N1 asks that a generator or analyzer failure not pass as a CS8785 or AD0001 warning that leaves the assembly without a resolver. The change fixes two [0] index sites but adds nothing that reports an unexpected exception at error level. It also adds a path that discards diagnostics without saying so: any diagnostic with a null or out-of-compilation location is dropped. The new tests catch a regression for the cases they cover, but in user builds any other failure still degrades to a warning and a missing resolver.",
+      "title": "Blanket filter hides diagnostics that affect the consumer's generated code",
+      "detail": "ReportIfLocatedInCompilation drops every analyzer diagnostic whose location is null, in metadata, or outside the compilation. This is not limited to the metadata-member cases the fix targets. The consuming project still generates a formatter for the referenced generic definition through CollectCore(type.OriginalDefinition). So problems found while collecting that type are now silent in the consuming build: an unkeyed member, a member type that is not a MessagePackObject (TypeMustBeMessagePackObject at callerSymbol.Locations[0]), or a missing constructor. Those problems shape the code this assembly emits. Any in-source diagnostic whose location lookup returns null is also discarded now instead of being reported without a location, for example PartialTypeRequired when primaryLocation is null. This works against N1: a problem passes without any signal.",
       "statement": null,
       "hunkIds": [
         "h3",
@@ -2429,19 +2391,26 @@
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
           "side": "new",
-          "startLine": 236,
-          "endLine": 242,
-          "quote": "this.reportDiagnostic = reportAnalyzerDiagnostic is null ? null : diagnostic => ReportIfLocatedInCompilation(reportAnalyzerDiagnostic, diagnostic);"
+          "startLine": 1444,
+          "endLine": 1450,
+          "quote": "if (diagnostic.Location.IsInSource && this.compilation.ContainsSyntaxTree(diagnostic.Location.SourceTree))"
+        },
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 650,
+          "endLine": 654,
+          "quote": "this.CollectCore(type.OriginalDefinition, callerSymbol);"
         }
       ]
     },
     {
-      "id": "f4",
+      "id": "f3",
       "kind": "missing",
       "area": "generator",
-      "severity": "low",
-      "title": "No snapshot or round-trip test of the generated cross-assembly formatter",
-      "detail": "F3 expects the consuming assembly to get a working resolver and formatter. The new tests set SkipGeneratedSourcesCheck and only check that the resolver hint name exists. The generated resolver and formatter content for the cross-assembly closed generic struct is never compared to a snapshot. No test serializes and deserializes an instance through the generated resolver to check that the member value survives.",
+      "severity": "medium",
+      "title": "No runtime round-trip test through the generated resolver",
+      "detail": "F3 expects the generated resolver to serialize and deserialize an object whose member is a cross-assembly generic struct. The new tests skip the generated-sources check and only assert that a file with the resolver hint name exists. Nothing checks the content of the generated formatter (no snapshot), and nothing round-trips a value. The formatter emitted for the metadata generic definition could be wrong and the tests would still pass.",
       "statement": null,
       "hunkIds": [
         "h9"
@@ -2457,9 +2426,53 @@
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs",
           "side": "new",
-          "startLine": 638,
-          "endLine": 648,
-          "quote": "TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,"
+          "startLine": 656,
+          "endLine": 658,
+          "quote": "Assert.Contains(expectedResolverHintName, hintNames);"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "low",
+      "title": "Generator failures still surface only as CS8785 warnings",
+      "detail": "N1 asks that a generator or analyzer failure not pass silently as a warning that leaves the assembly without a resolver. The change removes these particular crash sites, but adds nothing that turns an unexpected exception in TypeCollector into an error-level diagnostic or a failed build. A future crash would still appear as a CS8785/AD0001 warning, and the resolver would be missing. Only the new tests assert that no warnings occur.",
+      "statement": null,
+      "hunkIds": [
+        "h3",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 263,
+          "endLine": 273,
+          "quote": "FullModel model = collector.Collect();"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "kind": "missing",
+      "area": "generator",
+      "severity": "low",
+      "title": "BothStringAndIntKeyAreNull metadata path has no test",
+      "detail": "The new GetPropertyIdentifierLocation path (a Key attribute whose value is neither int nor string, on a property from metadata) replaces a crash site, but none of the new tests exercises it. All three tests use int keys.",
+      "statement": null,
+      "hunkIds": [
+        "h4",
+        "h6"
+      ],
+      "citations": [
+        {
+          "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+          "side": "new",
+          "startLine": 983,
+          "endLine": 986,
+          "quote": "this.reportDiagnostic?.Invoke(Diagnostic.Create(MsgPack00xMessagePackAnalyzer.BothStringAndIntKeyAreNull, GetPropertyIdentifierLocation(item), formattedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), item.Name));"
         }
       ]
     }
@@ -2469,29 +2482,9 @@
       "id": "r1",
       "ruleId": "R2",
       "source": "ai",
-      "reason": "The change decides that string keys no longer get the collision-resistant equality comparer when HashCollisionResistant is set, which changes how untrusted input is handled.",
+      "reason": "The change decides that string keys no longer get the collision-resistant comparer when untrusted-data protection is on, which is an untrusted-input handling decision for the security owner.",
       "hunkIds": [
         "h7"
-      ]
-    },
-    {
-      "id": "r2",
-      "ruleId": "R6",
-      "source": "ai",
-      "reason": "The MessagePackSecurity comparer change has nothing to do with the generator or analyzer crash in MP-2283.",
-      "hunkIds": [
-        "h7"
-      ]
-    },
-    {
-      "id": "r3",
-      "ruleId": "R7",
-      "source": "ai",
-      "reason": "The change sets and documents a new analyzer contract: diagnostics about members of types from referenced assemblies are no longer reported by the consuming project.",
-      "hunkIds": [
-        "h1",
-        "h2",
-        "h3"
       ]
     }
   ],
@@ -2544,54 +2537,37 @@
     ],
     "notChecked": [
       {
-        "item": "README.md:1636 (h1)",
-        "reason": "Refusal r3 (R7) names this hunk: a person decides"
-      },
-      {
-        "item": "doc/analyzers/MsgPack004.md:45 (h2)",
-        "reason": "Refusal r3 (R7) names this hunk: a person decides"
-      },
-      {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:236 (h3)",
-        "reason": "Finding f1 (defect) names this hunk"
-      },
-      {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
         "reason": "Finding f2 (defect) names this hunk"
       },
       {
-        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1074 (h5)",
-        "reason": "Generator is at Shadow: the AI's evidence routes nothing here yet"
+        "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:982 (h4)",
+        "reason": "Finding f5 (missing) names this hunk"
       },
       {
         "item": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs:1426 (h6)",
-        "reason": "Finding f1 (defect) names this hunk"
+        "reason": "Finding f2 (defect) names this hunk"
       },
       {
         "item": "src/MessagePack/MessagePackSecurity.cs:131 (h7)",
-        "reason": "Refusal r1 (R2) names this hunk: a person decides"
+        "reason": "Finding f1 (defect) names this hunk"
       },
       {
         "item": "tests/MessagePack.SourceGenerator.Tests/GenericsFormatterTests.cs:496 (h9)",
-        "reason": "Finding f4 (missing) names this hunk"
+        "reason": "Finding f3 (missing) names this hunk"
       }
     ],
     "residualRisk": {
-      "text": "r1 (R2): The change decides that string keys no longer get the collision-resistant equality comparer when HashCollisionResistant is set, which changes how untrusted input is handled. r2 (R6): The MessagePackSecurity comparer change has nothing to do with the generator or analyzer crash in MP-2283. r3 (R7): The change sets and documents a new analyzer contract: diagnostics about members of types from referenced assemblies are no longer reported by the consuming project.",
+      "text": "r1 (R2): The change decides that string keys no longer get the collision-resistant comparer when untrusted-data protection is on, which is an untrusted-input handling decision for the security owner.",
       "acceptedRefusalIds": []
     }
   },
   "routing": {
-    "tier": "full",
+    "tier": "focused",
     "reasons": [
       {
-        "ruleId": "R-read-share",
-        "text": "Read 8 of 9 hunks: most of the change needs a human",
-        "tier": "full"
-      },
-      {
         "ruleId": "R-refusal",
-        "text": "3 items refused: a human decides",
+        "text": "1 item refused: a human decides",
         "tier": "focused"
       },
       {
@@ -2606,12 +2582,12 @@
       },
       {
         "ruleId": "R-area-level",
-        "text": "Analyzer: Shadow, the AI's output routes nothing here",
+        "text": "Analyzer: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
         "ruleId": "R-area-level",
-        "text": "Generator: Shadow, the AI's output routes nothing here",
+        "text": "Generator: Calibrated, may route Focused at best",
         "tier": "focused"
       },
       {
@@ -2621,21 +2597,21 @@
       }
     ],
     "coverage": {
-      "h1": "read",
-      "h2": "read",
+      "h1": "supported",
+      "h2": "supported",
       "h3": "read",
       "h4": "read",
-      "h5": "read",
+      "h5": "supported",
       "h6": "read",
       "h7": "read",
       "h8": "supported",
       "h9": "read"
     },
-    "readHunks": 8,
+    "readHunks": 5,
     "totalHunks": 9,
-    "readLines": 228,
+    "readLines": 216,
     "totalLines": 230,
-    "readMinutes": 10,
+    "readMinutes": 9,
     "fullMinutes": 10
   }
 }

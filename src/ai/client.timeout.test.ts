@@ -4,7 +4,7 @@ import { createModelClient } from "./client";
 import { ModelTimeoutError } from "./errors";
 import type { Transport, UsageEntry } from "./types";
 
-// A 20 ms budget instead of 120 s, so the test waits on the real abort signal.
+// A 20 ms timeout instead of 180 s, so the test waits on the real abort signal.
 vi.mock("./limits", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./limits")>()),
   CALL_TIMEOUT_MS: 20,
