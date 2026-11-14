@@ -33,7 +33,6 @@
 - **The planted-bug catch rate measures the reviewer, not the agent.** It says how often the reviewer finds a planted kind of defect, not how often agents write that kind; real defect mixes differ.
 - **A diff-only quote check strikes some true claims.** A claim about code the change doesn't touch, such as a caller left unchanged, has nothing in the diff to quote. It is struck and stays in the log.
 - **Hunks are judged one at a time.** Two hunks can be fine alone and wrong together (a buffer rented in one, returned in another); routing doesn't see that interaction.
-- **A rebase onto a changed base keeps the receipt valid.** The receipt binds the diff; the code around the diff can differ after the rebase.
 - **Notes are not tamper-evident without the signature.** An unsigned or unverified git note proves nothing.
 - **One repository, one reviewer model.** Results say nothing yet about other code or models.
 
