@@ -39,11 +39,12 @@ export function CoverageLine({ decision }: Readonly<{ decision: TierDecision }>)
 /**
  * One line per rule that fired. From 760 px up they are a plain list, so
  * nothing animates after hydration; below that, more than two go behind a
- * "Why <Tier>" disclosure to keep the phone's first screen short.
+ * "Why <Tier>" disclosure to keep the phone's first screen short. From
+ * 1100 px they run in two columns, so the reading list starts higher.
  */
 function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
   const list = (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-1 wide:grid wide:grid-cols-2 wide:gap-x-8">
       {decision.reasons.map((reason, index) => (
         <li key={index} className="text-base text-text-secondary">
           {reason.text} <span className="font-mono text-xs text-text-muted">{reason.ruleId}</span>
@@ -77,7 +78,7 @@ function HowIsThisComputed() {
             How is this computed?
           </button>
         </TooltipTrigger>
-        <TooltipContent className="max-w-72 text-sm">{HOW_IS_THIS_COMPUTED}</TooltipContent>
+        <TooltipContent side="right" align="center" sideOffset={8} className="max-w-72 text-sm">{HOW_IS_THIS_COMPUTED}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
