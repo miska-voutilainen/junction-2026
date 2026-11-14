@@ -97,10 +97,12 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
  * Client from the environment: AI_BACKEND (default claude-code) picks the transport,
  * AI_MODE (default record) picks record, replay or live.
  *
+ * @param usageSink where usage lines go; defaults to stderr. The pipeline passes a sink that also totals them.
  * @throws if AI_BACKEND or AI_MODE hold a value other than the documented ones.
  */
 export function createModelClientFromEnv(
   env: NodeJS.ProcessEnv = process.env,
+  usageSink?: UsageSink,
 ): ModelClient {
   const backend = parseChoice<AiBackend>(
     "AI_BACKEND",
@@ -116,6 +118,7 @@ export function createModelClientFromEnv(
   return createModelClient({
     mode,
     transport: backend === "api" ? apiTransport : claudeCodeTransport,
+    usageSink,
   });
 }
 
