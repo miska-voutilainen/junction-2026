@@ -2,6 +2,12 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-14 · A5 on mp-2129, mp-2234 and mp-2297: tests that did not build on the base left two reviews all Supported
+
+- **What happened:** With `a5.v2` in Docker, no claim was retracted on any of the three changes. mp-2297 (mostly generated code) has 7 claims Verified and 6 Supported; 4 test methods tell the versions apart and none fail on the head. mp-2129 has 17 claims, all Supported, and 18 test entries without a verdict (4 files in another test project, 14 methods that do not build on the base); mp-2234 has 10 claims, all Supported, and 3 (1 file in another test project, 2 methods that do not build on the base). The build errors are `CS0117` and `CS0535`: the tests call generated members the base version does not have.
+- **Why:** A5 writes tests blind to the change, so a test that needs an API the change introduces cannot compile on the base. The runner reads that as "no verdict", never as a failure of the claim, so the claims stay Supported instead of being retracted or promoted.
+- **What we changed:** Nothing. We recorded the reviews as they came out and did not tune the prompts to these three changes. Each review lists the tests that could not run in `inconclusiveTests`.
+
 ## 2026-11-14 · A5 on mp-2283, final recording: two claims Verified by two methods, the F2 tests did not build
 
 - **What happened:** With `a5.v2`, in Docker, A5 wrote three methods for F1 and two for F2. Two F1 methods (`A5_F1_ClosedGenericStructFromReferencedAssembly_DoesNotThrow`, `A5_F1_ClosedGenericRecordStructFromReferencedAssembly_DoesNotThrow`) fail on the base and pass on the head, so claims c3 and c4 are Verified. The PR's own tests (3 of 3) also fail on the base and pass on the head; they keep c1 and c2 at Supported by design. Both F2 methods did not build on the base (`CS0104: AnalyzerOptions is an ambiguous reference`), so they said nothing and the F2 claims are unchanged; the reason is stored in `inconclusiveTests`. No retractions.
