@@ -74,7 +74,7 @@ test("planted inputs are not reviewable changes", async ({ request }) => {
 
 test("the reviewer report card and the dashboard load cleanly", async ({ page }) => {
   await page.goto("/reviewer");
-  await expect(page.getByRole("heading", { level: 1, name: "Reviewer Report Card" })).toBeAttached();
+  await expect(page.getByRole("heading", { level: 1, name: "Reviewer report card" })).toBeAttached();
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { level: 1 })).toBeAttached();
 });
