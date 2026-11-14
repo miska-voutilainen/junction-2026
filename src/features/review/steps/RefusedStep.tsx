@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { IdeaLabel } from "@/components/IdeaLabel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LocationButton } from "./LocationButton";
 import type { Refusals, RefusalView } from "./stepsModel";
 
@@ -51,6 +53,7 @@ function RefusalItem({ refusal, onShowHunk }: { refusal: RefusalView } & Pick<Re
         <span className="shrink-0 rounded-chip border border-border-default px-1.5 font-mono text-xs text-text-secondary">{refusal.ruleId}</span>
         <span data-written-text className="text-base font-medium text-text-primary">{refusal.title}</span>
       </p>
+      <RaisedBy source={refusal.source} />
       <p data-written-text className="text-sm text-text-secondary">{refusal.reason}</p>
       {refusal.locations.length > 0 && (
         <div className="flex flex-wrap gap-x-3 gap-y-0.5">
@@ -72,5 +75,32 @@ function RefusalItem({ refusal, onShowHunk }: { refusal: RefusalView } & Pick<Re
         <p className="text-xs text-amber-light">Open: no signed receipt accepts it yet</p>
       )}
     </li>
+  );
+}
+
+const FIXED_RULE_NOTE = "A fixed policy rule raised this, no model involved. It always reaches a person, whatever the model says.";
+
+/**
+ * Who raised the refusal: a small neutral chip. "Fixed rule" is a code rule
+ * that fires without a model, so the reviewer cannot talk its way out of it;
+ * "AI" is a refusal the reviewer raised. The chip's tooltip and its screen
+ * reader description carry the explanation (idea 8). The tooltip is controlled
+ * so a tap opens it on a touch screen, where hover and focus never fire.
+ */
+function RaisedBy({ source }: { source: RefusalView["source"] }) {
+  const chip = "w-fit rounded-chip border border-border-default px-1.5 text-xs text-text-muted";
+  const [isOpen, setIsOpen] = useState(false);
+  if (source === "ai") return <span className={chip}>AI</span>;
+  return (
+    <TooltipProvider>
+      <Tooltip open={isOpen} onOpenChange={setIsOpen}>
+        <TooltipTrigger asChild>
+          <button type="button" onClick={() => setIsOpen(true)} aria-label={`Fixed rule. ${FIXED_RULE_NOTE}`} className={`${chip} focus-visible:outline-2 focus-visible:outline-focus-ring`}>
+            Fixed rule
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{FIXED_RULE_NOTE}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

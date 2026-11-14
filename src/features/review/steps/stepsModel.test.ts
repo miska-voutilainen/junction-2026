@@ -108,6 +108,14 @@ describe("refusals", () => {
     expect(buildStepTabs(review, otherRun, "signed")[2].count).toBe("2 open");
   });
 
+  it("tells a fixed-rule refusal from one the AI raised", async () => {
+    const { items } = buildRefusals(await loadFixtureReview("mp-2129"), null, "needs-review");
+    expect(items.map((item) => [item.id, item.source])).toEqual([
+      ["r1", "rule"],
+      ["r2", "ai"],
+    ]);
+  });
+
   it("has no items when nothing was refused", async () => {
     expect(buildRefusals(await loadFixtureReview("mp-2234"), null, "needs-review").items).toEqual([]);
   });
