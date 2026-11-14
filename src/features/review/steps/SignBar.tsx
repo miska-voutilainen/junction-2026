@@ -1,7 +1,7 @@
 "use client";
 
-import { signActionLabel } from "./stepsModel";
-import type { SignState } from "./stepsModel";
+import { isSignable, signActionLabel } from "./signModel";
+import type { SignState } from "./signModel";
 
 /** The bar's classes, shared with its spacer so the page always keeps exactly the room the bar takes, safe area included. */
 export const SIGN_BAR_HEIGHT = "h-[calc(var(--layout-sign-bar)+env(safe-area-inset-bottom))]";
@@ -11,9 +11,11 @@ export const SIGN_BAR_HEIGHT = "h-[calc(var(--layout-sign-bar)+env(safe-area-ins
  * sits far down the page. It opens step 4 (where the receipt, or the sign
  * command, is); it cannot sign, because signing happens in the owner's
  * terminal. From 760 px the header's Sign button and the `4` key do this
- * job, so the bar is hidden there and in print.
+ * job, so the bar is hidden there and in print. It shows only when there is
+ * something to sign; a signed change has the header's "View full receipt" link.
  */
 export function SignBar({ signState, onOpenSign }: Readonly<{ signState: SignState; onOpenSign: () => void }>) {
+  if (!isSignable(signState)) return null;
   return (
     <div
       className={`${SIGN_BAR_HEIGHT} fixed inset-x-0 bottom-0 z-30 flex items-center border-t border-border-subtle bg-surface-panel px-4 pb-[env(safe-area-inset-bottom)] compact:hidden print:hidden`}
@@ -30,6 +32,7 @@ export function SignBar({ signState, onOpenSign }: Readonly<{ signState: SignSta
 }
 
 /** Empty space under the page as tall as the Sign bar, so the bar never covers the last lines. */
-export function SignBarSpacer() {
+export function SignBarSpacer({ signState }: Readonly<{ signState: SignState }>) {
+  if (!isSignable(signState)) return null;
   return <div aria-hidden="true" className={`${SIGN_BAR_HEIGHT} compact:hidden print:hidden`} />;
 }

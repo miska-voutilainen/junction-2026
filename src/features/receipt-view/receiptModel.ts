@@ -13,6 +13,7 @@ import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import type { SignerState } from "@/lib/data/receiptStatus";
 import { refusalRules } from "@/policy/refusals";
 import { verifyLine } from "@/lib/receiptCopy";
+import { COVERAGE_READING_ORDER } from "@/features/review/reviewModel";
 import { countGenerated } from "@/rules/route";
 
 /**
@@ -198,11 +199,9 @@ function shortHash(hash: string): string {
   return hash.slice(0, SHORT_HASH_LENGTH);
 }
 
-const COVERAGE_ORDER: Coverage[] = ["read", "supported", "verified", "generated"];
-
 /** One row per signed hunk, the ones a person read first, in the signed order within each group. */
 function hunkLedger(signedHunks: ReceiptRecord["receipt"]["hunks"]): LedgerRow[] {
-  return COVERAGE_ORDER.flatMap((coverage) => signedHunks.filter((hunk) => hunk.coverage === coverage));
+  return COVERAGE_READING_ORDER.flatMap((coverage) => signedHunks.filter((hunk) => hunk.coverage === coverage));
 }
 
 /** "2026-11-14 09:40 UTC", formatted without locale so the server and the browser agree. */

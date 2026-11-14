@@ -12,8 +12,8 @@ import { useSelectedClaim } from "../SelectedClaim";
 import { FindingLocations } from "./FindingLocations";
 import { LocationButton } from "./LocationButton";
 import { OWN_TEST_LABEL, OWN_TEST_NOTE, isOwnTestOnly } from "../reviewModel";
-import { citationLabel } from "./stepsModel";
-import type { ClaimGroup, Story, StoryClaim } from "./stepsModel";
+import { citationLabel } from "./storyModel";
+import type { ClaimGroup, Story, StoryClaim } from "./storyModel";
 
 type Claim = Review["claims"][number];
 
