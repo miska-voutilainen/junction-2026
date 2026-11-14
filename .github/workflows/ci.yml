@@ -26,7 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # Full history: the message and lane checks diff against the PR's base commit.
+      # Full history: the message and lane checks diff against the base branch's current tip
+      # (origin/<base_ref>). Not pull_request.base.sha: that is the base when the PR was last
+      # pushed, so a later merge to main would count main's new files as this PR's changes.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -47,7 +49,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: origin/${{ github.base_ref }}
         run: node .github/scripts/checkMessages.mjs
 
       - name: 1. Lane check
@@ -55,7 +57,7 @@ jobs:
         env:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: origin/${{ github.base_ref }}
         run: node .github/scripts/checkLanes.mjs
 
       - name: 2. Tree check
@@ -81,7 +83,7 @@ jobs:
           fi
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: origin/${{ github.base_ref }}
 
       - name: 4. Lint
         if: steps.scope.outputs.slow == 'true'
