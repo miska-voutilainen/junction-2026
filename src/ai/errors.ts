@@ -26,7 +26,7 @@ export class ModelValidationError extends Error {
 export class RecordingMissingError extends Error {
   constructor(promptVersion: string, file: string) {
     super(
-      `No recording for ${promptVersion} at ${file}. ` +
+      `No recording for this prompt, model and run index (${promptVersion}) at ${file}. ` +
         `The prompt or its input changed since the last recording. ` +
         `Run the step once with AI_MODE=record (for example pnpm pipeline run <changeId>) and commit the new file.`,
     );
@@ -42,5 +42,27 @@ export class ModelTimeoutError extends Error {
         `Run the step again; if it repeats, shorten the input.`,
     );
     this.name = "ModelTimeoutError";
+  }
+}
+
+/** A recording exists but its answer no longer passes the call's schema. */
+export class RecordingStaleError extends Error {
+  constructor(promptVersion: string, file: string) {
+    super(
+      `Recording ${file} no longer matches the ${promptVersion} schema. ` +
+        `Bump the prompt version and record again.`,
+    );
+    this.name = "RecordingStaleError";
+  }
+}
+
+/** The answer was cut off at the output limit; a retry would cut off at the same place. */
+export class ModelTruncatedError extends Error {
+  constructor(promptVersion: string, maxTokens: number) {
+    super(
+      `The ${promptVersion} answer hit the ${maxTokens} token output limit and was cut off. ` +
+        `Shorten the input or split the step; retrying the same prompt fails the same way.`,
+    );
+    this.name = "ModelTruncatedError";
   }
 }

@@ -3,7 +3,7 @@
  * validation, retry, refusal handling, recording and cost logging are written once.
  * A call is: render, ask, validate against the call's zod schema, retry once with the
  * validation error, record. In replay mode no model is called at all, which is what
- * lets the demo and the tests run offline on byte-identical answers.
+ * lets the demo and the tests run offline on identical answers.
  * Spec section 6, "Model and client".
  */
 import path from "node:path";
@@ -15,6 +15,7 @@ import {
   ModelTimeoutError,
   ModelValidationError,
   RecordingMissingError,
+  RecordingStaleError,
 } from "./errors";
 import { CALL_TIMEOUT_MS, MAX_VALIDATION_RETRIES, MODEL } from "./limits";
 import {
@@ -28,9 +29,12 @@ import type {
   AiMode,
   ModelRequest,
   Transport,
+  TransportResponse,
   Usage,
+  UsageEntry,
 } from "./types";
 import { costOf, stderrUsageSink, type UsageSink } from "./usageLog";
+import { validateAnswer } from "./validateAnswer";
 
 /** Default recordings folder, relative to the repository root where the CLIs run. */
 const DEFAULT_RECORDINGS_DIRECTORY = path.join("data", "recordings");
@@ -43,9 +47,12 @@ export interface ModelClientOptions {
   usageSink?: UsageSink;
 }
 
+/** A request whose schema fixes the answer's type. */
+export type TypedRequest<T> = ModelRequest & { schema: z.ZodType<T> };
+
 /** The client's one operation: send a request, get a validated answer of the schema's type. */
 export interface ModelClient {
-  call<T>(request: ModelRequest & { schema: z.ZodType<T> }): Promise<T>;
+  call<T>(request: TypedRequest<T>): Promise<T>;
 }
 
 /**
@@ -60,36 +67,28 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
   const logUsage = options.usageSink ?? stderrUsageSink;
 
   return {
-    async call<T>(
-      request: ModelRequest & { schema: z.ZodType<T> },
-    ): Promise<T> {
+    async call<T>(request: TypedRequest<T>): Promise<T> {
       const runIndex = request.runIndex ?? 0;
       const key = recordingKey(request.promptVersion, request.prompt, runIndex);
       const file = recordingPath(directory, request.promptVersion, key);
 
       if (options.mode === "replay") return replay(request, file, logUsage);
 
-      const startedAt = Date.now();
-      const { answer, usage } = await askUntilValid(options.transport, request);
-      logUsage({
-        model: MODEL,
-        promptVersion: request.promptVersion,
-        inputTokens: usage.inputTokens,
-        outputTokens: usage.outputTokens,
-        costUsd: costOf(usage),
-        milliseconds: Date.now() - startedAt,
-        source: "model",
-      });
+      const accepted = await askUntilValid(
+        options.transport,
+        request,
+        logUsage,
+      );
       if (options.mode === "record") {
         await writeRecording(file, {
-          model: MODEL,
+          model: accepted.model,
           promptVersion: request.promptVersion,
           runIndex,
-          answer,
-          usage,
+          rawAnswer: accepted.rawAnswer,
+          usage: accepted.usage,
         });
       }
-      return answer;
+      return accepted.answer;
     },
   };
 }
@@ -134,14 +133,15 @@ function parseChoice<T extends string>(
 }
 
 async function replay<T>(
-  request: ModelRequest & { schema: z.ZodType<T> },
+  request: TypedRequest<T>,
   file: string,
   logUsage: UsageSink,
 ): Promise<T> {
   const recording = await readRecording(file);
   if (!recording) throw new RecordingMissingError(request.promptVersion, file);
-  // A recording that no longer fits the schema means the schema changed without a version bump.
-  const answer = request.schema.parse(recording.answer);
+  // Same check as a fresh answer. A failure means the schema changed without a prompt version bump.
+  const checked = validateAnswer(recording.rawAnswer, request.schema);
+  if (!checked.ok) throw new RecordingStaleError(request.promptVersion, file);
   logUsage({
     model: recording.model,
     promptVersion: request.promptVersion,
@@ -149,30 +149,75 @@ async function replay<T>(
     outputTokens: recording.usage.outputTokens,
     costUsd: costOf(recording.usage),
     milliseconds: 0,
+    outcome: "ok",
     source: "replay",
   });
-  return answer;
+  return checked.value;
 }
 
-/** Asks, validates, and on a schema failure asks once more with the error appended. Usage sums both asks. */
+interface AcceptedAnswer<T> {
+  answer: T;
+  rawAnswer: string;
+  model: string;
+  /** Tokens and cost of every ask this call made, so a recording shows what the answer cost. */
+  usage: Usage;
+}
+
+/**
+ * Asks, validates, and on a schema failure asks once more with the error appended.
+ * Every response is logged with its outcome, so refusals and rejected answers are counted too.
+ */
 async function askUntilValid<T>(
   transport: Transport,
-  request: ModelRequest & { schema: z.ZodType<T> },
-): Promise<{ answer: T; usage: Usage }> {
+  request: TypedRequest<T>,
+  logUsage: UsageSink,
+): Promise<AcceptedAnswer<T>> {
   let prompt = request.prompt;
   const total: Usage = { inputTokens: 0, outputTokens: 0, costUsd: 0 };
   let lastProblem = "";
 
   for (let attempt = 0; attempt <= MAX_VALIDATION_RETRIES; attempt++) {
-    const response = await askOnce(transport, request, prompt);
+    const startedAt = Date.now();
+    const log = (outcome: UsageEntry["outcome"], model: string, usage: Usage) =>
+      logUsage({
+        model,
+        promptVersion: request.promptVersion,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        costUsd: costOf(usage),
+        milliseconds: Date.now() - startedAt,
+        outcome,
+        source: "model",
+      });
+
+    let response: TransportResponse;
+    try {
+      response = await askOnce(transport, request, prompt);
+    } catch (error) {
+      if (error instanceof ModelTimeoutError)
+        log("timeout", MODEL, { inputTokens: 0, outputTokens: 0, costUsd: 0 });
+      throw error;
+    }
     total.inputTokens += response.usage.inputTokens;
     total.outputTokens += response.usage.outputTokens;
     total.costUsd = (total.costUsd ?? 0) + costOf(response.usage);
-    if (response.isRefusal) throw new ModelRefusalError(request.promptVersion);
 
-    const checked = validate(response.text, request.schema);
-    if (checked.ok) return { answer: checked.value, usage: total };
+    if (response.isRefusal) {
+      log("refusal", response.model, response.usage);
+      throw new ModelRefusalError(request.promptVersion);
+    }
+    const checked = validateAnswer(response.text, request.schema);
+    if (checked.ok) {
+      log("ok", response.model, response.usage);
+      return {
+        answer: checked.value,
+        rawAnswer: response.text,
+        model: response.model,
+        usage: total,
+      };
+    }
 
+    log("invalid", response.model, response.usage);
     lastProblem = checked.problem;
     prompt =
       `${request.prompt}\n\nYour previous answer was rejected: ${checked.problem}\n` +
@@ -181,16 +226,21 @@ async function askUntilValid<T>(
   throw new ModelValidationError(request.promptVersion, lastProblem);
 }
 
-/** One transport call under the per-call time budget. */
+/** One transport call under the per-request time budget. */
 async function askOnce<T>(
   transport: Transport,
-  request: ModelRequest & { schema: z.ZodType<T> },
+  request: TypedRequest<T>,
   prompt: string,
-) {
+): Promise<TransportResponse> {
   const signal = AbortSignal.timeout(CALL_TIMEOUT_MS);
   try {
     return await transport(
-      { system: request.system, prompt, schema: request.schema },
+      {
+        promptVersion: request.promptVersion,
+        system: request.system,
+        prompt,
+        schema: request.schema,
+      },
       signal,
     );
   } catch (error) {
@@ -201,29 +251,4 @@ async function askOnce<T>(
       );
     throw error;
   }
-}
-
-type Checked<T> = { ok: true; value: T } | { ok: false; problem: string };
-
-function validate<T>(text: string, schema: z.ZodType<T>): Checked<T> {
-  let json: unknown;
-  try {
-    json = JSON.parse(stripCodeFence(text));
-  } catch {
-    return { ok: false, problem: "the answer is not valid JSON" };
-  }
-  const parsed = schema.safeParse(json);
-  if (parsed.success) return { ok: true, value: parsed.data };
-  return {
-    ok: false,
-    problem: parsed.error.issues
-      .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-      .join("; "),
-  };
-}
-
-/** Models sometimes wrap JSON in a ```json fence despite instructions; unwrap it before parsing. */
-function stripCodeFence(text: string): string {
-  const fenced = /^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/.exec(text);
-  return fenced ? fenced[1] : text;
 }

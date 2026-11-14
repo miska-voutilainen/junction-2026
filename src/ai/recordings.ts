@@ -1,23 +1,28 @@
 /**
- * Recordings: every model answer is saved under data/recordings/ so demos, tests and
- * evals replay byte-identical output without a model call. The model has no
+ * Recordings: every accepted model answer is saved raw under data/recordings/ so demos,
+ * tests and evals replay identical output without a model call. The model has no
  * temperature, so repeatability comes from these files, not from sampling.
  * Spec section 6, "Recording key".
  */
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { MODEL, RECORDING_KEY_FILE_CHARS } from "./limits";
-import type { Usage } from "./types";
 
-/** The saved form of one call: the validated answer and what it cost. */
-export interface Recording {
-  model: string;
-  promptVersion: string;
-  runIndex: number;
-  answer: unknown;
-  usage: Usage;
-}
+/** The saved form of one call: the model's raw text and what it cost. Replay validates it again. */
+export const RecordingSchema = z.object({
+  model: z.string(),
+  promptVersion: z.string(),
+  runIndex: z.number().int().nonnegative(),
+  rawAnswer: z.string(),
+  usage: z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    costUsd: z.number().optional(),
+  }),
+});
+export type Recording = z.infer<typeof RecordingSchema>;
 
 /**
  * sha256 of model + prompt version + rendered prompt + run index (spec section 6).
@@ -48,16 +53,22 @@ export function recordingPath(
   );
 }
 
-/** Reads a recording, or returns undefined when the file does not exist. */
+/**
+ * Reads a recording, or returns undefined when the file does not exist.
+ *
+ * @throws if the file exists but is not a recording (the zod message names the field).
+ */
 export async function readRecording(
   file: string,
 ): Promise<Recording | undefined> {
+  let text: string;
   try {
-    return JSON.parse(await readFile(file, "utf8")) as Recording;
+    text = await readFile(file, "utf8");
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
     throw error;
   }
+  return RecordingSchema.parse(JSON.parse(text));
 }
 
 /** Writes a recording as indented JSON so diffs in review stay readable. */

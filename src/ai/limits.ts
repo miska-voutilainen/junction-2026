@@ -6,7 +6,10 @@ export const MODEL = "claude-opus-5-5";
 /** Reasoning effort for every call; the API backend sends it, Claude Code reads it from the environment. */
 export const EFFORT = "high";
 
-/** Per-call budget from the latency budget: a call that takes longer than this fails the step. */
+/**
+ * Budget for one model request from the latency budget (spec section 6). A call that retries
+ * after a validation failure makes two requests, so it can take twice this long.
+ */
 export const CALL_TIMEOUT_MS = 120_000;
 
 /** Request timeout inside the SDK (spec: 180 s). Longer than the call budget, so the budget decides. */
@@ -32,3 +35,12 @@ export const MAX_VALIDATION_RETRIES = 1;
 
 /** Hex characters of the recording key used in file names; 64 bits is far beyond what one run needs. */
 export const RECORDING_KEY_FILE_CHARS = 16;
+
+/**
+ * Longest `claude` command line we build, in characters. Windows rejects command lines over
+ * about 32,000; the system text and the JSON schema travel as arguments, only the prompt is on stdin.
+ */
+export const CLI_ARGUMENT_LIMIT_CHARS = 30_000;
+
+/** Characters of a Claude Code reply shown in an error, enough to recognise it without dumping the prompt. */
+export const ERROR_EXCERPT_CHARS = 200;

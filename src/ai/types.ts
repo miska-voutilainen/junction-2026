@@ -29,13 +29,20 @@ export interface Usage {
 export interface TransportResponse {
   text: string;
   usage: Usage;
+  /** The model that answered; differs from the requested one when the server-side fallback replied. */
+  model: string;
   /** True when the model declined (stop reason `refusal`) even after any server-side fallback. */
   isRefusal: boolean;
 }
 
 /** One round trip to a backend. Tests supply a fake; production uses claude-code or api. */
 export type Transport = (
-  call: { system: string; prompt: string; schema: z.ZodType },
+  call: {
+    promptVersion: string;
+    system: string;
+    prompt: string;
+    schema: z.ZodType;
+  },
   signal: AbortSignal,
 ) => Promise<TransportResponse>;
 
@@ -47,6 +54,8 @@ export interface UsageEntry {
   outputTokens: number;
   costUsd: number;
   milliseconds: number;
+  /** How the response ended: accepted, refused, or rejected by the schema. A timeout has no tokens. */
+  outcome: "ok" | "refusal" | "invalid" | "timeout";
   /** "replay" lines report the recorded cost, which this run did not spend. */
   source: "model" | "replay";
 }

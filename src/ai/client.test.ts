@@ -1,16 +1,17 @@
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { createModelClient } from "./client";
-import { parseClaudeCodeOutput } from "./claudeCodeTransport";
+import { toTransportResult } from "./claudeCodeTransport";
+import { recordingKey } from "./recordings";
 import {
   ModelRefusalError,
   ModelValidationError,
   RecordingMissingError,
+  RecordingStaleError,
 } from "./errors";
-import { recordingKey } from "./recordings";
 import type { Transport, TransportResponse, UsageEntry } from "./types";
 import { costOf } from "./usageLog";
 
@@ -21,6 +22,7 @@ const request = {
   prompt: "rendered prompt",
   schema,
 };
+const model = "claude-opus-5-5";
 const usage = { inputTokens: 1000, outputTokens: 500 };
 
 function answering(...texts: string[]): {
@@ -31,7 +33,7 @@ function answering(...texts: string[]): {
   const transport: Transport = async ({ prompt }) => {
     prompts.push(prompt);
     const text = texts[Math.min(prompts.length - 1, texts.length - 1)];
-    return { text, usage, isRefusal: false };
+    return { text, usage, model, isRefusal: false };
   };
   return { transport, prompts };
 }
@@ -72,7 +74,7 @@ describe("model client", () => {
     expect(JSON.stringify(entries[0])).not.toContain("rendered prompt");
   });
 
-  it("retries once with the validation error and sums usage over both asks", async () => {
+  it("retries once with the validation error and logs both responses", async () => {
     const { transport, prompts } = answering(
       '{"verdict":"maybe"}',
       '{"verdict":"bad"}',
@@ -89,7 +91,7 @@ describe("model client", () => {
     expect(prompts).toHaveLength(2);
     expect(prompts[1]).toContain("verdict");
     expect(prompts[1]).toContain("rendered prompt");
-    expect(entries[0].inputTokens).toBe(2000);
+    expect(entries.map((entry) => entry.outcome)).toEqual(["invalid", "ok"]);
   });
 
   it("fails the step after a second validation failure", async () => {
@@ -123,6 +125,7 @@ describe("model client", () => {
       async (): Promise<TransportResponse> => ({
         text: "",
         usage,
+        model,
         isRefusal: true,
       }),
     );
@@ -183,7 +186,7 @@ describe("model client", () => {
     });
   });
 
-  it("does not save in live mode and keys runs apart by run index", async () => {
+  it("saves nothing in live mode", async () => {
     const { transport } = answering('{"verdict":"ok"}');
     await createModelClient({
       mode: "live",
@@ -192,9 +195,72 @@ describe("model client", () => {
       usageSink,
     }).call(request);
     expect(await readdir(directory)).toHaveLength(0);
+  });
 
+  it("keys runs apart by run index and repeats the key for the same inputs", () => {
     expect(recordingKey("t.v1", "p", 0)).not.toBe(recordingKey("t.v1", "p", 1));
     expect(recordingKey("t.v1", "p", 0)).toBe(recordingKey("t.v1", "p", 0));
+  });
+
+  it("stores the raw answer text and replays it through the same validation", async () => {
+    const fenced = ["```json", '{"verdict":"ok"}', "```"].join("\n");
+    const { transport } = answering(fenced);
+    await createModelClient({
+      mode: "record",
+      transport,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
+    const [name] = await readdir(directory);
+    expect(await readFile(path.join(directory, name), "utf8")).toContain(
+      "```json",
+    );
+
+    const stricter = {
+      ...request,
+      schema: z.object({ verdict: z.literal("bad") }),
+    };
+    const replayed = createModelClient({
+      mode: "replay",
+      transport: vi.fn<Transport>(),
+      recordingsDirectory: directory,
+      usageSink,
+    });
+    await expect(replayed.call(stricter)).rejects.toBeInstanceOf(
+      RecordingStaleError,
+    );
+  });
+
+  it("counts refusals and rejected answers in the usage log", async () => {
+    const refusing = vi.fn<Transport>(async () => ({
+      text: "",
+      usage,
+      model,
+      isRefusal: true,
+    }));
+    await createModelClient({
+      mode: "live",
+      transport: refusing,
+      recordingsDirectory: directory,
+      usageSink,
+    })
+      .call(request)
+      .catch(() => undefined);
+    const { transport } = answering("nope", "nope");
+    await createModelClient({
+      mode: "live",
+      transport,
+      recordingsDirectory: directory,
+      usageSink,
+    })
+      .call(request)
+      .catch(() => undefined);
+
+    expect(entries.map((entry) => entry.outcome)).toEqual([
+      "refusal",
+      "invalid",
+      "invalid",
+    ]);
   });
 });
 
@@ -209,10 +275,32 @@ describe("cost", () => {
   });
 });
 
-describe("claude code output", () => {
+describe("recording key", () => {
+  it("matches the committed smoke recording (golden)", async () => {
+    // Changing the key derivation orphans every committed recording; this test says so first.
+    const prompt = 'Return {"greeting": "hello", "sum": <the sum of 2 and 3>}.';
+    const key = recordingKey("smoke.v1", prompt, 0);
+    const file = path.join(
+      "data",
+      "recordings",
+      `smoke.v1-${key.slice(0, 16)}.json`,
+    );
+    const recording = JSON.parse(await readFile(file, "utf8"));
+    expect(recording.promptVersion).toBe("smoke.v1");
+    expect(JSON.parse(recording.rawAnswer)).toEqual({
+      greeting: "hello",
+      sum: 5,
+    });
+  });
+});
+
+describe("claude code result", () => {
+  const envelope = (fields: object) => JSON.stringify(fields);
+
   it("reads the answer, tokens including cache and the reported cost", () => {
-    const response = parseClaudeCodeOutput(
-      JSON.stringify({
+    const response = toTransportResult(
+      0,
+      envelope({
         is_error: false,
         result: '{"verdict":"ok"}',
         total_cost_usd: 0.07,
@@ -222,24 +310,48 @@ describe("claude code output", () => {
           output_tokens: 5,
         },
       }),
+      "",
     );
     expect(response).toEqual({
       text: '{"verdict":"ok"}',
+      model,
       isRefusal: false,
       usage: { inputTokens: 100, outputTokens: 5, costUsd: 0.07 },
     });
   });
 
-  it("marks a refusal stop reason and fails on any other error", () => {
-    expect(
-      parseClaudeCodeOutput(
-        JSON.stringify({ is_error: true, stop_reason: "refusal" }),
-      ).isRefusal,
-    ).toBe(true);
+  it("prefers structured_output over prose in result", () => {
+    const response = toTransportResult(
+      0,
+      envelope({
+        result: "Here you go.",
+        structured_output: { verdict: "ok" },
+      }),
+      "",
+    );
+    expect(JSON.parse(response.text)).toEqual({ verdict: "ok" });
+  });
+
+  it("reads the error envelope of a non-zero exit before the exit code", () => {
     expect(() =>
-      parseClaudeCodeOutput(
-        JSON.stringify({ is_error: true, result: "Not logged in" }),
+      toTransportResult(
+        1,
+        envelope({ is_error: true, result: "Not logged in" }),
+        "stderr text",
       ),
     ).toThrow(/logged in/);
+    expect(
+      toTransportResult(
+        1,
+        envelope({ is_error: true, stop_reason: "refusal" }),
+        "",
+      ).isRefusal,
+    ).toBe(true);
+  });
+
+  it("falls back to the exit code and stderr when stdout is not JSON", () => {
+    expect(() => toTransportResult(2, "", "boom: bad flag")).toThrow(
+      /code 2.*boom: bad flag/,
+    );
   });
 });
