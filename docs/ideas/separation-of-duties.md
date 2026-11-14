@@ -46,6 +46,6 @@ Separation of duties: the person who makes a change isn't the one who approves i
 
 ## In the code
 
-- The A5 test runner in `src/pipeline/`: tests the PR added give Supported at most (T14)
-- `src/receipt/`: only `sign` writes the signed note (T20)
+- The A5 test runner in `src/pipeline/`: tests the PR added give Supported at most
+- `src/receipt/`: only `sign` writes the signed note
 - Shown on S2 (roles line, "the PR's own test" lines) and S4 (roles line)

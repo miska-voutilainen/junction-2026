@@ -45,5 +45,5 @@ Not measured yet. MP-2283 is expected to be refused under `R7` or `R1`; the reco
 ## In the code
 
 - [`src/policy/refusals.ts`](../../src/policy/refusals.ts): the seven rules, `refusalPolicyVersion = "v1"`
-- `src/prompts/a3.ts`: the area review that outputs refusals (T13)
+- `src/prompts/a3.ts`: the area review that outputs refusals
 - Shown on S2, the Refused tab: rule, reason, decider, hunks, source
