@@ -2,32 +2,33 @@
  * Seed: gets this machine ready to run the pipeline and the receipt CLI.
  * Both read Tieto's code from a local clone of our fork (SAMPLE_REPO_DIR), so
  * this clones it once, fetches every branch plus the receipt notes, and checks
- * that the branches the sample changes come from are there. Spec section 9.1, T07.
+ * that the head commit of every sample change is there. Spec section 9.1, T07.
  *
  * Run with `pnpm seed`. Exit 0 on success, 1 on any failure.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ChangeInputSchema } from "../src/contracts";
 
 const FORK_URL =
   "https://github.com/miska-voutilainen/junction26-messagepack-csharp.git";
 
-/** Tieto branches the four sample changes come from. T07 swaps this for the `headSha`s in data/sample/changes/*.json. */
-export const TIETO_BRANCHES = [
-  "ju26-issue-2283",
-  "ju26-issue-2234",
-  "ju26-issue-2129",
-  "ju26-issue-2297",
-] as const;
-
 const NOTES_REF = "refs/notes/countersign";
+
+/** The part of a change input the seed needs: which commit to look for. */
+export interface SampleChange {
+  id: string;
+  headSha: string;
+}
 
 /** Where the script reads its settings and writes its messages; tests pass their own. */
 export interface SeedOptions {
   sampleRepoDir: string | undefined;
   forkUrl: string;
+  /** The sample changes whose head commits must exist in the clone. */
+  changes: SampleChange[];
   log: (line: string) => void;
   error: (line: string) => void;
 }
@@ -42,7 +43,7 @@ export function seed(options: SeedOptions): number {
     cloneIfMissing(dir, options.forkUrl, options.log);
     checkOrigin(dir, options.forkUrl);
     fetchBranchesAndNotes(dir, options.log);
-    printBranchHeads(dir, options.log);
+    checkChangeHeads(dir, options.changes, options.log);
     return 0;
   } catch (failure) {
     options.error(failure instanceof Error ? failure.message : String(failure));
@@ -67,8 +68,9 @@ function cloneIfMissing(
   // `git clone` accepts an empty folder, so only a folder with content is left alone.
   if (existsSync(dir) && readdirSync(dir).length > 0) return;
   log(`Cloning ${forkUrl} into ${dir}`);
+  // Windows refuses the long snapshot file names in the fork unless long paths are on.
   git(
-    ["clone", forkUrl, dir],
+    ["-c", "core.longpaths=true", "clone", forkUrl, dir],
     process.cwd(),
     `Could not clone the fork. Check your network and your access to ${forkUrl}, then run pnpm seed again`,
   );
@@ -111,22 +113,43 @@ function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
   log("Fetched receipts");
 }
 
-function printBranchHeads(dir: string, log: (line: string) => void): void {
+/**
+ * Checks that each change's head commit is in the clone, so a force-pushed or
+ * missing branch is caught here and not as a confusing diff error later.
+ * Example line: `mp-2283 9df83c38409c8bfad0517aebffe48211eda4a5b4`.
+ */
+function checkChangeHeads(
+  dir: string,
+  changes: SampleChange[],
+  log: (line: string) => void,
+): void {
   const missing: string[] = [];
-  for (const branch of TIETO_BRANCHES) {
+  for (const change of changes) {
     try {
-      log(
-        `${branch} ${git(["rev-parse", "--verify", `refs/remotes/origin/${branch}`], dir)}`,
-      );
+      git(["cat-file", "-e", `${change.headSha}^{commit}`], dir);
+      log(`${change.id} ${change.headSha}`);
     } catch {
-      missing.push(branch);
+      missing.push(`${change.id} (${change.headSha})`);
     }
   }
   if (missing.length > 0) {
     throw new Error(
-      `Branches missing on origin: ${missing.join(", ")}. The fork must keep all of Tieto's branches; ask the engine lane to re-sync it.`,
+      `Commits missing in the clone: ${missing.join(", ")}. The fork must keep all of Tieto's branches at the recorded heads; ask the engine lane to re-sync it.`,
     );
   }
+}
+
+/** Reads every data/sample/changes/*.json, validated, in file-name order. */
+function loadSampleChanges(): SampleChange[] {
+  const changesDir = "data/sample/changes";
+  return readdirSync(changesDir)
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+    .map((file) =>
+      ChangeInputSchema.parse(
+        JSON.parse(readFileSync(join(changesDir, file), "utf8")),
+      ),
+    );
 }
 
 function trimUrl(url: string): string {
@@ -159,6 +182,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   process.exitCode = seed({
     sampleRepoDir: process.env.SAMPLE_REPO_DIR,
     forkUrl: FORK_URL,
+    changes: loadSampleChanges(),
     log: (line) => process.stdout.write(`${line}\n`),
     error: (line) => process.stderr.write(`${line}\n`),
   });

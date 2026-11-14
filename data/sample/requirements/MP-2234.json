@@ -1,0 +1,30 @@
+{
+  "id": "MP-2234",
+  "title": "The analyzer does not work if SuppressSourceGeneration = true",
+  "intent": "The analyzer must report its diagnostics for types that set SuppressSourceGeneration = true, as it did in version 3.1.0.",
+  "functional": [
+    {
+      "id": "F1",
+      "text": "The analyzer reports diagnostics for a [MessagePackObject] type with SuppressSourceGeneration = true."
+    },
+    {
+      "id": "F2",
+      "text": "The analyzer behaves for such types as it did in version 3.1.0, before the regression in 3.1.1."
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "N1",
+      "text": "The analyzer must not crash on invalid input in a suppressed type; it reports the problem instead. (inferred)"
+    },
+    {
+      "id": "N2",
+      "text": "Types that do not suppress source generation keep their current diagnostics. (inferred)"
+    }
+  ],
+  "derivedFrom": {
+    "kind": "github-issue",
+    "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2234",
+    "note": "Derived by the evidence lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
+  }
+}
