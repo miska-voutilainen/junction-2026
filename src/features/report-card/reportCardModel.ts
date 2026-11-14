@@ -159,16 +159,42 @@ export interface FailedQuote {
   reason: string;
 }
 
+/**
+ * The quote check also strikes a refusal whose rule id is not in the written
+ * policy. Those failures are about the id, not a quote, so the lists below
+ * keep them apart. Matched on the phrase, case-insensitively, because the
+ * reason text is written by the pipeline, not fixed by the schema.
+ */
+function isUnknownRuleFailure(reason: string): boolean {
+  return /unknown rule id/i.test(reason);
+}
+
 /** Quotes that failed the check, across the recorded reviews. */
 export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures.map(({ itemId, citation, reason }) => ({
-      changeId,
-      itemId,
-      location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
-      quote: citation.quote,
-      reason,
-    })),
+    review.quoteCheck.failures
+      .filter(({ reason }) => !isUnknownRuleFailure(reason))
+      .map(({ itemId, citation, reason }) => ({
+        changeId,
+        itemId,
+        location: citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`,
+        quote: citation.quote,
+        reason,
+      })),
+  );
+}
+
+/** A refusal struck because the rule id it named is not in the refusal policy: the AI invented a rule. */
+export interface UnknownRuleRefusal {
+  changeId: string;
+  /** The refusal's id in its review, e.g. "r3". */
+  itemId: string;
+}
+
+/** Refusals struck for an unknown rule id, across the recorded reviews. */
+export function unknownRuleRefusals(reviews: ReviewOfChange[]): UnknownRuleRefusal[] {
+  return reviews.flatMap(({ changeId, review }) =>
+    review.quoteCheck.failures.filter(({ reason }) => isUnknownRuleFailure(reason)).map(({ itemId }) => ({ changeId, itemId })),
   );
 }
 
