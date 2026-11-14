@@ -54,12 +54,9 @@ function InputGroupAddon({
       data-slot="input-group-addon"
       data-align={align}
       className={cn(inputGroupAddonVariants({ align }), className)}
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) {
-          return
-        }
-        e.currentTarget.parentElement?.querySelector("input")?.focus()
-      }}
+      // The generated primitive focused the input when the addon was clicked. That is a
+      // mouse-only path on a non-interactive div (SonarCloud S1082); keyboard users reach
+      // the input with Tab, and our only addon is the ⌘K menu's search icon.
       {...props}
     />
   )

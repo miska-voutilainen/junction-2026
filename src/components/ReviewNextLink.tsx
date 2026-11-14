@@ -20,7 +20,7 @@ export function ReviewNextLink({ changeId, className }: Readonly<{ changeId: str
         className,
       )}
     >
-      Review next
+      <span>Review next</span>
       <span className="font-mono text-xs font-medium">{changeId}</span>
       <Kbd className="hidden bg-primary-foreground/15 text-primary-foreground compact:inline-flex">N</Kbd>
       <ArrowRight aria-hidden="true" className="size-4" />
