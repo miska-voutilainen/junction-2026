@@ -121,6 +121,20 @@ test("the phone shows the hunks to read read-only, behind one button", async ({ 
   expect(await hasHorizontalScroll(page)).toBe(false);
 });
 
+test("mp-2297 lists its generated hunks apart from the reading count", async ({ page }, testInfo) => {
+  await page.goto("/changes/mp-2297");
+  await expect(page.getByText("read 2 of 5 hunks · 2 generated")).toBeVisible();
+  await expect(page.getByText(/^2 are generated snapshots: read the template change that produces them/)).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    // The note sits above the sticky Sign bar once the page is scrolled to its end.
+    const note = page.getByText("Generated: 2 hunks, not in the reading count");
+    await note.scrollIntoViewIfNeeded();
+    await expect(note).toBeVisible();
+    return;
+  }
+  await expect(page.getByRole("heading", { name: /^Generated\s*2$/ })).toBeVisible();
+});
+
 test("an unknown id says so, keeps the four changes in the shell and links back to the inbox", async ({ page }, testInfo) => {
   await page.goto("/changes/zz-9999");
   await expect(page.getByText("No change with id zz-9999.")).toBeVisible();

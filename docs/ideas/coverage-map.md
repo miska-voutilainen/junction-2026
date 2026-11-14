@@ -34,7 +34,7 @@ Not measured yet. The report card will show how many of Tieto's four changes wen
 
 - **You need:** hunks with stable ids, claims that list their hunks, and a ladder level per area (start at Shadow).
 - **It costs:** no model calls. Our `route()` is 172 lines with 263 lines of tests.
-- **First step:** show the three states in your diff view and the "Read r of n hunks" line; keep your approval flow.
+- **First step:** show the four states in your diff view and the "Read r of n hunks" line; keep your approval flow.
 
 ## Limits and failure modes
 

@@ -366,11 +366,6 @@ describe("coverageReason", () => {
     expect(coverageReason(review, shadowGenerator, "h1")).toBe("Generator is at Shadow: the AI's evidence routes nothing here yet");
   });
 
-  it("says a generated hunk is not read and what that risks", () => {
-    const review = makeReview({ hunks: [{ id: "h1", file: "tests/Resources/a.cs", kind: "generated" }] });
-    expect(coverageReason(review, trusted, "h1")).toBe("Generated file: not read, so code hidden in it wouldn't be caught");
-  });
-
   it("says no Verified or Supported claim covers it otherwise", () => {
     const review = makeReview({ hunks: [{ id: "h1" }], claims: [claim("c1", "unverified", ["h1"])] });
     expect(coverageReason(review, trusted, "h1")).toBe("No Verified or Supported claim covers it");

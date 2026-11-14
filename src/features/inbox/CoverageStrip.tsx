@@ -5,12 +5,12 @@ const CELL: Record<Coverage, string> = {
   read: "bg-coverage-read",
   supported: "border border-dashed border-coverage-supported",
   verified: "bg-coverage-verified opacity-50",
-  generated: "border border-dotted border-coverage-generated opacity-60",
+  generated: "border border-coverage-generated bg-coverage-generated/30",
 };
 
 /**
  * One cell per hunk in diff order: amber for "Read this", a dashed outline for
- * Supported, a dim fill for Verified, a dotted outline for Generated. The row's text already says the numbers,
+ * Supported, a dim fill for Verified, a faint fill with an outline for Generated. The row's text already says the numbers,
  * so the strip is for the eye and hidden from assistive tech.
  */
 export function CoverageStrip({ coverage, className }: Readonly<{ coverage: Coverage[]; className?: string }>) {

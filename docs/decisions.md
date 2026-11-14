@@ -8,7 +8,7 @@
 - **Decision:** Hunks in files `src/policy/areas.ts` classifies as `generated` get coverage `generated`: shown on the hunk map, left out of `readHunks`, `readLines` and the `R-read-share` denominator. `R-generated` (tier light) adds one line: "411 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)". A finding or refusal that names a generated hunk still makes it `read`. Shared contract and spec change, decided by Miska.
 - **Why:** The honest statement is that nobody reads snapshots and the real review is of the template that produces them; the line also says what that leaves unchecked. Recorded reviews without generated files route byte for byte as before; `schemaVersion` stays 1 because the new enum value only appears where generated hunks exist.
 - **Rejected:** Keeping them counted (the count stays unreadable and the tier is driven by snapshots). Dropping `mp-2297` from the sample (it is the one real Tieto change that shows the idea; hiding it would be cherry-picking).
-- **PR:** –
+- **PR:** #113
 
 ## 2026-11-14 · Record mode reuses a recording with the same key; A3 cites source first, A4 copies statements exactly
 

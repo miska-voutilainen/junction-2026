@@ -5,6 +5,7 @@
  * 5); this file only arranges it. Pure functions, no React.
  */
 import type { Area, Citation, Coverage, LadderLevel, Review, TierDecision } from "@/contracts";
+import { countGenerated } from "@/rules/route";
 
 type Hunk = Review["hunks"][number];
 type File = Review["files"][number];
@@ -103,7 +104,8 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
  * @param areaLevel trust level of the hunk's area, null when the file has no area
  */
 function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
-  if (coverage === "generated") return "Generated file: not in the reading count";
+  // The generated section title says why these hunks are outside the count, so a row repeats nothing.
+  if (coverage === "generated") return "";
   if (coverage === "read") return readReason(review, hunk, areaLevel);
   const claims = claimsAtLevel(review, hunk, coverage);
   if (coverage === "verified") return verifiedLine(claims);
@@ -219,16 +221,16 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
  * and names the generated hunks when the count leaves some out: "read 12 of 423 hunks · 411 generated".
  */
 export function coverageLineText(decision: TierDecision): string {
-  const generated = Object.values(decision.coverage).filter((state) => state === "generated").length;
+  const generated = countGenerated(decision.coverage);
   const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
   const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
   return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading} (full read ~${decision.fullMinutes} min)`;
 }
 
-/** The line under a collapsed covered section: "4 verified · 5 supported". */
+/** The line under a collapsed covered section: "4 verified · 5 supported", a zero part left out. */
 export function coveredSummary(entries: HunkEntry[]): string {
   const count = (coverage: Coverage) => entries.filter((entry) => entry.coverage === coverage).length;
-  return `${count("verified")} verified · ${count("supported")} supported`;
+  return [`${count("verified")} verified`, `${count("supported")} supported`].filter((part) => !part.startsWith("0 ")).join(" · ");
 }
 
 /** Raw unified text of a hunk, as `git diff` prints it; what Copy puts on the clipboard. */

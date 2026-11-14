@@ -112,8 +112,10 @@ function ReadThisSection({
 /** "Nothing to read: evidence covers all 8 hunks.", or with snapshots: "...covers 2 hunks; the other 411 are generated files." */
 function nothingToReadText(coveredCount: number, generatedCount: number): string {
   if (generatedCount === 0) return `Nothing to read: evidence covers all ${coveredCount} hunks.`;
-  if (coveredCount === 0) return `Nothing to read: all ${generatedCount} hunks are generated files.`;
-  return `Nothing to read: evidence covers ${coveredCount} ${coveredCount === 1 ? "hunk" : "hunks"}; the other ${generatedCount} are generated files.`;
+  if (coveredCount === 0) return generatedCount === 1 ? "Nothing to read: the one hunk is a generated file." : `Nothing to read: all ${generatedCount} hunks are generated files.`;
+  const covered = `${coveredCount} ${coveredCount === 1 ? "hunk" : "hunks"}`;
+  const others = generatedCount === 1 ? "the other hunk is a generated file" : `the other ${generatedCount} are generated files`;
+  return `Nothing to read: evidence covers ${covered}; ${others}.`;
 }
 
 interface CoveredListProps {
@@ -151,6 +153,7 @@ function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<
       className="rounded-control border border-dashed border-border-default px-2 py-1"
       title={`${fileCount} ${noun} · not in the reading count · ${reveal.isGeneratedOpen ? "Hide" : "Show"}`}
     >
+      <p className="px-1 pb-2 text-xs text-text-muted">{"Generated files aren't read, so code hidden in one wouldn't be caught. Read the template change that produces them."}</p>
       <CoveredList entries={entries} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
     </Disclosure>
   );

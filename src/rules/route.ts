@@ -40,7 +40,7 @@ export function route(
   const readHunkList = review.hunks.filter((hunk) => coverage[hunk.id] === "read");
 
   const totalHunks = review.hunks.length;
-  const generatedHunks = review.hunks.filter((hunk) => coverage[hunk.id] === "generated").length;
+  const generatedHunks = countGenerated(coverage);
   const readHunks = readHunkList.length;
   const totalLines = sumChangedLines(review.hunks);
   const readLines = sumChangedLines(readHunkList);
@@ -86,7 +86,7 @@ function coverHunks(
 /**
  * Why a hunk is in the reading list, in the order coverHunks applies its rule:
  * a finding, then a refusal, then a Shadow area, else no claim covers it. Only
- * meaningful for hunks whose coverage is "read" (or "generated", see below).
+ * meaningful for hunks whose coverage is "read".
  * @example "Finding f1 (defect) names this hunk"
  */
 export function coverageReason(
@@ -102,9 +102,6 @@ export function coverageReason(
   const area = review.files.find((file) => file.path === hunk?.file)?.area ?? null;
   if (area !== null && levels[area] === "shadow") {
     return `${areaLabel[area]} is at Shadow: the AI's evidence routes nothing here yet`;
-  }
-  if (hunk && review.files.find((file) => file.path === hunk.file)?.kind === "generated") {
-    return "Generated file: not read, so code hidden in it wouldn't be caught";
   }
   return "No Verified or Supported claim covers it";
 }
@@ -168,6 +165,11 @@ function collectReasons(input: RuleInput): Reason[] {
     reasons.push({ ruleId: "R-generated", tier: "light", text: generatedReason(generatedHunks) });
   }
   return reasons;
+}
+
+/** How many hunks route() marked "generated": the ones the reading count leaves out. */
+export function countGenerated(coverage: Record<string, Coverage> | Coverage[]): number {
+  return Object.values(coverage).filter((state) => state === "generated").length;
 }
 
 /**
