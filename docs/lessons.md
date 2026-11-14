@@ -2,6 +2,13 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-14 · Independent audit of the eight ideas against the recorded data
+
+- **What we did:** A script outside the test suite parsed every recorded file against its schema, re-ran `route()` on the four Tieto reviews, and re-checked each citation with plain `git show` in the fork, not with the pipeline's quote check. It also checked the evidence rules (no Verified claim without an A5 test that fails on the base and passes on the head; none on the PR's own test alone), the ladder thresholds, the fixed refusals and the receipt against the review. 54 recorded reviews, 1,421 citations: no violation. `pnpm countersign verify mp-2283` exits 0, and the 53 demo-path e2e specs pass on a production build.
+- **What it found that wasn't logged:** the report card's Shadow legend said a person reads only the hunks no checked evidence covers; `route()` sends every hunk of a Shadow area to a person, which is why mp-2297 shows 7 Verified claims and "Read 21 of 21" (#212). Reasons in mp-2129's `inconclusiveTests` start mid-word because the build error line is read from an output excerpt that can begin mid-line (#213). The concept card quoted "55 of 473 hunks" without saying that 402 are generated snapshots: outside them a person reads 55 of 71 (#214). 93 of 117 findings on planted-bug runs are not scored, so the false-positive rate is unknown (#217).
+- **Confirmed, already logged above:** blind-first shows no advantage at 10 of 10 per mode (#216 tracks harder plants); tests of new API can't build on the base, so mp-2129 and mp-2234 have no Verified claim (#215 tracks the rule change). The quote check passed 1,421 of 1,422 quotes on real runs, so its value on screen rests on that one failure and the unit tests.
+- **What we changed:** the legend and the S2 hunk line (#212), the concept card (#214). The rest are open issues.
+
 ## Correction (2026-11-14)
 
 The entry below, "Security caught 0 of 3 planted bugs: all three are real misses", was partly wrong. Under rv1, A3 did spot v03 and v10 but filed them as `scope-creep`, which the eval rightly doesn't count (spec 9.1), so the "three real misses" was partly a labelling miss.
