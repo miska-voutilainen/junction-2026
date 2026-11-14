@@ -1,18 +1,18 @@
+/**
+ * `pnpm countersign draft|sign|verify|export <changeId>`: the receipt CLI.
+ * Commands return the lines to print or throw a CommandError; only this file
+ * turns them into output and an exit code, so tests call the commands directly.
+ */
+
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { CommandError, type ReceiptOptions } from "./context";
 import { defaultSshKeygenPath } from "./sshKeygen";
 import { draftReceipt } from "./draft";
-import { exportReceipt } from "./exportRecord";
+import { exportReceipt } from "./exportReceipt";
 import { signReceipt } from "./sign";
 import { verifyReceipt } from "./verify";
-
-/**
- * `pnpm countersign draft|sign|verify|export <changeId>`: the receipt CLI.
- * Commands return the lines to print or throw a CommandError; only this file
- * turns them into output and an exit code, so tests call the commands directly.
- */
 
 const usage = `Usage: pnpm countersign <draft|sign|verify|export> <changeId>
   draft  [--owner <github-login>] [--force]

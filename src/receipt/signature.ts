@@ -1,13 +1,13 @@
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { signatureNamespace, withTempFolder, type ReceiptOptions } from "./context";
-import { runSshKeygen, toSshPath } from "./sshKeygen";
-
 /**
  * Checks an armored SSH signature over a payload against allowed_signers for one
  * owner in the receipt namespace. `sign` runs it before writing a note (so a
  * wrong key never produces a receipt) and `verify` runs it as the merge gate.
  */
+
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { signatureNamespace, withTempFolder, type ReceiptOptions } from "./context";
+import { runSshKeygen, toSshPath } from "./sshKeygen";
 
 /** The outcome of one `ssh-keygen -Y verify`: its "Good ..." line, or why it failed. */
 export type SignatureCheck =

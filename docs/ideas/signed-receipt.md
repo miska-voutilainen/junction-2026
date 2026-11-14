@@ -43,6 +43,6 @@ Auditors already ask who approved a change, what was checked and what risk was a
 
 ## In the code
 
-- [`src/receipt/cli.ts`](../../src/receipt/cli.ts): the countersign CLI entry; it spans [`src/receipt/`](../../src/receipt/): [`draft.ts`](../../src/receipt/draft.ts), [`sign.ts`](../../src/receipt/sign.ts), [`verify.ts`](../../src/receipt/verify.ts) and [`exportRecord.ts`](../../src/receipt/exportRecord.ts)
+- [`src/receipt/cli.ts`](../../src/receipt/cli.ts): the countersign CLI entry; it spans [`src/receipt/`](../../src/receipt/): [`draft.ts`](../../src/receipt/draft.ts), [`sign.ts`](../../src/receipt/sign.ts), [`verify.ts`](../../src/receipt/verify.ts) and [`exportReceipt.ts`](../../src/receipt/exportReceipt.ts)
 - [`src/lib/git/diffIdentity.ts`](../../src/lib/git/diffIdentity.ts): `computeDiffIdentity()`, which feeds both review and receipt
 - Shown on S2, the Receipt tab (signed, unsigned or stale), and S4, the full receipt

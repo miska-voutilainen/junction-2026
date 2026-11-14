@@ -363,7 +363,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 
 - `pnpm countersign draft <changeId>`: writes `.scratch/receipts/<changeId>.json` (a `Receipt` without `signedAt`, from `review.receiptDraft`, owner from `--owner <login>` or `git config github.user`, else asks for `--owner`). The owner edits it.
 - `pnpm countersign sign <changeId> [--key <path>]` (default key `~/.ssh/countersign_ed25519`): sets `signedAt`, serialises the receipt as canonical JSON (keys sorted, 2-space indent, trailing newline), signs it with `ssh-keygen -Y sign -f <key> -n countersign-receipt`, writes the note `<canonical JSON>\n<armored signature>` with `git notes --ref=countersign add --no-stripspace -F <file> <headSha>` in `SAMPLE_REPO_DIR` (fails if a note exists: receipts are append-only by policy), then prints the verify command.
-- `pnpm countersign verify <changeId>`: reads the note, splits it at the `-----BEGIN SSH SIGNATURE-----` line, runs `ssh-keygen -Y verify -f data/sample/allowed_signers -I <owner> -n countersign-receipt -s <sig>` with the payload on stdin, checks `commit === headSha` and recomputes `computeDiffIdentity()`. Prints the ssh-keygen line and "diff unchanged" (exit 0), or "Stale: the diff changed since signing" (exit 1), or "No receipt for <changeId>" (exit 2), or "Signature invalid" (exit 3). The exit code is the merge gate a CI step would use.
+- `pnpm countersign verify <changeId>`: reads the note, splits it at the `-----BEGIN SSH SIGNATURE-----` line, runs `ssh-keygen -Y verify -f data/sample/allowed_signers -I <owner> -n countersign-receipt -s <sig>` with the payload on stdin, checks `commit === headSha` and recomputes `computeDiffIdentity()`. Prints the ssh-keygen line and "diff unchanged" (exit 0), or "Stale: the diff changed since signing" (exit 1), or "No receipt for <changeId>. Run pnpm countersign sign <changeId> first." (exit 2), or "Signature invalid" (exit 3). The exit code is the merge gate a CI step would use.
 - `pnpm countersign export <changeId>`: runs verify and writes `data/receipts/<changeId>.json`.
 - ssh-keygen: on Windows `C:\Program Files\Git\usr\bin\ssh-keygen.exe` (OpenSSH 10.2), else `ssh-keygen` on the PATH; paths passed with forward slashes, `cwd` set.
 
@@ -652,8 +652,8 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
   - **Field sources:**
     - `changeId`, `requirementId`, `reviewerVersion` (`review.reviewer.version`), `reviewRunId` (`review.run.id`) and the three lists come from the review.
     - `repo`, `commit` (`headSha`) and `baseCommit` come from the change input.
-    - `baseTree`, `headTree` and `diffSha256` come from `computeDiffIdentity()`. They must equal `review.diff`, else exit 1 "Review is stale: re-run the pipeline".
-  - **Owner:** `--owner <login>`, else `git config github.user` in the repo root, else exit 1 "Pass --owner <github-login>".
+    - `baseTree`, `headTree` and `diffSha256` come from `computeDiffIdentity()`. They must equal `review.diff`, else exit 1 "Review is stale: re-run the pipeline. Run pnpm review run <changeId>, then pnpm countersign draft <changeId> --force." (`sign` says the same).
+  - **Owner:** `--owner <login>`, else `git config github.user` in the repo root, else exit 1 "Pass --owner <github-login>, or set one with git config github.user <github-login>.".
   - **Output:** the draft goes to `<repo root>/.scratch/receipts/<id>.json`. An existing draft is overwritten only with `--force`, else exit 1 "Draft exists: <path> (use --force)".
 - **Exit codes:**
   - 0 ok.
@@ -670,12 +670,12 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 - **verify:**
   - Finds the newest receipt for the change id among all notes in `refs/notes/countersign` (`git notes --ref=countersign list`).
   - Checks the signature first: exit 3 on failure or an unparseable note.
-  - Then `receipt.commit === ChangeInput.headSha` and the three identity values recomputed for `baseSha..headSha`. Any mismatch is exit 1, "Stale: the diff changed since signing".
+  - Then `receipt.commit === ChangeInput.headSha` and the three identity values recomputed for `baseSha..headSha`. Any mismatch is exit 1, "Stale: the diff changed since signing. Run pnpm review run <changeId>, then pnpm countersign draft <changeId> --force and sign it again.".
   - Test for stale: sign on commit A, then point the change input's `headSha` at a new commit B.
   - The printed "Good …" line is ssh-keygen's stdout.
 - **Testability:**
   - Functions take `{ repoDir, dataDir, allowedSignersPath, sshKeygenPath }`. The CLI fills them from the env and defaults; `COUNTERSIGN_DATA_DIR` and `COUNTERSIGN_ALLOWED_SIGNERS` override them for tests.
-  - Modules: `src/receipt/{cli,draft,sign,verify,exportRecord,canonicalJson,sshKeygen,notes}.ts`. Args are parsed with `node:util` `parseArgs`.
+  - Modules: `src/receipt/{cli,draft,sign,verify,exportReceipt,canonicalJson,sshKeygen,notes}.ts`. Args are parsed with `node:util` `parseArgs`.
   - Temp repos in tests set `user.name` and `user.email` with `-c`. Tests build a minimal `Review` in a temp data folder.
 - **export:** writes only after verify exits 0; otherwise it exits with verify's code and writes nothing.
   - `verify.command` is "pnpm countersign verify <id>" and `verify.output` is the lines verify printed.

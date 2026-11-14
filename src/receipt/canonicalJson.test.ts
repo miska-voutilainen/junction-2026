@@ -33,4 +33,11 @@ describe("canonicalJson", () => {
     expect(text.endsWith("\n\n")).toBe(false);
     expect(text).not.toContain("\r");
   });
+
+  it("refuses an undefined value and names where it is", () => {
+    expect(() => canonicalJson({ owner: "ada", note: { text: undefined } })).toThrow(
+      "Cannot sign $.note.text",
+    );
+    expect(() => canonicalJson({ hunks: [1, undefined] })).toThrow("Cannot sign $.hunks[1]");
+  });
 });

@@ -1,3 +1,11 @@
+/**
+ * Signed receipt in git, step 2: a named engineer signs. The signature covers the
+ * canonical JSON of the receipt, which binds the diff identity and the hunk
+ * ledger, and the result is stored as a git note on the head commit, so the proof
+ * travels with the repository. The AI never reaches this step by itself: signing
+ * needs the owner's key. Spec section 5, Receipt CLI; 9.1 for the formats.
+ */
+
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -19,14 +27,6 @@ import { DraftSchema, type Draft } from "./draft";
 import { addNote, hasNote } from "./notes";
 import { checkSignature } from "./signature";
 import { runSshKeygen, toSshPath } from "./sshKeygen";
-
-/**
- * Signed receipt in git, step 2: a named engineer signs. The signature covers the
- * canonical JSON of the receipt, which binds the diff identity and the hunk
- * ledger, and the result is stored as a git note on the head commit, so the proof
- * travels with the repository. The AI never reaches this step by itself: signing
- * needs the owner's key. Spec section 5, Receipt CLI; 9.1 for the formats.
- */
 
 /** The default signing key, named in the spec. */
 const defaultKeyPath = "~/.ssh/countersign_ed25519";
@@ -168,7 +168,10 @@ async function requireDraftMatchesCurrentDiff(
   const change = await readChangeInput(options, changeId);
   const current = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
   if (!isSameDiff(draft, change.headSha, current))
-    throw new CommandError(1, "Review is stale: re-run the pipeline");
+    throw new CommandError(
+      1,
+      `Review is stale: re-run the pipeline. Run pnpm review run ${changeId}, then pnpm countersign draft ${changeId} --force.`,
+    );
 }
 
 /**

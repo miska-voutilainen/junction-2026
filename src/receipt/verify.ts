@@ -1,15 +1,15 @@
-import { ReceiptSchema, type Receipt } from "@/contracts/receipt";
-import { computeDiffIdentity } from "@/lib/git";
-import { CommandError, isSameDiff, readChangeInput, type ReceiptOptions } from "./context";
-import { listNotes, readNote, type NoteEntry } from "./notes";
-import { checkSignature } from "./signature";
-
 /**
  * Signed receipt in git, the merge gate: a receipt counts only if its signature
  * verifies against allowed_signers and the diff it was signed over is the diff
  * under review now. The exit code is what a CI step would gate on. Spec section 5,
  * Receipt CLI, verify.
  */
+
+import { ReceiptSchema, type Receipt } from "@/contracts/receipt";
+import { computeDiffIdentity } from "@/lib/git";
+import { CommandError, isSameDiff, readChangeInput, type ReceiptOptions } from "./context";
+import { listNotes, readNote, type NoteEntry } from "./notes";
+import { checkSignature } from "./signature";
 
 const signatureMarker = "-----BEGIN SSH SIGNATURE-----";
 
@@ -52,7 +52,10 @@ export async function verifyReceipt(
 
   const current = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
   if (!isSameDiff(receipt, change.headSha, current))
-    throw new CommandError(1, "Stale: the diff changed since signing");
+    throw new CommandError(
+      1,
+      `Stale: the diff changed since signing. Run pnpm review run ${changeId}, then pnpm countersign draft ${changeId} --force and sign it again.`,
+    );
 
   return {
     receipt,
@@ -81,7 +84,11 @@ async function findNewestNote(
     if (note.claimed.changeId !== changeId) continue;
     if (newest === null || isLater(note, newest)) newest = note;
   }
-  if (newest === null) throw new CommandError(2, `No receipt for ${changeId}`);
+  if (newest === null)
+    throw new CommandError(
+      2,
+      `No receipt for ${changeId}. Run pnpm countersign sign ${changeId} first.`,
+    );
   return newest;
 }
 
