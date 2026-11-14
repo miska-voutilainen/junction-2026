@@ -199,7 +199,7 @@ All data the site shows is committed under `data/`, validated by the zod schemas
 - **Planted bugs:** 10 variant branches `variant/v01` … `variant/v10` in the fork. Each is the base commit plus one commit that contains the agent's original change **plus one planted defect**, with the same commit message as the original. Six are variants of `mp-2283`, four of `mp-2234`. By area: 4 generator, 3 analyzer, 3 security, 0 performance. Branch names and commit messages never hint at the defect. Each has an answer key `data/sample/answer-key/v<nn>.json` (file, new-side line range, area, the defect in one sentence, written by, written at). Each variant also gets a change input `data/sample/changes/v<nn>.json` with `kind: "planted-bug"` and the same author description as its parent. A plant's `area` is the area of its file by `classifyFile()` in `src/policy/areas.ts`, the rule routing and the ladder use, so a variant may change files its parent doesn't (the defect stays inside the variant's diff against the base). Every planted line range lies more than 3 lines from any line the parent change edits (new side), so a finding about the parent's own code cannot score as a catch.
 - **Contradiction plants:** `cp0` is the false statement in `mp-2283`'s own description (answer key only, 9.1 T07); plus 4 change inputs `data/sample/changes/cp<n>.json` (`kind: "contradiction-plant"`), each pointing at a Tieto change's branch and head, with an author description that contains one planted false statement; answer keys `data/sample/answer-key/cp<n>.json` hold the exact false sentence and why it's false. `cp1` and `cp2` point at `mp-2283`, `cp3` at `mp-2234`, `cp4` at `mp-2129`.
 - **Owners' public keys:** `data/sample/allowed_signers` in the `ssh-keygen` ALLOWED SIGNERS format, one line per owner: `<github-login> namespaces="countersign-receipt" ssh-ed25519 <base64>`. Private keys never enter the repo.
-- **Recorded output:** `data/runs/<changeId>/review.json` (latest blind-first review), `data/runs/<changeId>/anchored/<k>.json` and `data/runs/<changeId>/blind/<k>.json` (anchored-vs-blind runs, k = 1–3), `data/eval/report-card.json`, `data/recordings/<promptVersion>-<keyHash>.json` (raw model responses for replay), `data/receipts/<changeId>.json` (exported signed receipts).
+- **Recorded output:** `data/runs/<changeId>/review.json` (latest blind-first review), `data/runs/<changeId>/anchored/<k>.json` and `data/runs/<changeId>/blind/<k>.json` (anchored-vs-blind runs, k = 1–3; for planted bugs `blind/<k>.json` holds runs 2..n), `data/eval/report-card.json`, `data/recordings/<promptVersion>-<keyHash>.json` (raw model responses for replay), `data/receipts/<changeId>.json` (exported signed receipts).
 - **Fixtures:** `data/fixtures/` mirrors the recorded layout (`runs/mp-2283/review.json`, `eval/report-card.json`, `receipts/mp-2283.json`, `sample/changes/*.json`) with hand-written data that validates against the schemas; used by the UI until recorded files exist and by unit and e2e tests.
 
 ## 5. Contracts between lanes
@@ -320,7 +320,7 @@ Reading time: `readMinutes = ceil(readLines / 25)` (minimum 1 when readLines > 0
   schemaVersion: 1, generatedAt: string,
   reviewer: { version: string, model: string },
   areas: { area: Area, planted: number, caught: number, spotChecksClean: number, level: LadderLevel,
-           plants: { plantId: string, changeId: string, caught: boolean, findingId: string | null, defect: string, variantUrl: string }[] }[],
+           plants: { plantId: string, changeId: string, caught: boolean, runs: number, caughtRuns: number, findingId: string | null, defect: string, variantUrl: string }[] }[],
   anchoredVsBlind: { plants: number, runsPerMode: number,
                      anchored: { caught: number, total: number }, blind: { caught: number, total: number },
                      perPlant: { plantId: string, changeId: string, statement: string, anchoredCaught: number, blindCaught: number, runs: number }[] },
@@ -356,7 +356,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 ### Pipeline CLI (`src/pipeline/cli.ts`)
 
 - `pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
-- `pnpm evals`: blind runs (no A5) of every `planted-bug` input, 2 anchored and 2 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
+- `pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]`: 3 blind runs (no A5) of every `planted-bug` input, 2 anchored and 2 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
 - Env: `AI_BACKEND` (`claude-code` default | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
 
 ### Receipt CLI (`src/receipt/cli.ts`)
@@ -580,7 +580,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 
 **T16 · eval details.**
 - **Runs and output paths:**
-  - **Planted bugs:** one blind run per plant (A1–A3; no A4, no A5) into `data/runs/<plantId>/review.json` (e.g. `data/runs/v01/review.json`). A re-run overwrites.
+  - **Planted bugs:** 3 blind runs per plant (A1–A3; no A4, no A5; `--plant-runs <n>` to change). Run 1 goes to `data/runs/<plantId>/review.json` (e.g. `data/runs/v01/review.json`, the file the app links to), runs 2..n to `data/runs/<plantId>/blind/<k>.json`. A re-run overwrites. Why 3: a single run flips on security plants; three give a majority and a per-plant rate.
   - **Contradiction plants:** 2 blind runs (A1, A2, A4) and 2 anchored runs (A2 with the description first, A4) per plant. A3 and A5 are skipped in these runs.
     - `cp1`–`cp4` write to `data/runs/<plantId>/{blind,anchored}/<k>.json`.
     - `cp0`, the false statement in `mp-2283`'s own description, writes to `data/runs/mp-2283/{blind,anchored}/<k>.json`.
@@ -588,8 +588,8 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 - **Mapping:** `cp1` and `cp2` belong to `mp-2283`, `cp3` to `mp-2234`, `cp4` to `mp-2129`. In answer keys and in `anchoredVsBlind.perPlant`, `changeId` is that Tieto change (`cp0` → `mp-2283`).
 - **Planted-bug match:**
   - A finding matches when its kind is `defect` or `missing` and its `area` equals the answer key's (null never matches). It also needs a citation with `side: "new"` in the answer key's file whose `[startLine, endLine]` intersects `[keyStart − 3, keyEnd + 3]`; any one such citation is enough.
-  - `findingId` is the first match in output order. `scope-creep` and `contradiction` findings never count.
-  - `findingsOnPlants` counts `defect` and `missing` findings over the planted-bug runs: `total`, plus `matchedPlant` for the ones that match.
+  - A plant is `caught` when a strict majority of its runs match (2 of 3); `caughtRuns` of `runs` is the per-plant rate. `findingId` is the first match in output order of the first run that matched, null when none did. `scope-creep` and `contradiction` findings never count.
+  - `findingsOnPlants` counts `defect` and `missing` findings over every planted-bug run: `total`, plus `matchedPlant` for the ones that match.
 - **Contradiction match:**
   - A run catches the plant when a `contradiction` finding's `statement` matches the answer key's sentence. A match is equality after lowercasing and collapsing whitespace, or a token overlap of at least 0.8.
   - Token overlap: lowercase, split on non-alphanumerics, drop empties, then `|key tokens ∩ statement tokens| / |key tokens|`.

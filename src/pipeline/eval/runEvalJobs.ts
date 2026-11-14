@@ -1,6 +1,7 @@
 /**
  * The eval's run schedule: which reviews to record, and how. Planted-bug
- * variants get one blind run each (A1 to A3); every contradiction plant gets
+ * variants get `plantRuns` blind runs each (A1 to A3; run 1 is the review the
+ * app links to, runs 2..n are blind comparison runs); every contradiction plant gets
  * `runsPerMode` blind runs (A1, A2, A4) and as many anchored runs (A2 with the
  * description first, A4). Runs are staged: a run whose file already exists for
  * the current reviewer version is reused, so asking for 3 runs after 2 only
@@ -18,7 +19,10 @@ export interface EvalJob {
   changeInputId: string;
   mode: Review["mode"];
   steps: readonly ModelStep[];
-  /** Set for contradiction runs, which land in data/runs/<change>/<mode>/<k>.json. */
+  /**
+   * Set for every run but a planted bug's first: contradiction runs and planted-bug
+   * runs 2..n, which land in data/runs/<change>/<mode>/<k>.json.
+   */
   comparison?: { mode: "anchored" | "blind"; runNumber: number };
 }
 
@@ -53,11 +57,16 @@ const plantedBugSteps: readonly ModelStep[] = ["a1", "a2", "a3"];
  * identical across the plants of one Tieto change; those runs sit in one group
  * so the first records and the rest reuse the recording instead of racing it.
  *
+ * A planted bug's runs stay in one group too: they share A1 and A2 recordings
+ * the same way, and run k only differs from run 1 by its recording key.
+ *
+ * @param plantRuns blind runs per planted bug; run k >= 2 is stored as blind/<k>.json
  * @param changeInputIdOf the change input a plant's runs review
  */
 export function planEvalJobs(
   keys: readonly AnswerKey[],
   runsPerMode: number,
+  plantRuns: number,
   changeInputIdOf: (key: AnswerKey) => string,
 ): EvalJob[][] {
   const groups = new Map<string, EvalJob[]>();
@@ -71,6 +80,15 @@ export function planEvalJobs(
       mode: "blind-first",
       steps: plantedBugSteps,
     });
+    for (let k = 2; k <= plantRuns; k++) {
+      add(key.plantId, {
+        label: `${key.plantId} run ${k}`,
+        changeInputId: changeInputIdOf(key),
+        mode: "blind-first",
+        steps: plantedBugSteps,
+        comparison: { mode: "blind", runNumber: k },
+      });
+    }
   }
   for (const key of keys.filter((candidate) => candidate.kind === "contradiction")) {
     for (let k = 1; k <= runsPerMode; k++) {

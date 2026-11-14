@@ -20,7 +20,9 @@ export const ReportCardSchema = z.strictObject({
         z.strictObject({
           plantId: z.string(),
           changeId: z.string(),
-          caught: z.boolean(),
+          caught: z.boolean(), // caught in a strict majority of runs
+          runs: nonNegInt,
+          caughtRuns: nonNegInt,
           findingId: z.string().nullable(),
           defect: z.string(),
           variantUrl: z.string(), // https://github.com/<fork>/commit/<headSha>

@@ -34,7 +34,7 @@ const inputOf = (answerKey: AnswerKey) =>
 
 describe("planEvalJobs", () => {
   it("plans A1-A3 for a planted bug and A1, A2, A4 blind plus A2, A4 anchored per contradiction run", () => {
-    const jobs = planEvalJobs(keys, 2, inputOf).flat();
+    const jobs = planEvalJobs(keys, 2, 1, inputOf).flat();
     expect(jobs.filter((job) => !job.comparison).map((job) => [job.label, job.steps])).toEqual([
       ["v01", ["a1", "a2", "a3"]],
     ]);
@@ -54,17 +54,28 @@ describe("planEvalJobs", () => {
   });
 
   it("puts the blind runs of one Tieto change and run number in one group, so they run in turn", () => {
-    const groups = planEvalJobs(keys, 1, inputOf);
+    const groups = planEvalJobs(keys, 1, 1, inputOf);
     const blind = groups.find((group) => group.some((job) => job.label === "cp0 blind 1"));
     expect(blind?.map((job) => job.label)).toEqual(["cp0 blind 1", "cp1 blind 1"]);
   });
 
   it("plans only as many runs as asked for", () => {
     expect(
-      planEvalJobs(keys, 3, inputOf)
+      planEvalJobs(keys, 3, 1, inputOf)
         .flat()
         .filter((job) => job.comparison),
     ).toHaveLength(12);
+  });
+
+  it("plans runs 2..n of a planted bug as blind comparison runs in the plant's own group", () => {
+    const groups = planEvalJobs(keys, 1, 3, inputOf);
+    const plant = groups.find((group) => group.some((job) => job.label === "v01"));
+    expect(plant?.map((job) => [job.label, job.comparison])).toEqual([
+      ["v01", undefined],
+      ["v01 run 2", { mode: "blind", runNumber: 2 }],
+      ["v01 run 3", { mode: "blind", runNumber: 3 }],
+    ]);
+    expect(plant?.[2]).toMatchObject({ mode: "blind-first", steps: ["a1", "a2", "a3"] });
   });
 });
 

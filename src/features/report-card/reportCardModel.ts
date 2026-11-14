@@ -133,6 +133,8 @@ export interface MissedPlant {
   area: Area;
   defect: string;
   variantUrl: string;
+  /** "1 of 3 runs": how many of the plant's runs caught it, though not a majority. */
+  runsLine: string;
 }
 
 /** Every plant with `caught: false`, in card order. */
@@ -140,7 +142,13 @@ export function missedPlants(reportCard: ReportCard): MissedPlant[] {
   return AreaSchema.options.flatMap((area) =>
     (reportCard.areas.find((entry) => entry.area === area)?.plants ?? [])
       .filter((plant) => !plant.caught)
-      .map((plant) => ({ plantId: plant.plantId, area, defect: plant.defect, variantUrl: plant.variantUrl })),
+      .map((plant) => ({
+        plantId: plant.plantId,
+        area,
+        defect: plant.defect,
+        variantUrl: plant.variantUrl,
+        runsLine: `${plant.caughtRuns} of ${plant.runs} runs`,
+      })),
   );
 }
 

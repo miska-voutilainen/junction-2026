@@ -17,6 +17,8 @@
           "plantId": "v01",
           "changeId": "v01",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f1",
           "defect": "FirstOrDefault fallback returns Location.None, so the diagnostic for a missing Key points nowhere.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/3b698fe7cfa42f0f18b108078ca7ed5b1dba1e8b"
@@ -25,6 +27,8 @@
           "plantId": "v02",
           "changeId": "v02",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f2",
           "defect": "TryGetMemberType returns true for a member that is neither a property nor a field.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/94fc1c00e77a95b32ad6b1432b5ad39e153d711a"
@@ -33,6 +37,8 @@
           "plantId": "v03",
           "changeId": "v03",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f1",
           "defect": "The type-argument loop stops one element early, so the last argument of a closed generic is never mapped.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/d02b6832b84d4086e11afb3af42c28f8396d1b65"
@@ -41,6 +47,8 @@
           "plantId": "v07",
           "changeId": "v07",
           "caught": false,
+          "runs": 3,
+          "caughtRuns": 0,
           "findingId": null,
           "defect": "The option is read once per assembly instead of per syntax tree, so a per-file override is ignored.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/1f58f5000408476f3afbfefc752142bba203058a"
@@ -58,6 +66,8 @@
           "plantId": "v04",
           "changeId": "v04",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f2",
           "defect": "The catch block reports the unsupported-member diagnostic at Locations[0] without checking the list is non-empty.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/706b37ef42a1a5dbe47bba4f7ff2ca18d9173703"
@@ -66,6 +76,8 @@
           "plantId": "v08",
           "changeId": "v08",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f1",
           "defect": "The partial-class check is registered when SuppressSourceGeneration is true instead of when it is false.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/eeaa8fb2cbf2078eb43ba4479cae0b9384655d41"
@@ -74,6 +86,8 @@
           "plantId": "v09",
           "changeId": "v09",
           "caught": false,
+          "runs": 3,
+          "caughtRuns": 0,
           "findingId": null,
           "defect": "A MsgPack003 diagnostic is skipped for properties declared in a base class.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/7a3dddfb55a3a4fc3985fe96b652f3e266810c71"
@@ -91,6 +105,8 @@
           "plantId": "v05",
           "changeId": "v05",
           "caught": false,
+          "runs": 3,
+          "caughtRuns": 0,
           "findingId": null,
           "defect": "The emitted deserializer no longer calls options.Security.DepthStep for the new closed generic member.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/a3f4cca97de3ae9d44bccfa2dc1cdb64554b6015"
@@ -99,6 +115,8 @@
           "plantId": "v06",
           "changeId": "v06",
           "caught": true,
+          "runs": 3,
+          "caughtRuns": 3,
           "findingId": "f4",
           "defect": "The renamed options parameter is shadowed in the emitted Deserialize method, so a caller's security options are replaced by defaults.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/37f51aab4750b3a8059fa837b73bd2f63589eb01"
@@ -107,6 +125,8 @@
           "plantId": "v10",
           "changeId": "v10",
           "caught": false,
+          "runs": 3,
+          "caughtRuns": 0,
           "findingId": null,
           "defect": "The analyzer's relaxed path skips the untrusted-type allow-list check.",
           "variantUrl": "https://github.com/miska-voutilainen/junction26-messagepack-csharp/commit/1d9d67f126da982476b3c60fc9d31871cf6e2907"
