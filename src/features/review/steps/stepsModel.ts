@@ -13,7 +13,7 @@ import { countOf } from "@/lib/countOf";
 /** The four steps, in the order the person works through them. */
 export type StepId = "read" | "blind" | "refused" | "sign";
 
-/** One tab of the panel: "1 Read" with a short count under it. */
+/** One tab of the panel: "Read" with a short count under it; `number` is its keyboard shortcut. */
 export interface StepTab {
   id: StepId;
   number: 1 | 2 | 3 | 4;
