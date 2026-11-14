@@ -58,12 +58,24 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                     data-navigator-item
                     aria-current={item.hunkId === activeHunkId ? "true" : undefined}
                     onClick={() => onJump(item.hunkId)}
-                    className="flex w-full items-center gap-2 rounded-item px-2 py-1.5 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover aria-[current=true]:bg-surface-selected"
+                    className="flex w-full items-start gap-2 rounded-item px-2 py-1.5 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover aria-[current=true]:bg-surface-selected"
                   >
                     <CoverageMark coverage={item.coverage} isLabelHidden />
-                    {/* dir="rtl" puts the ellipsis on the left, so a long file name gives way and the line numbers stay readable; <bdi> keeps the label's own order. */}
-                    <span dir="rtl" className="min-w-0 flex-1 truncate text-left font-mono text-xs text-text-secondary">
-                      <bdi>{item.label}</bdi>
+                    {/* The area sits under the name, not beside it: in a 192 px column a chip on the
+                        same line left only "Type…" of TypeCollector.cs. */}
+                    <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                      {/* The name truncates at its end and the line range stays whole, so two hunks of one file stay apart. */}
+                      <span title={item.label} className="flex w-full min-w-0 font-mono text-xs text-text-secondary">
+                        {item.lineRange === null ? (
+                          <span className="truncate">{item.label}</span>
+                        ) : (
+                          <>
+                            <span className="truncate">{item.label.slice(0, -item.lineRange.length - 1)}</span>
+                            <span className="shrink-0">:{item.lineRange}</span>
+                          </>
+                        )}
+                      </span>
+                      {item.area && <AreaChip area={item.area} />}
                     </span>
                     {readIds.has(item.hunkId) && !item.isGenerated && (
                       <>
@@ -71,7 +83,6 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                         <span className="sr-only">Read</span>
                       </>
                     )}
-                    {item.area && <AreaChip area={item.area} />}
                   </button>
                 </li>
               ))}

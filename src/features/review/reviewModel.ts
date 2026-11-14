@@ -37,7 +37,10 @@ export interface HunkSections {
 export interface NavigatorItem {
   /** The hunk to scroll to; for the generated item, the first generated hunk of the group. */
   hunkId: string;
+  /** The full text, also the dropdown option: `TypeCollector.cs:236-242`. */
   label: string;
+  /** The line range alone (`236-242`), kept whole when the file name truncates; null for the generated item. */
+  lineRange: string | null;
   coverage: Coverage;
   area: Area | null;
   isGenerated: boolean;
@@ -195,6 +198,7 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
     const items: NavigatorItem[] = hunkEntries.map((entry) => ({
       hunkId: entry.hunk.id,
       label: `${fileName(entry.hunk.file)}:${entry.range}`,
+      lineRange: entry.range,
       coverage,
       area: entry.file.area,
       isGenerated: false,
@@ -204,6 +208,7 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
       items.push({
         hunkId: generated[0].hunk.id,
         label: `${fileCount} generated snapshot ${fileCount === 1 ? "file" : "files"}`,
+        lineRange: null,
         coverage,
         area: null,
         isGenerated: true,
