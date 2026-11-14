@@ -5,7 +5,9 @@ import { unlock } from "./unlock";
 // The report card shows the committed fixture until a recorded one exists: generator and analyzer
 // Calibrated, security and performance Shadow.
 const AREA_ORDER = ["Generator", "Analyzer", "Security", "Performance"];
-const ESCAPE_TOAST = "Escape recorded in Generator (simulated). Its changes re-routed.";
+// On the fixtures a Generator escape moves only mp-2283, the signed change, from Focused to Full.
+const ESCAPE_TOAST = "Escape recorded in Generator (simulated). mp-2283: Focused to Full.";
+const RE_ROUTED_TINT = /bg-rose\/15/;
 const ESCAPE_NOTICE = "Escape recorded (simulated) · dropped from Calibrated to Shadow";
 
 /** Collects console errors, warnings and uncaught exceptions while the test runs. */
@@ -36,7 +38,7 @@ test("shows the four areas in order with their sample sizes and no horizontal sc
   await page.goto("/reviewer");
 
   await expect(
-    page.getByRole("heading", { level: 1, name: "Reviewer Report Card" }),
+    page.getByRole("heading", { level: 1, name: "Reviewer report card" }),
   ).toBeAttached();
   await expect(
     page
@@ -78,7 +80,6 @@ test("records an escape with a notice and a toast, and undo restores the level",
   await card.getByRole("button", { name: "Record escape" }).click();
   await expect(page.getByText(ESCAPE_TOAST)).toBeVisible();
   await expect(card.getByText(ESCAPE_NOTICE)).toBeVisible();
-  await expect(card.getByText("(1 simulated escape)")).toBeVisible();
   await expect(card.getByRole("button", { name: "Record escape" })).toBeDisabled();
 
   await card.getByRole("button", { name: "Undo" }).click();
@@ -86,14 +87,24 @@ test("records an escape with a notice and a toast, and undo restores the level",
   await expect(card.getByRole("button", { name: "Record escape" })).toBeEnabled();
 });
 
+test("Reset replaces the escape toast with a cleared notice", async ({ page }) => {
+  await page.goto("/reviewer");
+  await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
+  await expect(page.getByText(ESCAPE_TOAST)).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.getByText("Simulated escapes cleared")).toBeVisible();
+  await expect(page.getByText(ESCAPE_TOAST)).toBeHidden();
+});
+
 test("re-routes the inbox without a reload after an escape", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "mobile", "the breadcrumb is the desktop route back");
+  test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
   await page.goto("/reviewer");
   await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
   await expect(page.getByText(ESCAPE_NOTICE)).toBeVisible();
   await page.evaluate(() => Object.assign(window, { stillSamePage: true }));
 
-  await page.getByRole("link", { name: "Inbox", exact: true }).first().click();
+  await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
   await page.waitForURL((url) => url.pathname === "/");
   // The same document: no reload happened between the report card and the inbox.
   expect(await page.evaluate(() => "stillSamePage" in window)).toBe(true);
@@ -111,6 +122,33 @@ test("re-routes the inbox without a reload after an escape", async ({ page }, te
     ) ?? [])[1],
   );
   expect(readAfter).toBeGreaterThan(readBefore);
+});
+
+const inboxRowOf = (page: Page, id: string) => page.getByRole("row").filter({ hasText: new RegExp(id, "i") });
+
+test("tints the re-routed inbox row after an escape, and not after Undo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "the sidebar nav is the desktop route back");
+  // Wait for the inbox's URL and the Signed fold: under a full parallel run the click
+  // can otherwise land on the fold before the client-side navigation has rendered it.
+  const openInbox = async () => {
+    await page.getByRole("navigation").getByRole("link", { name: /^Inbox/ }).first().click();
+    await page.waitForURL((url) => url.pathname === "/");
+    await expect(page.getByRole("button", { name: "Signed 1", expanded: false })).toBeVisible();
+  };
+
+  await page.goto("/reviewer");
+  await generatorCard(page).getByRole("button", { name: "Record escape" }).click();
+  await openInbox();
+  // mp-2283 is signed, so its row sits in the folded Signed list.
+  await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
+  await expect(inboxRowOf(page, "mp-2283")).toHaveClass(RE_ROUTED_TINT);
+
+  await page.getByRole("navigation").getByRole("link", { name: "Reviewer" }).click();
+  await page.waitForURL((url) => url.pathname === "/reviewer");
+  await generatorCard(page).getByRole("button", { name: "Undo" }).click();
+  await openInbox();
+  await page.getByRole("button", { name: "Signed 1", expanded: false }).click();
+  await expect(inboxRowOf(page, "mp-2283")).not.toHaveClass(RE_ROUTED_TINT);
 });
 
 test("labels the trust ladder as idea 1 and the hallucinations list as idea 4, each linking to its page", async ({

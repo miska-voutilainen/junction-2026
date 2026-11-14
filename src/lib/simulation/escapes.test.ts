@@ -100,3 +100,34 @@ describe("useEscapes", () => {
     expect(result.current.escapes).toEqual({ security: 1 });
   });
 });
+
+describe("re-routed changes for the inbox highlight", () => {
+  async function freshStore() {
+    vi.resetModules();
+    return import("./escapes");
+  }
+
+  it("adds up across escapes, survives a read, and is gone once cleared", async () => {
+    const { markRerouted, peekRerouted, clearRerouted } = await freshStore();
+    markRerouted(["mp-2283"]);
+    markRerouted(["mp-2283", "mp-2129"]);
+    // A render React discards reads too; the ids must still be there for the one that mounts.
+    expect(peekRerouted()).toEqual(["mp-2283", "mp-2129"]);
+    expect(peekRerouted()).toEqual(["mp-2283", "mp-2129"]);
+    clearRerouted();
+    expect(peekRerouted()).toEqual([]);
+  });
+
+  it("is dropped by undo and by reset", async () => {
+    const { markRerouted, peekRerouted, useEscapes } = await freshStore();
+    const { result } = renderHook(() => useEscapes());
+    act(() => result.current.record("generator"));
+    markRerouted(["mp-2283"]);
+    act(() => result.current.undo("generator"));
+    expect(peekRerouted()).toEqual([]);
+
+    markRerouted(["mp-2283"]);
+    act(() => result.current.reset());
+    expect(peekRerouted()).toEqual([]);
+  });
+});

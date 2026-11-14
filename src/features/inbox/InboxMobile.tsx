@@ -7,6 +7,8 @@ import type { ReactNode } from "react";
 import { tierLabel } from "@/contracts";
 import { flagsText, readCount } from "./rowText";
 import { isReviewed } from "./inboxModel";
+import { ReroutedNote } from "./ReroutedNote";
+import { REROUTED_TINT } from "./tableLayout";
 import type { InboxRow, MobileSections, ReviewedRow } from "./inboxModel";
 
 /**
@@ -15,15 +17,18 @@ import type { InboxRow, MobileSections, ReviewedRow } from "./inboxModel";
  * "Needs a desktop" the Focused and Full ones with a read-only link, and
  * "Signed" folds away. There is no approve button: signing is a git command.
  */
-export function InboxMobile({ sections }: Readonly<{ sections: MobileSections }>) {
+export function InboxMobile({
+  sections,
+  highlightedIds,
+}: Readonly<{ sections: MobileSections; highlightedIds: ReadonlySet<string> }>) {
   return (
     <div className="flex flex-col gap-6">
       {sections.signHere.length > 0 && (
         <Section title="Sign here" count={sections.signHere.length}>
           {sections.signHere.map((row) => (
-            <li key={row.id} className="flex flex-col gap-2 border-t border-border-subtle pt-3">
+            <li key={row.id} className={rowClass("flex flex-col gap-2 border-t border-border-subtle pt-3", row.id, highlightedIds)}>
               {/* Plain text: the button below is this row's one link. */}
-              <RowTitle row={row} isLink={false} />
+              <RowTitle row={row} isLink={false} isHighlighted={highlightedIds.has(row.id)} />
               <RowMeta row={row} />
               <Link
                 href={`/changes/${row.id}`}
@@ -39,8 +44,8 @@ export function InboxMobile({ sections }: Readonly<{ sections: MobileSections }>
       {sections.needsDesktop.length > 0 && (
         <Section title="Needs a desktop" count={sections.needsDesktop.length}>
           {sections.needsDesktop.map((row) => (
-            <li key={row.id} className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
-              <RowTitle row={row} dataRowLink />
+            <li key={row.id} className={rowClass("flex flex-col gap-1.5 border-t border-border-subtle pt-3", row.id, highlightedIds)}>
+              <RowTitle row={row} dataRowLink isHighlighted={highlightedIds.has(row.id)} />
               <RowMeta row={row} />
               {isReviewed(row) && (
                 <Link href={`/changes/${row.id}`} className="flex min-h-11 items-center text-sm text-link">
@@ -61,8 +66,8 @@ export function InboxMobile({ sections }: Readonly<{ sections: MobileSections }>
         >
           <ul className="flex flex-col gap-3 pb-2 pl-6">
             {sections.signed.map((row) => (
-              <li key={row.id} className="flex flex-col gap-0.5">
-                <RowTitle row={row} />
+              <li key={row.id} className={rowClass("flex flex-col gap-0.5", row.id, highlightedIds)}>
+                <RowTitle row={row} isHighlighted={highlightedIds.has(row.id)} />
                 <RowMeta row={row} />
               </li>
             ))}
@@ -84,11 +89,29 @@ function Section({ title, count, children }: Readonly<{ title: string; count: nu
   );
 }
 
-function RowTitle({ row, isLink = true, dataRowLink = false }: Readonly<{ row: InboxRow; isLink?: boolean; dataRowLink?: boolean }>) {
-  if (!isLink) return <span className="font-medium text-text-primary">{row.title}</span>;
+/** The list item's classes, tinted when the last simulated escape re-routed the change. */
+function rowClass(base: string, id: string, highlightedIds: ReadonlySet<string>): string {
+  return highlightedIds.has(id) ? `${base} ${REROUTED_TINT}` : base;
+}
+
+function RowTitle({
+  row,
+  isLink = true,
+  dataRowLink = false,
+  isHighlighted,
+}: Readonly<{ row: InboxRow; isLink?: boolean; dataRowLink?: boolean; isHighlighted: boolean }>) {
+  if (!isLink) {
+    return (
+      <span className="font-medium text-text-primary">
+        {row.title}
+        {isHighlighted && <ReroutedNote />}
+      </span>
+    );
+  }
   return (
     <Link href={`/changes/${row.id}`} data-inbox-row-link={dataRowLink || undefined} className="font-medium text-text-primary">
       {row.title}
+      {isHighlighted && <ReroutedNote />}
     </Link>
   );
 }

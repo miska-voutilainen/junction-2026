@@ -7,13 +7,13 @@ import { InboxError } from "@/features/inbox";
 import { ReviewerScreen } from "@/features/report-card";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 
-export const metadata: Metadata = { title: "Reviewer Report Card · Countersign" };
+export const metadata: Metadata = { title: "Reviewer report card · Countersign" };
 
 // The page is static, so this runs at build time: the link appears once the file is committed.
 const hasLessonsLog = existsSync(path.join(process.cwd(), "docs", "lessons.md"));
 
 /**
- * S3 · Reviewer Report Card. Reads the report card and every change with its
+ * S3 · Reviewer report card. Reads the report card and every change with its
  * review (for the routing spread and the lists), then hands plain data to
  * `ReviewerScreen`, which re-levels in the browser with the simulated escapes.
  */
@@ -24,8 +24,8 @@ export default async function ReviewerPage() {
       <AppShell
         changes={[]}
         repo={FALLBACK_REPO}
-        title="Reviewer Report Card"
-        breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Reviewer Report Card" }]}
+        title="Reviewer report card"
+        breadcrumb={[{ label: "Reviewer" }]}
         backHref="/"
         escapeSlot={<EscapeCounter />}
       >

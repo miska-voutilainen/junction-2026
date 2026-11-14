@@ -14,6 +14,9 @@ import { type Area, AreaSchema } from "@/contracts";
 /** Escapes recorded per area; an area with none is absent. */
 export type Escapes = Partial<Record<Area, number>>;
 
+/** Id of the toast that reports a recorded escape, so Reset dismisses that toast and no other. */
+export const ESCAPE_TOAST_ID = "simulated-escape";
+
 /** localStorage key; the version suffix lets a later shape change start clean. */
 export const escapesStorageKey = "countersign.escapes.v1";
 
@@ -107,11 +110,40 @@ export function useEscapes(): EscapesApi {
     const next = { ...now };
     if (remaining === 0) delete next[area];
     else next[area] = remaining;
+    // The rows are back on their earlier tier, so there is nothing left to highlight.
+    pendingReroutedIds = [];
     set(next);
   }, []);
-  const reset = useCallback(() => set(noEscapes), []);
+  const reset = useCallback(() => {
+    pendingReroutedIds = [];
+    set(noEscapes);
+  }, []);
   return useMemo(
     () => ({ escapes, total: Object.values(escapes).reduce((sum, count) => sum + count, 0), record, undo, reset }),
     [escapes, record, undo, reset],
   );
+}
+
+// Ids re-routed by the last recorded escape, waiting for S1 to highlight them.
+// Memory only: a reload or a second visit shows no highlight.
+let pendingReroutedIds: string[] = [];
+
+/** Remembers which changes escapes re-routed, for the inbox's brief highlight; several escapes before S1 opens add up. */
+export function markRerouted(changeIds: string[]): void {
+  pendingReroutedIds = [...new Set([...pendingReroutedIds, ...changeIds])];
+}
+
+/**
+ * The ids `markRerouted` stored, without clearing them. Read during render, and
+ * cleared by `clearRerouted` only after the inbox has mounted: React may start a
+ * render and throw it away (a navigation transition), and a read that also cleared
+ * would leave the render that does mount with nothing to highlight.
+ */
+export function peekRerouted(): string[] {
+  return pendingReroutedIds;
+}
+
+/** Forgets the stored ids once the inbox has shown them, so the highlight plays one visit. */
+export function clearRerouted(): void {
+  pendingReroutedIds = [];
 }

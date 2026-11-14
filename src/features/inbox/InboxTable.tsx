@@ -13,16 +13,19 @@ const IDEA_LABEL_CLASS = "hidden whitespace-nowrap xl:inline-flex";
  * Receipt idea 7) and one `InboxRow` per change. `withHeader` is off for the
  * list inside the Signed fold, which sits under the same column heads.
  *
+ * @param highlightedIds Rows to tint because the last simulated escape re-routed them.
  * @param label Names the table for screen readers.
  * @param emptyText Shown inside the box when no row matches the filter.
  */
 export function InboxTable({
   rows,
+  highlightedIds,
   label,
   emptyText,
   withHeader = true,
 }: Readonly<{
   rows: Row[];
+  highlightedIds: ReadonlySet<string>;
   label: string;
   emptyText: string;
   withHeader?: boolean;
@@ -46,7 +49,7 @@ export function InboxTable({
         )}
         <div role="rowgroup">
           {rows.map((row, index) => (
-            <InboxRow key={row.id} row={row} index={index} />
+            <InboxRow key={row.id} row={row} index={index} isHighlighted={highlightedIds.has(row.id)} />
           ))}
         </div>
       </div>
