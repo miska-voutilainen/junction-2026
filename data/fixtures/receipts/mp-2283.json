@@ -49,7 +49,57 @@
       "acceptedRefusalIds": [
         "r2"
       ]
-    }
+    },
+    "hunks": [
+      {
+        "hunkId": "h1",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "coverage": "verified",
+        "readBy": null
+      },
+      {
+        "hunkId": "h2",
+        "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
+        "coverage": "verified",
+        "readBy": null
+      },
+      {
+        "hunkId": "h3",
+        "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
+        "coverage": "read",
+        "readBy": "miska-voutilainen"
+      },
+      {
+        "hunkId": "h4",
+        "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+        "coverage": "read",
+        "readBy": "miska-voutilainen"
+      },
+      {
+        "hunkId": "h5",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+        "coverage": "supported",
+        "readBy": null
+      },
+      {
+        "hunkId": "h6",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+        "coverage": "verified",
+        "readBy": null
+      },
+      {
+        "hunkId": "h7",
+        "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
+        "coverage": "supported",
+        "readBy": null
+      },
+      {
+        "hunkId": "h8",
+        "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
+        "coverage": "supported",
+        "readBy": null
+      }
+    ]
   },
   "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgFIXTUREBLeVLOGRBm3sKq7dH\nqPzJ0nN2xTq8dQmV3S8AAAAUY291bnRlcnNpZ24tcmVjZWlwdAAAAAAAAAAGc2hhNTEy\nAAAAUwAAAAtzc2gtZWQyNTUxOQAAAEBVq3c0M1bX9YwJ8cK5eT2gL7ZpNfoH4rA6yD1s\n-----END SSH SIGNATURE-----",
   "notesRef": "refs/notes/countersign",

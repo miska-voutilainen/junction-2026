@@ -24,3 +24,21 @@ export const refusalRules: RefusalRule[] = [
   { id: "R6", title: "Changes it can't trace to the requirement", decider: "change owner" },
   { id: "R7", title: "Public contract: new or changed public API, diagnostic IDs or documented behaviour", decider: "API owner (the maintainers)" },
 ];
+
+/** A path that always needs a human, whatever the model says. */
+export interface FixedRefusal {
+  ruleId: string;
+  glob: string;
+  reason: string;
+}
+
+/**
+ * Triggers that need no model: a change to the declared public API or to the
+ * public attributes is a public-contract decision (R7) every time. After A3 the
+ * pipeline adds a `source: "rule"` refusal for the hunks each glob matches, so a
+ * model that misses them cannot let them through unread.
+ */
+export const fixedRefusals: FixedRefusal[] = [
+  { ruleId: "R7", glob: "**/PublicAPI.Unshipped.txt", reason: "Changes the declared public API" },
+  { ruleId: "R7", glob: "src/MessagePack.Annotations/**", reason: "Changes the public attributes" },
+];

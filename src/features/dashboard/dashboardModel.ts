@@ -104,6 +104,7 @@ export interface DashboardModel {
 const REASON_LABEL: Record<string, string> = {
   "R-size": "Large change outside generated files",
   "R-read-share": "Most hunks need a human",
+  "R-escape": "A bug escaped in this area",
   "R-refusal": "Refused item: a human decides",
   "R-contradiction": "Description contradicts the code",
   "R-defect": "Defect found",

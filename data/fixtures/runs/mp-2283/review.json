@@ -1147,6 +1147,7 @@
     {
       "id": "r1",
       "ruleId": "R6",
+      "source": "ai",
       "reason": "The rename in the shared formatter template can't be traced to any item of MP-2283. A person decides whether it belongs in this change.",
       "hunkIds": [
         "h4"
@@ -1155,6 +1156,7 @@
     {
       "id": "r2",
       "ruleId": "R7",
+      "source": "ai",
       "reason": "The analyzer now reports a diagnostic that did not exist before. Whether and how to expose it is a public contract decision.",
       "hunkIds": [
         "h3"

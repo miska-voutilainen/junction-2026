@@ -620,6 +620,7 @@
     {
       "id": "r1",
       "ruleId": "R7",
+      "source": "rule",
       "reason": "A new public attribute is public API. The issue lists three alternatives for per-member keys and settings; which one the library supports is the maintainers' decision.",
       "hunkIds": [
         "h1"
@@ -628,6 +629,7 @@
     {
       "id": "r2",
       "ruleId": "R1",
+      "source": "ai",
       "reason": "Whether a generated formatter should live in the consuming project, and how keys of a foreign type are chosen, is a question about the requested behaviour.",
       "hunkIds": [
         "h2"
