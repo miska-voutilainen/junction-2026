@@ -63,6 +63,7 @@ export function ReviewScreen({
             review={review.state === "ok" ? review.data : undefined}
             receiptStatus={review.state === "ok" ? receiptStatus(review.data, record) : undefined}
             signedBy={record?.receipt.owner}
+            receiptHref={receipt === null ? undefined : `/changes/${change.id}/receipt`}
           />
           {review.state === "missing" && <ReviewMissing changeId={change.id} />}
           {review.state === "unreadable" && <ReviewUnreadable changeId={change.id} details={reviewError} />}

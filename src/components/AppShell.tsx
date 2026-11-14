@@ -48,12 +48,12 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <div className="hidden compact:block">
+      <div className="hidden compact:block print:hidden">
         <TopBar repo={repo} breadcrumb={breadcrumb} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
       </div>
       <MobileHeader title={title} backHref={backHref} escapeSlot={escapeSlot} />
       <div className="flex flex-1">
-        <aside className="hidden w-nav shrink-0 border-r border-border-subtle bg-surface-raised nav:block">
+        <aside className="hidden print:hidden w-nav shrink-0 border-r border-border-subtle bg-surface-raised nav:block">
           <AppNav needsReviewCount={needsReviewCount} />
         </aside>
         <main id="content" className="min-w-0 flex-1">

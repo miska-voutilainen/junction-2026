@@ -22,7 +22,7 @@ describe("CopyButton", () => {
     writeText.mockRejectedValue(new Error("denied"));
     render(<CopyButton text="abc" label="Copy command" />);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy command" })));
-    expect(screen.getByRole("status").textContent).toBe("Copy failed");
+    expect(screen.getByRole("status").textContent).toBe("Couldn't copy. Select the text instead.");
   });
 
   it("shows a visible alert icon, not only an announcement, when copying fails", async () => {
@@ -30,5 +30,14 @@ describe("CopyButton", () => {
     const { container } = render(<CopyButton text="abc" label="Copy command" />);
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy command" })));
     expect(container.querySelector("svg.lucide-circle-alert")).not.toBeNull();
+  });
+
+  it("copies the text a function returns only when pressed, in the text variant", async () => {
+    const getText = vi.fn(() => "https://example.test/receipt");
+    render(<CopyButton text={getText} label="Copy link" variant="text" />);
+    expect(getText).not.toHaveBeenCalled();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Copy link" })));
+    expect(writeText).toHaveBeenCalledWith("https://example.test/receipt");
+    expect(screen.getByRole("status").textContent).toBe("Copied");
   });
 });
