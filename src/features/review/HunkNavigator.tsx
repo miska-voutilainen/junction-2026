@@ -40,7 +40,7 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Navigat
       onKeyDown={moveFocus}
       className="hidden w-56 shrink-0 wide:block xwide:w-navigator"
     >
-      <div className="sticky top-0 flex max-h-dvh flex-col gap-4 overflow-y-auto py-4 pr-1">
+      <div className="sticky top-topbar flex max-h-below-topbar flex-col gap-4 overflow-y-auto py-4 pr-1">
         {groups.map((group) => (
           <section key={group.coverage} aria-labelledby={`navigator-${group.coverage}`}>
             <h2 id={`navigator-${group.coverage}`} className="flex items-baseline justify-between px-2 pb-1 text-xs font-medium text-text-muted">

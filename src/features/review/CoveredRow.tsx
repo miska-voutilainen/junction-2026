@@ -35,7 +35,7 @@ export function CoveredRow({
   const bodyId = `hunk-body-${hunk.id}`;
 
   return (
-    <div data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4">
+    <div data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
       <button
         id={hunkHeaderId(hunk.id)}
         type="button"

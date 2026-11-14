@@ -48,12 +48,13 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <div className="hidden compact:block print:hidden">
+      <div className="sticky top-0 z-30 hidden compact:block print:hidden">
         <TopBar repo={repo} breadcrumb={breadcrumb} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
       </div>
-      <MobileHeader title={title} backHref={backHref} escapeSlot={escapeSlot} />
+      <MobileHeader title={title} backHref={backHref} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
       <div className="flex flex-1">
-        <aside className="hidden print:hidden w-nav shrink-0 border-r border-border-subtle bg-surface-raised nav:block">
+        {/* Sticky at the height of what is left below the top bar, so the shortcuts at the foot stay on screen on a long page; a short window scrolls the nav itself. */}
+        <aside className="sticky top-topbar hidden h-below-topbar w-nav shrink-0 self-start overflow-y-auto border-r border-border-subtle bg-surface-raised nav:block print:hidden">
           <AppNav needsReviewCount={needsReviewCount} />
         </aside>
         <main id="content" className="min-w-0 flex-1">

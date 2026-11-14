@@ -132,7 +132,7 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
         showCloseButton={false}
         aria-describedby={undefined}
         // The entrance is the motion element below; the exit is the dialog's own shorter fade.
-        className="top-1/3 max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
+        className="top-[15dvh] max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
         onCloseAutoFocus={(event) => {
           // Return focus to the button that opened the menu, not whatever Radix remembered.
           if (trigger?.isConnected) {
@@ -152,7 +152,8 @@ export function CommandMenu({ changes }: { changes: ShellChange[] }) {
               placeholder="Search changes or type a command…"
               aria-label="Search or run a command"
             />
-            <CommandList className="max-h-100 p-1">
+            {/* The list takes what is left under the 15dvh offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
+            <CommandList className="max-h-[min(25rem,calc(100dvh-15dvh-9rem))] p-1">
               <CommandEmpty className="px-3 py-7 text-text-muted">
                 No match for “{query}”. Try a change id, a requirement or a page.
               </CommandEmpty>

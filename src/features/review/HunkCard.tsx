@@ -33,7 +33,7 @@ export function HunkCard({
 }) {
   const { hunk, coverage } = entry;
   return (
-    <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4">
+    <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
       <Console
         label={`hunk ${hunk.header} in ${hunk.file}`}
         text={hunkRawText(hunk)}

@@ -1,15 +1,14 @@
 "use client";
 
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useRef } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Menu, Search } from "lucide-react";
-import { AppNav } from "@/components/AppNav";
+import { Search } from "lucide-react";
 import { useCommandMenu } from "@/components/CommandMenu";
+import { NavSheet } from "@/components/NavSheet";
 import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSearchShortcutLabel } from "@/lib/useShortcuts";
 
 /** One step of the top bar trail; the last item is the current page and has no `href`. */
@@ -38,7 +37,7 @@ export function TopBar({
 }) {
   return (
     <header className="flex h-topbar shrink-0 items-center gap-3.5 border-b border-border-subtle bg-surface-raised px-4 text-sm">
-      <NavSheet needsReviewCount={needsReviewCount} />
+      <NavSheet needsReviewCount={needsReviewCount} className="-ml-2 nav:hidden" />
       <Link href="/" aria-label="Countersign home" className="rounded-item">
         <Wordmark size="sm" />
       </Link>
@@ -109,24 +108,5 @@ function SearchButton() {
         <Search aria-hidden="true" className="size-4" />
       </Button>
     </>
-  );
-}
-
-/** Menu button and sheet that carry the nav between 760 and 900 px, where there is no side column. */
-function NavSheet({ needsReviewCount }: { needsReviewCount: number }) {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" aria-label="Open navigation" className="hidden compact:inline-flex nav:hidden">
-          <Menu aria-hidden="true" className="size-4" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" showCloseButton={false} className="w-nav gap-0 bg-surface-raised p-0 sm:max-w-nav">
-        <SheetTitle className="sr-only">Navigation</SheetTitle>
-        <SheetDescription className="sr-only">Pages and keyboard shortcuts.</SheetDescription>
-        <AppNav needsReviewCount={needsReviewCount} onNavigate={() => setIsOpen(false)} />
-      </SheetContent>
-    </Sheet>
   );
 }
