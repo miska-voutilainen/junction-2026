@@ -2,10 +2,10 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
-## 2026-11-14 · A5 on mp-2283, second recording: two claims Verified, the F2 test did not build
+## 2026-11-14 · A5 on mp-2283, final recording: two claims Verified by two methods, the F2 tests did not build
 
-- **What happened:** With `a5.v2` the F1 tests (no exception from the generator and analyzer for a closed generic value type from a referenced assembly) fail on the base and pass on the head, so claims c3 and c4 are Verified. The PR's own tests also fail on the base and pass on the head; they keep c1 and c2 at Supported by design. The F2 tests did not build on the base (`CS0104: AnalyzerOptions is an ambiguous reference`): no verdict, claims unchanged, the reason stored in `inconclusiveTests`. No retractions.
-- **What we changed:** Nothing for this change specifically. The one prompt edit was generic (see the entry below).
+- **What happened:** With `a5.v2`, in Docker, A5 wrote three methods for F1 and two for F2. Two F1 methods (`A5_F1_ClosedGenericStructFromReferencedAssembly_DoesNotThrow`, `A5_F1_ClosedGenericRecordStructFromReferencedAssembly_DoesNotThrow`) fail on the base and pass on the head, so claims c3 and c4 are Verified. The PR's own tests (3 of 3) also fail on the base and pass on the head; they keep c1 and c2 at Supported by design. Both F2 methods did not build on the base (`CS0104: AnalyzerOptions is an ambiguous reference`), so they said nothing and the F2 claims are unchanged; the reason is stored in `inconclusiveTests`. No retractions.
+- **What we changed:** The runner now reads results per test method, so one failing method cannot hide behind passing neighbours. A test run is classified from its test summary, not from the words "error CS" in an assertion message. Tests run in Docker (restore with the network, test with none). The list of the PR's own tests ends a method at its closing brace, so `Generics_Defined_In_ReferencedProject` (an unchanged test before an added helper) is no longer counted as the PR's.
 
 ## 2026-11-14 · A5 on mp-2283, first recording: tests that fail on both versions retracted two correct claims
 
