@@ -2,8 +2,9 @@
 # planted-bug eval re-runs on it and the job shows which areas moved up or down a level. An area that
 # drops fails the job: a prompt edit cannot quietly cost the reviewer trust it had earned. Needs the
 # repository secret ANTHROPIC_API_KEY (spending limit set) and spends model credits, which is why it
-# runs only when prompts or policy change, or by hand. The cheap check that the committed report card
-# matches the committed runs is `pnpm evals --check` in ci.yml. docs/development.md, CI.
+# runs only when a prompt, a file a prompt imports, or a policy value changes, or by hand. The paths
+# below must cover every file checkReviewerVersion.mjs counts as a prompt input; a test checks that.
+# docs/development.md, CI.
 name: countersign-eval
 
 on:
@@ -11,6 +12,10 @@ on:
     paths:
       - "src/prompts/**"
       - "src/policy/**"
+      - "src/pipeline/promptContext.ts"
+      - "src/pipeline/quoteCheck.ts"
+      - "src/pipeline/differential/testProject.ts"
+      - "src/lib/git/hunksMatchingGlob.ts"
   workflow_dispatch:
 
 concurrency:
@@ -31,11 +36,13 @@ jobs:
     env:
       AI_BACKEND: api
       AI_MODE: record
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
+      # The key is set only on the steps that need it, so install and seed scripts never see it.
       - name: Skip without a key
         id: key
         shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           # A job's env: may not use the runner context, so the clone's path is set here.
           echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
@@ -67,6 +74,8 @@ jobs:
       # Runs for the current reviewer version are reused, so only what the change made stale is re-recorded.
       - name: Planted-bug eval
         if: steps.key.outputs.has_key == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: pnpm evals
 
       - name: Levels before and after

@@ -56,6 +56,10 @@ export function applyEscapes(
  * and another model's catch rate is unknown. Any other model gets no earned trust,
  * so every area is Shadow until that model has its own eval.
  * Example: a card measured on model A, a review by model B: all Shadow.
+ *
+ * @param reportCard the recorded report card, or null when there is none
+ * @param reviewerModel the model that wrote the review being routed (`review.reviewer.model`)
+ * @returns the card's levels for the measured model; every area Shadow otherwise
  */
 export function levelsForReviewer(
   reportCard: Pick<ReportCard, "areas" | "reviewer"> | null,
