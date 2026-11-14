@@ -16,15 +16,19 @@
 
 ## Environment variables
 
-| Name | What it's for | Where to get it |
-| --- | --- | --- |
-| `ACCESS_CODE` | Temporary access gate until the submission on Sun 15.11; empty turns it off | Ask the team; set in Vercel's env settings only |
+| Name                | What it's for                                                                                                              | Where to get it                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `AI_BACKEND`        | Which model backend the pipeline uses: `claude-code` (Claude Code headless on your own subscription, the default) or `api` | Set it yourself                                 |
+| `ANTHROPIC_API_KEY` | Only for `AI_BACKEND=api`                                                                                                  | Your Anthropic Console, with a spending limit   |
+| `SAMPLE_REPO_DIR`   | Absolute path of your clone of the fork; `pnpm seed` creates it                                                            | Choose a folder                                 |
+| `AI_MODE`           | `record` (default), `replay` (recordings only) or `live`                                                                   | Set it yourself                                 |
+| `ACCESS_CODE`       | Temporary access gate until the submission on Sun 15.11; empty turns it off                                                | Ask the team; set in Vercel's env settings only |
 
 ## Commands
 
 | Command | What it does |
-| --- | --- |
-| --- | --- |
+| ------- | ------------ |
+| ---     | ---          |
 
 ## Testing
 
