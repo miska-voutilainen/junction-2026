@@ -50,7 +50,7 @@ describe("areaCardModel", () => {
     const card = areaCardModel("generator", entry("generator"), 1);
     expect(card.level).toBe("shadow");
     expect(card.escapeDrop).toEqual({ from: "calibrated", to: "shadow" });
-    expect(card.nextStep).toMatch(/^Earned Calibrated; 1 simulated escape holds it at Shadow\. Undo the escape to restore it\.$/);
+    expect(card.nextStep).toMatch(/^Earned Calibrated\. 1 simulated escape holds it at Shadow\. Undo the escape to restore it\.$/);
     expect(card.canRecordEscape).toBe(false);
   });
 

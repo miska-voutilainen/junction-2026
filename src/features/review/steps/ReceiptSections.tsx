@@ -34,13 +34,13 @@ export function ReceiptSections({ body, review, signedRunId }: { body: ReceiptBo
       <Section heading="Not checked" emptyText={isSigned ? "The signer listed nothing as unchecked." : "Nothing listed as unchecked."}>
         {body.notChecked.map((entry) => (
           <li key={entry.item} className="text-sm text-text-secondary">
-            {entry.item} <span className="text-xs text-text-muted">· {entry.reason}</span>
+            <span data-written-text>{entry.item}</span> <span data-written-text className="text-xs text-text-muted">· {entry.reason}</span>
           </li>
         ))}
       </Section>
       <section aria-label="Residual risk" className="flex flex-col gap-1">
         <h4 className="text-xs font-medium text-text-muted">Residual risk</h4>
-        <p className="text-sm text-text-secondary">{body.residualRisk.text}</p>
+        <p data-written-text className="text-sm text-text-secondary">{body.residualRisk.text}</p>
         {acceptedLabels.length > 0 && (
           <p className="text-xs text-text-muted">
             Accepts the refused items {acceptedLabels.join(", ")}

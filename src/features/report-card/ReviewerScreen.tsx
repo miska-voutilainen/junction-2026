@@ -56,8 +56,8 @@ export function ReviewerScreen({
     <AppShell
       changes={toShellChanges(model.rows)}
       repo={repo}
-      title="Reviewer report card"
-      breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Reviewer report card" }]}
+      title="Reviewer Report Card"
+      breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Reviewer Report Card" }]}
       backHref="/"
       escapeSlot={<EscapeCounter />}
     >

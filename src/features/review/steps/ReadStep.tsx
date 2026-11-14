@@ -57,7 +57,7 @@ function StoryText({ heading, text }: { heading: string; text: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <h3 className="text-xs font-medium text-text-muted">{heading}</h3>
-      <p className="text-base text-text-secondary">{text}</p>
+      <p data-written-text className="text-base text-text-secondary">{text}</p>
     </div>
   );
 }
@@ -70,7 +70,7 @@ function Touches({ touches }: { touches: Story["touches"] }) {
       <ul className="flex flex-col gap-1.5">
         {touches.map((touch) => (
           <li key={`${touch.file}:${touch.symbol}`} className="text-base text-text-secondary">
-            <span className="font-mono text-sm break-all text-text-primary">{touch.symbol}</span> · {touch.note}
+            <span className="font-mono text-sm break-all text-text-primary">{touch.symbol}</span> <span data-written-text>· {touch.note}</span>
           </li>
         ))}
       </ul>
@@ -107,7 +107,7 @@ function ClaimRow({ storyClaim, onOpenRefused }: { storyClaim: StoryClaim } & Pi
         className="flex w-full flex-col items-start gap-1.5 rounded-item px-2 py-2 text-left transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-focus-ring"
       >
         {retraction ? <RetractedBadge /> : <EvidenceBadge level={claim.level} />}
-        <span className={cn("font-mono text-sm text-text-primary", retraction && "text-text-muted line-through")}>{claim.text}</span>
+        <span data-written-text className={cn("max-w-full font-mono text-sm text-text-primary [overflow-wrap:anywhere]", retraction && "text-text-muted line-through")}>{claim.text}</span>
       </button>
       {retraction && <Retraction retraction={retraction} />}
       <div id={detailsId} hidden={!isSelected} className="px-2 pb-2">
@@ -131,7 +131,7 @@ function RetractedBadge() {
 function Retraction({ retraction }: { retraction: Review["retractions"][number] }) {
   return (
     <div className="flex flex-col gap-1.5 px-2 pb-2">
-      <p className="flex flex-wrap items-center gap-2 text-xs text-amber-light">
+      <p data-written-text className="flex flex-wrap items-center gap-2 text-xs text-amber-light">
         Retracted: {retraction.reason}
         <IdeaLabel n={4} />
       </p>
@@ -248,7 +248,7 @@ function Defects({ defects }: { defects: Story["defects"] }) {
               <span className="font-medium text-text-secondary capitalize">{view.finding.severity}</span>
               {view.finding.area && <AreaChip area={view.finding.area} />}
             </p>
-            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
             <p className="text-sm text-text-secondary">{view.finding.detail}</p>
             <FindingLocations view={view} />
           </li>

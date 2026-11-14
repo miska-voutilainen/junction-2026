@@ -73,7 +73,7 @@ function Contradictions({ contradictions }: { contradictions: FindingView[] }) {
       <ul className="flex flex-col gap-4">
         {contradictions.map((view) => (
           <li key={view.finding.id} className="flex flex-col gap-2 rounded-item border border-border-default bg-surface-raised p-3">
-            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-muted">The PR says: </span>
               {view.finding.statement}
@@ -131,7 +131,7 @@ function FindingList({ heading, emptyText, findings }: { heading: string; emptyT
       <ul className="flex flex-col gap-3">
         {findings.map((view) => (
           <li key={view.finding.id} className="flex flex-col gap-1">
-            <p className="text-base font-medium text-text-primary">{view.finding.title}</p>
+            <p data-written-text className="text-base font-medium text-text-primary">{view.finding.title}</p>
             <p className="text-sm text-text-secondary">{view.finding.detail}</p>
             <FindingLocations view={view} />
           </li>

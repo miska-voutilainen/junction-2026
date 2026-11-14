@@ -45,11 +45,15 @@ const SAME_SITE_BASE = "http://gate.invalid";
 /**
  * The proxy step: lets a request through when the gate is off or the visitor
  * holds the right cookie, and otherwise sends them to `/unlock`. Every gated
- * response asks search engines not to index the site.
+ * response asks search engines not to index the site. With the gate off,
+ * `/unlock` itself answers with a 307 to `next`: doing it here, rather than in
+ * the page, keeps the root loading boundary from streaming a 200 first.
  */
 export async function accessGate(request: NextRequest): Promise<NextResponse> {
   const code = readAccessCode();
-  if (code === null) return NextResponse.next();
+  const isUnlockPage = request.nextUrl.pathname === "/unlock";
+  if (code === null) return isUnlockPage ? redirectPastUnlock(request) : NextResponse.next();
+  if (isUnlockPage) return NextResponse.next();
 
   const cookie = request.cookies.get(ACCESS_COOKIE)?.value;
   const response =
@@ -70,4 +74,9 @@ function redirectToUnlock(request: NextRequest): NextResponse {
   const unlockUrl = new URL("/unlock", request.url);
   unlockUrl.searchParams.set("next", query ? `${pathname}?${query}` : pathname);
   return NextResponse.redirect(unlockUrl);
+}
+
+function redirectPastUnlock(request: NextRequest): NextResponse {
+  const next = safeNextPath(request.nextUrl.searchParams.get("next"));
+  return NextResponse.redirect(new URL(next, request.url));
 }

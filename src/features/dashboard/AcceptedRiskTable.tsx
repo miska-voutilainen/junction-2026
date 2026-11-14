@@ -36,7 +36,7 @@ export function AcceptedRiskTable({ risks }: { risks: AcceptedRisk[] }) {
             role="row"
             className={`flex flex-col gap-1.5 border-b border-border-subtle px-4 py-3 text-sm last:border-b-0 ${ROW_COLUMNS}`}
           >
-            <span role="cell" className="min-w-0 text-text-primary">
+            <span role="cell" data-written-text className="min-w-0 text-text-primary">
               {risk.text}
             </span>
             <span role="cell" className="min-w-0 break-words text-text-secondary">

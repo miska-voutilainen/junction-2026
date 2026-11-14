@@ -54,7 +54,11 @@ test.describe("gate off", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeAttached();
   });
 
-  test("/unlock redirects to /", async ({ page }) => {
+  test("/unlock answers with a 307 to /", async ({ request, page }) => {
+    const response = await request.get("/unlock", { maxRedirects: 0 });
+    expect(response.status()).toBe(307);
+    expect(new URL(response.headers().location, "http://localhost").pathname).toBe("/");
+
     await page.goto("/unlock");
     await expect(page).toHaveURL(/\/$/);
   });

@@ -57,7 +57,7 @@ async function readValidated<T>(file: string, schema: z.ZodType<T>): Promise<T |
   if (parsed.success) return parsed.data;
   const issues = parsed.error.issues
     .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-    .join("; ");
+    .join(". ");
   throw new Error(`${file} does not match its schema. ${issues}`);
 }
 

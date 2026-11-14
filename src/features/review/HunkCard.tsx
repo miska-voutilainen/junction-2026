@@ -33,7 +33,7 @@ export function HunkCard({
 }) {
   const { hunk, coverage } = entry;
   return (
-    <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4">
+    <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
       <Console
         label={`hunk ${hunk.header} in ${hunk.file}`}
         text={hunkRawText(hunk)}
@@ -98,7 +98,7 @@ function HunkHeading({ entry }: { entry: HunkEntry }) {
         <span className="truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
         <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
       </div>
-      <p className="text-xs text-text-muted">{evidence}</p>
+      <p data-written-text className="text-xs text-text-muted">{evidence}</p>
     </div>
   );
 }

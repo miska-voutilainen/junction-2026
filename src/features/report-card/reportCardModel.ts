@@ -105,7 +105,7 @@ function nextStep(input: {
   if (level !== earned) {
     const [count, verb, undo] =
       escapes === 1 ? ["1 simulated escape", "holds", "Undo the escape"] : [`${escapes} simulated escapes`, "hold", "Undo the escapes"];
-    return `Earned ${ladderLevelLabel[earned]}; ${count} ${verb} it at ${ladderLevelLabel[level]}. ${undo} to restore it.`;
+    return `Earned ${ladderLevelLabel[earned]}. ${count} ${verb} it at ${ladderLevelLabel[level]}. ${undo} to restore it.`;
   }
   if (level === "trusted") return "Top level. It holds while no escape is recorded.";
   if (level === "calibrated") {

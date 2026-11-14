@@ -20,7 +20,7 @@ export function ReviewNotFound({ sources, reportCard, repo }: { sources: InboxSo
     <AppShell
       changes={changes}
       repo={repo}
-      title="Not found"
+      title="Not Found"
       backHref="/"
       breadcrumb={[{ label: "Inbox", href: "/" }, { label: id }]}
       escapeSlot={<EscapeCounter />}

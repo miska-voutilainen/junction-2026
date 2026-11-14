@@ -1,5 +1,5 @@
 const SIZES = {
-  lg: { text: "text-[28px]", logoWidth: 44, logoHeight: 35 },
+  lg: { text: "text-2xl", logoWidth: 44, logoHeight: 35 },
   sm: { text: "text-base", logoWidth: 25, logoHeight: 20 },
 } as const;
 
