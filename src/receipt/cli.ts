@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { CommandError, type ReceiptOptions } from "./context";
+import { defaultSshKeygenPath } from "./sshKeygen";
 import { draftReceipt } from "./draft";
 import { exportReceipt } from "./exportRecord";
 import { signReceipt } from "./sign";
@@ -23,7 +24,11 @@ type FlagValues = { owner?: string; force?: boolean; key?: string };
 async function main(): Promise<number> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { owner: { type: "string" }, force: { type: "boolean" }, key: { type: "string" } },
+    options: {
+      owner: { type: "string" },
+      force: { type: "boolean" },
+      key: { type: "string" },
+    },
   });
   const [command, changeId] = positionals;
   if (!changeId || !["draft", "sign", "verify", "export"].includes(command)) {
@@ -35,9 +40,19 @@ async function main(): Promise<number> {
   return 0;
 }
 
-function runCommand(command: string, changeId: string, options: ReceiptOptions, values: FlagValues): Promise<string[]> {
-  if (command === "draft") return draftReceipt(changeId, options, { ownerOption: values.owner, force: values.force });
-  if (command === "sign") return signReceipt(changeId, options, { keyOption: values.key });
+function runCommand(
+  command: string,
+  changeId: string,
+  options: ReceiptOptions,
+  values: FlagValues,
+): Promise<string[]> {
+  if (command === "draft")
+    return draftReceipt(changeId, options, {
+      ownerOption: values.owner,
+      force: values.force,
+    });
+  if (command === "sign")
+    return signReceipt(changeId, options, { keyOption: values.key });
   if (command === "export") return exportReceipt(changeId, options);
   return verifyReceipt(changeId, options).then((verified) => verified.lines);
 }
@@ -46,7 +61,10 @@ function runCommand(command: string, changeId: string, options: ReceiptOptions, 
 function optionsFromEnv(): ReceiptOptions {
   const repoDir = process.env.SAMPLE_REPO_DIR;
   if (!repoDir) {
-    throw new CommandError(1, "SAMPLE_REPO_DIR is not set. Run pnpm seed, then set it to the clone's absolute path.");
+    throw new CommandError(
+      1,
+      "SAMPLE_REPO_DIR is not set. Run pnpm seed, then set it to the clone's absolute path.",
+    );
   }
   const projectRoot = process.cwd();
   const dataDir = process.env.COUNTERSIGN_DATA_DIR ?? join(projectRoot, "data");
@@ -54,8 +72,10 @@ function optionsFromEnv(): ReceiptOptions {
     repoDir,
     dataDir,
     draftsDir: join(projectRoot, ".scratch", "receipts"),
-    allowedSignersPath: process.env.COUNTERSIGN_ALLOWED_SIGNERS ?? join(dataDir, "sample", "allowed_signers"),
-    sshKeygenPath: "ssh-keygen",
+    allowedSignersPath:
+      process.env.COUNTERSIGN_ALLOWED_SIGNERS ??
+      join(dataDir, "sample", "allowed_signers"),
+    sshKeygenPath: defaultSshKeygenPath,
   };
 }
 

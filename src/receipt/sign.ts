@@ -5,10 +5,16 @@ import { join, resolve } from "node:path";
 import { ReceiptSchema } from "@/contracts/receipt";
 import { computeDiffIdentity } from "@/lib/git";
 import { canonicalJson } from "./canonicalJson";
-import { CommandError, draftPath, readChangeInput, signatureNamespace, type ReceiptOptions } from "./context";
+import {
+  CommandError,
+  draftPath,
+  readChangeInput,
+  signatureNamespace,
+  type ReceiptOptions,
+} from "./context";
 import { DraftSchema, type Draft } from "./draft";
 import { addNote, hasNote } from "./notes";
-import { runSshKeygen } from "./sshKeygen";
+import { runSshKeygen, toSshPath } from "./sshKeygen";
 
 /**
  * Signed receipt in git, step 2: a named engineer signs. The signature covers the
@@ -40,12 +46,18 @@ export async function signReceipt(
   await requireUnencryptedKey(keyPath, options.sshKeygenPath);
 
   if (await hasNote(options.repoDir, draft.commit)) {
-    throw new CommandError(4, `A receipt already exists for ${draft.commit} (receipts are append-only)`);
+    throw new CommandError(
+      4,
+      `A receipt already exists for ${draft.commit} (receipts are append-only)`,
+    );
   }
   await requireDraftMatchesCurrentDiff(draft, options, changeId);
 
   // The timestamp is set here, not in the draft: it records when the person signed.
-  const receipt = ReceiptSchema.parse({ ...draft, signedAt: new Date().toISOString() });
+  const receipt = ReceiptSchema.parse({
+    ...draft,
+    signedAt: new Date().toISOString(),
+  });
   const payload = canonicalJson(receipt);
   const signature = await signPayload(payload, keyPath, options.sshKeygenPath);
   await attachNote(options.repoDir, payload + signature, draft.commit);
@@ -56,16 +68,25 @@ export async function signReceipt(
   ];
 }
 
-async function readDraft(options: ReceiptOptions, changeId: string): Promise<Draft> {
+async function readDraft(
+  options: ReceiptOptions,
+  changeId: string,
+): Promise<Draft> {
   const path = draftPath(options, changeId);
   const text = await readFile(path, "utf8").catch(() => {
-    throw new CommandError(1, `No draft for ${changeId}. Run pnpm countersign draft ${changeId} first.`);
+    throw new CommandError(
+      1,
+      `No draft for ${changeId}. Run pnpm countersign draft ${changeId} first.`,
+    );
   });
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
-    throw new CommandError(1, `Invalid draft ${path}: not JSON. Fix it or run pnpm countersign draft ${changeId} --force.`);
+    throw new CommandError(
+      1,
+      `Invalid draft ${path}: not JSON. Fix it or run pnpm countersign draft ${changeId} --force.`,
+    );
   }
   const parsed = DraftSchema.safeParse(json);
   if (!parsed.success) {
@@ -76,13 +97,21 @@ async function readDraft(options: ReceiptOptions, changeId: string): Promise<Dra
 
 /** `~` resolves to the home folder, as a shell would; ssh-keygen itself does not expand it. */
 function resolveKeyPath(keyPath: string): string {
-  return resolve(keyPath.startsWith("~") ? join(homedir(), keyPath.slice(1)) : keyPath);
+  return resolve(
+    keyPath.startsWith("~") ? join(homedir(), keyPath.slice(1)) : keyPath,
+  );
 }
 
 /** The owner must be a principal in allowed_signers, or verify could never succeed. Comment lines are skipped. */
-async function requireListedSigner(owner: string, allowedSignersPath: string): Promise<void> {
+async function requireListedSigner(
+  owner: string,
+  allowedSignersPath: string,
+): Promise<void> {
   const text = await readFile(allowedSignersPath, "utf8").catch(() => {
-    throw new CommandError(1, `No allowed_signers file at ${allowedSignersPath}. Add a line for ${owner}.`);
+    throw new CommandError(
+      1,
+      `No allowed_signers file at ${allowedSignersPath}. Add a line for ${owner}.`,
+    );
   });
   const principals = text
     .split(/\r?\n/)
@@ -90,7 +119,10 @@ async function requireListedSigner(owner: string, allowedSignersPath: string): P
     .filter((line) => line !== "" && !line.startsWith("#"))
     .flatMap((line) => line.split(/\s+/)[0].split(","));
   if (!principals.includes(owner)) {
-    throw new CommandError(1, `${owner} is not in ${allowedSignersPath}. Add a line with their public key first.`);
+    throw new CommandError(
+      1,
+      `${owner} is not in ${allowedSignersPath}. Add a line with their public key first.`,
+    );
   }
 }
 
@@ -98,11 +130,23 @@ async function requireListedSigner(owner: string, allowedSignersPath: string): P
  * Fails early on a key ssh-keygen would prompt for. Exporting the public key with
  * an empty passphrase succeeds only for an unencrypted key.
  */
-async function requireUnencryptedKey(keyPath: string, sshKeygenPath: string): Promise<void> {
+async function requireUnencryptedKey(
+  keyPath: string,
+  sshKeygenPath: string,
+): Promise<void> {
   if (!existsSync(keyPath)) {
-    throw new CommandError(1, `No signing key at ${keyPath}. Pass --key <path> or create one with ssh-keygen -t ed25519 -N "".`);
+    throw new CommandError(
+      1,
+      `No signing key at ${keyPath}. Pass --key <path> or create one with ssh-keygen -t ed25519 -N "".`,
+    );
   }
-  const probe = await runSshKeygen(sshKeygenPath, ["-y", "-P", "", "-f", keyPath]);
+  const probe = await runSshKeygen(sshKeygenPath, [
+    "-y",
+    "-P",
+    "",
+    "-f",
+    toSshPath(keyPath),
+  ]);
   if (probe.code !== 0) {
     throw new CommandError(
       1,
@@ -112,35 +156,67 @@ async function requireUnencryptedKey(keyPath: string, sshKeygenPath: string): Pr
 }
 
 /** A draft made for another diff would sign claims about code the owner is not looking at. */
-async function requireDraftMatchesCurrentDiff(draft: Draft, options: ReceiptOptions, changeId: string): Promise<void> {
+async function requireDraftMatchesCurrentDiff(
+  draft: Draft,
+  options: ReceiptOptions,
+  changeId: string,
+): Promise<void> {
   const change = await readChangeInput(options, changeId);
-  const current = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
+  const current = await computeDiffIdentity(
+    options.repoDir,
+    change.baseSha,
+    change.headSha,
+  );
   const isCurrent =
     draft.commit === change.headSha &&
     draft.baseTree === current.baseTree &&
     draft.headTree === current.headTree &&
     draft.diffSha256 === current.diffSha256;
-  if (!isCurrent) throw new CommandError(1, "Review is stale: re-run the pipeline");
+  if (!isCurrent)
+    throw new CommandError(1, "Review is stale: re-run the pipeline");
 }
 
 /** Signs in a private temp folder with stdin closed, and always removes the folder. */
-async function signPayload(payload: string, keyPath: string, sshKeygenPath: string): Promise<string> {
+async function signPayload(
+  payload: string,
+  keyPath: string,
+  sshKeygenPath: string,
+): Promise<string> {
   const folder = await mkdtemp(join(tmpdir(), "countersign-sign-"));
   try {
     await writeFile(join(folder, "receipt.json"), payload);
     const result = await runSshKeygen(
       sshKeygenPath,
-      ["-Y", "sign", "-f", keyPath, "-n", signatureNamespace, "receipt.json"],
+      [
+        "-Y",
+        "sign",
+        "-f",
+        toSshPath(keyPath),
+        "-n",
+        signatureNamespace,
+        "receipt.json",
+      ],
       { cwd: folder },
     );
-    if (result.code !== 0) throw new CommandError(1, `ssh-keygen could not sign: ${result.stderr.trim()}`);
-    return (await readFile(join(folder, "receipt.json.sig"), "utf8")).replace(/\r\n/g, "\n");
+    if (result.code !== 0)
+      throw new CommandError(
+        1,
+        `ssh-keygen could not sign: ${result.stderr.trim()}`,
+      );
+    return (await readFile(join(folder, "receipt.json.sig"), "utf8")).replace(
+      /\r\n/g,
+      "\n",
+    );
   } finally {
     await rm(folder, { recursive: true, force: true });
   }
 }
 
-async function attachNote(repoDir: string, note: string, commit: string): Promise<void> {
+async function attachNote(
+  repoDir: string,
+  note: string,
+  commit: string,
+): Promise<void> {
   const folder = await mkdtemp(join(tmpdir(), "countersign-note-"));
   try {
     const noteFile = join(folder, "note.txt");

@@ -1,6 +1,21 @@
 import { spawn } from "node:child_process";
 import { CommandError } from "./context";
 
+/**
+ * The ssh-keygen the spec pins (OpenSSH 10.2) on Windows. Windows' inbox OpenSSH in
+ * System32 often comes first on PATH and behaves differently, so the CLI and the
+ * tests name Git for Windows' build; elsewhere the PATH one is used.
+ */
+export const defaultSshKeygenPath =
+  process.platform === "win32"
+    ? "C:/Program Files/Git/usr/bin/ssh-keygen.exe"
+    : "ssh-keygen";
+
+/** Forward slashes for every path handed to ssh-keygen: its msys build misreads backslashes. */
+export function toSshPath(path: string): string {
+  return path.replaceAll("\\", "/");
+}
+
 /** What an ssh-keygen run produced. */
 export type SshKeygenResult = { code: number; stdout: string; stderr: string };
 
@@ -27,7 +42,10 @@ export function runSshKeygen(
     child.on("error", (error: NodeJS.ErrnoException) => {
       reject(
         error.code === "ENOENT"
-          ? new CommandError(1, "ssh-keygen not found: install Git for Windows or OpenSSH, or put ssh-keygen on PATH.")
+          ? new CommandError(
+              1,
+              "ssh-keygen not found: install Git for Windows or OpenSSH, or put ssh-keygen on PATH.",
+            )
           : error,
       );
     });

@@ -11,7 +11,10 @@ async function git(repoDir: string, args: string[]): Promise<Buffer> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("ENOENT")) {
-      throw new CommandError(1, "git not found: install Git or put git on PATH.");
+      throw new CommandError(
+        1,
+        "git not found: install Git or put git on PATH.",
+      );
     }
     throw new CommandError(1, message);
   }
@@ -19,7 +22,9 @@ async function git(repoDir: string, args: string[]): Promise<Buffer> {
 
 /** Lists every receipt note: `git notes --ref=countersign list` prints "<noteBlob> <annotatedCommit>" per line. */
 export async function listNotes(repoDir: string): Promise<NoteEntry[]> {
-  const output = (await git(repoDir, ["notes", `--ref=${notesRef}`, "list"])).toString("utf8");
+  const output = (
+    await git(repoDir, ["notes", `--ref=${notesRef}`, "list"])
+  ).toString("utf8");
   return output
     .split("\n")
     .filter((line) => line.trim() !== "")
@@ -35,7 +40,10 @@ export function readNote(repoDir: string, entry: NoteEntry): Promise<Buffer> {
 }
 
 /** Whether `commit` already carries a receipt note. */
-export async function hasNote(repoDir: string, commit: string): Promise<boolean> {
+export async function hasNote(
+  repoDir: string,
+  commit: string,
+): Promise<boolean> {
   return (await listNotes(repoDir)).some((entry) => entry.annotated === commit);
 }
 
@@ -44,6 +52,18 @@ export async function hasNote(repoDir: string, commit: string): Promise<boolean>
  * payload byte for byte; without it git would trim trailing blank lines.
  * Fails if a note exists: receipts are append-only.
  */
-export async function addNote(repoDir: string, noteFile: string, commit: string): Promise<void> {
-  await git(repoDir, ["notes", `--ref=${notesRef}`, "add", "--no-stripspace", "-F", noteFile, commit]);
+export async function addNote(
+  repoDir: string,
+  noteFile: string,
+  commit: string,
+): Promise<void> {
+  await git(repoDir, [
+    "notes",
+    `--ref=${notesRef}`,
+    "add",
+    "--no-stripspace",
+    "-F",
+    noteFile,
+    commit,
+  ]);
 }

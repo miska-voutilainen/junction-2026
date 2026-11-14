@@ -5,7 +5,12 @@ import { ReviewSchema, type Review } from "@/contracts/review";
 import { computeDiffIdentity, type DiffIdentity } from "@/lib/git";
 import { runGit } from "@/lib/git/runGit";
 import { canonicalJson } from "./canonicalJson";
-import { CommandError, draftPath, readChangeInput, type ReceiptOptions } from "./context";
+import {
+  CommandError,
+  draftPath,
+  readChangeInput,
+  type ReceiptOptions,
+} from "./context";
 
 /**
  * Signed receipt in git, step 1: the AI drafts, a person signs. The draft turns a
@@ -33,7 +38,11 @@ export async function draftReceipt(
 ): Promise<string[]> {
   const review = await readReview(options.dataDir, changeId);
   const change = await readChangeInput(options, changeId);
-  const identity = await computeDiffIdentity(options.repoDir, change.baseSha, change.headSha);
+  const identity = await computeDiffIdentity(
+    options.repoDir,
+    change.baseSha,
+    change.headSha,
+  );
   requireReviewMatchesDiff(review, identity);
   const owner = ownerOption ?? (await githubUserFromGitConfig());
 
@@ -55,20 +64,33 @@ export async function draftReceipt(
 
   const path = draftPath(options, changeId);
   await writeDraftFile(path, draft, force ?? false);
-  return [`Draft written: ${path}`, `Edit it, then: pnpm countersign sign ${changeId}`];
+  return [
+    `Draft written: ${path}`,
+    `Edit it, then: pnpm countersign sign ${changeId}`,
+  ];
 }
 
 async function readReview(dataDir: string, changeId: string): Promise<Review> {
-  const text = await readFile(join(dataDir, "runs", changeId, "review.json"), "utf8").catch(() => {
+  const text = await readFile(
+    join(dataDir, "runs", changeId, "review.json"),
+    "utf8",
+  ).catch(() => {
     throw new CommandError(1, `No recorded review for ${changeId}`);
   });
   return ReviewSchema.parse(JSON.parse(text));
 }
 
 /** A review recorded for another diff would put claims the owner never saw into a receipt for this one. */
-function requireReviewMatchesDiff(review: Review, identity: DiffIdentity): void {
+function requireReviewMatchesDiff(
+  review: Review,
+  identity: DiffIdentity,
+): void {
   const { baseTree, headTree, diffSha256 } = review.diff;
-  if (baseTree !== identity.baseTree || headTree !== identity.headTree || diffSha256 !== identity.diffSha256) {
+  if (
+    baseTree !== identity.baseTree ||
+    headTree !== identity.headTree ||
+    diffSha256 !== identity.diffSha256
+  ) {
     throw new CommandError(1, "Review is stale: re-run the pipeline");
   }
 }
@@ -89,17 +111,32 @@ function hunkLedger(review: Review, owner: string): Draft["hunks"] {
   return review.hunks.map((hunk) => {
     const coverage = review.routing.coverage[hunk.id];
     if (coverage === undefined) {
-      throw new CommandError(1, `Review routing has no coverage for ${hunk.id}: re-run the pipeline`);
+      throw new CommandError(
+        1,
+        `Review routing has no coverage for ${hunk.id}: re-run the pipeline`,
+      );
     }
-    return { hunkId: hunk.id, file: hunk.file, coverage, readBy: coverage === "read" ? owner : null };
+    return {
+      hunkId: hunk.id,
+      file: hunk.file,
+      coverage,
+      readBy: coverage === "read" ? owner : null,
+    };
   });
 }
 
-async function writeDraftFile(path: string, draft: Draft, force: boolean): Promise<void> {
+async function writeDraftFile(
+  path: string,
+  draft: Draft,
+  force: boolean,
+): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   // "wx" fails if the file exists, so a draft the owner edited is never lost to a rerun.
-  await writeFile(path, canonicalJson(draft), { flag: force ? "w" : "wx" }).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === "EEXIST") throw new CommandError(1, `Draft exists: ${path} (use --force)`);
+  await writeFile(path, canonicalJson(draft), {
+    flag: force ? "w" : "wx",
+  }).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "EEXIST")
+      throw new CommandError(1, `Draft exists: ${path} (use --force)`);
     throw error;
   });
 }

@@ -41,12 +41,22 @@ export function draftPath(options: ReceiptOptions, changeId: string): string {
  *
  * @throws CommandError (exit 1) when the file is missing or invalid.
  */
-export async function readChangeInput(options: ReceiptOptions, changeId: string): Promise<ChangeInput> {
+export async function readChangeInput(
+  options: ReceiptOptions,
+  changeId: string,
+): Promise<ChangeInput> {
   const path = join(options.dataDir, "sample", "changes", `${changeId}.json`);
   const text = await readFile(path, "utf8").catch(() => {
-    throw new CommandError(1, `No change input for ${changeId}: expected ${path}.`);
+    throw new CommandError(
+      1,
+      `No change input for ${changeId}: expected ${path}.`,
+    );
   });
   const parsed = ChangeInputSchema.safeParse(JSON.parse(text));
-  if (!parsed.success) throw new CommandError(1, `Invalid change input ${path}: ${parsed.error.message}`);
+  if (!parsed.success)
+    throw new CommandError(
+      1,
+      `Invalid change input ${path}: ${parsed.error.message}`,
+    );
   return parsed.data;
 }

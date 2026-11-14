@@ -11,7 +11,10 @@ import { verifyReceipt } from "./verify";
  *
  * @throws CommandError with verify's exit code, writing nothing, when verify fails.
  */
-export async function exportReceipt(changeId: string, options: ReceiptOptions): Promise<string[]> {
+export async function exportReceipt(
+  changeId: string,
+  options: ReceiptOptions,
+): Promise<string[]> {
   const { receipt, signature, lines } = await verifyReceipt(changeId, options);
   const record: ReceiptRecord = ReceiptRecordSchema.parse({
     schemaVersion: 1,
