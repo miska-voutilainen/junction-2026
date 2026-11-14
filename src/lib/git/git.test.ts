@@ -22,10 +22,7 @@ function writeTempConfig(content: string): string {
 
 const repoDir = process.env.SAMPLE_REPO_DIR;
 const describeWithClone = repoDir ? describe : describe.skip;
-if (!repoDir)
-  console.info(
-    "git.test.ts skipped: SAMPLE_REPO_DIR is not set (absolute path of the fork clone).",
-  );
+if (!repoDir) console.info("git.test.ts skipped: SAMPLE_REPO_DIR is not set (absolute path of the fork clone).");
 
 const change = ChangeInputSchema.parse(
   JSON.parse(readFileSync(join(__dirname, "../../../data/sample/changes/mp-2283.json"), "utf8")),
@@ -39,13 +36,8 @@ describeWithClone("against the fork clone, mp-2283", () => {
     expect(files.flatMap((file) => file.hunkIds)).toEqual(hunks.map((hunk) => hunk.id));
     expect(diff.filesChanged).toBe(files.length);
     // git's own numstat is the oracle for the added and removed line counts.
-    const numstat = execFileSync("git", ["diff", "--no-renames", "--numstat", baseSha, headSha], {
-      cwd: repoDir,
-      encoding: "utf8",
-    })
-      .trim()
-      .split("\n")
-      .map((row) => row.split("\t"));
+    const numstat = execFileSync("git", ["diff", "--no-renames", "--numstat", baseSha, headSha], { cwd: repoDir, encoding: "utf8" })
+      .trim().split("\n").map((row) => row.split("\t"));
     // numstat prints "-" for a binary file, which has no counted lines.
     const count = (value: string | undefined) => (value === "-" ? 0 : Number(value));
     expect(diff.linesAdded).toBe(numstat.reduce((sum, [added]) => sum + count(added), 0));
@@ -69,27 +61,9 @@ describeWithClone("against the fork clone, mp-2283", () => {
     const emptyConfig = writeTempConfig("");
     const rawDiff = execFileSync(
       "git",
-      [
-        "-c",
-        "core.quotepath=false",
-        "-c",
-        "diff.algorithm=myers",
-        "diff",
-        "--binary",
-        "--no-ext-diff",
-        "--no-color",
-        "--no-renames",
-        "--full-index",
-        "--src-prefix=a/",
-        "--dst-prefix=b/",
-        baseSha,
-        headSha,
-      ],
-      {
-        cwd: repoDir,
-        maxBuffer: 256 * 1024 * 1024,
-        env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: emptyConfig },
-      },
+      ["-c", "core.quotepath=false", "-c", "diff.algorithm=myers", "diff", "--binary", "--no-ext-diff", "--no-color",
+        "--no-renames", "--full-index", "--src-prefix=a/", "--dst-prefix=b/", baseSha, headSha],
+      { cwd: repoDir, maxBuffer: 256 * 1024 * 1024, env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: emptyConfig } },
     );
     const identity = await computeDiffIdentity(repoDir!, baseSha, headSha);
     expect(identity.diffSha256).toBe(createHash("sha256").update(rawDiff).digest("hex"));
@@ -126,8 +100,6 @@ describeWithClone("against the fork clone, mp-2283", () => {
   });
 
   it("fails loudly when the commit is unknown, not as a missing file", async () => {
-    await expect(readFileAtCommit(repoDir!, "1".repeat(40), "README.md")).rejects.toThrow(
-      /cat-file/,
-    );
+    await expect(readFileAtCommit(repoDir!, "1".repeat(40), "README.md")).rejects.toThrow(/cat-file/);
   });
 });

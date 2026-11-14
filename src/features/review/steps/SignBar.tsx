@@ -14,10 +14,7 @@ export const SIGN_BAR_HEIGHT = "h-[calc(var(--layout-sign-bar)+env(safe-area-ins
  * job, so the bar is hidden there and in print. It shows only when there is
  * something to sign; a signed change has the header's "View full receipt" link.
  */
-export function SignBar({
-  signState,
-  onOpenSign,
-}: Readonly<{ signState: SignState; onOpenSign: () => void }>) {
+export function SignBar({ signState, onOpenSign }: Readonly<{ signState: SignState; onOpenSign: () => void }>) {
   if (!isSignable(signState)) return null;
   return (
     <div

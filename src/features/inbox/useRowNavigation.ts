@@ -17,9 +17,7 @@ export function useRowNavigation(): void {
       const step = stepFromKey(event);
       if (step === 0) return;
 
-      const links = [...document.querySelectorAll<HTMLAnchorElement>(ROW_LINK)].filter(
-        (link) => link.offsetParent !== null,
-      );
+      const links = [...document.querySelectorAll<HTMLAnchorElement>(ROW_LINK)].filter((link) => link.offsetParent !== null);
       if (links.length === 0) return;
       event.preventDefault();
       const current = links.indexOf(document.activeElement as HTMLAnchorElement);

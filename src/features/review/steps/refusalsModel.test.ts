@@ -29,14 +29,8 @@ describe("refusals", () => {
     const review = await loadFixtureReview("mp-2283");
     const record = await loadFixtureReceipt("mp-2283");
     if (record === null) throw new Error("fixture receipt missing");
-    const otherRun = {
-      ...record,
-      receipt: { ...record.receipt, reviewRunId: "run-from-another-day" },
-    };
-    expect(buildRefusals(review, otherRun, "signed").items.map((item) => item.acceptedBy)).toEqual([
-      null,
-      null,
-    ]);
+    const otherRun = { ...record, receipt: { ...record.receipt, reviewRunId: "run-from-another-day" } };
+    expect(buildRefusals(review, otherRun, "signed").items.map((item) => item.acceptedBy)).toEqual([null, null]);
     expect(buildStepTabs(review, otherRun, "signed")[2].count).toBe("2 open");
   });
 
@@ -49,8 +43,6 @@ describe("refusals", () => {
   });
 
   it("has no items when nothing was refused", async () => {
-    expect(buildRefusals(await loadFixtureReview("mp-2234"), null, "needs-review").items).toEqual(
-      [],
-    );
+    expect(buildRefusals(await loadFixtureReview("mp-2234"), null, "needs-review").items).toEqual([]);
   });
 });

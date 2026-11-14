@@ -39,12 +39,7 @@ export function CoveredRow({
   const bodyId = `hunk-body-${hunk.id}`;
 
   return (
-    <div
-      data-hunk-card
-      data-hunk-id={hunk.id}
-      data-coverage={coverage}
-      className="scroll-mt-4 compact:scroll-mt-scroll-clear"
-    >
+    <div data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
       <div className="flex flex-col items-start transition-colors duration-(--duration-fast) ease-out hover:bg-surface-hover">
         <OwnTestTooltip isActive={isOwnTest}>
           <button
@@ -56,9 +51,7 @@ export function CoveredRow({
             className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2 text-left"
           >
             <CoverageMark coverage={coverage} />
-            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">
-              {hunk.file}
-            </span>
+            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{hunk.file}</span>
             <span className="font-mono text-xs text-text-muted">{hunk.header}</span>
             <span className="ml-auto flex min-w-0 items-center gap-2 text-xs text-text-muted">
               {/* The own-test line carries the point of this row, so it wraps instead of being cut with an ellipsis; the idea label sits on its own line below. */}
@@ -84,12 +77,7 @@ export function CoveredRow({
                 isFlush
                 className="rounded-none border-x-0 border-b-0"
               >
-                <DiffTable
-                  hunk={hunk}
-                  coverage={coverage}
-                  tokens={tokens}
-                  highlightedLines={highlightedLines}
-                />
+                <DiffTable hunk={hunk} coverage={coverage} tokens={tokens} highlightedLines={highlightedLines} />
               </Console>
             </motion.div>
           )}
@@ -104,10 +92,7 @@ export function CoveredRow({
  * the same tooltip the Refused chip uses. The button is the trigger, so the
  * note opens on hover and on keyboard focus too. Other rows pass through.
  */
-function OwnTestTooltip({
-  isActive,
-  children,
-}: Readonly<{ isActive: boolean; children: ReactNode }>) {
+function OwnTestTooltip({ isActive, children }: Readonly<{ isActive: boolean; children: ReactNode }>) {
   if (!isActive) return children;
   return (
     <TooltipProvider>

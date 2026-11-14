@@ -8,10 +8,7 @@ describe("sign", () => {
   it("says the receipt file is unreadable instead of offering a draft", async () => {
     const review = await loadFixtureReview("mp-2234");
     expect(buildSignView(review, null, "unreadable").status).toBe("unreadable");
-    expect(buildStepTabs(review, null, "unreadable")[3]).toMatchObject({
-      count: "Unreadable",
-      tone: "rose",
-    });
+    expect(buildStepTabs(review, null, "unreadable")[3]).toMatchObject({ count: "Unreadable", tone: "rose" });
   });
 
   it("shows the draft and the sign command for a change with no receipt", async () => {

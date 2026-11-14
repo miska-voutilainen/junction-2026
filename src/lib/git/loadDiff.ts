@@ -25,11 +25,7 @@ const contextLines = 3;
  *
  * @throws Error when git fails, e.g. a SHA is missing from the clone (run pnpm seed).
  */
-export async function loadDiff(
-  repoDir: string,
-  baseSha: string,
-  headSha: string,
-): Promise<LoadedDiff> {
+export async function loadDiff(repoDir: string, baseSha: string, headSha: string): Promise<LoadedDiff> {
   const [identity, rawDiff] = await Promise.all([
     computeDiffIdentity(repoDir, baseSha, headSha),
     runGit(repoDir, pinnedDiffArgs(baseSha, headSha, [`-U${contextLines}`]), { isolated: true }),
@@ -58,10 +54,7 @@ export async function loadDiff(
  * @throws Error when an entry has no file path, rather than dropping it and
  *   showing less than the hashed diff.
  */
-export function parseUnifiedDiff(
-  diffText: string,
-  range = "the diff",
-): Pick<LoadedDiff, "files" | "hunks"> {
+export function parseUnifiedDiff(diffText: string, range = "the diff"): Pick<LoadedDiff, "files" | "hunks"> {
   const files: Review["files"] = [];
   const hunks: Review["hunks"] = [];
 

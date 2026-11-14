@@ -11,11 +11,7 @@ export function SummaryBar({ summary }: Readonly<{ summary: InboxSummary }>) {
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-control border border-border-subtle bg-surface-panel px-4 py-2.5 text-sm text-text-secondary">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span
-          role="img"
-          aria-label={`${signed} of ${changes} signed`}
-          className="inline-flex gap-0.5"
-        >
+        <span role="img" aria-label={`${signed} of ${changes} signed`} className="inline-flex gap-0.5">
           {Array.from({ length: changes }, (_, index) => (
             <span
               key={index}
@@ -25,13 +21,11 @@ export function SummaryBar({ summary }: Readonly<{ summary: InboxSummary }>) {
         </span>
         <span>
           <b className="font-semibold text-text-primary">{countOf(changes, "change")}</b> ·{" "}
-          {tierCounts.light} Light · {tierCounts.focused} Focused · {tierCounts.full} Full ·{" "}
-          {signed} signed
+          {tierCounts.light} Light · {tierCounts.focused} Focused · {tierCounts.full} Full · {signed} signed
         </span>
       </div>
       <span className="text-text-muted compact:ml-auto">
-        Humans read {summary.readHunks} of {summary.totalHunks} hunks · ~{summary.readMinutes} of{" "}
-        {summary.fullMinutes} min
+        Humans read {summary.readHunks} of {summary.totalHunks} hunks · ~{summary.readMinutes} of {summary.fullMinutes} min
       </span>
     </div>
   );

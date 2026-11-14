@@ -24,12 +24,7 @@ export interface StepTab {
   tone: "neutral" | "amber" | "rose";
 }
 
-const STEP_LABELS: Record<StepId, string> = {
-  read: "Read",
-  blind: "Blind check",
-  refused: "Refused",
-  sign: "Sign",
-};
+const STEP_LABELS: Record<StepId, string> = { read: "Read", blind: "Blind check", refused: "Refused", sign: "Sign" };
 
 /** The step ids in tab order; the `1` to `4` keys index into it. */
 export const STEP_IDS: readonly StepId[] = ["read", "blind", "refused", "sign"];
@@ -42,15 +37,9 @@ function refusedCount(review: Review, openRefusals: number): string {
 }
 
 /** The tabs with their counts, so a person sees which steps have something for them before opening one. */
-export function buildStepTabs(
-  review: Review,
-  record: ReceiptRecord | null,
-  signState: SignState,
-): StepTab[] {
+export function buildStepTabs(review: Review, record: ReceiptRecord | null, signState: SignState): StepTab[] {
   const openRefusals = openRefusalCount(buildRefusals(review, record, signState));
-  const contradictionCount = review.findings.filter(
-    (finding) => finding.kind === "contradiction",
-  ).length;
+  const contradictionCount = review.findings.filter((finding) => finding.kind === "contradiction").length;
   const signCount: Record<SignState, Pick<StepTab, "count" | "tone">> = {
     "needs-review": { count: "Draft ready", tone: "neutral" },
     signed: { count: "Signed", tone: "neutral" },
@@ -70,10 +59,5 @@ export function buildStepTabs(
     },
     sign: signCount[signState],
   };
-  return STEP_IDS.map((id, index) => ({
-    id,
-    number: (index + 1) as StepTab["number"],
-    label: STEP_LABELS[id],
-    ...counts[id],
-  }));
+  return STEP_IDS.map((id, index) => ({ id, number: (index + 1) as StepTab["number"], label: STEP_LABELS[id], ...counts[id] }));
 }

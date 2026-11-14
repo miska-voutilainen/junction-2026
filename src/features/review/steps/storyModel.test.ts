@@ -15,9 +15,7 @@ describe("story", () => {
   });
 
   it("pairs a retracted claim with its retraction and leaves the others alone", async () => {
-    const claims = buildStory(await loadFixtureReview("mp-2283")).groups.flatMap(
-      (group) => group.claims,
-    );
+    const claims = buildStory(await loadFixtureReview("mp-2283")).groups.flatMap((group) => group.claims);
     const retracted = claims.filter((entry) => entry.retraction !== null);
     expect(retracted.map((entry) => entry.claim.id)).toEqual(["c8"]);
     expect(claims).toHaveLength(8);
@@ -27,9 +25,7 @@ describe("story", () => {
     const review = await loadFixtureReview("mp-2283");
     const story = buildStory(review);
     expect(story.groups.flatMap((group) => group.claims)).toHaveLength(review.claims.length);
-    expect(story.quoteCheckLine).toBe(
-      "Quote check: 9 of 10 quotes found in the code, 1 claim downgraded.",
-    );
+    expect(story.quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code, 1 claim downgraded.");
   });
 });
 
@@ -52,21 +48,13 @@ describe("quote check", () => {
   it("counts downgraded claims and dropped findings apart", async () => {
     const review = structuredClone(await loadFixtureReview("mp-2283"));
     review.quoteCheck = { ...review.quoteCheck, downgraded: 1, dropped: 2 };
-    expect(buildStory(review).quoteCheckLine).toBe(
-      "Quote check: 9 of 10 quotes found in the code, 1 claim downgraded, 2 findings dropped.",
-    );
+    expect(buildStory(review).quoteCheckLine).toBe("Quote check: 9 of 10 quotes found in the code, 1 claim downgraded, 2 findings dropped.");
   });
 });
 
 describe("citation label", () => {
   it("writes a citation as file:line, collapsing a one-line range", () => {
-    const citation = {
-      file: "src/a/Foo.cs",
-      side: "new" as const,
-      startLine: 10,
-      endLine: 12,
-      quote: "",
-    };
+    const citation = { file: "src/a/Foo.cs", side: "new" as const, startLine: 10, endLine: 12, quote: "" };
     expect(citationLabel(citation)).toBe("Foo.cs:10–12");
     expect(citationLabel({ ...citation, endLine: 10 })).toBe("Foo.cs:10");
   });

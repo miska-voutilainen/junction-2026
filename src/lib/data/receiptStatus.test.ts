@@ -39,9 +39,7 @@ describe("receiptStatus", () => {
 describe("signerOf", () => {
   it("names the owner only for a receipt whose signature check passed", () => {
     expect(signerOf(record)).toEqual({ kind: "signed", owner: record.receipt.owner });
-    expect(signerOf({ ...record, verify: { ...record.verify, ok: false } })).toEqual({
-      kind: "unverified",
-    });
+    expect(signerOf({ ...record, verify: { ...record.verify, ok: false } })).toEqual({ kind: "unverified" });
   });
 
   it("tells no receipt from an unreadable one", () => {

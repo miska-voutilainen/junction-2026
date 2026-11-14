@@ -41,15 +41,7 @@ interface ReviewStepsProps {
  * keys 1 to 4 are bound by `useStepKeys`). The active underline slides
  * between tabs through one shared `layoutId`. UI plan section 5.2.
  */
-export function ReviewSteps({
-  review,
-  reportCard,
-  record,
-  signState,
-  step,
-  onStepChange,
-  onShowHunk,
-}: Readonly<ReviewStepsProps>) {
+export function ReviewSteps({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: Readonly<ReviewStepsProps>) {
   const tabs = useMemo(() => buildStepTabs(review, record, signState), [review, record, signState]);
   const slide = useEnterTransition();
 
@@ -68,22 +60,13 @@ export function ReviewSteps({
   }
 
   return (
-    <section
-      id={REVIEW_STEPS_ID}
-      aria-labelledby="review-steps-heading"
-      className="scroll-mt-4 overflow-hidden rounded-page border border-border-subtle bg-surface-panel compact:scroll-mt-scroll-clear wide:sticky wide:top-scroll-clear wide:flex wide:max-h-[calc(var(--spacing-below-topbar)-2rem)] wide:flex-col"
-    >
+    <section id={REVIEW_STEPS_ID} aria-labelledby="review-steps-heading" className="scroll-mt-4 compact:scroll-mt-scroll-clear overflow-hidden rounded-page border border-border-subtle bg-surface-panel wide:sticky wide:top-scroll-clear wide:flex wide:max-h-[calc(var(--spacing-below-topbar)-2rem)] wide:flex-col">
       <h2 id="review-steps-heading" className="sr-only">
         Review steps
       </h2>
       {/* Roving tabindex: the active tab is focusable, which the lint rule cannot see across the map. */}
       {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus */}
-      <div
-        role="tablist"
-        aria-label="Review steps"
-        onKeyDown={moveBetweenTabs}
-        className="grid grid-cols-4 border-b border-border-subtle"
-      >
+      <div role="tablist" aria-label="Review steps" onKeyDown={moveBetweenTabs} className="grid grid-cols-4 border-b border-border-subtle">
         {tabs.map((tab) => {
           const isActive = tab.id === step;
           return (
@@ -116,12 +99,7 @@ export function ReviewSteps({
                 {tab.count}
               </span>
               {isActive && (
-                <motion.span
-                  layoutId="review-steps-underline"
-                  aria-hidden="true"
-                  className="absolute inset-x-0 -bottom-px h-0.5 bg-brand"
-                  transition={slide}
-                />
+                <motion.span layoutId="review-steps-underline" aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 bg-brand" transition={slide} />
               )}
             </button>
           );
@@ -136,41 +114,22 @@ export function ReviewSteps({
           aria-labelledby={tabId(id)}
           hidden={id !== step}
           tabIndex={0}
-          className="p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring wide:min-h-0 wide:overflow-y-auto"
+          className="p-4 wide:min-h-0 wide:overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring"
         >
-          {id === step && (
-            <ActiveStep
-              {...{ review, reportCard, record, signState, step, onStepChange, onShowHunk }}
-            />
-          )}
+          {id === step && <ActiveStep {...{ review, reportCard, record, signState, step, onStepChange, onShowHunk }} />}
         </div>
       ))}
     </section>
   );
 }
 
-function ActiveStep({
-  review,
-  reportCard,
-  record,
-  signState,
-  step,
-  onStepChange,
-  onShowHunk,
-}: Readonly<ReviewStepsProps>) {
+function ActiveStep({ review, reportCard, record, signState, step, onStepChange, onShowHunk }: Readonly<ReviewStepsProps>) {
   const story = useMemo(() => buildStory(review), [review]);
   const blindCheck = useMemo(() => buildBlindCheck(review, reportCard), [review, reportCard]);
-  const refusals = useMemo(
-    () => buildRefusals(review, record, signState),
-    [review, record, signState],
-  );
-  const signView = useMemo(
-    () => buildSignView(review, record, signState),
-    [review, record, signState],
-  );
+  const refusals = useMemo(() => buildRefusals(review, record, signState), [review, record, signState]);
+  const signView = useMemo(() => buildSignView(review, record, signState), [review, record, signState]);
 
-  if (step === "read")
-    return <ReadStep story={story} onOpenRefused={() => onStepChange("refused")} />;
+  if (step === "read") return <ReadStep story={story} onOpenRefused={() => onStepChange("refused")} />;
   if (step === "blind") return <BlindCheckStep blindCheck={blindCheck} />;
   if (step === "refused") return <RefusedStep refusals={refusals} onShowHunk={onShowHunk} />;
   return <SignStep view={signView} review={review} />;

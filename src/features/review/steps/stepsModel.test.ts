@@ -12,8 +12,6 @@ describe("tabs", () => {
     expect(tabs[1].tone).toBe("rose");
 
     const staleReview = await loadFixtureReview("mp-2129");
-    expect(
-      buildStepTabs(staleReview, await loadFixtureReceipt("mp-2129"), "stale")[3],
-    ).toMatchObject({ count: "Stale", tone: "amber" });
+    expect(buildStepTabs(staleReview, await loadFixtureReceipt("mp-2129"), "stale")[3]).toMatchObject({ count: "Stale", tone: "amber" });
   });
 });

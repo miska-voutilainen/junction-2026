@@ -70,8 +70,7 @@ describe("fixtures", () => {
   it("make the report card's routing spread match the four reviews", () => {
     const card = ReportCardSchema.parse(readFixture("eval/report-card.json"));
     const routings = tietoIds.map((id) => reviewOf(id).routing);
-    const total = (pick: (r: (typeof routings)[number]) => number) =>
-      routings.reduce((sum, r) => sum + pick(r), 0);
+    const total = (pick: (r: (typeof routings)[number]) => number) => routings.reduce((sum, r) => sum + pick(r), 0);
     expect(card.routingSpread.focused).toBe(routings.filter((r) => r.tier === "focused").length);
     expect(card.routingSpread.full).toBe(routings.filter((r) => r.tier === "full").length);
     expect(card.routingSpread.readHunks).toBe(total((r) => r.readHunks));
@@ -81,9 +80,7 @@ describe("fixtures", () => {
   it("have a signed receipt for mp-2283, a stale one for mp-2129 and none for the others", () => {
     const status = (id: string) => {
       const file = `receipts/${id}.json`;
-      const record = fixtureFiles.includes(file)
-        ? ReceiptRecordSchema.parse(readFixture(file))
-        : null;
+      const record = fixtureFiles.includes(file) ? ReceiptRecordSchema.parse(readFixture(file)) : null;
       return receiptStatus(reviewOf(id), record);
     };
     expect(status("mp-2283")).toBe("signed");
@@ -96,9 +93,7 @@ describe("fixtures", () => {
     const review = reviewOf("mp-2283");
     const kinds = new Set(review.findings.map((finding) => finding.kind));
     expect(kinds).toEqual(new Set(["defect", "contradiction", "missing", "scope-creep"]));
-    expect(
-      review.findings.find((finding) => finding.kind === "contradiction")?.statement,
-    ).toBeTruthy();
+    expect(review.findings.find((finding) => finding.kind === "contradiction")?.statement).toBeTruthy();
     expect(review.refusals.length).toBeGreaterThanOrEqual(2);
     expect(review.retractions).toHaveLength(1);
     const evidence = review.claims.find((claim) => claim.level === "verified")?.evidence[0];

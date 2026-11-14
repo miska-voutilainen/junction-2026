@@ -25,14 +25,7 @@ interface DiffViewProps {
  * snapshot files last. This ordering is the hunk coverage map (idea 3) made
  * visible: the reader sees what to read before anything else.
  */
-export function DiffView({
-  sections,
-  tokens,
-  highlightedLines,
-  reveal,
-  readIds,
-  onToggleRead,
-}: Readonly<DiffViewProps>) {
+export function DiffView({ sections, tokens, highlightedLines, reveal, readIds, onToggleRead }: Readonly<DiffViewProps>) {
   const coveredCount = sections.covered.length;
 
   return (
@@ -53,28 +46,20 @@ export function DiffView({
           className="rounded-control border border-dashed border-border-default px-2 py-1"
           title={
             <span className="flex w-full items-baseline justify-between gap-3">
-              <span>Covered by evidence: {countOf(coveredCount, "hunk")}</span>
+              <span>
+                Covered by evidence: {countOf(coveredCount, "hunk")}
+              </span>
               <span className="text-xs text-text-muted">{coveredSummary(sections.covered)}</span>
             </span>
           }
         >
           <div className="mb-1 flex flex-col gap-3">
-            <CoveredList
-              entries={sections.covered}
-              tokens={tokens}
-              highlightedLines={highlightedLines}
-              reveal={reveal}
-            />
+            <CoveredList entries={sections.covered} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
           </div>
         </Disclosure>
       )}
       {sections.generated.length > 0 && (
-        <GeneratedFiles
-          entries={sections.generated}
-          tokens={tokens}
-          highlightedLines={highlightedLines}
-          reveal={reveal}
-        />
+        <GeneratedFiles entries={sections.generated} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
       )}
     </div>
   );
@@ -107,7 +92,9 @@ function ReadThisSection({
   return (
     <section aria-labelledby="read-this-heading" className="flex flex-col gap-3">
       <h2 id="read-this-heading" className="flex items-center gap-3 text-sm font-medium text-amber">
-        <span>Read this: {countOf(entries.length, "hunk")}</span>
+        <span>
+          Read this: {countOf(entries.length, "hunk")}
+        </span>
         <span aria-hidden="true" className="h-px flex-1 bg-border-subtle" />
       </h2>
       {entries.map((entry) => (
@@ -127,15 +114,9 @@ function ReadThisSection({
 /** "Nothing to read: evidence covers all 8 hunks.", or with snapshots: "...covers 2 hunks; the other 411 are generated files." */
 function nothingToReadText(coveredCount: number, generatedCount: number): string {
   if (generatedCount === 0) return `Nothing to read: evidence covers all ${coveredCount} hunks.`;
-  if (coveredCount === 0)
-    return generatedCount === 1
-      ? "Nothing to read: the one hunk is a generated file."
-      : `Nothing to read: all ${generatedCount} hunks are generated files.`;
+  if (coveredCount === 0) return generatedCount === 1 ? "Nothing to read: the one hunk is a generated file." : `Nothing to read: all ${generatedCount} hunks are generated files.`;
   const covered = countOf(coveredCount, "hunk");
-  const others =
-    generatedCount === 1
-      ? "the other hunk is a generated file"
-      : `the other ${generatedCount} are generated files`;
+  const others = generatedCount === 1 ? "the other hunk is a generated file" : `the other ${generatedCount} are generated files`;
   return `Nothing to read: evidence covers ${covered}; ${others}.`;
 }
 
@@ -172,17 +153,8 @@ function GeneratedFiles({ entries, tokens, highlightedLines, reveal }: Readonly<
       className="rounded-control border border-dashed border-border-default px-2 py-1"
       title={`${generatedFilesLabel(entries)} · not in the reading count · ${reveal.isGeneratedOpen ? "Hide" : "Show"}`}
     >
-      <p className="px-1 pb-2 text-xs text-text-muted">
-        {
-          "Generated files aren't read, so code hidden in one wouldn't be caught. Read the template that produces them."
-        }
-      </p>
-      <CoveredList
-        entries={entries}
-        tokens={tokens}
-        highlightedLines={highlightedLines}
-        reveal={reveal}
-      />
+      <p className="px-1 pb-2 text-xs text-text-muted">{"Generated files aren't read, so code hidden in one wouldn't be caught. Read the template that produces them."}</p>
+      <CoveredList entries={entries} tokens={tokens} highlightedLines={highlightedLines} reveal={reveal} />
     </Disclosure>
   );
 }

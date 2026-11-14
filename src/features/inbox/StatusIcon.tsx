@@ -9,20 +9,10 @@ function statusOf(row: InboxRow): { label: string; icon: ReactNode } {
       ? { label: "Not reviewed", icon: <Minus className="size-4 text-text-muted" /> }
       : { label: "Review unreadable", icon: <TriangleAlert className="size-4 text-rose-light" /> };
   }
-  if (row.receipt === "signed")
-    return { label: "Signed", icon: <Check className="size-4 text-text-secondary" /> };
-  if (row.receipt === "stale")
-    return { label: "Stale", icon: <TriangleAlert className="size-4 text-amber-light" /> };
-  if (row.receipt === "reopened")
-    return {
-      label: "Reopened by an escape",
-      icon: <TriangleAlert className="size-4 text-amber-light" />,
-    };
-  if (row.receipt === "unverified")
-    return {
-      label: "Signature failed verification",
-      icon: <ShieldX className="size-4 text-rose-light" />,
-    };
+  if (row.receipt === "signed") return { label: "Signed", icon: <Check className="size-4 text-text-secondary" /> };
+  if (row.receipt === "stale") return { label: "Stale", icon: <TriangleAlert className="size-4 text-amber-light" /> };
+  if (row.receipt === "reopened") return { label: "Reopened by an escape", icon: <TriangleAlert className="size-4 text-amber-light" /> };
+  if (row.receipt === "unverified") return { label: "Signature failed verification", icon: <ShieldX className="size-4 text-rose-light" /> };
   return { label: "Needs review", icon: <span className="size-2 rounded-full bg-link" /> };
 }
 

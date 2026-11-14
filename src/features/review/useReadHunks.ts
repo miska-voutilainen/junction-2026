@@ -37,9 +37,7 @@ function writeRaw(changeId: string, raw: string): void {
 function parseIds(raw: string): Set<string> {
   try {
     const parsed: unknown = JSON.parse(raw);
-    return new Set(
-      Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [],
-    );
+    return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
   } catch {
     return new Set();
   }

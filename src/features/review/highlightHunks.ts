@@ -20,28 +20,19 @@ export interface CodeToken {
 /** Tokens per hunk id, then per line of the hunk (same order as `hunk.lines`). */
 export type HighlightedHunks = Record<string, CodeToken[][]>;
 
-const theme = createCssVariablesTheme({
-  name: "countersign",
-  variablePrefix: "--shiki-",
-  fontStyle: false,
-});
+const theme = createCssVariablesTheme({ name: "countersign", variablePrefix: "--shiki-", fontStyle: false });
 
 /**
  * Tokenises every C# hunk of a review. Hunks of other file types come back
  * as one plain token per line.
  */
 export async function highlightHunks(hunks: Review["hunks"]): Promise<HighlightedHunks> {
-  const entries = await Promise.all(
-    hunks.map(async (hunk) => [hunk.id, await tokenise(hunk)] as const),
-  );
+  const entries = await Promise.all(hunks.map(async (hunk) => [hunk.id, await tokenise(hunk)] as const));
   return Object.fromEntries(entries);
 }
 
 async function tokenise(hunk: Review["hunks"][number]): Promise<CodeToken[][]> {
   if (!hunk.file.endsWith(".cs")) return hunk.lines.map((line) => [{ content: line.text }]);
-  const lines = await codeToTokensBase(hunk.lines.map((line) => line.text).join("\n"), {
-    lang: "csharp",
-    theme,
-  });
+  const lines = await codeToTokensBase(hunk.lines.map((line) => line.text).join("\n"), { lang: "csharp", theme });
   return lines.map((line) => line.map(({ content, color }) => ({ content, color })));
 }

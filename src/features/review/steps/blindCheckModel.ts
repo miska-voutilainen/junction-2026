@@ -42,10 +42,7 @@ export function buildBlindCheck(review: Review, reportCard: ReportCardInput): Bl
   const comparison = reportCard.state === "ok" ? reportCard.data.anchoredVsBlind : null;
   return {
     requirementId: review.requirement.id,
-    expected: (review.expectation?.items ?? []).map((item) => ({
-      itemId: item.requirementItemId,
-      behaviours: item.expectedBehaviours,
-    })),
+    expected: (review.expectation?.items ?? []).map((item) => ({ itemId: item.requirementItemId, behaviours: item.expectedBehaviours })),
     contradictions: findingViews(review, "contradiction"),
     readingOrder: comparison?.perPlant.filter((plant) => plant.changeId === review.changeId) ?? [],
     overallLine:

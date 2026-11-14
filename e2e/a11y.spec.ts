@@ -126,18 +126,12 @@ test.describe("keyboard", () => {
           const box = element.getBoundingClientRect();
           const marksFocus = (node: Element) => {
             const style = getComputedStyle(node);
-            return (
-              (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0) ||
-              style.boxShadow !== "none"
-            );
+            return (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0) || style.boxShadow !== "none";
           };
           // An inbox row is one link stretched over the row; its ring is drawn on the row two levels up.
           const ring = [element, element.parentElement, element.parentElement?.parentElement];
           const hasIndicator = ring.some((node) => node != null && marksFocus(node));
-          const label =
-            element.tagName.toLowerCase() +
-            ":" +
-            (element.getAttribute("aria-label") ?? element.textContent?.trim().slice(0, 30) ?? "");
+          const label = element.tagName.toLowerCase() + ":" + (element.getAttribute("aria-label") ?? element.textContent?.trim().slice(0, 30) ?? "");
           return {
             label,
             isVisible: box.width > 0 && box.height > 0 && box.bottom > 0 && box.top < innerHeight,
@@ -153,9 +147,7 @@ test.describe("keyboard", () => {
         if (!stop.isVisible) problems.push(`not visible: ${key}`);
         if (!stop.hasIndicator) problems.push(`no focus indicator: ${key}`);
       }
-      expect(stops, "focus kept moving through more than a page of stops").toBeLessThan(
-        MAX_TAB_STOPS,
-      );
+      expect(stops, "focus kept moving through more than a page of stops").toBeLessThan(MAX_TAB_STOPS);
       expect(problems).toEqual([]);
     });
   }
@@ -171,9 +163,7 @@ test.describe("keyboard", () => {
     await expect(page).toHaveURL(/#content$/);
   });
 
-  test("Ctrl+K opens the menu, arrows move, Esc closes and returns focus to the trigger", async ({
-    page,
-  }) => {
+  test("Ctrl+K opens the menu, arrows move, Esc closes and returns focus to the trigger", async ({ page }) => {
     await page.goto("/");
     await settle(page);
     const trigger = page.locator("button[aria-haspopup='dialog']:visible").first();
@@ -222,10 +212,7 @@ test.describe("reduced motion", () => {
     await settle(page);
 
     await page.getByRole("tab", { name: /Blind check/ }).click();
-    await expect(page.getByRole("tab", { name: /Blind check/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await expect(page.getByRole("tab", { name: /Blind check/ })).toHaveAttribute("aria-selected", "true");
 
     await page.getByRole("tab", { name: /Sign/ }).click();
     await page.getByRole("button", { name: /^Copy/ }).first().click();
@@ -241,9 +228,7 @@ test.describe("no confidence percentages", () => {
     test(`${route} shows no percentage except the documented threshold`, async ({ page }) => {
       await page.goto(route);
       await settle(page);
-      for (const name of STEP_TABS.filter(() =>
-        CHANGE_IDS.some((id) => route === `/changes/${id}`),
-      )) {
+      for (const name of STEP_TABS.filter(() => CHANGE_IDS.some((id) => route === `/changes/${id}`))) {
         await page.getByRole("tab", { name }).click();
         await expectNoPercentages(page);
       }
@@ -254,9 +239,7 @@ test.describe("no confidence percentages", () => {
   async function expectNoPercentages(page: Page): Promise<void> {
     const text = await page.locator("body").innerText();
     const found = [...text.matchAll(/\b\d{1,3}\s?%/g)]
-      .map((match) =>
-        text.slice(Math.max(0, match.index - 30), match.index + 20).replace(/\s+/g, " "),
-      )
+      .map((match) => text.slice(Math.max(0, match.index - 30), match.index + 20).replace(/\s+/g, " "))
       .filter((context) => !ALLOWED.some((allowed) => allowed.test(context)));
     expect(found).toEqual([]);
     expect(text).not.toMatch(/confiden[a-z]*[^.\n]{0,40}\d/i);
@@ -273,8 +256,7 @@ test.describe("copy punctuation", () => {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       for (let node = walker.nextNode(); node; node = walker.nextNode()) {
         const text = node.textContent ?? "";
-        if (/[;→]/.test(text) && !node.parentElement?.closest(skipped))
-          found.push(text.trim().slice(0, 120));
+        if (/[;→]/.test(text) && !node.parentElement?.closest(skipped)) found.push(text.trim().slice(0, 120));
       }
       return found;
     });

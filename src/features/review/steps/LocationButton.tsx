@@ -11,7 +11,7 @@ export function LocationButton({ label, onShow }: Readonly<{ label: string; onSh
       type="button"
       aria-label={`Show ${label} in the diff`}
       onClick={onShow}
-      className="inline-flex items-center rounded-chip py-0.5 text-left font-mono text-xs break-all text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring max-compact:min-h-11"
+      className="inline-flex items-center rounded-chip py-0.5 text-left max-compact:min-h-11 font-mono text-xs break-all text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-focus-ring"
     >
       {label}
     </button>

@@ -12,9 +12,7 @@ test.describe("gate on", () => {
     await expect(page.getByRole("heading", { name: "This project is private" })).toBeVisible();
   });
 
-  test("a wrong code is checked on its last digit, then the error clears the field and keeps focus", async ({
-    page,
-  }) => {
+  test("a wrong code is checked on its last digit, then the error clears the field and keeps focus", async ({ page }) => {
     await page.goto("/unlock");
     const field = page.getByLabel("4-digit code");
     await field.pressSequentially("0000");

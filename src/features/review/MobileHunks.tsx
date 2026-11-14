@@ -26,22 +26,12 @@ export function MobileHunks({
   const covered = sections.covered;
   return (
     <div className="flex flex-col gap-3 compact:hidden">
-      <p className="text-base text-text-secondary">
-        Reading code works best on a desktop. These hunks are read-only.
-      </p>
+      <p className="text-base text-text-secondary">Reading code works best on a desktop. These hunks are read-only.</p>
       {sections.read.length > 0 && (
-        <Disclosure
-          title={`Read-only hunks (${sections.read.length})`}
-          className="rounded-control border border-border-subtle px-2 py-1"
-        >
+        <Disclosure title={`Read-only hunks (${sections.read.length})`} className="rounded-control border border-border-subtle px-2 py-1">
           <div className="flex flex-col gap-3 pb-2">
             {sections.read.map((entry) => (
-              <ReadOnlyHunk
-                key={entry.hunk.id}
-                entry={entry}
-                tokens={tokens}
-                highlightedLines={highlightedLines}
-              />
+              <ReadOnlyHunk key={entry.hunk.id} entry={entry} tokens={tokens} highlightedLines={highlightedLines} />
             ))}
           </div>
         </Disclosure>
@@ -60,11 +50,7 @@ export function MobileHunks({
   );
 }
 
-function ReadOnlyHunk({
-  entry,
-  tokens,
-  highlightedLines,
-}: Readonly<{ entry: HunkEntry; tokens: HighlightedHunks; highlightedLines: HighlightedLines[] }>) {
+function ReadOnlyHunk({ entry, tokens, highlightedLines }: Readonly<{ entry: HunkEntry; tokens: HighlightedHunks; highlightedLines: HighlightedLines[] }>) {
   const { hunk, coverage } = entry;
   const label = `${fileName(hunk.file)} ${hunk.header}`;
   return (
@@ -73,14 +59,8 @@ function ReadOnlyHunk({
         <span className="truncate font-mono text-xs text-text-secondary">{label}</span>
         <CopyButton text={hunkRawText(hunk)} label={`Copy hunk ${label}`} />
       </div>
-      <div className="font-mono text-sm [overflow-wrap:anywhere] whitespace-pre-wrap text-text-secondary">
-        <DiffTable
-          hunk={hunk}
-          coverage={coverage}
-          tokens={tokens[hunk.id]}
-          highlightedLines={highlightedLines}
-          isCompact
-        />
+      <div className="font-mono text-sm whitespace-pre-wrap text-text-secondary [overflow-wrap:anywhere]">
+        <DiffTable hunk={hunk} coverage={coverage} tokens={tokens[hunk.id]} highlightedLines={highlightedLines} isCompact />
       </div>
     </div>
   );

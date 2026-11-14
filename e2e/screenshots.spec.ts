@@ -22,9 +22,7 @@ for (const viewport of VIEWPORTS) {
       await page.goto(path);
       await page.evaluate(() => document.fonts.ready);
       // Skeletons carry aria-busy; wait until none is left.
-      await page.waitForFunction(
-        () => !document.querySelector('[aria-busy="true"], [data-slot="skeleton"]'),
-      );
+      await page.waitForFunction(() => !document.querySelector('[aria-busy="true"], [data-slot="skeleton"]'));
       await page.screenshot({ path: `.review/${name}-${viewport.width}.png`, fullPage: true });
     });
   }

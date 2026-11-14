@@ -39,10 +39,7 @@ export function DiffTable({
   isCompact?: boolean;
 }>) {
   return (
-    <table
-      className="w-full border-collapse text-sm"
-      aria-label={`${coverageLabel[coverage]} hunk in ${hunk.file}`}
-    >
+    <table className="w-full border-collapse text-sm" aria-label={`${coverageLabel[coverage]} hunk in ${hunk.file}`}>
       <tbody>
         {hunk.lines.map((line, index) => {
           const isHighlighted = isLineHighlighted(hunk, line, highlightedLines);
@@ -50,24 +47,13 @@ export function DiffTable({
             <tr
               key={index}
               data-highlighted={isHighlighted || undefined}
-              className={cn(
-                LINE_TINT[line.kind],
-                isHighlighted && "bg-link/20 outline outline-1 -outline-offset-1 outline-link",
-              )}
+              className={cn(LINE_TINT[line.kind], isHighlighted && "bg-link/20 outline outline-1 -outline-offset-1 outline-link")}
             >
               <td aria-hidden="true" className={cn("w-0 border-l-2 p-0", COVERAGE_BAR[coverage])} />
-              {!isCompact && (
-                <td className="w-10 px-2 text-right text-xs text-text-faint select-none">
-                  {line.oldLine}
-                </td>
-              )}
-              <td className="w-10 px-2 text-right text-xs text-text-faint select-none">
-                {line.newLine}
-              </td>
+              {!isCompact && <td className="w-10 px-2 text-right text-xs text-text-faint select-none">{line.oldLine}</td>}
+              <td className="w-10 px-2 text-right text-xs text-text-faint select-none">{line.newLine}</td>
               <td className="w-4 text-center text-text-muted select-none">
-                <span className="sr-only">
-                  {line.kind === "add" ? "added" : line.kind === "del" ? "removed" : "unchanged"}
-                </span>
+                <span className="sr-only">{line.kind === "add" ? "added" : line.kind === "del" ? "removed" : "unchanged"}</span>
                 <span aria-hidden="true">{SIGN[line.kind]}</span>
               </td>
               <td className="pr-3 pl-1">

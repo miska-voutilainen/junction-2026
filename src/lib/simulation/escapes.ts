@@ -119,13 +119,7 @@ export function useEscapes(): EscapesApi {
     set(noEscapes);
   }, []);
   return useMemo(
-    () => ({
-      escapes,
-      total: Object.values(escapes).reduce((sum, count) => sum + count, 0),
-      record,
-      undo,
-      reset,
-    }),
+    () => ({ escapes, total: Object.values(escapes).reduce((sum, count) => sum + count, 0), record, undo, reset }),
     [escapes, record, undo, reset],
   );
 }

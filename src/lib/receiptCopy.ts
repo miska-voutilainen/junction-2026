@@ -23,5 +23,4 @@ export function verifyLine(status: VerifyLineStatus): string {
 export const STALE_TITLE = "Stale: the code changed after signing.";
 
 /** What to do about a stale receipt. */
-export const STALE_BODY =
-  "This receipt no longer covers the diff. Review the new diff, then sign a fresh receipt.";
+export const STALE_BODY = "This receipt no longer covers the diff. Review the new diff, then sign a fresh receipt.";

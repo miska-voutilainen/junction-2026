@@ -9,20 +9,14 @@ export const FALLBACK_REPO = "No repository";
 /** Every change with its review and receipt, plus the report card, as the inbox and the report card page read them. */
 export type InboxData =
   | { status: "invalid"; error: string }
-  | {
-      status: "ok";
-      sources: InboxSource[];
-      reportCard: ReportCardInput;
-      repo: string | null;
+  | { status: "ok"; sources: InboxSource[]; reportCard: ReportCardInput; repo: string | null;
       usesFixture: boolean;
       /** The validation error of every file that failed, one entry each; empty when all files read. */
       problems: string[];
     };
 
 /** A change's receipt for the inbox: the record, "unreadable" when the file fails validation, null when nobody signed. */
-function receiptOf(
-  result: Awaited<ReturnType<typeof loadReceipt>>,
-): ReceiptRecord | "unreadable" | null {
+function receiptOf(result: Awaited<ReturnType<typeof loadReceipt>>): ReceiptRecord | "unreadable" | null {
   if (result.status === "ok") return result.data;
   if (result.status === "invalid") return "unreadable";
   return null;
@@ -42,11 +36,7 @@ export async function loadInboxData(root?: string): Promise<InboxData> {
   const changeInputs = changes.status === "ok" ? changes.data : [];
   const reportCardResult = await loadReportCard(root);
   const loaded = await Promise.all(
-    changeInputs.map(async (change) => ({
-      change,
-      review: await loadReview(change.id, root),
-      receipt: await loadReceipt(change.id, root),
-    })),
+    changeInputs.map(async (change) => ({ change, review: await loadReview(change.id, root), receipt: await loadReceipt(change.id, root) })),
   );
 
   const sources: InboxSource[] = loaded.map(({ change, review, receipt }) => ({
@@ -70,17 +60,9 @@ export async function loadInboxData(root?: string): Promise<InboxData> {
       (result) => result.status === "ok" && result.source === "fixture",
     );
 
-  const problems = [
-    reportCardResult,
-    ...loaded.flatMap(({ review, receipt }) => [review, receipt]),
-  ].flatMap((result) => (result.status === "invalid" ? [result.error] : []));
+  const problems = [reportCardResult, ...loaded.flatMap(({ review, receipt }) => [review, receipt])].flatMap((result) =>
+    result.status === "invalid" ? [result.error] : [],
+  );
 
-  return {
-    status: "ok",
-    sources,
-    reportCard,
-    repo: changeInputs[0]?.repo ?? null,
-    usesFixture,
-    problems,
-  };
+  return { status: "ok", sources, reportCard, repo: changeInputs[0]?.repo ?? null, usesFixture, problems };
 }

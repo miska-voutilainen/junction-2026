@@ -23,28 +23,16 @@ function emptyGitConfig(): Promise<string> {
 
 /** Variables that change what git reads or how it diffs, besides the config files. */
 const gitOverrideNames = [
-  "GIT_CONFIG_PARAMETERS",
-  "GIT_CONFIG_COUNT",
-  "GIT_DIFF_OPTS",
-  "GIT_DIR",
-  "GIT_WORK_TREE",
-  "GIT_INDEX_FILE",
-  "GIT_EXTERNAL_DIFF",
+  "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_DIFF_OPTS", "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_EXTERNAL_DIFF",
 ];
 
 async function isolatedEnv(): Promise<NodeJS.ProcessEnv> {
   const env: NodeJS.ProcessEnv = { ...process.env };
   for (const name of Object.keys(env)) {
-    if (gitOverrideNames.includes(name) || /^GIT_CONFIG_(KEY|VALUE)_\d+$/.test(name))
-      delete env[name];
+    if (gitOverrideNames.includes(name) || /^GIT_CONFIG_(KEY|VALUE)_\d+$/.test(name)) delete env[name];
   }
   // LC_ALL=C keeps git's messages and ordering the same on every machine.
-  return {
-    ...env,
-    GIT_CONFIG_NOSYSTEM: "1",
-    GIT_CONFIG_GLOBAL: await emptyGitConfig(),
-    LC_ALL: "C",
-  };
+  return { ...env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: await emptyGitConfig(), LC_ALL: "C" };
 }
 
 /**
@@ -69,11 +57,7 @@ export async function runGit(
       { cwd: repoDir, env, encoding: "buffer", maxBuffer: maxGitOutputBytes },
       (error, stdout, stderr) => {
         if (error) {
-          reject(
-            new Error(
-              `git ${args.join(" ")} failed in ${repoDir}: ${stderr.toString().trim() || error.message}`,
-            ),
-          );
+          reject(new Error(`git ${args.join(" ")} failed in ${repoDir}: ${stderr.toString().trim() || error.message}`));
           return;
         }
         resolve(stdout);
