@@ -76,7 +76,7 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
   const sections: HunkSections = { read: [], covered: [], generated: [] };
   for (const hunk of review.hunks) {
     const file = fileOf.get(hunk.file);
-    if (!file) throw new Error(`Review ${review.changeId} has hunk ${hunk.id} in ${hunk.file}, which is not in its file list. Re-record it with pnpm pipeline run ${review.changeId}.`);
+    if (!file) throw new Error(`Review ${review.changeId} has hunk ${hunk.id} in ${hunk.file}, which is not in its file list. Re-record it with pnpm review run ${review.changeId}.`);
     const coverage = decision.coverage[hunk.id];
     const entry: HunkEntry = {
       hunk,

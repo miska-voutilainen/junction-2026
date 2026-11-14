@@ -67,7 +67,7 @@ export async function draftReceipt(
 
 function readReview(dataDir: string, changeId: string): Promise<Review> {
   return readValidatedJson(join(dataDir, "runs", changeId, "review.json"), "review", ReviewSchema, {
-    hint: `Re-run pnpm pipeline run ${changeId}.`,
+    hint: `Re-run pnpm review run ${changeId}.`,
     missing: `No recorded review for ${changeId}`,
   });
 }

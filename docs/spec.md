@@ -145,7 +145,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
   - the receipt status: "Needs review", "Signed by <owner login>", "Stale" or "Signature failed verification" (the receipt's recorded check failed);
   - a "synthetic PR description" tag when the change's `authorDescription.synthetic` is true.
 - **375 px:** rows stack in three lines: title; chips (requirement ID, tier badge, reading estimate); counts, receipt status and tag. The summary bar wraps to two lines.
-- **States:** empty (no change has a review file): "No recorded reviews yet." and "Run `pnpm pipeline run mp-2283` to record one." · a change whose review file is missing: its row shows the title and "Not reviewed yet" in place of tier and estimate · a review file that fails validation: the row shows the title and "This review couldn't be read. Re-record it with `pnpm pipeline run <id>`." · success as above.
+- **States:** empty (no change has a review file): "No recorded reviews yet." and "Run `pnpm review run mp-2283` to record one." · a change whose review file is missing: its row shows the title and "Not reviewed yet" in place of tier and estimate · a review file that fails validation: the row shows the title and "This review couldn't be read. Re-record it with `pnpm review run <id>`." · success as above.
 - **Live re-routing:** tier badges, reading estimates and the summary bar are computed in the browser by `route()` with the current simulated escapes (T06's store), so a recorded escape changes them without a reload.
 
 ### S2 · Review (`/changes/[id]`)
@@ -161,7 +161,7 @@ The app is a **Graphite-style review interface**: an inbox of changes, a review 
   - **Refused:** each refusal as "<ruleId> · <rule title>", the reason, "Decides: <decider>" and links to its hunks. Empty: "Nothing refused. Policy v1 has 7 rules. None applied to this change."
   - **Receipt:** unsigned: the intro "Drafted by the AI. Only a named human can sign it.", then "Checked" (each item and by whom or what: "tool", "AI, supported", "human"), "Not checked" (each item and its reason), "Residual risk" (text plus the refused items the owner accepts); then "Sign on your own machine" with two copyable commands, `pnpm countersign draft mp-2283` (writes the draft to edit) and `pnpm countersign sign mp-2283`. Signed: "Signed by <owner> · <date and time>", the same three sections from the signed receipt, then "Verify" with the command `pnpm countersign verify mp-2283` and its recorded output in a code block, and the line "Signature valid · diff unchanged". Stale (the receipt's `diffSha256` differs from the review's): a warning "Stale: the code changed after signing." with both hashes.
 - **375 px:** one column: header, tier banner, then a tab list "Hunks · Diff · Story · Blind check · Refused · Receipt" with "Diff" selected by default. The diff scrolls horizontally inside its own container; the page never does.
-- **States:** unknown id: "No change with id <id>." and a link "Back to the inbox" (`not-found.tsx`) · review missing: "This change hasn't been reviewed yet. Run `pnpm pipeline run <id>`." · review invalid: "This review couldn't be read. Re-record it with `pnpm pipeline run <id>`." · success as above.
+- **States:** unknown id: "No change with id <id>." and a link "Back to the inbox" (`not-found.tsx`) · review missing: "This change hasn't been reviewed yet. Run `pnpm review run <id>`." · review invalid: "This review couldn't be read. Re-record it with `pnpm review run <id>`." · success as above.
 
 ### S3 · Reviewer report card (`/reviewer`)
 
@@ -217,7 +217,7 @@ There is no HTTP API: the contracts are data files, one shared function and two 
 | `route()` | `src/rules/route.ts` | engine | app, evidence (S3) |
 | `ladderLevel()`, `applyEscapes()`, `levelsFromReportCard()` | `src/rules/ladder.ts` | engine | app, evidence |
 | Diff hash | `computeDiffIdentity()` in `src/lib/git/diffIdentity.ts` | engine | evidence (receipt) |
-| Pipeline CLI | `pnpm pipeline run <changeId> [--anchored] [--run <k>]`, `pnpm pipeline check <changeId>`, `pnpm evals` | engine | people |
+| Pipeline CLI | `pnpm review run <changeId> [--anchored] [--run <k>]`, `pnpm review check <changeId>`, `pnpm evals` | engine | people |
 | Receipt CLI | `pnpm countersign draft|sign|verify|export <changeId>` | evidence | people, CI later |
 | Simulated escapes | `useEscapes()` in `src/lib/simulation/escapes.ts` | app | app, evidence (S3) |
 | Policy | `src/policy/*.ts` | engine | app, evidence (rule titles, thresholds) |
@@ -354,7 +354,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 
 ### Pipeline CLI (`src/pipeline/cli.ts`)
 
-- `pnpm pipeline run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
+- `pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
 - `pnpm evals`: blind runs (no A5) of every `planted-bug` input, 3 anchored and 3 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
 - Env: `AI_BACKEND` (`claude-code` default | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
 
@@ -412,7 +412,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - **Anchored run for comparison:** with `--anchored`, A2 sees the author description first and A1 is skipped; A4 runs the same (A3 and A5 are skipped in the comparison runs, 9.1 T16). A planted contradiction counts as caught in a run when A4 marks the planted sentence (case- and whitespace-insensitive match, or ≥ 80% token overlap) as `contradicted` or `unsupported`.
 - **Eval cases:** the 5 contradiction plants (`cp0`–`cp4`), 3 runs per mode.
 
-### A5 · Differential test evidence (`a5.v1`, offline inside `pnpm pipeline run`)
+### A5 · Differential test evidence (`a5.v1`, offline inside `pnpm review run`)
 
 - **Two sources of tests:** (1) the PR's own added or changed test methods; (2) one test per functional requirement item, written by A5 **from the requirement and A1's expectation, not from the diff**.
 - **A5 input:** the requirement item, A1's expectation for it, and the base-side text of one existing test file in the touched test project as a style example. No hunks.
@@ -464,10 +464,10 @@ Each task is one PR in one lane, about 1–3 hours of agent work. Lanes: **engin
 | T09 | engine | Git diff loader, hunks, diff identity and policy | T07 | 1 | `src/lib/git/`: diff between two SHAs parsed (parse-diff) into `Review.files` and `Review.hunks` with ids `h1…` in diff order, file kind and area from `src/policy/areas.ts`; `computeDiffIdentity()` per section 5; head and base file text readers; `src/policy/*.ts` per section 5 incl. the four area checklists; tests on `mp-2283` (8 hunks expected; adjust the number in the spec if the real diff differs) and on fixture diffs |
 | T10 | engine | AI client with record/replay and usage log | – | – | `src/ai/client.ts` per section 6 (model, effort, structured outputs, retry with the validation error, refusal fallback, timeout, usage and cost); `AI_MODE` record/replay/live; unit tests with a fake transport (validation retry, replay miss, refusal); one live smoke call recorded |
 | T11 | engine | Routing rules and trust ladder | – | 1, 3 | `src/rules/route.ts` and `src/rules/ladder.ts` per section 5, pure and browser-safe; one unit test per rule and per coverage branch, plus the `mp-2283` fixture routing to Focused with the reasons in order |
-| T12 | engine | Pipeline: A1 blind expectation, A2 story and claims, quote check | T09, T10, T11 | 1 | `src/prompts/a1.ts`, `a2.ts`; `src/pipeline/` steps and the quote check per section 6; `pnpm pipeline run mp-2283 --no-tests` writes a schema-valid review (findings and refusals empty until T13); quote-check unit tests incl. a deliberately wrong quote |
+| T12 | engine | Pipeline: A1 blind expectation, A2 story and claims, quote check | T09, T10, T11 | 1 | `src/prompts/a1.ts`, `a2.ts`; `src/pipeline/` steps and the quote check per section 6; `pnpm review run mp-2283 --no-tests` writes a schema-valid review (findings and refusals empty until T13); quote-check unit tests incl. a deliberately wrong quote |
 | T13 | engine | Pipeline: A3 area review and refusals, A4 contradictions, anchored mode | T12 | 2 | `a3.ts`, `a4.ts`; findings and refusals in the review; `--anchored` and `--run <k>` per section 5; receipt draft built from the review (checked: tool and Verified items; not checked: Read this hunks and Unverified claims; residual risk: the refusals); A4 catches the false statement in `mp-2283`'s description in a recorded run |
 | T14 | engine | Pipeline: A5 differential tests on .NET | T12 | 1 | `a5.ts`; worktree runner with timeouts; differential classification per section 6; a recorded `mp-2283` review with at least one Verified claim showing fail-on-base and pass-on-head output; or, if the Sat 01:00 go/no-go fails, the documented cut (`docs/decisions.md`, concept card limits) |
-| T15 | engine | Record the four Tieto reviews and start the lessons log | T13, T14 | 1, 2 | `data/runs/mp-*/review.json` for all four, recorded with `AI_MODE=record`; `pnpm pipeline run` reproduces each from recordings with `AI_MODE=replay`; `docs/lessons.md` started with every failure seen (quote-check failures, retractions, wrong tiers, model errors), dated, with what we changed |
+| T15 | engine | Record the four Tieto reviews and start the lessons log | T13, T14 | 1, 2 | `data/runs/mp-*/review.json` for all four, recorded with `AI_MODE=record`; `pnpm review run` reproduces each from recordings with `AI_MODE=replay`; `docs/lessons.md` started with every failure seen (quote-check failures, retractions, wrong tiers, model errors), dated, with what we changed |
 | T16 | engine | Planted-bug eval, anchored-vs-blind count, report card | T08, T13, T11 | 2, 3 | `pnpm evals` per section 5 writes a schema-valid `data/eval/report-card.json` from recorded runs; scoring unit tests (overlap ±3 lines, area match, statement match); reviews re-routed with the measured levels; go/no-go result for anchored-vs-blind logged in `docs/lessons.md` by Sat 12:00 |
 | T17 | app | S1 Inbox | T01, T03, T06, T11 | 1, 3 | S1 per section 3, every state; tiers via `route()` with simulated escapes; e2e: row count, a tier badge, the link to S2, no console errors, at 375 and 1440 px |
 | T18 | app | S2 header, tier banner, hunk navigator and diff viewer | T01, T03, T06, T11 | 1 | S2 header, banner, navigator and diff per section 3 with shiki highlighting; every hunk shows exactly one coverage state; e2e: banner text equals `route()` output for the fixture, clicking a navigator item focuses its hunk, 375 px tab layout |
@@ -541,7 +541,7 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
   - `usage.calls` counts API requests, retries included.
   - The summary line prints cost with two decimals and whole seconds.
   - A call over 120 s logs a warning; the 180 s timeout fails it (after the SDK retries).
-- **CLI:** T12 creates `src/pipeline/cli.ts` with `run` (rejecting `--anchored` and `--run` with "available after T13"). It also adds `pnpm pipeline check <changeId>`, which runs the eval cases of A1 and A2 on the recorded review:
+- **CLI:** T12 creates `src/pipeline/cli.ts` with `run` (rejecting `--anchored` and `--run` with "available after T13"). It also adds `pnpm review check <changeId>`, which runs the eval cases of A1 and A2 on the recorded review:
   - A1 covers every requirement item.
   - For `mp-2283`, A1's text mentions a crash, throw or IndexOutOfRange, and mentions a resolver.
   - Every hunk of a non-docs file is listed by a claim.
