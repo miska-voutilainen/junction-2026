@@ -7,6 +7,7 @@ graphify-out/
 .obsidian/
 .lightfoot/
 .playwright-mcp/
+.claude/worktrees/
 
 # Dependencies and build output
 node_modules/
