@@ -1,4 +1,4 @@
-import { ShieldCheck, ShieldX } from "lucide-react";
+import { ShieldCheck, ShieldX, TriangleAlert } from "lucide-react";
 import { Console } from "@/components/Console";
 import { Disclosure } from "@/components/Disclosure";
 import type { ReceiptDocumentView } from "./receiptModel";
@@ -9,7 +9,7 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * means, and the exported record itself, collapsed, for Copy.
  */
 export function VerifySection({ view }: { view: ReceiptDocumentView }) {
-  const Icon = view.status === "unverified" ? ShieldX : ShieldCheck;
+  const Icon = { signed: ShieldCheck, stale: TriangleAlert, unverified: ShieldX }[view.status];
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-medium text-text-muted">Verify</h2>

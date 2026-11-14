@@ -6,10 +6,9 @@ import { ReceiptScreen } from "@/features/receipt-view";
 import { FALLBACK_REPO, loadInboxData } from "@/lib/data/loadInboxSources";
 import { loadChanges, loadReceipt } from "@/lib/data/loaders";
 
-// Only the Tieto changes have a receipt page; any other id is a 404 at build time.
-export const dynamicParams = false;
+// No `dynamicParams = false`: it would answer an unknown id with Next's unstyled 404 instead of the not-found.tsx with the shell.
 
-/** One static page per Tieto change in the recorded or fixture changes. */
+/** One static page per Tieto change; any other id falls through to the change segment's not-found page. */
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   const changes = await loadChanges();
   if (changes.status !== "ok") return [];

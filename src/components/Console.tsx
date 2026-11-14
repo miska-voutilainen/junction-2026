@@ -55,7 +55,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
           !isFlush && "p-3",
           isWrapped
             ? "[overflow-wrap:anywhere] whitespace-pre-wrap [&_pre]:whitespace-pre-wrap"
-            : "overflow-x-auto whitespace-pre",
+            : "overflow-x-auto whitespace-pre print:overflow-visible print:whitespace-pre-wrap print:[overflow-wrap:anywhere]",
         )}
       >
         {children ?? <pre className="font-[inherit]">{text}</pre>}

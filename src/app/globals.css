@@ -210,3 +210,31 @@
   --shiki-token-comment: var(--text-faint);
   --shiki-token-link: var(--link);
 }
+
+/* The product is dark; paper is not. Printing swaps the tokens for a light set (the page then prints what it shows, minus the shell chrome), so no light text lands on white. */
+@media print {
+  :root {
+    --surface-bg: #fff;
+    --surface-raised: #fff;
+    --surface-panel: #fff;
+    --surface-code: #fff;
+    --surface-hover: #f3f4f6;
+    --border-subtle: #d1d5db;
+    --border-default: #9ca3af;
+    --border-strong: #6b7280;
+    --text-primary: #111827;
+    --text-secondary: #1f2937;
+    --text-muted: #374151;
+    --text-faint: #4b5563;
+    --link: #1d4ed8;
+    --amber: #92400e;
+    --amber-light: #92400e;
+    --rose: #9f1239;
+    --rose-light: #9f1239;
+    --green: #166534;
+    --green-light: #166534;
+    --coverage-verified: #4b5563;
+    --coverage-supported: #4b5563;
+    --coverage-read: #92400e;
+  }
+}

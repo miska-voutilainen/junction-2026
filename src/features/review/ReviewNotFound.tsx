@@ -40,9 +40,11 @@ export function ReviewNotFound({ sources, reportCard, repo }: { sources: InboxSo
   );
 }
 
-/** The id in `/changes/<id>`; a malformed escape such as `%E0` is shown as typed instead of throwing. */
+/** The id in `/changes/<id>` or `/changes/<id>/receipt`; a malformed escape such as `%E0` is shown as typed instead of throwing. */
 function idFromPath(pathname: string): string {
-  const segment = pathname.split("/").filter(Boolean).pop() ?? "";
+  // /changes/<id> and /changes/<id>/receipt both name the id right after "changes".
+  const segments = pathname.split("/").filter(Boolean);
+  const segment = segments[segments.indexOf("changes") + 1] ?? "";
   try {
     return decodeURIComponent(segment);
   } catch {

@@ -4,9 +4,8 @@ import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { EscapeCounter } from "@/components/EscapeCounter";
 import { MockDataBanner } from "@/components/MockDataBanner";
-import { buildInboxModel, inboxLevels, toShellChanges } from "@/features/inbox";
 import type { InboxSource, ReportCardInput } from "@/features/inbox";
-import { useEscapes } from "@/lib/simulation/escapes";
+import { useShellChanges } from "@/features/review/useShellChanges";
 import { ReceiptDocument } from "./ReceiptDocument";
 import { InvalidReceipt, NoReceipt } from "./ReceiptStates";
 import { buildReceiptView } from "./receiptModel";
@@ -14,7 +13,7 @@ import { buildReceiptView } from "./receiptModel";
 /**
  * The receipt page inside its shell. The shell gets the same live routing as
  * the inbox (nav badge, command menu order, simulated escapes); the receipt
- * itself does not depend on routing, so only the shell reads the escapes.
+ * itself does not depend on routing.
  *
  * @param changeId The change whose receipt to show; it must be one of `sources`.
  * @param receiptError Why the receipt file failed validation, when it did.
@@ -34,14 +33,13 @@ export function ReceiptScreen({
   usesFixture: boolean;
   receiptError: string | null;
 }) {
-  const { escapes } = useEscapes();
-  const model = useMemo(() => buildInboxModel(sources, inboxLevels(reportCard, escapes)), [sources, reportCard, escapes]);
+  const changes = useShellChanges(sources, reportCard);
   const source = sources.find((candidate) => candidate.change.id === changeId);
   const view = useMemo(() => (source ? buildReceiptView(source, receiptError) : null), [source, receiptError]);
 
   return (
     <AppShell
-      changes={toShellChanges(model.rows)}
+      changes={changes}
       repo={repo}
       title="Receipt"
       backHref={`/changes/${changeId}`}

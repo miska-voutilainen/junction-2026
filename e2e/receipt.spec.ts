@@ -11,8 +11,6 @@ function watchConsole(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
-    // The back-to-review links prefetch /changes/<id>, which 404s until S2 (T18) ships; delete this line with that PR.
-    if (/\/changes\/[\w-]+(\?_rsc=|$)/.test(message.location().url)) return;
     problems.push(`${message.type()}: ${message.text()} ${message.location().url}`);
   });
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));
@@ -47,17 +45,19 @@ test("a signed receipt shows the seal, the diff hash and the verify output", asy
   expect(problems).toEqual([]);
 });
 
-test("a receipt for an older diff shows the stale notice and no seal", async ({ page }) => {
+test("a receipt for an older diff shows the stale notice and no seal", async ({ page }, testInfo) => {
   const problems = watchConsole(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/changes/mp-2129/receipt");
 
   await expect(page.getByText("The code changed after signing. This receipt no longer covers the diff.")).toBeVisible();
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "sign command" })).toContainText("pnpm countersign sign mp-2129");
+  await page.screenshot({ path: `.review/receipt-stale-${testInfo.project.name === "mobile" ? 375 : 1440}.png`, fullPage: true });
   expect(problems).toEqual([]);
 });
 
-test("a change without a receipt says so and shows the sign command", async ({ page }) => {
+test("a change without a receipt says so and shows the sign command", async ({ page }, testInfo) => {
   const problems = watchConsole(page);
   await page.goto("/changes/mp-2234/receipt");
 
@@ -66,6 +66,7 @@ test("a change without a receipt says so and shows the sign command", async ({ p
   await expect(page.getByText("pnpm countersign sign mp-2234")).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to the review" })).toHaveAttribute("href", "/changes/mp-2234");
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: `.review/receipt-unsigned-${testInfo.project.name === "mobile" ? 375 : 1440}.png`, fullPage: true });
   expect(problems).toEqual([]);
 });
 
@@ -92,4 +93,27 @@ test("the page never scrolls sideways from 320 to 1920 px", async ({ page }, tes
       expect(await hasHorizontalScroll(page), `${changeId} at ${width}px`).toBe(false);
     }
   }
+});
+
+test("an unknown id under /receipt shows the not-found page inside the shell", async ({ page }) => {
+  await page.goto("/changes/nope-1/receipt");
+  await expect(page.getByRole("heading", { name: "No change with id nope-1." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to the inbox" })).toBeVisible();
+});
+
+test("the printout drops the shell and the toolbar and keeps the receipt", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/changes/mp-2283/receipt");
+  await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
+  await page.emulateMedia({ media: "print" });
+  await expect(page.getByRole("navigation", { name: "Main" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Print" })).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Residual risk" })).toBeVisible();
+  await expect(page.getByText("Signature verified", { exact: true })).toBeVisible();
+});
+
+test("the review page links to the full receipt", async ({ page }) => {
+  await page.goto("/changes/mp-2129");
+  await page.getByRole("link", { name: "View full receipt" }).click();
+  await expect(page).toHaveURL(/\/changes\/mp-2129\/receipt$/);
 });

@@ -9,17 +9,20 @@ const CONFIRMATION_MS = 1500;
 
 /**
  * The row above the receipt card: what this page is, the idea it shows, and
- * two copy buttons: the verify command, and this page's link for whoever
- * should check the receipt.
+ * copy buttons for the verify command and this page's link, for whoever
+ * should check the receipt, and Print. The row is left out of the printout.
  */
 export function ReceiptToolbar({ verifyCommand }: { verifyCommand: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 print:hidden">
       <span className="text-sm font-medium text-text-muted">Receipt</span>
       <IdeaLabel n={7} />
       <span className="flex-1" />
       <CopyTextButton label="Copy verify command" getText={() => verifyCommand} />
       <CopyTextButton label="Copy link" getText={() => window.location.href} />
+      <Button type="button" variant="secondary" onClick={() => window.print()} className="min-h-8">
+        Print
+      </Button>
     </div>
   );
 }
