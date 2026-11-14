@@ -1,6 +1,6 @@
 # Pitch
 
-The full script and slides come from `demo-prep` at the freeze. Until then, this page holds what the pitch must do. Spec section 1 (Pitch spine, Final submission) has the rest.
+The script for the video, the table and the top-5 pitch is in [demo.md](demo.md); its numbers are filled in at the freeze. This page holds what the pitch must do. Spec section 1 (Pitch spine, Final submission) has the rest.
 
 ## What decides it, in order
 
