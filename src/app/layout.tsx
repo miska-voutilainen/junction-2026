@@ -16,6 +16,8 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  // Resolves the social preview image to an absolute URL, which link crawlers need.
+  metadataBase: new URL("https://countersign-junction.com"),
   title: "Countersign",
   description:
     "AI reviews. A named human countersigns, on evidence they can check.",
