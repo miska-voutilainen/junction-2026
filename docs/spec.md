@@ -297,6 +297,8 @@ Deterministic, pure, no I/O; runs in Node and the browser. Rules, in this order 
 8. `R-area-level` · for each area of the change's hunks (file areas) whose level is not `trusted` → focused · "<Area>: <Level>, may route Focused at best" (shadow: "<Area>: Shadow, the AI's output routes nothing here").
 9. `R-unread` · any hunk with coverage `read` and no other rule fired → focused · "<n> hunks have no checked evidence".
 
+**Without a readable report card** (missing or invalid), the app applies one rule on top of `route()`, in `decideChange()` (`src/features/inbox/`), so every screen shows the same decision: route with every area at Shadow, then force tier Full and every hunk `read`, drop `R-read-share` and `R-unread` (their counts no longer match), and add `R-no-track-record` · → full · "No readable report card: nothing counts as covered, so a person reads every hunk."
+
 Reading time: `readMinutes = ceil(readLines / 25)` (minimum 1 when readLines > 0), `fullMinutes = ceil(totalLines / 25)`; lines = added + removed lines of the hunks.
 
 ### Ladder (`src/rules/ladder.ts`)

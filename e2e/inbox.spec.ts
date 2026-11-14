@@ -10,8 +10,6 @@ function watchConsole(page: Page): string[] {
   const problems: string[] = [];
   page.on("console", (message) => {
     if (message.type() !== "error" && message.type() !== "warning") return;
-    // Row links prefetch /changes/<id>, which 404s until S2 (T18) ships; delete this line with that PR.
-    if (/\/changes\/[\w-]+\?_rsc=/.test(message.location().url)) return;
     problems.push(`${message.type()}: ${message.text()} ${message.location().url}`);
   });
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));

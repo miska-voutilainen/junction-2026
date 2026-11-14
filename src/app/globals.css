@@ -195,3 +195,18 @@
     box-shadow: 0 0 0 18px color-mix(in srgb, var(--green) 0%, transparent);
   }
 }
+
+/* C# highlighting in the diff: shiki's css-variables theme reads these, so the code colours come from the palette. */
+:root {
+  --shiki-foreground: var(--text-secondary);
+  --shiki-background: var(--surface-code);
+  --shiki-token-keyword: var(--link);
+  --shiki-token-string: var(--amber-light);
+  --shiki-token-string-expression: var(--amber-light);
+  --shiki-token-constant: var(--rose-light);
+  --shiki-token-function: var(--text-primary);
+  --shiki-token-parameter: var(--text-secondary);
+  --shiki-token-punctuation: var(--text-muted);
+  --shiki-token-comment: var(--text-faint);
+  --shiki-token-link: var(--link);
+}
