@@ -34,6 +34,29 @@ Older disciplines solved "trusting work you didn't do and can't fully inspect" l
 
 Recommended but not built ("Beyond the reference" in the concept card): registered pull requests, where the owner signs the tests before the agent writes code; audit sampling (ISA 530) for very large PRs; round-trip property tests for serializers.
 
+## Where the receipt fits in regulated delivery
+
+Tieto's customers are banks, insurers, healthcare and the public sector, so we asked what their rules require of software changes. Two findings shape how we talk about the receipt:
+
+- **No rule exempts AI-written code.** Change control, review and testing duties apply whoever or whatever wrote the change, and accountability stays with a named person in the organisation.
+- **Auditors already ask for the record the receipt is.** Change-control frameworks want each change tied to who approved it, what was checked and what risk was accepted, with the approver separate from whoever implemented the change. With an agent as the author, the named signer is that separate approver.
+
+| Control | What it asks | Status |
+| --- | --- | --- |
+| PCI DSS v4.0.1, requirement 6.2.3.1 | Manual code review by someone other than the author who knows review techniques, approved before release | Known, correct |
+| DORA RTS, Delegated Regulation (EU) 2024/1774, art. 17 | ICT change management, including independence between those who approve changes and those who request and implement them | From knowledge; the EUR-Lex text couldn't be fetched, so check the wording before quoting an article point |
+| DORA RTS 2024/1774, art. 16 | Source code review with static and dynamic testing in ICT development | From knowledge; same check needed |
+| NIS2, Directive (EU) 2022/2555, art. 21(2)(e) | Security in the acquisition, development and maintenance of systems | Known, correct |
+| Cyber Resilience Act, Regulation (EU) 2024/2847 | Reporting duties from 11 September 2026, full application from 11 December 2027 | Known, correct |
+| EU AI Act, Regulation (EU) 2024/1689, art. 14 | Human oversight of high-risk AI systems; applies only where the software itself is high-risk AI | Known, correct |
+| NIST SSDF, SP 800-218 (PW.7 review, PW.8 test) | Review and test code before release; SP 800-218A covers building AI models, not reviewing AI-written code | Known, correct |
+
+**What the receipt is not:** it doesn't replace runtime or penetration testing, a software bill of materials, incident reporting, key governance (personal SSH keys would give way to the organisation's signing setup), or the separate approval to deploy to production. It is the change-approval record, nothing more.
+
+**How we say it:** "the receipt is the kind of change-approval record auditors already ask for, now for agent-written changes". Never "compliant with" a regulation: the spec rules out legal claims, and compliance is decided per organisation.
+
+Not quoted: the research summarised a Tieto article on governing AI agents ("who makes decisions, and when human oversight is required") that we couldn't find on tieto.com, and the company figures it cited are unchecked.
+
 ## The hardest questions, and our answers
 
 1. **"Verified hunks can still hide a security flaw."** Verified only means a test written from the requirement fails before the change and passes after it. Refusal rules run on every hunk and send security, public API and dependency changes to a human regardless.
