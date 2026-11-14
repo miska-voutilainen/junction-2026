@@ -147,6 +147,11 @@ export const ReviewSchema = z.strictObject({
     z.strictObject({
       id: z.string(), // "r1"
       ruleId: z.string(), // "R1".."R7"
+      /**
+       * "rule": a fixed trigger in policy (`fixedRefusals`), no model involved,
+       * so it reaches a human whatever the model says. "ai": the model refused.
+       */
+      source: z.enum(["ai", "rule"]),
       reason: z.string(),
       hunkIds: z.array(z.string()),
     }),
