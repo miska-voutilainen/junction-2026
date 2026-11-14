@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · The architecture diagram is an SVG too; `next dev` no longer edits AGENTS.md
+
+- **Context:** The SVG decision below left the architecture diagram in Mermaid only because spec T05 said so. Separately, `next dev` writes a generic Next.js block into `AGENTS.md` whenever it detects an AI agent, and puts it back if removed.
+- **Decision:** `docs/architecture.md` uses the same light and dark SVGs, drawn by `scripts/idea-diagrams/` into `docs/img/`; spec T05 and `.claude/rules/docs.md` now say so. `next.config.ts` sets `agentRules: false`. Miska decided both; Veijo's agreement for `scripts/` was not asked.
+- **Why:** An architecture page in Mermaid next to eight designed idea diagrams reads as two different projects. Our agents read `CLAUDE.md`, which already pins the stack, and the generated block is text any project would have.
+- **Rejected:** Keeping Mermaid for architecture (the styling limits from the entry below apply); committing the generated block (it reaches only agents we don't use).
+- **PR:** this PR
+
 ## 2026-11-14 · Eight ideas built, four next ideas on paper
 
 - **Context:** After the research, the team chose the final idea list; more than seven was allowed.

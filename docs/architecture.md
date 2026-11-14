@@ -1,40 +1,73 @@
 # Architecture
 
-<!-- Kept current by docs-keeper. A judge should understand the system in two minutes. -->
+Countersign has two halves that never meet at runtime. A **laptop half** (the review pipeline, the receipt CLI, git, .NET and the model) writes JSON files into `data/`. A **static site** on Vercel reads those committed files and shows them. There is no server and no database. What is built and what is only specified is marked in the tables below; the spec is [docs/spec.md](spec.md), section 1 ("Product in parts") and section 4 (data).
 
-## Overview
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/architecture-dark.svg">
+  <img src="img/architecture-light.svg" width="880" alt="Countersign architecture: a laptop half (demo data, review pipeline, planted-bug eval, receipt CLI, the model and .NET) writes committed files into data/, and a static site on Vercel reads them; the routing rules are shared by both.">
+</picture>
 
-<!-- Two or three sentences: what the system does and its main parts. -->
+P7 (Tieto deliverables: idea pages, concept card, decision log, video, deck) is documentation and a recording, so it has no box. The idea pages are in [docs/ideas/](ideas/README.md).
 
-```mermaid
-flowchart LR
-  user([User]) --> web[Web app]
-  web --> api[API]
-  api --> db[(Database)]
-  api --> ai[Model provider]
-```
+**Boundaries.** P2 never decides a tier itself; it calls P3. P3 never calls a model, and it is plain TypeScript that runs both in the pipeline and in the browser. The site (P6) never runs the pipeline and never signs anything: it reads recorded files and re-runs P3 client-side. P5 is the only part that writes git notes. Everything that needs git, .NET or a model runs on a laptop.
 
 ## Components
 
-| Component | Responsibility | Tech | Code |
-| --- | --- | --- | --- |
-| Web app | | | |
-| API | | | |
+| Component                 | What it does                                                                                                                                                                | Status                                                                                                  | Code                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| P1 · Demo data            | Our fork of Tieto's MessagePack-CSharp, a branch per change and per planted bug, requirements, author descriptions, answer keys. The evidence lane writes the plants blind. | `pnpm seed` clones the fork; `data/sample/` is not in the repo yet, so the app runs on `data/fixtures/` | `scripts/seed.ts`, `data/fixtures/`                                         |
+| P2 · Review pipeline      | Reviews one change and writes `data/runs/<changeId>/review.json`. Steps A1 to A5 and the quote check, below.                                                                | Specified, not built                                                                                    | `src/pipeline/`, `src/prompts/`, `src/ai/`, `src/lib/git/` (none exist yet) |
+| P3 · Routing rules        | `route()` turns a review and the per-area trust levels into a tier, one-line reasons and a coverage state per hunk. The trust ladder gives the levels.                      | Built, with unit tests                                                                                  | `src/rules/route.ts`, `src/rules/ladder.ts`, `src/policy/`                  |
+| P4 · Reviewer measurement | Scores recorded planted-bug runs against the answer keys and writes the report card.                                                                                        | Specified, not built                                                                                    | `src/pipeline/` (eval)                                                      |
+| P5 · Receipt              | Drafts a receipt from the review, the owner signs it with their SSH key into a git note, `verify` checks signature and diff identity.                                       | Specified, not built                                                                                    | `src/receipt/`, `src/lib/git/diffIdentity.ts`                               |
+| P6 · Review app           | Static Next.js site: inbox, review page, report card, receipt, dashboard. Loaders prefer recorded files and fall back to fixtures, with a "Showing mock data" banner.       | Built, on fixtures                                                                                      | `src/app/`, `src/features/`, `src/components/`, `src/lib/data/`             |
+| Simulated escapes         | "Record escape" on an area drops it a level in the browser and re-routes every change live. Stored in `localStorage`.                                                       | Built                                                                                                   | `src/lib/simulation/escapes.ts`                                             |
+| Contracts                 | zod schemas for every data file; the only shared types between lanes.                                                                                                       | Built                                                                                                   | `src/contracts/`                                                            |
+| Access gate               | Temporary four-digit code until the submission on Sun 15.11. Off when `ACCESS_CODE` is empty.                                                                               | Built                                                                                                   | `src/proxy.ts`, `src/features/access-gate/`                                 |
+
+## Data files
+
+All data the site shows is committed under `data/` and validated by the zod schemas in `src/contracts/`. Nothing is fetched at runtime. Fields are in [api.md](api.md).
+
+| Path                                                                      | Written by                   | Read by                                                      |
+| ------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| `data/sample/changes/`, `requirements/`, `answer-key/`, `allowed_signers` | evidence lane                | pipeline, app (answer keys: scoring only, never in a prompt) |
+| `data/runs/<changeId>/review.json` and `anchored/`, `blind/` runs         | `pnpm pipeline`              | app, receipt CLI                                             |
+| `data/eval/report-card.json`                                              | `pnpm evals`                 | app, pipeline (levels for routing)                           |
+| `data/recordings/<callHash>.json`                                         | the AI client in record mode | the AI client in replay mode                                 |
+| `data/receipts/<changeId>.json`                                           | `pnpm countersign export`    | app                                                          |
+| `data/fixtures/`                                                          | app lane, by hand            | app and tests until recorded files exist                     |
+
+Signed receipts also live in the fork, as git notes under `refs/notes/countersign`.
 
 ## The demo path, end to end
 
-<!-- For each demo step: what the user does, which component handles it, which external call happens, typical latency. -->
+Nothing runs a model during the demo; everything shown comes from recorded runs.
 
-1.
+1. **Inbox (S1).** The server component reads every change's `review.json` and the report card, calls `route()` with the trust levels, and lists each change with its tier and receipt status.
+2. **Review (S2).** For `mp-2283` the page shows the story, claims with their quote and evidence level, and a hunk map: every hunk is Verified, Supported or Read this, from `route()`'s coverage. "Blind check" and "Refused" tabs show findings and refusals from the same file.
+3. **Report card (S3) and escapes.** Trust per area with sample sizes, the anchored-vs-blind count and the routing spread, from `data/eval/report-card.json`. "Record escape" updates the browser's escape store and the badges re-route without a reload.
+4. **Receipt (S4).** The owner runs `pnpm countersign sign mp-2283` on a laptop; the exported `data/receipts/mp-2283.json` is what the site shows, with the verify output. A diff that changed since signing shows as Stale.
 
-## AI pipeline
+## AI pipeline (specified, not built)
 
-<!-- Models and why each, prompts (paths and versions), structured outputs and validation, streaming, fallbacks, latency budgets, eval set and current score. -->
+One run per change, blind-first. Spec section 6 has the inputs, outputs and eval cases of every step.
 
-## Data
+| Step                        | Job                                                                                                                                                        | Gets                                                       | Never sees                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------- |
+| A1 blind expectation        | What the requirement should produce                                                                                                                        | The requirement and a one-paragraph repository orientation | The diff, the author's description |
+| A2 story and claims         | The change story and claims, each citing code                                                                                                              | Hunks, touched files, A1's expectation                     |                                    |
+| Quote check (code)          | A citation that doesn't match the code is never shown; failures are counted                                                                                | A2 and A3 citations                                        |                                    |
+| A3 area review and refusals | Defects, missing items, scope creep, and refusals against the written policy                                                                               | Hunks, area checklists, refusal policy                     |                                    |
+| A4 contradiction check      | Marks each sentence of the author's description supported, contradicted or unsupported                                                                     | The description and A2's output                            |                                    |
+| A5 differential tests       | One test per requirement item, written from the requirement, run on base and head with `dotnet test`; Verified only if it fails on base and passes on head | The requirement item and A1's expectation                  | The hunks                          |
+| `route()`                   | Tier, reasons and coverage                                                                                                                                 | The review and the area levels                             |                                    |
 
-<!-- Main entities, where they come from (partner data, seed), what is stored, what is never stored. -->
+- **Model.** `claude-opus-5-5` at effort `high`, behind one client, `src/ai/client.ts`. Backend by `AI_BACKEND`: Claude Code headless on the operator's subscription (default) or the Anthropic API.
+- **Record and replay.** `AI_MODE=record` saves each response to `data/recordings/`; `replay` reads only those and fails on a miss; `live` calls without saving. The recording key is a hash of model, prompt version, rendered prompt and run index, so a recorded review reproduces offline.
+- **Validation.** Every model output is parsed with a zod schema; one retry with the validation error appended, then the run fails with no partial review written.
+- **Planted-bug eval.** `pnpm evals` runs the reviewer over ten planted-bug branches and five contradiction plants (three anchored and three blind runs each), scores against the answer keys and writes the report card. The plants are written without sight of the prompts, prompts are frozen as `rv1` before the first eval, and every rate carries its sample size.
 
 ## Deployment
 
-<!-- Host, environments (preview per PR, production), env vars by name, how a merge reaches production. -->
+Vercel (team "junction", project "junction-2026") builds from Git: a preview per pull request, production from `main` at https://countersign-junction.com. `vercel.json` sets the Next.js framework and the pnpm commands. Env names are in [development.md](development.md). Details: [Deploying](development.md#deploying).
