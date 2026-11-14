@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-14 · Generated hunks get their own coverage state and leave the reading count
+
+- **Context:** Tieto's `mp-2297` has 237 files and 423 hunks, nearly all generated snapshots. Counting them made "Read 12 of 423" meaningless: they were either listed as read (nobody reads 411 snapshots) or marked Verified or Supported by claims about the template.
+- **Decision:** Hunks in files `src/policy/areas.ts` classifies as `generated` get coverage `generated`: shown on the hunk map, left out of `readHunks`, `readLines` and the `R-read-share` denominator. `R-generated` (tier light) adds one line: "411 are generated snapshots: read the template change that produces them (code hidden in one wouldn't be caught)". A finding or refusal that names a generated hunk still makes it `read`. Shared contract and spec change, decided by Miska.
+- **Why:** The honest statement is that nobody reads snapshots and the real review is of the template that produces them; the line also says what that leaves unchecked. Recorded reviews without generated files route byte for byte as before; `schemaVersion` stays 1 because the new enum value only appears where generated hunks exist.
+- **Rejected:** Keeping them counted (the count stays unreadable and the tier is driven by snapshots). Dropping `mp-2297` from the sample (it is the one real Tieto change that shows the idea; hiding it would be cherry-picking).
+- **PR:** #113
+
 ## 2026-11-14 · Record mode reuses a recording with the same key; A3 cites source first, A4 copies statements exactly
 
 - **Context:** A1's prompt is only the requirement, so every change with the same requirement has the same A1 key at the same run index, and a second `record` run overwrote the file the first one wrote. The T13 review also found that A3's missing-test findings cited test files first (area null, so they could never count toward a planted bug's area) and that A4's copied sentences failed the substring check on backticks and wrapped lines.

@@ -48,7 +48,7 @@ export function useDiffReveal(sections: HunkSections): DiffReveal {
   const openHiding = useCallback(
     (hunkId: string) => {
       if (sections.read.some((entry) => entry.hunk.id === hunkId)) return;
-      setCoveredOpen(true);
+      if (sections.covered.some((entry) => entry.hunk.id === hunkId)) setCoveredOpen(true);
       if (sections.generated.some((entry) => entry.hunk.id === hunkId)) setGeneratedOpen(true);
       setExpandedIds((ids) => new Set(ids).add(hunkId));
     },

@@ -8,6 +8,7 @@ import { parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../ai/client";
 import type { AnswerKey, Review } from "../contracts";
 import { levelsFromReportCard } from "../rules/ladder";
+import { countGenerated } from "../rules/route";
 import { checkReview, loadContradictionKey } from "./checkReview";
 import {
   loadChangeAndRequirement,
@@ -93,7 +94,7 @@ function summaryLine(review: Review): string {
   return [
     review.changeId,
     routing.tier,
-    `read ${routing.readHunks} of ${routing.totalHunks} hunks`,
+    `read ${routing.readHunks} of ${routing.totalHunks} hunks${countGenerated(routing.coverage) > 0 ? ` · ${countGenerated(routing.coverage)} generated` : ""}`,
     `${review.claims.length} claims`,
     `${review.findings.length} findings`,
     `${review.refusals.length} refused`,

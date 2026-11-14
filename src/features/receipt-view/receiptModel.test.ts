@@ -3,7 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ChangeInputSchema, ReceiptRecordSchema, ReviewSchema } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
-import { buildReceiptView, formatUtc } from "./receiptModel";
+import type { Review } from "@/contracts";
+import { buildReceiptView, formatUtc, readingSummary } from "./receiptModel";
 import type { ReceiptDocumentView } from "./receiptModel";
 
 const fixtureText = (relativePath: string): string =>
@@ -158,5 +159,22 @@ describe("accepted refusals", () => {
 describe("formatUtc", () => {
   it("formats without locale, converting an offset to UTC", () => {
     expect(formatUtc("2026-11-14T11:40:12+02:00")).toBe("2026-11-14 09:40 UTC");
+  });
+});
+
+describe("readingSummary", () => {
+  const routing = (coverage: Record<string, "read" | "verified" | "generated">) =>
+    ({ routing: { tier: "focused", coverage, readHunks: 1, totalHunks: Object.keys(coverage).length } }) as unknown as Review;
+
+  it("says what a person read and what checks covered", () => {
+    expect(readingSummary(routing({ h1: "read", h2: "verified" }))).toBe(
+      "Focused review. A person read 1 of 2 hunks. Tests or checked quotes covered the other 1.",
+    );
+  });
+
+  it("adds the generated hunks nobody read, and does not count them as covered", () => {
+    expect(readingSummary(routing({ h1: "read", h2: "generated", h3: "generated" }))).toBe(
+      "Focused review. A person read 1 of 3 hunks. Tests or checked quotes covered the other 0. 2 generated hunks were not read.",
+    );
   });
 });

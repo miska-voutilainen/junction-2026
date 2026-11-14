@@ -39,6 +39,7 @@
   --color-coverage-verified: var(--coverage-verified);
   --color-coverage-supported: var(--coverage-supported);
   --color-coverage-read: var(--coverage-read);
+  --color-coverage-generated: var(--coverage-generated);
   --color-tier-light: var(--tier-light);
   --color-tier-focused: var(--tier-focused);
   --color-tier-full: var(--tier-full);
