@@ -6,7 +6,7 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Accessibility and console rules for everything a person sees. eslint-config-next already
-  // registers the jsx-a11y plugin; these raise its rules to the recommended set. Console output
+  // registers the jsx-a11y plugin; these are a stricter selection of jsx-a11y rules for app code. Console output
   // belongs to the pipeline and CLIs, never the app.
   {
     files: ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],

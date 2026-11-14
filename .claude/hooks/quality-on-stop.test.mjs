@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { changedSourceFiles, checksFor } from "./quality-on-stop.mjs";
+import { changedSourceFiles, checksFor, trimReport } from "./quality-on-stop.mjs";
 
 test("lists files inside a new folder (git status -uall) and skips deleted and non-source files", () => {
   const porcelain =
@@ -41,4 +41,18 @@ test("stop_hook_active exits silently so a block cannot loop", () => {
   });
   assert.equal(run.status, 0);
   assert.equal(run.stdout, "");
+});
+
+test("many changed files fall back to the full test run", () => {
+  const files = Array.from({ length: 40 }, (_, index) => `src/f${index}.ts`);
+  const tests = checksFor(files).find((check) => check.name === "unit tests");
+  assert.deepEqual(tests.args, ["run"]);
+});
+
+test("a long report keeps the tail from the first failure, not the start", () => {
+  const output = `${"passing line\n".repeat(2000)}FAIL src/a.test.ts\nexpected 1 to be 2`;
+  const report = trimReport(output);
+  assert.ok(report.startsWith("FAIL src/a.test.ts"));
+  assert.ok(report.length <= 4000);
+  assert.ok(trimReport("x".repeat(9000) + "end").endsWith("end"));
 });
