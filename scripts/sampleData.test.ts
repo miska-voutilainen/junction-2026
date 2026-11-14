@@ -16,6 +16,9 @@ import {
 const SAMPLE_DIR = join(__dirname, "..", "data", "sample");
 const TIETO_CHANGE_IDS = ["mp-2283", "mp-2234", "mp-2129", "mp-2297"];
 // Spec 9.1 T07: a description is 80 to 200 words, so a reviewer can read it in seconds.
+const TIETO_BASE_SHA = "32258fdbee4bcd653c79f51b4376b5103c6f4d27";
+const DESCRIPTION_WRITTEN_BY =
+  "engine lane (Miska), drafted by a Claude Sonnet builder without opening prompts, pipeline or review output";
 const MIN_DESCRIPTION_WORDS = 80;
 const MAX_DESCRIPTION_WORDS = 200;
 const MAX_TITLE_LENGTH = 70;
@@ -33,9 +36,10 @@ const changes = readJsonFiles("changes").map(({ file, json }) => ({
   file,
   change: ChangeInputSchema.parse(json),
 }));
-const requirements = readJsonFiles("requirements").map(({ json }) =>
-  RequirementSchema.parse(json),
-);
+const requirements = readJsonFiles("requirements").map(({ file, json }) => ({
+  file,
+  requirement: RequirementSchema.parse(json),
+}));
 const answerKeys = readJsonFiles("answer-key").map(({ file, json }) => ({
   file,
   key: AnswerKeySchema.parse(json),
@@ -52,16 +56,32 @@ describe("sample data", () => {
     }
   });
 
-  it("gives every change a requirement, named after its file", () => {
+  it("fixes the fields spec 9.1 sets for the four Tieto changes", () => {
     for (const { change } of changes) {
-      const requirement = requirements.find(
-        ({ id }) => id === change.requirementId,
-      );
-      expect(requirement, `requirement for ${change.id}`).toBeDefined();
+      const number = change.id.replace("mp-", "");
+      expect(change.baseSha).toBe(TIETO_BASE_SHA);
+      expect(change.parentChangeId).toBeNull();
+      expect(change.branch).toBe(`ju26-issue-${number}`);
+      expect(change.requirementId).toBe(`MP-${number}`);
+      expect(change.authorAgent).toBe("Coding agent (Tieto sample)");
+      expect(change.authorDescription.writtenBy).toBe(DESCRIPTION_WRITTEN_BY);
     }
-    for (const requirement of requirements) {
-      expect(requirement.derivedFrom.url).toContain(
-        `/issues/${requirement.id.replace("MP-", "")}`,
+  });
+
+  it("gives every change a requirement, named after its file and derived from its issue", () => {
+    for (const { change } of changes) {
+      const found = requirements.find(
+        ({ requirement }) => requirement.id === change.requirementId,
+      );
+      expect(found, `requirement for ${change.id}`).toBeDefined();
+    }
+    for (const { file, requirement } of requirements) {
+      expect(file).toBe(`${requirement.id}.json`);
+      expect(requirement.derivedFrom.url).toBe(
+        `https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/${requirement.id.replace("MP-", "")}`,
+      );
+      expect(requirement.derivedFrom.note).toMatch(
+        /^Derived by the engine lane from the upstream issue text on \d{4}-\d{2}-\d{2}; not Tieto's requirements set\.$/,
       );
     }
   });
@@ -77,7 +97,7 @@ describe("sample data", () => {
   });
 
   it("numbers requirement items F1.. and N1.. within the spec's counts", () => {
-    for (const requirement of requirements) {
+    for (const { requirement } of requirements) {
       expect(requirement.functional.map(({ id }) => id)).toEqual(
         requirement.functional.map((_, index) => `F${index + 1}`),
       );

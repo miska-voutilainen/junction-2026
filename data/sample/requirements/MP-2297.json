@@ -33,6 +33,6 @@
   "derivedFrom": {
     "kind": "github-issue",
     "url": "https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2297",
-    "note": "Derived by the evidence lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
+    "note": "Derived by the engine lane from the upstream issue text on 2026-11-14; not Tieto's requirements set."
   }
 }
