@@ -49,8 +49,13 @@ export function chooseStyleExample(
   const inProject = basePaths
     .filter((path) => path.startsWith(`${projectDir}/`) && path.endsWith("Tests.cs"))
     // Ordinal, not locale order: the same style example on every machine keeps A5's prompt, and so its recording key, stable.
-    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    .sort(compareOrdinal);
   return inProject[0] ?? null;
+}
+
+function compareOrdinal(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
 }
 
 const testAttribute = /^\s*\[(Fact|Theory|Test|TestMethod)\b/;

@@ -265,11 +265,15 @@ async function readHeadTexts(
   headSha: string,
   files: Review["files"],
 ): Promise<Map<string, string>> {
+  const shown = files.filter((file) => file.kind === "source" || file.kind === "test");
+  const read = await Promise.all(
+    shown.map(
+      async (file) => [file.path, await readFileAtCommit(repoDir, headSha, file.path)] as const,
+    ),
+  );
   const texts = new Map<string, string>();
-  for (const file of files) {
-    if (file.kind !== "source" && file.kind !== "test") continue;
-    const text = await readFileAtCommit(repoDir, headSha, file.path);
-    if (text !== null) texts.set(file.path, text);
+  for (const [path, text] of read) {
+    if (text !== null) texts.set(path, text);
   }
   return texts;
 }

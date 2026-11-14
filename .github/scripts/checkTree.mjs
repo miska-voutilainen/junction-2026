@@ -4,7 +4,7 @@
 // .claude/rules/structure.md; CLAUDE.md stays the one place where the layout is written down.
 // docs/setup.md section 6, step 2.
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 // Root files that structure.md allows but CLAUDE.md's File tree doesn't list.
@@ -30,7 +30,7 @@ const BANNED_NAMES = new Set([
 ]);
 
 // Working folders and build output that .gitignore keeps out; a file here got in by force.
-const FORBIDDEN_FOLDERS = [".scratch", ".review", ".next", "graphify-out", "node_modules"];
+const FORBIDDEN_FOLDERS = new Set([".scratch", ".review", ".next", "graphify-out", "node_modules"]);
 
 /**
  * Reads the top-level names from the File tree in CLAUDE.md.
@@ -68,7 +68,7 @@ export function findTreeProblems(files, claudeMd) {
   const reportedFolders = new Set();
   for (const path of files) {
     const [first, ...rest] = path.split("/");
-    if (FORBIDDEN_FOLDERS.includes(first)) {
+    if (FORBIDDEN_FOLDERS.has(first)) {
       problems.push(`${path}: ${first}/ is a working or build folder and is never committed`);
     } else if (rest.length === 0 && !isAllowedRootFile(first, rootFiles)) {
       problems.push(`${path}: not an allowed root file; move it into a folder (structure.md)`);
@@ -107,8 +107,19 @@ export function bannedSegment(path) {
   return undefined;
 }
 
+// git by absolute path: a bare "git" is looked up on PATH, where a writable folder early on it could
+// put another program in its place and run it with this script's rights.
+const GIT_LOCATIONS = ["/usr/bin/git", "/usr/local/bin/git", "C:/Program Files/Git/cmd/git.exe"];
+
+function gitPath() {
+  const found = GIT_LOCATIONS.find((location) => existsSync(location));
+  if (found === undefined)
+    throw new Error(`git not found in ${GIT_LOCATIONS.join(", ")}. Install git.`);
+  return found;
+}
+
 function main() {
-  const tracked = execFileSync("git", ["ls-files", "-z"], {
+  const tracked = execFileSync(gitPath(), ["ls-files", "-z"], {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   })

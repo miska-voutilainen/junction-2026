@@ -36,6 +36,7 @@ export async function withTestWorktrees<T>(
 
 async function removeWorktrees(repoDir: string, root: string, dirs: string[]): Promise<void> {
   for (const dir of dirs) {
+    // One at a time: git locks the repository's worktree list while it removes one.
     // Fails when the worktree was never added; the folder is deleted below either way.
     await runGit(repoDir, ["worktree", "remove", "--force", dir]).catch(() => undefined);
   }

@@ -114,7 +114,9 @@ export function outputSchema({ requirementItemId, projectDir }: A5Reference): z.
             "testNames",
             `"${name}" must start with "${namePrefix}" and use only letters, digits and underscores`,
           );
-        else if (!new RegExp(`\\b(?:void|Task|ValueTask)\\s+${name}\\s*\\(`).test(output.code))
+        else if (
+          !new RegExp(String.raw`\b(?:void|Task|ValueTask)\s+${name}\s*\(`).test(output.code)
+        )
           problem("testNames", `"${name}" is not a method in code`);
       }
     });

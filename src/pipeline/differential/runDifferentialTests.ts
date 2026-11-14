@@ -131,6 +131,7 @@ async function writeTests(
     );
   const tests: GeneratedTest[] = [];
   for (const requirementItemId of itemIds) {
+    // One at a time: each call is recorded under its own key and the usage log reads in item order.
     const answer = await input.client.call({
       promptVersion: a5.version,
       system: a5.system,
@@ -184,6 +185,7 @@ async function runAllTests(
   const outcomes: TestOutcome[] = [];
   const notRun: NotRun = [];
   for (const test of generated) {
+    // One at a time: every run builds in the same two worktrees, which a parallel run would overwrite.
     const result = await runGeneratedTest(input, projectDir, test, worktrees);
     if ("reason" in result) notRun.push(result);
     else outcomes.push(result);
@@ -251,6 +253,7 @@ async function runPrTests(
   for (const file of files.filter((candidate) => candidate.path.startsWith(`${projectDir}/`))) {
     const headFile = pathInside(headDir, file.path);
     if (!existsSync(headFile)) continue;
+    // Sequential: the files are few and written into one worktree, so there is nothing to gain.
     const text = await readFile(headFile, "utf8");
     testNames.push(...changedTestMethods(text, input.hunks, file.path));
     await writeNewFile(pathInside(baseDir, file.path), text);

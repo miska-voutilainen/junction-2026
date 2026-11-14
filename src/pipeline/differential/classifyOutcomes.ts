@@ -261,8 +261,9 @@ function summaryFor(
 ): string {
   const deciding = methods.filter((method) => method.verdict === verdict);
   const isPrTest = outcome.source === "pr-test";
+  const prNoun = deciding.length === 1 ? "test" : "tests";
   const lead = isPrTest
-    ? `${deciding.length} of ${methods.length} PR ${deciding.length === 1 ? "test" : "tests"} ${phrase(verdict, deciding.length)}`
+    ? `${deciding.length} of ${methods.length} PR ${prNoun} ${phrase(verdict, deciding.length)}`
     : `${deciding.map(({ name }) => name).join(", ")} ${phrase(verdict, deciding.length)}`;
   const others = verdictOrder
     .filter((other) => other !== verdict)

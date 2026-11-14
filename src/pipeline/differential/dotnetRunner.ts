@@ -218,9 +218,10 @@ export const dockerDotnetRunner: DotnetRunner = {
   async restore(request) {
     const name = containerName();
     const result = await runDocker(restoreArguments(name, request), TEST_RUN_TIMEOUT_MS, name);
+    const restoreOutcome = result.isTimeout ? "timed out" : "exit " + result.exitCode;
     if (result.exitCode !== 0 || result.isTimeout)
       throw new Error(
-        `dotnet restore failed in ${request.projectDir} (${result.isTimeout ? "timed out" : `exit ${result.exitCode}`}): ${tail(result.output)}. Check the network, or run with --no-tests.`,
+        `dotnet restore failed in ${request.projectDir} (${restoreOutcome}): ${tail(result.output)}. Check the network, or run with --no-tests.`,
       );
     if (request.warmupTestName !== undefined) {
       // A failing warm-up is not an error: the test may fail for its own reasons, and the cache fills as far as it ran.
