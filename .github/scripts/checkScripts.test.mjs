@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { findLaneViolations, summarise } from "./checkLanes.mjs";
 import { findMessageProblems } from "./checkMessages.mjs";
+import { findVersionProblem, readsIntoPrompt } from "./checkReviewerVersion.mjs";
+import { findChangeId } from "./countersignChange.mjs";
+import { compareLevels, renderLevelTable } from "./levelDiff.mjs";
 import { bannedSegment, findTreeProblems, readRootNames } from "./checkTree.mjs";
 
 const config = {
@@ -130,4 +133,66 @@ test("lanes: the summary lists paths no lane claims", () => {
     /Not in any lane.*mystery\/a\.ts/,
   );
   assert.doesNotMatch(summarise({ files: ["docs/a.md"], config, author: "x" }), /Not in any lane/);
+});
+
+test("countersign change: reads the id from its own line and ignores the rest of the body", () => {
+  assert.equal(findChangeId("[agent:app]\n\nCountersign: mp-2283\n\n## Summary"), "mp-2283");
+  assert.equal(findChangeId("Countersign:v03  "), "v03");
+});
+
+test("countersign change: no line, or an id that is not plain, is no change", () => {
+  assert.equal(findChangeId("Closes #6"), null);
+  assert.equal(findChangeId("Countersign: ../../etc/passwd"), null);
+  assert.equal(findChangeId("see Countersign: mp-2283 in the body"), null);
+});
+
+const card = (...areas) => ({
+  areas: areas.map(([area, level, planted, caught]) => ({ area, level, planted, caught })),
+});
+
+test("level diff: a lower level is a drop and names the area", () => {
+  const result = compareLevels(
+    card(["security", "calibrated", 3, 3], ["generator", "calibrated", 4, 3]),
+    card(["security", "shadow", 3, 1], ["generator", "calibrated", 4, 3]),
+  );
+  assert.equal(result.hasDrop, true);
+  assert.deepEqual(result.rows[0], {
+    area: "security",
+    from: "calibrated",
+    to: "shadow",
+    caught: "1 of 3",
+    isDrop: true,
+  });
+  assert.match(
+    renderLevelTable(result),
+    /\| security \| 1 of 3 \| calibrated \| shadow \(dropped\) \|/,
+  );
+});
+
+test("level diff: a rise, no change and a new area pass", () => {
+  const result = compareLevels(
+    card(["analyzer", "shadow", 2, 1]),
+    card(["analyzer", "calibrated", 3, 3], ["performance", "shadow", 0, 0]),
+  );
+  assert.equal(result.hasDrop, false);
+  assert.equal(result.rows[1].from, "shadow");
+});
+
+test("reviewer version: only files the model reads count, not their tests", () => {
+  assert.equal(readsIntoPrompt("src/prompts/a3.ts"), true);
+  assert.equal(readsIntoPrompt("src/policy/areaChecklists.ts"), true);
+  assert.equal(readsIntoPrompt("src/prompts/a3.test.ts"), false);
+  assert.equal(readsIntoPrompt("src/policy/routing.ts"), false);
+});
+
+test("reviewer version: a prompt change without a bump names the files and the fix", () => {
+  const problem = findVersionProblem(["src/prompts/a3.ts", "docs/spec.md"], "");
+  assert.match(problem, /^src\/prompts\/a3\.ts change what the model reads/);
+  assert.match(problem, /Bump it in src\/pipeline\/assembleReview\.ts/);
+});
+
+test("reviewer version: a bump, or no prompt change, passes", () => {
+  const bump = '-export const reviewerVersion = "rv1";\n+export const reviewerVersion = "rv2";';
+  assert.equal(findVersionProblem(["src/prompts/a3.ts"], bump), null);
+  assert.equal(findVersionProblem(["src/app/page.tsx"], ""), null);
 });

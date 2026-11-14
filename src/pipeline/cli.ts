@@ -1,15 +1,18 @@
 /**
  * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
- * review, `check <changeId>` runs the eval cases of A1 to A5 on it, `eval` runs the
- * planted-bug eval. Spec section 5, Pipeline CLI.
+ * review, `check <changeId>` runs the eval cases of A1 to A5 on it, `comment <changeId>`
+ * prints the pull request comment CI posts, `eval` runs the planted-bug eval.
+ * Spec section 5, Pipeline CLI.
  */
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { createModelClientFromEnv } from "../ai/client";
 import type { AnswerKey, Review } from "../contracts";
-import { levelsFromReportCard } from "../rules/ladder";
+import { MODEL } from "../ai/limits";
+import { levelsForReviewer } from "../rules/ladder";
 import { countGenerated } from "../rules/route";
 import { MP2283_CHANGE_ID, checkReview, loadContradictionKey } from "./checkReview";
+import { receiptExitFrom, renderReviewComment } from "./prComment";
 import {
   loadChangeAndRequirement,
   loadRecordedReview,
@@ -23,6 +26,7 @@ import { createUsageTally } from "./usageTally";
 const usage = `Usage:
   pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
   pnpm review check <changeId>
+  pnpm review comment <changeId> [--receipt-exit <code>]
   pnpm evals [--runs <n>] [--score-only]`;
 
 /** The optional local environment file, loaded the way the seed script does. */
@@ -39,10 +43,21 @@ async function main(argv: string[]): Promise<void> {
       "no-tests": { type: "boolean" },
       anchored: { type: "boolean" },
       run: { type: "string" },
+      // The exit code of `pnpm countersign verify <changeId>`, so the comment can say if the diff is signed.
+      "receipt-exit": { type: "string" },
     },
   });
   const [command, changeId] = positionals;
-  if (!changeId || (command !== "run" && command !== "check")) fail(usage);
+  if (!changeId || (command !== "run" && command !== "check" && command !== "comment")) fail(usage);
+
+  if (command === "comment") {
+    const receiptExit = receiptExitFrom(values["receipt-exit"]);
+    const measuredModel = (await loadReportCard())?.reviewer.model ?? null;
+    console.log(
+      renderReviewComment(await loadRecordedReview(changeId), receiptExit, measuredModel),
+    );
+    return;
+  }
 
   if (command === "check") {
     const review = await loadRecordedReview(changeId);
@@ -86,7 +101,7 @@ async function recordReview(changeId: string, options: RunOptions): Promise<void
     repoDir,
     client: createModelClientFromEnv(process.env, tally.sink),
     usage: tally,
-    levels: levelsFromReportCard(await loadReportCard()),
+    levels: levelsForReviewer(await loadReportCard(), MODEL),
     mode: options.isAnchored ? "anchored" : "blind-first",
     steps: stepsFor(options, isComparison),
     runIndex: isComparison ? runNumber : 0,
@@ -110,7 +125,8 @@ function summaryLine(review: Review): string {
   return [
     review.changeId,
     routing.tier,
-    `read ${routing.readHunks} of ${routing.totalHunks} hunks${generatedHunks > 0 ? ` · ${generatedHunks} generated` : ""}`,
+    `read ${routing.readHunks} of ${routing.totalHunks} hunks`,
+    ...(generatedHunks > 0 ? [`${generatedHunks} generated`] : []),
     `${review.claims.length} claims`,
     `${review.findings.length} findings`,
     `${review.refusals.length} refused`,

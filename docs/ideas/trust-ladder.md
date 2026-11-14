@@ -39,6 +39,7 @@ No area reaches Trusted: with no spot-check workflow, clean spot checks are 0. O
 
 - **You need:** areas with path rules, a planter who never sees the prompts, an answer key per bug.
 - **It costs:** one reviewer run per plant, plus writing the plants. Our first 10 plant runs (rv1, before the three-run scoring) cost $1.78 to $3.59 each ($22.14 in all) and took 2 to 4 minutes each.
+- **In CI:** a PR that changes a prompt must bump the reviewer version, which re-runs the eval and fails the job if an area drops a level ([`countersign-eval.yml`](../../.github/workflows/countersign-eval.yml)). Levels belong to the model that earned them: a review by any other model routes every area as Shadow and says so in the PR comment.
 - **First step:** start every area in Shadow, plant three bugs in the area you care about most, and publish the catch rate with its sample size.
 
 ## Limits and failure modes

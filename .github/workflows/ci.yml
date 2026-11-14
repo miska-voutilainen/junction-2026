@@ -68,6 +68,13 @@ jobs:
           pnpm test:hooks
           node --test ".github/scripts/*.test.mjs"
 
+      # Prompt freeze: a change to what the model reads needs a new reviewerVersion, so the eval measures this reviewer.
+      - name: 3. Reviewer version check
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: origin/${{ github.base_ref }}
+        run: node .github/scripts/checkReviewerVersion.mjs
+
       # Pushes to main always run the slow steps; a PR skips them when every changed file is Markdown.
       - name: Decide whether the slow steps run
         id: scope

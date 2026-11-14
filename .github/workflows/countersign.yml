@@ -1,0 +1,180 @@
+# Countersign in CI, on a pull request: the receipt is the merge gate and the reviewer posts its tier.
+# A PR opts in with one line in its body, `Countersign: <changeId>` (the id the pipeline and the
+# receipt CLI use), or a person starts the workflow by hand with the id. PRs without the line skip
+# both jobs, so a required `receipt` check never blocks an ordinary PR. docs/development.md, CI.
+#
+#   change   names the change from the PR body
+#   receipt  `pnpm countersign verify`: no valid receipt for this diff, no merge. Add `receipt` to the
+#            branch protection rule to make it a gate.
+#   review   `pnpm review run` then one PR comment: tier, hunks to read, receipt status. With the
+#            repository secret ANTHROPIC_API_KEY (spending limit set) it calls the model; without it
+#            it replays the committed recordings, so no model is called and a registered change still
+#            gets its comment for free; where the recordings stop short, the comment shows the
+#            committed review and says so. Docker runs A5's tests either way. Fork PRs skip: they get
+#            no token to comment with.
+name: countersign
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+    inputs:
+      change_id:
+        description: "Change to verify and review, for example mp-2283"
+        required: true
+
+# One run per PR; a push replaces the run still going, so a stale review never posts over a newer one.
+concurrency:
+  group: countersign-${{ github.event.pull_request.number || inputs.change_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  change:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      change_id: ${{ steps.change.outputs.change_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # The PR body is untrusted text: it reaches the script only through env:, and the script
+      # passes on nothing but an id that matches [A-Za-z0-9-]+ and has a change input file.
+      - id: change
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          INPUT_CHANGE_ID: ${{ inputs.change_id }}
+        run: node .github/scripts/countersignChange.mjs
+
+  receipt:
+    needs: change
+    if: needs.change.outputs.change_id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      exit_code: ${{ steps.verify.outputs.exit_code }}
+    env:
+      CHANGE_ID: ${{ needs.change.outputs.change_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # A job's env: may not use the runner context, so the clone's path is set from a step.
+      - run: echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
+
+      # Clones the sample fork and fetches refs/notes/countersign, where the signed receipts live.
+      - run: pnpm seed
+
+      # The exit code is recorded for the review job's comment first, then the step fails on any
+      # code but 0 (1 stale, 2 no receipt, 3 signature invalid; spec section 9.1).
+      - id: verify
+        shell: bash
+        run: |
+          set +e
+          pnpm countersign verify "$CHANGE_ID"
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Receipt for $CHANGE_ID"
+            case "$code" in
+              0) echo "Signed: the signature verifies and the diff is unchanged since signing." ;;
+              1) echo "Stale: the diff changed since the receipt was signed." ;;
+              2) echo "No receipt for this diff: a named person has not signed it." ;;
+              *) echo "Signature invalid." ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+  review:
+    needs: [change, receipt]
+    # Runs after a failed gate too: an unsigned diff is exactly when the comment is useful.
+    # Edits to the title or body re-run the gate, not a paid review.
+    if: >-
+      ${{ !cancelled() && needs.change.outputs.change_id != '' && github.event.action != 'edited'
+      && (github.event_name == 'workflow_dispatch'
+      || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CHANGE_ID: ${{ needs.change.outputs.change_id }}
+      RECEIPT_EXIT: ${{ needs.receipt.outputs.exit_code }}
+      AI_BACKEND: api
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Choose live or replay
+        id: mode
+        shell: bash
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "mode=record" >> "$GITHUB_OUTPUT"
+          else
+            echo "No ANTHROPIC_API_KEY secret: the review replays the committed recordings and calls no model." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "mode=replay" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # A job's env: may not use the runner context, so the clone's path is set from a step.
+      - run: echo "SAMPLE_REPO_DIR=$RUNNER_TEMP/fork" >> "$GITHUB_ENV"
+      - run: pnpm seed
+
+      # The recorded review in this checkout is replaced by a fresh one; nothing is committed back.
+      - name: Review
+        id: review
+        env:
+          AI_MODE: ${{ steps.mode.outputs.mode }}
+        # A5 mounts each git worktree into a container that runs as uid 1654, not the runner's user.
+        # Docker Desktop's mounts are writable by anyone; a Linux runner's keep their 755 owner bits, so
+        # dotnet restore could not write obj/. umask 0000 makes git create the worktrees writable; the
+        # runner is thrown away after the job and the container's lockdown is unchanged.
+        #
+        # Replay can only reproduce steps that were recorded: the planted bugs were recorded by the eval
+        # (A1 to A3, no A4 or A5), so their replay stops at A4. Then the comment shows the committed
+        # review instead, and says so. With a key, a failed review fails the job.
+        run: |
+          umask 0000
+          if pnpm review run "$CHANGE_ID"; then
+            echo "source=$AI_MODE" >> "$GITHUB_OUTPUT"
+          elif [ "$AI_MODE" = "replay" ]; then
+            git checkout -- "data/runs/$CHANGE_ID"
+            echo "::warning::The recordings do not cover every step of $CHANGE_ID, so the comment shows the committed review."
+            echo "source=committed" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+
+      - name: Comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SOURCE: ${{ steps.review.outputs.source }}
+        run: |
+          pnpm --silent review comment "$CHANGE_ID" --receipt-exit "${RECEIPT_EXIT:-}" > "$RUNNER_TEMP/comment.md"
+          case "$SOURCE" in
+            replay) note="Replayed from the committed recordings: no model was called for this comment." ;;
+            committed) note="No API key, and the recordings do not cover every step of this change, so this is the committed review in data/runs/$CHANGE_ID/review.json. No model was called." ;;
+            *) note="" ;;
+          esac
+          if [ -n "$note" ]; then printf '\n%s\n' "$note" >> "$RUNNER_TEMP/comment.md"; fi
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+          # One comment per PR, updated on every push. A manual run has no PR: the summary is the output.
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/comment.md" --edit-last --create-if-none
+          fi

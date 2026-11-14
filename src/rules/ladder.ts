@@ -27,7 +27,12 @@ export function ladderLevel(record: AreaRecord, policy: LadderPolicy = ladderPol
   return rungs[earnedRung(planted, caught, spotChecksClean, policy)];
 }
 
-function earnedRung(planted: number, caught: number, spotChecksClean: number, policy: LadderPolicy): number {
+function earnedRung(
+  planted: number,
+  caught: number,
+  spotChecksClean: number,
+  policy: LadderPolicy,
+): number {
   if (planted < policy.minPlanted || caught / planted < policy.minCatchRate) return 0;
   return spotChecksClean < policy.spotChecksForTrusted ? 1 : 2;
 }
@@ -45,8 +50,25 @@ export function applyEscapes(
   return adjusted;
 }
 
+/**
+ * Levels a review by `reviewerModel` may route with. A track record belongs to the
+ * reviewer that earned it: the report card measured one model on the planted bugs,
+ * and another model's catch rate is unknown. Any other model gets no earned trust,
+ * so every area is Shadow until that model has its own eval.
+ * Example: a card measured on model A, a review by model B: all Shadow.
+ */
+export function levelsForReviewer(
+  reportCard: Pick<ReportCard, "areas" | "reviewer"> | null,
+  reviewerModel: string,
+): Record<Area, LadderLevel> {
+  const isMeasured = reportCard !== null && reportCard.reviewer.model === reviewerModel;
+  return levelsFromReportCard(isMeasured ? reportCard : null);
+}
+
 /** Levels from the recorded report card; with none, no area has a track record, so all are Shadow. */
-export function levelsFromReportCard(reportCard: Pick<ReportCard, "areas"> | null): Record<Area, LadderLevel> {
+export function levelsFromReportCard(
+  reportCard: Pick<ReportCard, "areas"> | null,
+): Record<Area, LadderLevel> {
   const levels: Record<Area, LadderLevel> = {
     generator: "shadow",
     analyzer: "shadow",

@@ -60,11 +60,11 @@ Next ideas, **not built**: registered pull requests (the owner signs the tests b
 
 ## Beyond the reference
 
-- **The receipt as a required merge check.** Branch protection refuses a merge without a verifying receipt for the current diff.
+- **The receipt as a required merge check.** Branch protection refuses a merge without a verifying receipt for the current diff. Built as the `receipt` job in `countersign.yml`; the reference does not switch it on for its own `main`.
 - **Trust ladders across teams.** Each team's areas keep their own level, so a new team starts in Shadow.
 - **A spot-check workflow.** Owners get a queue of sampled Light changes; clean checks lift a level, and an escape drops it.
 - **A refusal policy per organisation.** Each organisation edits the list and names its own roles.
-- **The PR comment and "Prove it" button.** The tier and receipt status appear on the pull request, and a button re-runs a claim's evidence.
+- **The PR comment and "Prove it" button.** The tier and receipt status appear on the pull request (built: `pnpm review comment`, posted by the `review` job), and a button re-runs a claim's evidence (not built).
 - **Reverts as escapes.** A revert of a merged change feeds the ladder automatically.
 - **Organisation-managed signing.** Sigstore or similar replaces personal SSH keys.
 - **Review slices instead of hunks.** A compiler's call and data-flow graph groups hunks that share a field or a caller, so a hunk that needs a human keeps its linked hunks in view.
