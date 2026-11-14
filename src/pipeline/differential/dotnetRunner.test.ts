@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   classifyTestOutput,
+  withoutTimings,
+  withoutWorktreePath,
   dotnetEnvironment,
   dotnetTestArguments,
   trimOutput,
@@ -84,5 +86,28 @@ describe("trimOutput", () => {
     const trimmed = trimOutput(`${"x".repeat(5000)}END`);
     expect(trimmed).toHaveLength(2000);
     expect(trimmed.endsWith("END")).toBe(true);
+  });
+});
+
+describe("withoutWorktreePath", () => {
+  it("hides the random temp folder in both slash styles", () => {
+    const dir = ["C:", "Temp", "cs-a5-x", "base"].join(String.fromCharCode(92));
+    const output = `at ${dir}${String.fromCharCode(92)}A.cs and C:/Temp/cs-a5-x/base/B.cs`;
+    expect(withoutWorktreePath(output, dir)).toBe(
+      `at <worktree>${String.fromCharCode(92)}A.cs and <worktree>/B.cs`,
+    );
+  });
+});
+
+describe("withoutTimings", () => {
+  it("removes the durations of a run", () => {
+    const output = [
+      "  Failed A5_F1_X [6 ms]",
+      "Failed!  - Failed:     1, Passed:     0, Total:     1, Duration: 376 ms - Tests.dll (net8.0)",
+      "Time Elapsed 00:00:35.79",
+    ].join("\n");
+    expect(withoutTimings(output)).toBe(
+      "  Failed A5_F1_X\nFailed!  - Failed:     1, Passed:     0, Total:     1 - Tests.dll (net8.0)\n",
+    );
   });
 });

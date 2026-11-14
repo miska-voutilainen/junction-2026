@@ -95,7 +95,8 @@ export function dotnetTestArguments({ projectDir, testNames }: TestRunRequest): 
  *   // { result: "fail", output: "...Failed A5_F1_Works [12 ms]..." }
  */
 export const runDotnetTest: DotnetRunner = async (request) => {
-  const { output, exitCode, isTimeout } = await runProcess(request);
+  const { output: rawOutput, exitCode, isTimeout } = await runProcess(request);
+  const output = withoutTimings(withoutWorktreePath(rawOutput, request.worktreeDir));
   if (isTimeout)
     return {
       result: "error",
@@ -103,6 +104,28 @@ export const runDotnetTest: DotnetRunner = async (request) => {
     };
   return { result: classifyTestOutput(output, exitCode), output: trimOutput(output) };
 };
+
+/**
+ * Replaces the worktree's temp path with "<worktree>". The folder name is random,
+ * so a rerun would write different bytes for the same result, and the path names
+ * the operator's home folder.
+ */
+export function withoutWorktreePath(output: string, worktreeDir: string): string {
+  const forward = worktreeDir.replaceAll("\\", "/");
+  return output.split(worktreeDir).join("<worktree>").split(forward).join("<worktree>");
+}
+
+/**
+ * Removes durations ("Duration: 376 ms", "[6 ms]", "Time Elapsed 00:00:35.79"),
+ * which change on every run: the same result must record the same bytes, so a
+ * replay can be compared with the recording.
+ */
+export function withoutTimings(output: string): string {
+  return output
+    .replace(/, Duration: [^-\n]*?(?= - )/g, "")
+    .replace(/ \[[\d.,]+ ?m?s\]/g, "")
+    .replace(/^Time Elapsed .*$/gm, "");
+}
 
 /**
  * Reads a `dotnet test` run. Build errors and "no test matches the filter" come
