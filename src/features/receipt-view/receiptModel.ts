@@ -11,7 +11,7 @@ import { checkedByLabel, tierLabel } from "@/contracts";
 import type { InboxSource } from "@/features/inbox";
 import { receiptStatus, signerOf } from "@/lib/data/receiptStatus";
 import type { SignerState } from "@/lib/data/receiptStatus";
-import { refusalRules } from "@/policy/refusals";
+import { allRefusalRules } from "@/policy/refusalPolicy";
 import { verifyLine } from "@/lib/receiptCopy";
 import { COVERAGE_READING_ORDER } from "@/features/review/reviewModel";
 import { countGenerated } from "@/rules/route";
@@ -184,7 +184,7 @@ function acceptedRefusals({ receipt }: ReceiptRecord, review: Review | null): Ac
   const isSameRun = review !== null && review.run.id === receipt.reviewRunId;
   return receipt.residualRisk.acceptedRefusalIds.map((refusalId) => {
     const ruleId = isSameRun ? review.refusals.find((refusal) => refusal.id === refusalId)?.ruleId : undefined;
-    const rule = refusalRules.find((candidate) => candidate.id === ruleId);
+    const rule = allRefusalRules.find((candidate) => candidate.id === ruleId);
     return { refusalId, rule: rule ? { id: rule.id, title: rule.title } : null, runId: receipt.reviewRunId };
   });
 }

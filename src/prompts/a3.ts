@@ -60,8 +60,7 @@ export function render({ requirement, context, expectation, claims }: A3Input): 
     `<expectation>\n${expectation}\n</expectation>`,
     `<claims>\n${claims}\n</claims>`,
     `<checklists source="${checklistSource}">\n${checklistsBlock()}\n</checklists>`,
-    // Rule-only refusals (R8, legacy zones) come from code, so the model never sees them.
-    `<refusal-policy>\n${refusalPolicyBlock(refusalRules.filter((rule) => !rule.isRuleOnly))}\n</refusal-policy>`,
+    `<refusal-policy>\n${refusalPolicyBlock(refusalRules)}\n</refusal-policy>`,
     HUNK_LINE_LEGEND,
     `<hunks>\n${context.hunksBlock}\n</hunks>`,
     `<files>\n${context.filesBlock}\n</files>`,

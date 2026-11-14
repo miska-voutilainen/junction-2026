@@ -6,6 +6,18 @@
  * behaviour, and no test in the PR knows about that system. Spec section 5, Policy.
  */
 import { matchesGlob } from "./globMatch";
+import type { RefusalRule } from "./refusals";
+
+/**
+ * R8, raised only by code (src/pipeline/checkFindings.ts), never by the model:
+ * the model doesn't know the zone map. It lives here, not in refusals.ts,
+ * because refusals.ts is part of the A3 prompt (see refusalPolicy.ts).
+ */
+export const legacyRefusalRule: RefusalRule = {
+  id: "R8",
+  title: "Legacy contract: behaviour that old systems depend on",
+  decider: "the zone's owner (src/policy/legacy.ts)",
+};
 
 /** A part of the codebase that deployed systems rely on, with who decides changes to it. */
 export interface LegacyZone {
