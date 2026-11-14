@@ -477,6 +477,22 @@ describe("legacy guard", () => {
       return route(review, trustedEverywhere);
     }
 
+    it("leaves out the hunk count for a touch with no hunks, a binary file or a mode change", () => {
+      const touch = {
+        kind: "legacy-code" as const,
+        hunkIds: [],
+        detail: "Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no hunks: binary or mode change)",
+        owner: "Unity owner (the maintainers)",
+        guard: { status: "unguarded" as const, evidence: "no test at the base commit names Plugin", files: [] },
+      };
+      const review = { ...makeReview({ hunks: [{ id: "h1" }], claims: verifiedOn("h1") }), legacyTouchPoints: [touch] };
+      expect(route(review, trustedEverywhere).reasons).toContainEqual({
+        ruleId: "R-legacy-guard",
+        tier: "full",
+        text: "Legacy code: Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no hunks: binary or mode change), no test at the base commit names Plugin; the Unity owner (the maintainers) decides",
+      });
+    });
+
     it("asks for Full when the touch is unguarded, naming the owner", () => {
       const decision = routeWith("unguarded");
       expect(decision.reasons).toContainEqual({

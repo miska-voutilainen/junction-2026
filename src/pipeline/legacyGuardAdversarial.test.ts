@@ -1,8 +1,7 @@
 /**
  * Inputs chosen to make the legacy guard miss a touch (dangerous: the owner
  * never reads it) or invent one (costs reviewer trust). Each `it` is named for
- * its input. A case the code gets wrong is marked `it.fails` and names the
- * handoff issue to the engine lane, which owns the code.
+ * its input. Each case the code once got wrong is fixed; the fix PR names its handoff issue.
  */
 import { describe, expect, it } from "vitest";
 import type { Review } from "../contracts";
@@ -21,17 +20,13 @@ describe("old-platform directives in a hunk", () => {
   const directiveHunk = (...lines: Array<["add" | "del" | "context", string]>) =>
     hunk("h1", generator, lines);
 
-  // Bug: #247.
-  it.fails(
-    "a #if NETFRAMEWORK that is only context, above an added line, is still a touch",
-    async () => {
-      const points = await find(
-        [directiveHunk(["context", "#if NETFRAMEWORK"], ["add", "LegacyOnly();"])],
-        fakeTree(),
-      );
-      expect(points.map((point) => point.kind)).toEqual(["old-platform"]);
-    },
-  );
+  it("a #if NETFRAMEWORK that is only context, above an added line, is still a touch", async () => {
+    const points = await find(
+      [directiveHunk(["context", "#if NETFRAMEWORK"], ["add", "LegacyOnly();"])],
+      fakeTree(),
+    );
+    expect(points.map((point) => point.kind)).toEqual(["old-platform"]);
+  });
 
   it("an added #if with CRLF endings keeps its directive text without the carriage return", async () => {
     const [point] = await find([directiveHunk(["add", "#if NETFRAMEWORK\r"])], fakeTree());
@@ -77,16 +72,14 @@ describe("test project targets", () => {
     expect(await guardFor(group)).toBe("guarded");
   });
 
-  // Bug: #248.
-  it.fails("does not count a net472 target inside an XML comment as guarded", async () => {
+  it("does not count a net472 target inside an XML comment as guarded", async () => {
     const group =
       "<!-- <PropertyGroup><TargetFrameworks>net8.0;net472</TargetFrameworks></PropertyGroup> -->" +
       "<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>";
     expect(await guardFor(group)).toBe("unguarded");
   });
 
-  // Bug: #249.
-  it.fails("reads targets a Directory.Build.props sets for every test project", async () => {
+  it("reads targets a Directory.Build.props sets for every test project", async () => {
     const tree = fakeTree({
       files: {
         ...sourceTests("<PropertyGroup><OutputType>Library</OutputType></PropertyGroup>"),
@@ -116,8 +109,7 @@ describe("C# symbols", () => {
     expect(lines.flatMap((line) => addedCalls(added(line)))).toEqual([]);
   });
 
-  // Bug: #251.
-  it.fails("finds a call to a generic method: writer.WriteExt<T>(x)", () => {
+  it("finds a call to a generic method: writer.WriteExt<T>(x)", () => {
     expect(addedCalls(added("writer.WriteExt<T>(x);"))).toEqual(["WriteExt"]);
   });
 
@@ -135,17 +127,12 @@ describe("C# symbols", () => {
     expect(changedDeclarations(added("public static T Resolve<T>(int a)"))).toEqual(["Resolve"]);
   });
 
-  // Bug: #253.
-  it.fails(
-    "finds a declaration whose return type nests generics: Task<Dictionary<string, int>>",
-    () => {
-      const line = "public async Task<Dictionary<string, int>> Load(int a)";
-      expect(changedDeclarations(added(line))).toEqual(["Load"]);
-    },
-  );
+  it("finds a declaration whose return type nests generics: Task<Dictionary<string, int>>", () => {
+    const line = "public async Task<Dictionary<string, int>> Load(int a)";
+    expect(changedDeclarations(added(line))).toEqual(["Load"]);
+  });
 
-  // Bug: #253.
-  it.fails("finds a declaration that returns a tuple", () => {
+  it("finds a declaration that returns a tuple", () => {
     expect(changedDeclarations(added("public (int Start, int End) Bounds(int a)"))).toEqual([
       "Bounds",
     ]);
@@ -194,7 +181,14 @@ describe("consumer contract and build", () => {
 });
 
 describe("diff edges", () => {
-  const touchesOf = (diff: string) => find(parseUnifiedDiff(diff).hunks, fakeTree());
+  const touchesOf = (diff: string) => {
+    const parsed = parseUnifiedDiff(diff);
+    return find(
+      parsed.hunks,
+      fakeTree(),
+      parsed.files.map((file) => file.path),
+    );
+  };
 
   it("an empty diff has no touch points", async () => {
     expect(await touchesOf("")).toEqual([]);
@@ -239,8 +233,7 @@ describe("diff edges", () => {
     expect(points.map((point) => point.detail)).toContain(`Wire format: ${writerFile}`);
   });
 
-  // Bug: #254.
-  it.fails("a mode-only change to a zone file is a zone touch", async () => {
+  it("a mode-only change to a zone file is a zone touch", async () => {
     const diff = [
       `diff --git a/${writerFile} b/${writerFile}`,
       "old mode 100644",
@@ -251,8 +244,7 @@ describe("diff edges", () => {
     expect(points.map((point) => point.kind)).toEqual(["legacy-code"]);
   });
 
-  // Bug: #254.
-  it.fails("a binary file in a zone is a zone touch", async () => {
+  it("a binary file in a zone is a zone touch", async () => {
     const path = "src/MessagePack.UnityClient/Assets/Plugin.dll";
     const diff = [
       `diff --git a/${path} b/${path}`,

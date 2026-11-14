@@ -70,18 +70,37 @@ export function codeOf(text: string): string {
 const literalPattern = /@"(?:[^"]|"")*"|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)'/g;
 
 /**
+ * Type arguments, nested up to three levels, written only with characters a
+ * type can have, so a comparison like `a < b && c > (d)` is not read as one.
+ * @example matches "<T>", "<string, int>", "<Dictionary<string, List<int>>>" and "<(int, int)>"
+ */
+const typeArguments = String.raw`<(?:[\w\s,.?\[\]()]|<(?:[\w\s,.?\[\]()]|<[\w\s,.?\[\]()]*>)*>)*>`;
+
+/**
+ * A return type: a name with optional type arguments, or a tuple.
+ * @example matches "Task<Dictionary<string, int>>", "int[]?" and "(int Start, int End)"
+ */
+const returnType = String.raw`(?:[\w.]+(?:${typeArguments})?|\((?:[^()]|\([^()]*\))*\))(?:\[\])*\??`;
+
+/**
  * A C# type or method declaration with an access modifier, capturing its name:
  * group 1 for a type (`class Baz`), group 2 for a method (`Foo<T> Bar<T>(`).
  * Fields and properties are left out: a call can't name them, and a field called
  * `writer` would make every `writer(...)` delegate call look like a reach in.
- * @example "public static Foo<T, U>? Bar<T>(" captures "Bar"; "internal sealed class Baz" captures "Baz"
+ * @example "public static Foo<T, U>? Bar<T>(" captures "Bar"; "public (int Start, int End) Bounds(" captures "Bounds"; "internal sealed class Baz" captures "Baz"
  */
-const declarationPattern =
-  /\b(?:public|internal|protected|private)\s+(?:(?:static|virtual|override|abstract|sealed|async|partial|readonly|unsafe|new)\s+)*(?:(?:class|struct|interface|enum|record)\s+(\w+)|[\w.]+(?:<[^>]*>)?(?:\[\])*\??\s+(\w+)\s*(?:<[^>]*>)?\s*\()/;
+const declarationPattern = new RegExp(
+  String.raw`\b(?:public|internal|protected|private)\s+(?:(?:static|virtual|override|abstract|sealed|async|partial|readonly|unsafe|new)\s+)*` +
+    String.raw`(?:(?:class|struct|interface|enum|record)\s+(\w+)|${returnType}\s+(\w+)\s*(?:${typeArguments})?\s*\()`,
+);
 
 /**
- * A call: a name followed by "(", not an object creation and not a call on
- * `this.`, which is the type's own method and not a reach into another type.
- * @example "writer.Write(x)" yields "Write"; "this.Write(x)" and "new Foo()" yield nothing.
+ * A call: a name, optional type arguments, then "(", not an object creation
+ * and not a call on `this.`, which is the type's own method and not a reach
+ * into another type.
+ * @example "writer.Write(x)" and "writer.WriteExt<T>(x)" yield "Write" and "WriteExt"; "this.Write(x)" and "new Foo()" yield nothing.
  */
-const callPattern = /(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)\s*\(/g;
+const callPattern = new RegExp(
+  String.raw`(?<!this\.)(?<!new\s)\b([A-Za-z_]\w*)\s*(?:${typeArguments})?\s*\(`,
+  "g",
+);
