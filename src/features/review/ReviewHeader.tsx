@@ -43,15 +43,17 @@ export function ReviewHeader({
   isReceiptUnreadable?: boolean;
 }>) {
   return (
-    <header className="flex flex-col gap-2">
+    // The rule underneath splits "what the change is" from the tier banner's "how to review it".
+    <header className="flex flex-col gap-2 border-b border-border-subtle pb-4">
       <div className="flex items-start justify-between gap-4">
         <h1 className="text-xl font-semibold text-balance [overflow-wrap:anywhere] text-text-primary">
           {change.title}
         </h1>
         {receiptStatus && <SignButton signState={isReceiptUnreadable ? "unreadable" : signStateOf(receiptStatus)} />}
       </div>
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
-        <span className="rounded-chip border border-border-default px-1.5 py-0.5 text-xs text-text-secondary">
+      {/* Chips and meta share one row: each alone left most of a line empty and the header stacked four rows deep. */}
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-text-muted">
+        <span className="rounded-chip border border-border-default px-1.5 py-0.5 text-text-secondary">
           Requirement <span className="font-mono">{change.requirementId}</span>
         </span>
         {change.authorDescription.synthetic && <SyntheticTag />}
@@ -59,6 +61,7 @@ export function ReviewHeader({
         {(receiptStatus === "stale" ||
           receiptStatus === "unverified" ||
           receiptStatus === "reopened") && <ReceiptStatus status={receiptStatus} />}
+        {review && <MetaItems change={change} review={review} />}
         {receiptHref && (
           <Link
             href={receiptHref}
@@ -68,7 +71,6 @@ export function ReviewHeader({
           </Link>
         )}
       </p>
-      {review && <MetaRow change={change} review={review} />}
       {/* Without a readable review there is no reviewer to name, but the author and signer still show. */}
       <div className="text-xs text-text-muted">
         <RolesLine
@@ -81,10 +83,11 @@ export function ReviewHeader({
   );
 }
 
-function MetaRow({ change, review }: Readonly<{ change: ChangeInput; review: Review }>) {
+/** The branch, the diff's size, and the model and date of the review, as items of the chip row. */
+function MetaItems({ change, review }: Readonly<{ change: ChangeInput; review: Review }>) {
   const { diff, reviewer, run } = review;
   return (
-    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+    <>
       <span className="font-mono [overflow-wrap:anywhere]">{change.branch}</span>
       <span>
         <span className="font-mono">
@@ -96,7 +99,7 @@ function MetaRow({ change, review }: Readonly<{ change: ChangeInput; review: Rev
         <span className="font-mono [overflow-wrap:anywhere]">{reviewer.model}</span> ·{" "}
         {reviewedOn.format(new Date(run.finishedAt))}
       </span>
-    </p>
+    </>
   );
 }
 

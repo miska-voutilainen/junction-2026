@@ -57,7 +57,7 @@ function Reasons({ decision }: Readonly<{ decision: TierDecision }>) {
       )}
     >
       {decision.reasons.map((reason, index) => (
-        <li key={index} className="text-base text-text-secondary wide:break-inside-avoid">
+        <li key={index} className="text-sm text-text-secondary wide:break-inside-avoid">
           {reason.text} <span className="font-mono text-xs text-text-muted">{reason.ruleId}</span>
         </li>
       ))}
