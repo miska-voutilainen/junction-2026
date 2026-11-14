@@ -6,7 +6,7 @@ Write it so an agent can build any task below without asking a question: concret
 Every task in section 9 becomes a GitHub issue; "go" works through them.
 -->
 
-Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-14, eight ideas and four next ideas (sections 1, 3, 9) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
+Status: ready (signed off by Miska, Fri 13.11 21:50) · Last change: 2026-11-14, legacy guard (sections 1, 5); before it, eight ideas and four next ideas (sections 1, 3, 9) · Feature freeze: Sun 15.11 00:00 · Submission deadline: Sun 15.11 10:00 (hard, form closes; our target 07:00)
 
 Event milestones: Fri 23:59 pre-submission ✅ done Fri 13.11 by Miska (draft "Countersign", Tieto challenge; name, punchline, description; status Draft) · Sat 12:00 submissions open · Sun 10:00 final (set to FINAL, not DRAFT) · Sun 10:30–13:00 live peer review at our table (all present, else no main prize) · Sun 14:15 top-5 pitches (3 min + 3 min Q&A).
 
@@ -34,7 +34,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
 - **Review areas for this repository:** `generator`, `analyzer`, `security`, `performance` (areas are per-repository configuration; a web repository would use frontend, backend, security, performance). Used the same everywhere: policy, prompts, planted bugs, report card.
 - **Event judging (peer review and finals):** Innovation (the canaries, the blind-first review and evidence, the receipt in git), Impact (every team merging agent PRs), Implementation (a working pipeline on Tieto's real repo, not slides).
 - **Tieto's judging criteria** (from the challenge page): **Clarity 30%** (a clear recommendation with stated principles, explicit trade-offs and limits) · **Practicality 25%** (could work in a real PR flow and scale, with a named human owning each decision) · **Measurement 25%** (how trust is measured: reverts and incidents don't rise as review time falls, AI findings are real and accepted, time to merge, share routed to humans) · **Evidence 20%** (evidence traceable to a requirement lets a named human accept a change without a full read, incl. what the AI found, what it refused to decide, and why). Tieto: "we put more weight for the concept than only the technical implementation." Tieto added two criteria for the code itself: **readable code** and **comments that give the reader something** (`.claude/rules/readability.md`).
-- **Emphasis (changed 2026-11-13):** Tieto wants ideas from the teams to build into their own product. So the **eight ideas are the headline and the app is their proof**: every screen exists to show an idea working on Tieto's real code, not to look like a finished product. Effort split, roughly: **60% proof** (pipeline, quote check, eval, receipt, and the screens that show them), **25% ideas** (the idea pages, the concept card, "Beyond the reference", the pitch), **15% readable code** (idea headers, giving comments, names; written as we build, not cleaned up at the end). The eight ideas, each with a page in `docs/ideas/` (T25):
+- **Emphasis (changed 2026-11-13):** Tieto wants ideas from the teams to build into their own product. So the **nine ideas are the headline and the app is their proof**: every screen exists to show an idea working on Tieto's real code, not to look like a finished product. Effort split, roughly: **60% proof** (pipeline, quote check, eval, receipt, and the screens that show them), **25% ideas** (the idea pages, the concept card, "Beyond the reference", the pitch), **15% readable code** (idea headers, giving comments, names; written as we build, not cleaned up at the end). The nine ideas, each with a page in `docs/ideas/` (T25); presented trust-first (9, 6 and 8, 1, 3 and 5, 4 and 2, 7), numbers unchanged:
 
   | # | Idea | Page | Shown in |
   | --- | --- | --- | --- |
@@ -46,8 +46,9 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   | 6 | Evidence levels instead of confidence scores | `evidence-levels.md` | S2 Story claims |
   | 7 | The signed receipt in git, tied to the exact diff | `signed-receipt.md` | S2 Receipt, the CLI |
   | 8 | The author never checks its own work: an agent's own test makes a claim Supported at most, the AI drafts the receipt but never signs it, the person who plants the bugs never sees the prompts | `separation-of-duties.md` | S2 roles line and "the PR's own test" evidence lines, S4 roles line |
+  | 9 | The legacy guard: every touch on what old systems rely on gets a kind, a named owner and a guard; an unguarded touch raises the tier | `legacy-guard.md` | S2 legacy touch list and tier reasons |
 
-  **Next ideas** (concept card and idea index only, labelled "not built"; no screen shows them): registered pull requests (the owner signs the tests before the agent writes code), audit sampling for very large PRs, round-trip property tests for serializers, post-merge reverts as the live source of escapes.
+  **Next ideas** (concept card and idea index only, labelled "not built"; no screen shows them): registered pull requests (the owner signs the tests before the agent writes code), audit sampling for very large PRs, round-trip property tests for serializers, post-merge reverts as the live source of escapes, running the guard tests on base and head, optional signing (the receipt's value is a named owner accepting a record tied to the diff, not the key).
 - **Final submission requires:** project name, punchline, description; challenge; technologies; a **2-minute video, strictly not a second longer**, publicly viewable (YouTube or Vimeo); demo and source links (source accessible to the organisers, MIT-licensed); pitch deck as PDF; phone numbers and Discord usernames.
 - **Rules that bind us:** no code written before the event (open-source libraries are fine); past experience is fine, copying a project is not.
 - **Challenge expectations, mapped:**
@@ -62,7 +63,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
   - "Who owns the decision?": moment 3, the signed receipt in git.
   - "How would this scale?": moment 3, the routing spread over all four Tieto changes, plus the trust ladder.
 - **Tieto deliverables (first-class, each has a task):**
-  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide. It is also the index of the eight ideas, lists the four next ideas (section 1, Emphasis), and holds "Beyond the reference", which adds organisation-managed signing (Sigstore or similar) in place of personal SSH keys.
+  - Concept card (recommendation, principles, trade-offs, limits, how trust is measured): `docs/concept-card.md` (T22), exported to one PDF page and used as a pitch slide. It is also the index of the nine ideas, lists the next ideas (section 1, Emphasis), and holds "Beyond the reference", which adds organisation-managed signing (Sigstore or similar) in place of personal SSH keys.
   - Research: `docs/research.md`, the checked figures we quote (sample size and source each) and the red-team questions with our answers. Pitch, concept card and idea pages quote only figures listed there.
   - Idea pages: `docs/ideas/*.md` (T25), one per idea, written for a product team that wants to adopt it.
   - Lessons log with the failure modes we actually saw: `docs/lessons.md`, started by T15 from the first pipeline run (caught hallucinations, missed planted bugs, wrong tier calls, model errors), each entry with the date and what we changed.
@@ -83,6 +84,7 @@ Build milestones: S1–S3 render on production from fixtures by Sat 08:00 · .NE
 7. **Measured trust, on a ladder.** Each area climbs Shadow → Calibrated → Trusted on evidence (planted-bug catch rate, clean spot checks) and drops a level after an escape. New areas start in Shadow: the reviewer runs but routes nothing. Humans set the thresholds; the evidence moves the level.
 8. **Blind first.** Expectations come from the requirement before the reviewer reads the author's story, and a test is evidence only if it fails before the change and passes after it; Verified needs a test the authoring agent didn't write. We show blind-first works by counting: the same reviewer anchored (given the author's description first) and blind-first, on the same planted contradictions.
 9. **We don't grade our own homework.** The planted bugs were written by an isolated subagent that never opened the reviewer's prompts, pipeline or review output, while the agents writing the prompts never opened the plants (`docs/decisions.md`). Every rate shows its sample size. Principles 1, 8 and 9 together are idea 8: the author never checks its own work. Every change shows three different roles: written by the agent, reviewed by the AI reviewer, signed by a named person.
+10. **Nothing passes that breaks old code.** Every touch on what old systems rely on goes to its named owner with its guard (idea 9). From Tieto's feedback on 2026-11-14; presented first, numbered last.
 
 ### Product in parts
 
@@ -114,7 +116,7 @@ Wow moment (first 30 s), as planned before the data: moment 1's "read 2 of 8 hun
 
 Each moment is told as ideas in action: moment 1 shows ideas 3, 4 and 6; moment 2 ideas 2 and 5; moment 3 ideas 7 and 1.
 
-Video and pitch structure (2 min): problem (15 s) → moment 1 (25 s) → moment 2 (25 s) → moment 3 (25 s) → the eight ideas and what Tieto can take from them, "Beyond the reference" (30 s).
+Video and pitch structure (2 min): problem (15 s) → moment 1 (25 s) → moment 2 (25 s) → moment 3 (25 s) → the nine ideas and what Tieto can take from them, "Beyond the reference" (30 s).
 
 At the peer-review table the app runs locally (`pnpm dev`) against the laptop's clone of the fork, so sign → refresh works live in front of judges. The deployed site shows the receipt signed earlier.
 
@@ -273,7 +275,7 @@ There is no HTTP API: the contracts are data files, one shared function and two 
   findings: { id: string /* "f1" */, kind: "defect" | "contradiction" | "missing" | "scope-creep", area: Area | null,
               severity: "high" | "medium" | "low", title: string, detail: string,
               statement: string | null /* contradiction: the PR's sentence */, hunkIds: string[], citations: Citation[] }[],
-  refusals: { id: string /* "r1" */, ruleId: string /* "R1".."R7" */, source: "ai" | "rule" /* rule: a fixed trigger in policy, no model involved */,
+  refusals: { id: string /* "r1" */, ruleId: string /* "R1".."R8" */, source: "ai" | "rule" /* rule: a fixed trigger in policy, no model involved */,
               reason: string, hunkIds: string[] }[],
   quoteCheck: { checked: number, passed: number, downgraded: number, dropped: number,
                 failures: { itemId: string, citation: Citation | null /* null: no code to check, e.g. an unknown rule id */, reason: string }[] },
@@ -281,6 +283,8 @@ There is no HTTP API: the contracts are data files, one shared function and two 
   receiptDraft: { checked: { item: string, by: "tool" | "ai-supported" | "human" }[],
                   notChecked: { item: string, reason: string }[],
                   residualRisk: { text: string, acceptedRefusalIds: string[] } },
+  legacyTouchPoints?: { kind: "legacy-code" | "old-platform" | "consumer-contract" | "build", hunkIds: string[], detail: string /* "#if !NETSTANDARD2_0 && !NETFRAMEWORK" */, owner: string,
+                        guard: { status: "guarded" | "partly" | "unguarded" | "owner-read", evidence: string, files: string[] } }[],  // optional: reviews recorded before the legacy guard stay valid
   routing: TierDecision   // route() at record time, with the levels from the report card then
 }
 ```
@@ -303,6 +307,8 @@ Deterministic, pure, no I/O; runs in Node and the browser. Rules, in this order 
 6. `R-contradiction` · any contradiction finding → focused · "The PR description contradicts the code in <n> place(s)".
 7. `R-defect` · any defect finding → focused · "<n> defect(s) found".
 8. `R-sensitive-path` · any hunk in `policy.sensitivePaths` → focused · "Touches <path glob label>".
+8a. `R-legacy` · one reason per legacy zone (`src/policy/legacy.ts`) the change's hunks touch → focused, or full when the zones' hunks total `legacyTouchFull` (5) or more · "<Zone label>: edits legacy code in <n> hunk(s), the <owner> decides". The hunks also carry a rule-made `R8` refusal, so no claim or ladder level takes them off the reading list.
+8b. `R-legacy-guard` · one reason per entry of `review.legacyTouchPoints`: `unguarded` → full · `partly` or `owner-read` → focused · `guarded` → light (informs) · "<Kind>: <detail> in <n> hunk(s), <guard evidence>; the <owner> decides" (guarded: "..., guarded: <evidence>"). Reviews without `legacyTouchPoints` add nothing.
 9. `R-area-level` · for each area of the change's hunks (file areas) whose level is not `trusted` → focused · "<Area>: <Level>, may route Focused at best" (shadow: "<Area>: Shadow, the AI's output routes nothing here").
 10. `R-unread` · any hunk with coverage `read` and no other rule fired → focused · "<n> hunks have no checked evidence".
 11. `R-generated` · any hunk with coverage `generated` → light, so it never raises the tier, added after the other reasons · "<n> are generated snapshots: read the template that produces them, because code hidden in a snapshot would not be caught" (singular "1 is a generated snapshot: read the template that produces it, because ...)"). The reason line says the risk because generated files are not read, so code hidden in one is not caught; the change that produces them is.
@@ -358,6 +364,7 @@ The S2 receipt is unverified when `verify.ok` is false, else stale when `receipt
 ### Pipeline CLI (`src/pipeline/cli.ts`)
 
 - `pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]`: blind-first by default (A1 → A2 → quote check → A3 → A4 → A5 unless `--no-tests` → `route()`), writes `data/runs/<changeId>/review.json`; with `--anchored` (A1 skipped, A2 gets the author description first) or `--run <k>` it writes `data/runs/<changeId>/<anchored|blind>/<k>.json` instead. Prints one summary line: "<changeId> · <tier> · read <r> of <n> hunks · <claims> claims · <findings> findings · <refusals> refused · $<cost> · <seconds> s".
+- `pnpm review legacy <changeId>`: adds `legacyTouchPoints` and the R8 refusals to the recorded review in place (`addLegacyGuard()` in `src/pipeline/addLegacyGuard.ts`), then re-runs `route()`. No model call; existing refusals keep their ids.
 - `pnpm review comment <changeId> [--receipt-exit <code>]`: prints the pull request comment for the recorded review (`renderReviewComment()` in `src/pipeline/prComment.ts`): tier and the rules behind it, hunks to read of the total, Verified, Supported and Read this counts, findings and refusals, the receipt status read from `pnpm countersign verify`'s exit code (0 signed, 1 stale, 2 not signed, 3 signature invalid; any other value reads "not checked"), reviewer version and the recorded calls and cost. It starts with `<!-- countersign -->`: the `review` job updates the bot's comment that starts with it, so each push edits one comment and no other workflow's comment is touched.
 - `pnpm evals [--runs <n>] [--plant-runs <n>] [--score-only]`: 3 blind runs (no A5) of every `planted-bug` input, 2 anchored and 2 blind runs of every `contradiction-plant` input, scoring against the answer keys, then writes `data/eval/report-card.json` and recomputes `data/runs/*/review.json` `routing` with the new levels.
 - Env: `AI_BACKEND` (`claude-code` default | `api`), `ANTHROPIC_API_KEY` (only for `api`), `SAMPLE_REPO_DIR`, `AI_MODE` (`record` default: call the model and save the response; `replay`: read `data/recordings/` only, fail on a miss; `live`: call without saving).
@@ -391,6 +398,9 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - `areas.ts`: file kind and area by path, first match wins: `tests/**/Resources/**` and `**/*.verified.*` → generated, area null · `tests/**` → test, area null · `**/AnalyzerReleases.*.md` → source, analyzer (listed before the Markdown rule, or it could never match: those files are `.md`) · `**/*.md` → docs, area null except `doc/analyzers/**` → analyzer · `src/MessagePack.SourceGenerator/Analyzers/**` → source, analyzer · `src/MessagePack.SourceGenerator/Transforms/**`, `src/MessagePack/**` → source, security (they generate or run deserialization of untrusted input) · `src/MessagePack.SourceGenerator/**`, `src/MessagePack.Annotations/**` → source, generator · anything else → source, area null. Plus the four area checklists for A3 (6–10 items each, written by T09 from public .NET, Roslyn and OWASP deserialization guidance, labelled "our checklist until Tieto's standards arrive").
 - `routing.ts`: `sizeLimit: 400`, `readShareFull: 0.75`, `linesPerMinute: 25`, `sensitivePaths: [{ glob: "src/MessagePack.Annotations/**", label: "public attributes (MessagePack.Annotations)" }, { glob: "**/AnalyzerReleases.*.md", label: "diagnostic IDs (analyzer releases)" }, { glob: "src/MessagePack/**", label: "the runtime serializer" }]`.
 - `ladder.ts`: the thresholds above.
+- `legacy.ts`: the legacy zones (Reflection resolvers `src/MessagePack/Resolvers/Dynamic*.cs`, Wire format `MessagePackCode.cs`, `MessagePackReader*.cs`, `MessagePackWriter.cs`, Unity client), their owners, `legacyTouchFull = 5`, and `legacyRefusalRule`: rule `R8` Legacy contract: behaviour that old systems depend on · decides: the zone's owner. R8 is rule-only (`source: "rule"` on every hunk in a zone, never raised by the model).
+- `legacyTouch.ts`: the touch kinds (`legacy-code`, `old-platform`, `consumer-contract`, `build`), their labels, and what each detector looks for (the `#if` directive, legacy target frameworks, consumer-contract and release-note globs, build files).
+- `refusalPolicy.ts` (`allRefusalRules`, policy `v2`): `refusals.ts` rules R1 to R7 plus R8. `refusals.ts` alone feeds the A3 prompt, so adding R8 didn't change reviewer `rv2` and kept the planted-bug report card valid (`docs/decisions.md`).
 
 ## 6. AI behaviour
 

@@ -1,6 +1,6 @@
 # Concept card
 
-**Recommendation.** Let the AI review every agent-written pull request, but make it show its work: each claim cites code that a program checks, and each hunk is marked by what covers it. Route a person's reading to the hunks no checked evidence covers, and let the AI's measured record on planted bugs decide how much that reading is. A named engineer signs a receipt in git for exactly what was checked and what was read.
+**Recommendation.** First, let nothing pass that breaks old code: every touch on what old systems rely on goes to its named owner with the evidence that covers it. Then let the AI review every agent-written pull request, but make it show its work: each claim cites code that a program checks, and each hunk is marked by what covers it. Route a person's reading to the hunks no checked evidence covers, and let the AI's measured record on planted bugs decide how much that reading is. A named engineer signs a receipt in git for exactly what was checked and what was read.
 
 ## Principles
 
@@ -13,6 +13,7 @@
 7. **Measured trust, on a ladder.** Areas climb Shadow, Calibrated, Trusted on evidence and drop after an escape.
 8. **Blind first.** Expectations come from the requirement before the author's story; a test counts only if it fails before the change and passes after.
 9. **We don't grade our own homework.** Planted bugs come from an agent that never sees the reviewer's prompts, the prompt writers never see the plants, and every rate shows its sample size.
+10. **Nothing passes that breaks old code.** Every touch on what old systems rely on goes to its named owner with its guard; an unguarded touch raises the tier. Listed first in the recommendation because it decides whether a change is safe to trust.
 
 ## Trade-offs
 
@@ -45,18 +46,21 @@
 | Time to merge                                         | Not measured yet                                                                                                                                    | Time from open to signed receipt, by tier                               |
 | Share routed to humans                                | Hunks per tier across the four sample changes (read 55 of 473, of which 402 are generated snapshots: 55 of 71 hand-written hunks; `mp-2283` 6 of 8) | Share of hunks and changes at Light, Focused and Full, per area         |
 
-## The eight ideas
+## The nine ideas
 
-1. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
-2. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
-3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
-4. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
-5. [A written refusal policy](ideas/refusal-policy.md): seven things the AI never decides.
+Ordered by what makes a change safe to trust, first. The numbers are fixed; idea 9 was added last.
+
+9. [The legacy guard](ideas/legacy-guard.md): every touch on what old systems rely on goes to its named owner with its guard; an unguarded touch raises the tier.
 6. [Evidence levels instead of confidence](ideas/evidence-levels.md): a claim is labelled by what backs it.
-7. [The signed receipt in git](ideas/signed-receipt.md): the owner signs what was checked, bound to the exact diff.
 8. [The author never checks its own work](ideas/separation-of-duties.md): an agent's own test is Supported at most, and a person signs.
+1. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
+3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
+5. [A written refusal policy](ideas/refusal-policy.md): the things the AI never decides, each with the role that does.
+4. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
+2. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
+7. [The signed receipt in git](ideas/signed-receipt.md): the owner signs what was checked, bound to the exact diff.
 
-Next ideas, **not built**: registered pull requests (the owner signs the tests before the agent codes); audit sampling for very large PRs; round-trip property tests for serializers; post-merge reverts as the live source of escapes.
+Next ideas, **not built**: registered pull requests (the owner signs the tests before the agent codes); audit sampling for very large PRs; round-trip property tests for serializers; post-merge reverts as the live source of escapes; running the guard tests on base and head, so a guard means "still passes"; optional signing (the receipt's value is a named owner accepting a record tied to the diff, not the key).
 
 ## Beyond the reference
 
