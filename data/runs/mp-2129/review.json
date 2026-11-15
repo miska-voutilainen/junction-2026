@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T141924Z",
-    "startedAt": "2026-11-14T14:19:24.700Z",
-    "finishedAt": "2026-11-14T14:24:10.784Z",
-    "durationMs": 286084,
+    "id": "20261115T001547Z",
+    "startedAt": "2026-11-15T00:15:47.996Z",
+    "finishedAt": "2026-11-15T00:21:52.804Z",
+    "durationMs": 364808,
     "usage": {
       "inputTokens": 349887,
       "outputTokens": 53655,
@@ -8867,7 +8867,7 @@
       "testNames": [
         "A5_F1_GeneratedFormatter_RoundtripsValue"
       ],
-      "reason": "build error on the base: ktree>/tests/MessagePack.SourceGenerator.ExecutionTests/A5_F1_GeneratedMessagePackFormatterTests.cs(58,36): error CS0535: 'A5F1PointFormatter' does not implement interface member 'IMessagePackFormatter<A5F1Point>.Deserialize(ref MessagePack…"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/A5_F1_GeneratedMessagePackFormatterTests.cs(57,2): error CS0246: The type or namespace name 'GeneratedMessagePackFormatterAttribute' could not be found (are you missing a using directive or a…"
     },
     {
       "source": "differential-test",
@@ -8875,7 +8875,7 @@
       "testNames": [
         "A5_F1_GeneratedFormatter_RoundtripsDefaultValue"
       ],
-      "reason": "build error on the base: ktree>/tests/MessagePack.SourceGenerator.ExecutionTests/A5_F1_GeneratedMessagePackFormatterTests.cs(58,36): error CS0535: 'A5F1PointFormatter' does not implement interface member 'IMessagePackFormatter<A5F1Point>.Deserialize(ref MessagePack…"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/A5_F1_GeneratedMessagePackFormatterTests.cs(57,2): error CS0246: The type or namespace name 'GeneratedMessagePackFormatterAttribute' could not be found (are you missing a using directive or a…"
     },
     {
       "source": "differential-test",
@@ -8923,7 +8923,7 @@
       "testNames": [
         "ContractlessClassRoundTrips"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8931,7 +8931,7 @@
       "testNames": [
         "ContractlessClassUsesStringKeysForPublicReadWriteMembers"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8939,7 +8939,7 @@
       "testNames": [
         "ContractlessClassNullRoundTrips"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8947,7 +8947,7 @@
       "testNames": [
         "ContractlessStructRoundTrips"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8955,7 +8955,7 @@
       "testNames": [
         "SurrogateControlsKeysAndMembership"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8963,7 +8963,7 @@
       "testNames": [
         "MessagePackObjectCanContainExternalTypes"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     },
     {
       "source": "pr-test",
@@ -8971,7 +8971,7 @@
       "testNames": [
         "GeneratedFormattersAreRegisteredInGeneratedResolver"
       ],
-      "reason": "build error on the base: tionTests/GeneratedFormatterForExternalTypes.cs(10,48): error CS0535: 'ExternalPersonFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPerson>.Deserialize(ref MessagePackReader, MessagePackSerializerOptions)'"
+      "reason": "build error on the base: tests/MessagePack.SourceGenerator.ExecutionTests/GeneratedFormatterForExternalTypes.cs(15,47): error CS0535: 'ExternalPointFormatter' does not implement interface member 'IMessagePackFormatter<ExternalPoint>.Serialize(ref MessagePackWriter,…"
     }
   ],
   "receiptDraft": {

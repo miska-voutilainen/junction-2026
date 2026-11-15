@@ -2,7 +2,8 @@
  * Pipeline CLI: `run <changeId> [--anchored] [--run <k>] [--no-tests]` records one
  * review, `check <changeId>` runs the eval cases of A1 to A5 on it, `comment <changeId>`
  * prints the pull request comment CI posts, `legacy <changeId>` adds the legacy guard to
- * its recorded runs without a model call, `eval` runs the planted-bug eval.
+ * its recorded runs without a model call, `replay <changeId | all>` re-runs the recorded
+ * runs with the model replayed and fails on any difference, `eval` runs the planted-bug eval.
  * Spec section 5, Pipeline CLI.
  */
 import { existsSync } from "node:fs";
@@ -17,6 +18,7 @@ import { receiptExitFrom, renderReviewComment } from "./prComment";
 import {
   hasRecordedReview,
   listComparisonRuns,
+  listRecordedChanges,
   loadChangeAndRequirement,
   loadRecordedReview,
   loadRecordedRun,
@@ -27,12 +29,14 @@ import {
 import { runEvalCommand } from "./eval/evalCommand";
 import { blindComparisonSteps, reviewStepsWithTests, runReview, type ModelStep } from "./runReview";
 import { addLegacyGuard } from "./addLegacyGuard";
+import { replayChange } from "./replayCheck";
 import { createUsageTally } from "./usageTally";
 
 const usage = `Usage:
   pnpm review run <changeId> [--anchored] [--run <k>] [--no-tests]
   pnpm review check <changeId>
   pnpm review legacy <changeId>
+  pnpm review replay <changeId | all> [--no-tests]
   pnpm review comment <changeId> [--receipt-exit <code>]
   pnpm evals [--runs <n>] [--score-only]`;
 
@@ -55,11 +59,9 @@ async function main(argv: string[]): Promise<void> {
     },
   });
   const [command, changeId] = positionals;
-  if (
-    !changeId ||
-    (command !== "run" && command !== "check" && command !== "comment" && command !== "legacy")
-  )
-    fail(usage);
+  if (!changeId || !["run", "check", "comment", "legacy", "replay"].includes(command)) fail(usage);
+
+  if (command === "replay") return replayCommand(changeId, values["no-tests"] !== true);
 
   if (command === "comment") {
     const receiptExit = receiptExitFrom(values["receipt-exit"]);
@@ -119,6 +121,35 @@ async function legacyCommand(changeId: string): Promise<void> {
     await writeRecordedReview(after, comparison);
     printLegacyResult(label, before, after);
   }
+}
+
+/**
+ * `replay`: the whole pipeline as a test. Re-runs each recorded run with the
+ * model replayed and compares it with the committed file; exits 1 on any
+ * difference. `all` covers every change in data/runs. --no-tests leaves out
+ * the four recorded reviews, whose A5 step needs Docker and minutes each.
+ */
+async function replayCommand(target: string, includesTests: boolean): Promise<void> {
+  if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
+  const repoDir = process.env.SAMPLE_REPO_DIR;
+  if (!repoDir)
+    fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
+  const changeIds = target === "all" ? await listRecordedChanges() : [target];
+  let differing = 0;
+  let total = 0;
+  for (const changeId of changeIds) {
+    for (const { label, differences } of await replayChange(changeId, repoDir, includesTests)) {
+      total += 1;
+      if (differences.length === 0) {
+        console.log(`same     ${label}`);
+        continue;
+      }
+      differing += 1;
+      console.log(`DIFFERS  ${label}\n${differences.map((line) => `  ${line}`).join("\n")}`);
+    }
+  }
+  console.log(`${total - differing} of ${total} runs replay to their recorded file`);
+  if (differing > 0) process.exit(1);
 }
 
 /** One line per run: the tier before and after, then one line per touch point. */

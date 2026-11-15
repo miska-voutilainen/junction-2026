@@ -18,10 +18,10 @@
     }
   },
   "run": {
-    "id": "20261114T122418Z",
-    "startedAt": "2026-11-14T12:24:18.227Z",
-    "finishedAt": "2026-11-14T12:31:47.775Z",
-    "durationMs": 449548,
+    "id": "20261115T002154Z",
+    "startedAt": "2026-11-15T00:21:54.467Z",
+    "finishedAt": "2026-11-15T00:26:45.107Z",
+    "durationMs": 290640,
     "usage": {
       "inputTokens": 169222,
       "outputTokens": 18589,
@@ -2695,6 +2695,7 @@
       "acceptedRefusalIds": []
     }
   },
+  "legacyTouchPoints": [],
   "routing": {
     "tier": "focused",
     "reasons": [

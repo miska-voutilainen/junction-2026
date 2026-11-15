@@ -2,6 +2,14 @@
 
 <!-- Every failure we saw: quote-check failures, retractions, wrong tiers, model errors. Dated, with what we changed. Newest first. -->
 
+## 2026-11-15 · Correction: the new-API rule still lifts nothing, but for another reason
+
+- **What we found:** `pnpm review replay all` showed that mp-2129 and mp-2234 still carried A5 reasons cut by the old excerpt rule (before #222), such as `ktree>/tests/...`. The entry below read those cut reasons. Re-recorded with the model replayed, the reasons read in full, and two facts in that entry change:
+  - mp-2129's 2 F1 methods first fail on the base with `CS0246: The type or namespace name 'GeneratedMessagePackFormatterAttribute' could not be found`, in A5's own `A5_F1_GeneratedMessagePackFormatterTests.cs`. The diff adds that attribute in `Attributes.cs`, so these two methods meet the rule's condition. They are not the `CS0535` the entry names.
+  - mp-2234 has 2 base build errors, not none: the same `CS0117 'MyGeneratedCompositeResolver' does not contain a definition for 'Instance'` in `GeneratedCompositeResolverTests.cs` as mp-2129's five. That file is not A5's own, so the rule doesn't apply.
+- **Why the result holds:** the rule also needs the test to pass on the head. A probe that logged A5's head runs on mp-2129 found that none of its methods builds there either: the test project fails with `CS0535` in the PR's own `GeneratedFormatterForExternalTypes.cs` (the formatters for `ExternalPoint` and `ExternalWidget` lack `Serialize`). No method passes on the head, so the rule lifts 0 of 40 claims, as the entry says.
+- **What we changed:** mp-2129's and mp-2234's reviews were re-recorded with the model replayed, so S2 shows whole reasons; no claim, verdict or tier moved. Not investigated: why the source generator test project doesn't build on mp-2129's head inside A5's container. Until it does, A5 can say nothing about mp-2129.
+
 ## 2026-11-15 · The new-API rule for A5 would change no claim: no-go (#215)
 
 - **What we checked:** the follow-up named in the A5 entry below: count "does not compile on the base, passes on the head" as Verified when the base error is in A5's own test file and names a symbol the diff declares or changes. It was checked against every A5 build error stored in `inconclusiveTests` of the four recorded reviews, and the symbols `changedDeclarations()` reads from the `src/**/*.cs` hunks.
