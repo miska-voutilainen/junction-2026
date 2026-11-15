@@ -8,7 +8,10 @@ import type { IdentityRow, ReceiptDocumentView } from "./receiptModel";
  * The last row is the roles line (idea 8): author, reviewer and signer in
  * sans, since they are names rather than ids.
  */
-export function IdentityList({ rows, roles }: Readonly<{ rows: IdentityRow[]; roles: ReceiptDocumentView["roles"] }>) {
+export function IdentityList({
+  rows,
+  roles,
+}: Readonly<{ rows: IdentityRow[]; roles: ReceiptDocumentView["roles"] }>) {
   return (
     <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-1 border-y border-border-subtle py-4 font-mono text-sm text-text-secondary compact:grid-cols-[7rem_minmax(0,1fr)] compact:gap-y-1.5">
       {rows.map(({ label, value }) => (

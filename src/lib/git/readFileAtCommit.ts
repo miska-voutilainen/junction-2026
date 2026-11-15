@@ -9,10 +9,16 @@ import { runGit } from "./runGit";
  *   (added by the change, deleted by it, or the path is a folder)
  * @throws Error when the commit is unknown.
  */
-export async function readFileAtCommit(repoDir: string, sha: string, path: string): Promise<string | null> {
+export async function readFileAtCommit(
+  repoDir: string,
+  sha: string,
+  path: string,
+): Promise<string | null> {
   // Fails on an unknown commit, so an empty listing below can only mean a missing path.
   await runGit(repoDir, ["cat-file", "-e", `${sha}^{commit}`], { isolated: true });
-  const entry = (await runGit(repoDir, ["ls-tree", sha, "--", path], { isolated: true })).toString().trim();
+  const entry = (await runGit(repoDir, ["ls-tree", sha, "--", path], { isolated: true }))
+    .toString()
+    .trim();
   if (entry === "") return null;
   // Each entry is "<mode> <type> <sha>", a tab, then the path. A folder or submodule is not a blob, so there is no text.
   if (entry.split(/\s/)[1] !== "blob") return null;

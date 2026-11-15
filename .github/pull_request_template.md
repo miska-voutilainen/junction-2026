@@ -37,8 +37,8 @@
 <!-- UI changes: before and after at 375 px and 1440 px; a short GIF for interactions. Otherwise "No UI change". -->
 
 | Before | After |
-| --- | --- |
-| --- | --- |
+| ------ | ----- |
+| ---    | ---   |
 
 ## How tested
 

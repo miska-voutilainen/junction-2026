@@ -46,9 +46,7 @@
     ],
     "residualRisk": {
       "text": "The new UnsupportedGenericMember diagnostic ships without an agreed wording. Accepted for the sample fork; the maintainers decide before it goes upstream.",
-      "acceptedRefusalIds": [
-        "r2"
-      ]
+      "acceptedRefusalIds": ["r2"]
     },
     "hunks": [
       {

@@ -30,14 +30,17 @@ export function queueStatus(issue, closedNumbers, myLogin) {
   const blockedBy = parseDependsOn(issue.body).filter((n) => !closed.has(n));
   if (labels.includes("needs-human")) return { state: "needs-human", blockedBy, assignees };
   const mine = (a) => String(a).toLowerCase() === String(myLogin ?? "").toLowerCase();
-  if (assignees.length > 0 && !assignees.some(mine)) return { state: "assigned", blockedBy, assignees };
+  if (assignees.length > 0 && !assignees.some(mine))
+    return { state: "assigned", blockedBy, assignees };
   if (blockedBy.length > 0) return { state: "blocked", blockedBy, assignees };
   return { state: "ready", blockedBy, assignees };
 }
 
 /** Shortens a sync-log comment to its Done, For other lanes and Next lines. */
 export function summariseSyncComment(body) {
-  const lines = String(body ?? "").replace(/\r/g, "").split("\n");
+  const lines = String(body ?? "")
+    .replace(/\r/g, "")
+    .split("\n");
   const wanted = [
     ["Done", /^done\b/i],
     ["For other lanes", /^for other lanes\b/i],
@@ -45,7 +48,10 @@ export function summariseSyncComment(body) {
   ];
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    const clean = lines[i].replace(/^[\s>#*_-]+/, "").replace(/\*\*|__/g, "").trim();
+    const clean = lines[i]
+      .replace(/^[\s>#*_-]+/, "")
+      .replace(/\*\*|__/g, "")
+      .trim();
     const hit = wanted.find(([, re]) => re.test(clean));
     if (!hit) continue;
     let rest = clean.slice(hit[0].length).replace(/^[\s:.–-]+/, "");
@@ -142,7 +148,9 @@ function main() {
   try {
     const l = [];
     const def = lane && config?.lanes?.[lane];
-    l.push(`- Lane: ${lane ?? "(not set)"}${def ? ` (owner ${def.owner}; paths: ${def.paths.join(", ")})` : ""}`);
+    l.push(
+      `- Lane: ${lane ?? "(not set)"}${def ? ` (owner ${def.owner}; paths: ${def.paths.join(", ")})` : ""}`,
+    );
     if (slot) l.push(`- Seat (SLOT): ${slot}`);
     const planText =
       plan === "max"
@@ -153,24 +161,39 @@ function main() {
             ? `${plan} (unknown value; expected max or pro)`
             : "(not set)";
     l.push(`- Plan (PLAN): ${planText}`);
-    if (!lane || !plan) l.push('- Setup incomplete: run `join`.');
+    if (!lane || !plan) l.push("- Setup incomplete: run `join`.");
     add("Lane, plan and seat", l);
   } catch {}
   if (timeLeft()) {
     try {
       const prs = ghJson([
-        "pr", "list", "--author", "@me", "--state", "open", "--json",
+        "pr",
+        "list",
+        "--author",
+        "@me",
+        "--state",
+        "open",
+        "--json",
         "number,title,mergeStateStatus,statusCheckRollup,autoMergeRequest",
       ]);
       const pl = [QUOTE];
       for (const pr of prs) {
-        const failed = (pr.statusCheckRollup ?? []).filter((c) => FAILED.includes(c.conclusion ?? c.state));
+        const failed = (pr.statusCheckRollup ?? []).filter((c) =>
+          FAILED.includes(c.conclusion ?? c.state),
+        );
         const flags = [];
-        if (failed.length) flags.push(`failed check: ${failed.map((c) => c.name ?? c.context).join(", ")}`);
+        if (failed.length)
+          flags.push(`failed check: ${failed.map((c) => c.name ?? c.context).join(", ")}`);
         if (pr.mergeStateStatus === "DIRTY") flags.push("merge conflict");
         if (pr.mergeStateStatus === "BLOCKED" && failed.length) flags.push("blocked by failures");
-        if (pr.autoMergeRequest && (failed.length || ["DIRTY", "BLOCKED", "BEHIND"].includes(pr.mergeStateStatus))) flags.push("auto-merge stalled");
-        pl.push(`- #${pr.number} ${pr.title} [${pr.mergeStateStatus}]${flags.length ? ` NEEDS ATTENTION: ${flags.join("; ")}` : ""}`);
+        if (
+          pr.autoMergeRequest &&
+          (failed.length || ["DIRTY", "BLOCKED", "BEHIND"].includes(pr.mergeStateStatus))
+        )
+          flags.push("auto-merge stalled");
+        pl.push(
+          `- #${pr.number} ${pr.title} [${pr.mergeStateStatus}]${flags.length ? ` NEEDS ATTENTION: ${flags.join("; ")}` : ""}`,
+        );
       }
       if (prs.length === 0) pl.push("- none");
       add("My open PRs", pl);
@@ -181,7 +204,9 @@ function main() {
   try {
     const l = [];
     l.push(`- Branch: ${git(["rev-parse", "--abbrev-ref", "HEAD"]).trim()}`);
-    l.push(`- Uncommitted files: ${git(["status", "--porcelain"]).split("\n").filter(Boolean).length}`);
+    l.push(
+      `- Uncommitted files: ${git(["status", "--porcelain"]).split("\n").filter(Boolean).length}`,
+    );
     try {
       git(["fetch", "-q"]);
     } catch {}
@@ -196,9 +221,27 @@ function main() {
   let closedNums = [];
   if (lane && timeLeft()) {
     try {
-      issues = ghJson(["issue", "list", "--state", "open", "--limit", "200", "--json", "number,title,body,labels,assignees"]);
+      issues = ghJson([
+        "issue",
+        "list",
+        "--state",
+        "open",
+        "--limit",
+        "200",
+        "--json",
+        "number,title,body,labels,assignees",
+      ]);
       try {
-        closedNums = ghJson(["issue", "list", "--state", "closed", "--limit", "300", "--json", "number"]).map((i) => i.number);
+        closedNums = ghJson([
+          "issue",
+          "list",
+          "--state",
+          "closed",
+          "--limit",
+          "300",
+          "--json",
+          "number",
+        ]).map((i) => i.number);
       } catch {}
     } catch {}
   }
@@ -208,8 +251,13 @@ function main() {
   let queue = [];
   if (issues) {
     try {
-      handoffs = issues.filter((i) => hasLabel(i, "handoff") && inLane(i)).sort((a, b) => a.number - b.number);
-      add("Handoffs to my lane", [QUOTE, ...(handoffs.length ? handoffs.map((i) => `- #${i.number} ${i.title}`) : ["- none"])]);
+      handoffs = issues
+        .filter((i) => hasLabel(i, "handoff") && inLane(i))
+        .sort((a, b) => a.number - b.number);
+      add("Handoffs to my lane", [
+        QUOTE,
+        ...(handoffs.length ? handoffs.map((i) => `- #${i.number} ${i.title}`) : ["- none"]),
+      ]);
     } catch {}
     try {
       queue = issues
@@ -217,23 +265,45 @@ function main() {
         .sort((a, b) => a.number - b.number)
         .map((i) => ({ number: i.number, title: i.title, ...queueStatus(i, closedNums, login) }));
       const mark = (q) =>
-        q.state === "ready" ? "ready"
-        : q.state === "needs-human" ? "needs-human"
-        : q.state === "assigned" ? `assigned to ${q.assignees.join(", ")}`
-        : `blocked by ${q.blockedBy.map((n) => `#${n}`).join(", ")}`;
-      add("My queue", [QUOTE, ...(queue.length ? queue.map((q) => `- #${q.number} ${q.title}: ${mark(q)}`) : ["- empty"])]);
+        q.state === "ready"
+          ? "ready"
+          : q.state === "needs-human"
+            ? "needs-human"
+            : q.state === "assigned"
+              ? `assigned to ${q.assignees.join(", ")}`
+              : `blocked by ${q.blockedBy.map((n) => `#${n}`).join(", ")}`;
+      add("My queue", [
+        QUOTE,
+        ...(queue.length ? queue.map((q) => `- #${q.number} ${q.title}: ${mark(q)}`) : ["- empty"]),
+      ]);
     } catch {}
   }
 
   // Part 5
   if (timeLeft()) {
     try {
-      const prs = ghJson(["pr", "list", "--state", "open", "--limit", "50", "--json", "number,title,author,files"]);
+      const prs = ghJson([
+        "pr",
+        "list",
+        "--state",
+        "open",
+        "--limit",
+        "50",
+        "--json",
+        "number,title,author,files",
+      ]);
       let mine = new Set();
       try {
         const names = [
           ...git(["diff", "--name-only", "origin/main...HEAD"]).split("\n"),
-          ...git(["status", "--porcelain"]).split("\n").map((s) => s.slice(3).replace(/^.* -> /, "").replace(/^"|"$/g, "")),
+          ...git(["status", "--porcelain"])
+            .split("\n")
+            .map((s) =>
+              s
+                .slice(3)
+                .replace(/^.* -> /, "")
+                .replace(/^"|"$/g, ""),
+            ),
         ].filter(Boolean);
         mine = new Set(names.map((n) => normalisePath(n, root)));
       } catch {}
@@ -242,7 +312,9 @@ function main() {
         const files = (pr.files ?? []).map((f) => f.path);
         const touched = lanesTouched(files, config);
         const overlap = files.filter((f) => mine.has(f));
-        l.push(`- #${pr.number} ${pr.title} (${pr.author?.login ?? "?"}; lanes: ${touched.join(", ") || "none"})${overlap.length ? ` OVERLAPS: ${overlap.slice(0, 8).join(", ")}${overlap.length > 8 ? ", ..." : ""}` : ""}`);
+        l.push(
+          `- #${pr.number} ${pr.title} (${pr.author?.login ?? "?"}; lanes: ${touched.join(", ") || "none"})${overlap.length ? ` OVERLAPS: ${overlap.slice(0, 8).join(", ")}${overlap.length > 8 ? ", ..." : ""}` : ""}`,
+        );
       }
       if (prs.length === 0) l.push("- none");
       add("Open PRs", l);
@@ -265,10 +337,29 @@ function main() {
   // Part 6
   if (timeLeft()) {
     try {
-      const prs = ghJson(["pr", "list", "--state", "merged", "--search", `merged:>=${since}`, "--limit", "50", "--json", "number,title,mergedAt,files"]);
+      const prs = ghJson([
+        "pr",
+        "list",
+        "--state",
+        "merged",
+        "--search",
+        `merged:>=${since}`,
+        "--limit",
+        "50",
+        "--json",
+        "number,title,mergedAt,files",
+      ]);
       const l = [QUOTE, `Since ${since}:`];
       const fresh = prs.filter((p) => Date.parse(p.mergedAt) > sinceMs);
-      for (const p of fresh) l.push(`- #${p.number} ${p.title} (lanes: ${lanesTouched((p.files ?? []).map((f) => f.path), config).join(", ") || "none"})`);
+      for (const p of fresh)
+        l.push(
+          `- #${p.number} ${p.title} (lanes: ${
+            lanesTouched(
+              (p.files ?? []).map((f) => f.path),
+              config,
+            ).join(", ") || "none"
+          })`,
+        );
       if (fresh.length === 0) l.push("- nothing merged");
       add("Merged since my last session", l);
       part6ok = true;
@@ -281,8 +372,17 @@ function main() {
   let part7ok = false;
   if (timeLeft()) {
     try {
-      const raw = gh(["api", "repos/{owner}/{repo}/issues/1/comments", "--paginate", "--jq", ".[] | {user: .user.login, created_at, body}"]);
-      const comments = raw.split("\n").filter((s) => s.trim()).map((s) => JSON.parse(s));
+      const raw = gh([
+        "api",
+        "repos/{owner}/{repo}/issues/1/comments",
+        "--paginate",
+        "--jq",
+        ".[] | {user: .user.login, created_at, body}",
+      ]);
+      const comments = raw
+        .split("\n")
+        .filter((s) => s.trim())
+        .map((s) => JSON.parse(s));
       const l = [QUOTE];
       for (const c of comments.filter((c) => Date.parse(c.created_at) > sinceMs)) {
         const marker = String(c.body).match(/^\s*\[agent:([^\]]+)\]/);
@@ -291,13 +391,19 @@ function main() {
       }
       if (l.length === 1) l.push("- no new summaries");
       try {
-        const mineC = comments.filter((c) => c.user === login && String(c.body).trimStart().startsWith(`[agent:${lane}]`));
+        const mineC = comments.filter(
+          (c) => c.user === login && String(c.body).trimStart().startsWith(`[agent:${lane}]`),
+        );
         const lastC = mineC.length ? Math.max(...mineC.map((c) => Date.parse(c.created_at))) : 0;
         const email = git(["config", "user.email"]).trim();
-        const lastCommit = Date.parse(git(["log", "--all", `--author=${email}`, "-1", "--format=%cI"]).trim());
+        const lastCommit = Date.parse(
+          git(["log", "--all", `--author=${email}`, "-1", "--format=%cI"]).trim(),
+        );
         if (login && lane && email && lastCommit > lastC) {
           missingSummary = true;
-          l.push("WARNING: your previous session committed work but posted no summary. Write the missing summary first (handover).");
+          l.push(
+            "WARNING: your previous session committed work but posted no summary. Write the missing summary first (handover).",
+          );
         }
       } catch {}
       add("Sync log (issue #1)", l);
@@ -307,7 +413,8 @@ function main() {
 
   // Cursor write: only for a real session start
   try {
-    if (cursorFile && shouldMoveCursor(source, part6ok, part7ok)) writeFileSync(cursorFile, JSON.stringify({ last: new Date().toISOString() }));
+    if (cursorFile && shouldMoveCursor(source, part6ok, part7ok))
+      writeFileSync(cursorFile, JSON.stringify({ last: new Date().toISOString() }));
   } catch {}
 
   // Part 8
@@ -319,7 +426,11 @@ function main() {
   try {
     const l = [];
     let installed = false;
-    for (const [c, a] of [["graphify", ["--help"]], ["py", ["-m", "graphify", "--help"]], ["python", ["-m", "graphify", "--help"]]]) {
+    for (const [c, a] of [
+      ["graphify", ["--help"]],
+      ["py", ["-m", "graphify", "--help"]],
+      ["python", ["-m", "graphify", "--help"]],
+    ]) {
       try {
         call(c, a, 2000);
         installed = true;
@@ -330,7 +441,9 @@ function main() {
     try {
       const common = resolve(root, git(["rev-parse", "--git-common-dir"]).trim());
       const hook = join(common, "hooks", "post-commit");
-      l.push(`- Graphify post-commit hook: ${existsSync(hook) && /graphify/i.test(readFileSync(hook, "utf8")) ? "installed" : "not installed"}`);
+      l.push(
+        `- Graphify post-commit hook: ${existsSync(hook) && /graphify/i.test(readFileSync(hook, "utf8")) ? "installed" : "not installed"}`,
+      );
     } catch {}
     if (vault) {
       try {

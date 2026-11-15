@@ -20,7 +20,9 @@ test.beforeEach(async ({ page }) => {
   await bypassVercelAuth(page);
 });
 
-test("lists the four changes with their tiers and links each to its review", async ({ page }, testInfo) => {
+test("lists the four changes with their tiers and links each to its review", async ({
+  page,
+}, testInfo) => {
   const problems = watchConsole(page);
   // Reduced motion shows every row and the fold at rest, so the screenshots never catch a half-faded row.
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -33,7 +35,9 @@ test("lists the four changes with their tiers and links each to its review", asy
   await page.getByRole("button", { name: /^Signed \d+$/ }).click();
   await expect(page.locator(`a[href="${SIGNED_CHANGE_HREF}"]:visible`).first()).toBeVisible();
 
-  const hasHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  const hasHorizontalScroll = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   expect(hasHorizontalScroll).toBe(false);
 
   const width = testInfo.project.name === "mobile" ? 375 : 1440;
@@ -44,7 +48,9 @@ test("lists the four changes with their tiers and links each to its review", asy
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.screenshot({ path: ".review/inbox-375-menu.png" });
     // The dialog is position: fixed, so the page-level scroll check misses it; check the menu fits inside its dialog.
-    const menuOverflow = await page.getByRole("dialog").evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth);
+    const menuOverflow = await page
+      .getByRole("dialog")
+      .evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth);
     expect(menuOverflow).toBeLessThanOrEqual(0);
   }
   expect(problems).toEqual([]);
@@ -95,7 +101,9 @@ test("the command menu opens on Ctrl+K and closes on Esc", async ({ page }, test
   await expect(page.getByRole("dialog")).toBeHidden();
 });
 
-test("the phone layout groups changes into Sign here, Needs a desktop and Signed", async ({ page }, testInfo) => {
+test("the phone layout groups changes into Sign here, Needs a desktop and Signed", async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "desktop shows the table");
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /^Needs a desktop/ })).toBeVisible();

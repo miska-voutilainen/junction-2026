@@ -8,7 +8,12 @@ const CARD_COUNT = 4;
  */
 export default function Loading() {
   return (
-    <div role="status" aria-busy="true" aria-label="Loading" className="flex min-h-screen flex-col bg-surface-bg">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+      className="flex min-h-screen flex-col bg-surface-bg"
+    >
       <div className="hidden h-topbar shrink-0 border-b border-border-subtle bg-surface-raised compact:block" />
       <div className="h-topbar shrink-0 border-b border-border-subtle bg-surface-raised compact:hidden" />
       <div className="flex flex-1">

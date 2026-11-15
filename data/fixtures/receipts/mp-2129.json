@@ -30,9 +30,7 @@
     ],
     "residualRisk": {
       "text": "The public attribute and its semantics are not decided.",
-      "acceptedRefusalIds": [
-        "r1"
-      ]
+      "acceptedRefusalIds": ["r1"]
     },
     "hunks": [
       {

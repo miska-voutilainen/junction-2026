@@ -46,10 +46,7 @@
       "area": "generator",
       "added": 5,
       "removed": 2,
-      "hunkIds": [
-        "h1",
-        "h2"
-      ]
+      "hunkIds": ["h1", "h2"]
     },
     {
       "path": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -57,9 +54,7 @@
       "area": "analyzer",
       "added": 8,
       "removed": 1,
-      "hunkIds": [
-        "h3"
-      ]
+      "hunkIds": ["h3"]
     },
     {
       "path": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
@@ -67,9 +62,7 @@
       "area": "security",
       "added": 2,
       "removed": 2,
-      "hunkIds": [
-        "h4"
-      ]
+      "hunkIds": ["h4"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
@@ -77,11 +70,7 @@
       "area": null,
       "added": 34,
       "removed": 0,
-      "hunkIds": [
-        "h5",
-        "h6",
-        "h7"
-      ]
+      "hunkIds": ["h5", "h6", "h7"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
@@ -89,9 +78,7 @@
       "area": null,
       "added": 7,
       "removed": 0,
-      "hunkIds": [
-        "h8"
-      ]
+      "hunkIds": ["h8"]
     }
   ],
   "hunks": [
@@ -789,10 +776,7 @@
         "expectedBehaviours": [
           "The source generator does not throw IndexOutOfRangeException (CS8785) for a member whose type is a closed generic value type defined in a referenced assembly."
         ],
-        "likelyAreas": [
-          "generator",
-          "analyzer"
-        ],
+        "likelyAreas": ["generator", "analyzer"],
         "expectedTests": [
           "A test that exercises: The source generator does not throw IndexOutOfRangeException (CS8785) for a member whose type is a closed generic value type defined in a referenced assembly"
         ]
@@ -802,10 +786,7 @@
         "expectedBehaviours": [
           "The compiling assembly gets a generated resolver that includes the affected [MessagePackObject] type."
         ],
-        "likelyAreas": [
-          "generator",
-          "analyzer"
-        ],
+        "likelyAreas": ["generator", "analyzer"],
         "expectedTests": [
           "A test that exercises: The compiling assembly gets a generated resolver that includes the affected [MessagePackObject] type"
         ]
@@ -815,10 +796,7 @@
         "expectedBehaviours": [
           "The MsgPack00xMessagePackAnalyzer does not throw (AD0001) for the same member type."
         ],
-        "likelyAreas": [
-          "generator",
-          "analyzer"
-        ],
+        "likelyAreas": ["generator", "analyzer"],
         "expectedTests": [
           "A test that exercises: The MsgPack00xMessagePackAnalyzer does not throw (AD0001) for the same member type"
         ]
@@ -853,9 +831,7 @@
       "text": "The generator no longer throws IndexOutOfRangeException when a member's type is a closed generic struct from a referenced assembly.",
       "kind": "behaviour",
       "level": "verified",
-      "hunkIds": [
-        "h1"
-      ],
+      "hunkIds": ["h1"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
@@ -887,10 +863,7 @@
       "text": "A resolver that includes the affected type is generated for the compiling assembly.",
       "kind": "behaviour",
       "level": "verified",
-      "hunkIds": [
-        "h2",
-        "h6"
-      ],
+      "hunkIds": ["h2", "h6"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
@@ -922,9 +895,7 @@
       "text": "The analyzer catches the failed lookup and reports a diagnostic instead of throwing.",
       "kind": "behaviour",
       "level": "supported",
-      "hunkIds": [
-        "h3"
-      ],
+      "hunkIds": ["h3"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -950,9 +921,7 @@
       "text": "Types without a referenced-assembly generic member go through the same code path as before.",
       "kind": "structure",
       "level": "supported",
-      "hunkIds": [
-        "h1"
-      ],
+      "hunkIds": ["h1"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
@@ -978,10 +947,7 @@
       "text": "Adds GenerationTests.ClosedGenericStructFromReferencedAssembly, which compiles a library and references it from the app project.",
       "kind": "test",
       "level": "supported",
-      "hunkIds": [
-        "h5",
-        "h7"
-      ],
+      "hunkIds": ["h5", "h7"],
       "citations": [
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
@@ -1007,9 +973,7 @@
       "text": "Adds an analyzer test that asserts no AD0001 diagnostic for the closed generic member.",
       "kind": "test",
       "level": "supported",
-      "hunkIds": [
-        "h8"
-      ],
+      "hunkIds": ["h8"],
       "citations": [
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
@@ -1076,9 +1040,7 @@
       "title": "The PR says the analyzer's diagnostics are unchanged; the change adds one",
       "detail": "The description says the analyzer \"reports exactly the same set of diagnostics as before and adds none\". The catch block reports UnsupportedGenericMember, a diagnostic users have not seen before.",
       "statement": "The analyzer's diagnostics are unchanged: it reports exactly the same set of diagnostics as before and adds none.",
-      "hunkIds": [
-        "h3"
-      ],
+      "hunkIds": ["h3"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -1097,9 +1059,7 @@
       "title": "Catch block hides other IndexOutOfRangeExceptions",
       "detail": "The analyzer now reports the type as an unsupported generic member for any IndexOutOfRangeException from the collector, so an unrelated bug in the collector looks like a user error.",
       "statement": null,
-      "hunkIds": [
-        "h3"
-      ],
+      "hunkIds": ["h3"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -1129,9 +1089,7 @@
       "title": "Renames the options parameter in emitted Serialize code",
       "detail": "FormatterTemplate now emits serializerOptions instead of options. No requirement item asks for it, and it changes every generated formatter.",
       "statement": null,
-      "hunkIds": [
-        "h4"
-      ],
+      "hunkIds": ["h4"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
@@ -1149,18 +1107,14 @@
       "ruleId": "R6",
       "source": "ai",
       "reason": "The rename in the shared formatter template can't be traced to any item of MP-2283. A person decides whether it belongs in this change.",
-      "hunkIds": [
-        "h4"
-      ]
+      "hunkIds": ["h4"]
     },
     {
       "id": "r2",
       "ruleId": "R7",
       "source": "ai",
       "reason": "The analyzer now reports a diagnostic that did not exist before. Whether and how to expose it is a public contract decision.",
-      "hunkIds": [
-        "h3"
-      ]
+      "hunkIds": ["h3"]
     }
   ],
   "quoteCheck": {

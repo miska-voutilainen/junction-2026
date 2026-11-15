@@ -46,9 +46,7 @@
       "area": "generator",
       "added": 12,
       "removed": 0,
-      "hunkIds": [
-        "h1"
-      ]
+      "hunkIds": ["h1"]
     },
     {
       "path": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
@@ -56,10 +54,7 @@
       "area": "generator",
       "added": 18,
       "removed": 0,
-      "hunkIds": [
-        "h2",
-        "h3"
-      ]
+      "hunkIds": ["h2", "h3"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
@@ -67,9 +62,7 @@
       "area": null,
       "added": 9,
       "removed": 0,
-      "hunkIds": [
-        "h4"
-      ]
+      "hunkIds": ["h4"]
     }
   ],
   "hunks": [
@@ -473,9 +466,7 @@
         "expectedBehaviours": [
           "A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>."
         ],
-        "likelyAreas": [
-          "generator"
-        ],
+        "likelyAreas": ["generator"],
         "expectedTests": [
           "A test that exercises: A [GeneratedMessagePackFormatter] attribute exists that can be placed on a partial class implementing IMessagePackFormatter<T>"
         ]
@@ -485,9 +476,7 @@
         "expectedBehaviours": [
           "The source generator emits the formatter implementation for T inside the project that declares the partial class."
         ],
-        "likelyAreas": [
-          "generator"
-        ],
+        "likelyAreas": ["generator"],
         "expectedTests": [
           "A test that exercises: The source generator emits the formatter implementation for T inside the project that declares the partial class"
         ]
@@ -497,9 +486,7 @@
         "expectedBehaviours": [
           "T may be declared in a referenced assembly that has no reference to MessagePack."
         ],
-        "likelyAreas": [
-          "generator"
-        ],
+        "likelyAreas": ["generator"],
         "expectedTests": [
           "A test that exercises: T may be declared in a referenced assembly that has no reference to MessagePack"
         ]
@@ -529,9 +516,7 @@
       "text": "A public sealed attribute applicable to classes is added to MessagePack.Annotations.",
       "kind": "structure",
       "level": "supported",
-      "hunkIds": [
-        "h1"
-      ],
+      "hunkIds": ["h1"],
       "citations": [
         {
           "file": "src/MessagePack.Annotations/GeneratedMessagePackFormatterAttribute.cs",
@@ -557,9 +542,7 @@
       "text": "Adds a generation test for a formatter of a type from a referenced library.",
       "kind": "test",
       "level": "supported",
-      "hunkIds": [
-        "h4"
-      ],
+      "hunkIds": ["h4"],
       "citations": [
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
@@ -602,9 +585,7 @@
       "title": "No diagnostic when the class is not partial or not a formatter",
       "detail": "CollectGeneratedFormatter returns false without telling the user why when the attributed class does not implement IMessagePackFormatter<T>.",
       "statement": null,
-      "hunkIds": [
-        "h3"
-      ],
+      "hunkIds": ["h3"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs",
@@ -622,18 +603,14 @@
       "ruleId": "R7",
       "source": "rule",
       "reason": "A new public attribute is public API. The issue lists three alternatives for per-member keys and settings; which one the library supports is the maintainers' decision.",
-      "hunkIds": [
-        "h1"
-      ]
+      "hunkIds": ["h1"]
     },
     {
       "id": "r2",
       "ruleId": "R1",
       "source": "ai",
       "reason": "Whether a generated formatter should live in the consuming project, and how keys of a foreign type are chosen, is a question about the requested behaviour.",
-      "hunkIds": [
-        "h2"
-      ]
+      "hunkIds": ["h2"]
     }
   ],
   "quoteCheck": {

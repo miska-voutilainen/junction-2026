@@ -7,7 +7,14 @@ import { motion } from "motion/react";
 import { ArrowRight, Copy, FileDiff } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { fadeUpItem, popover, useMotionPreset, useStaggeredPreset } from "@/lib/motion";
 import { countersignCommand } from "@/lib/countersignCommand";
@@ -53,7 +60,10 @@ export function CommandMenuProvider({ children }: Readonly<{ children: ReactNode
 /** Opens and closes the command menu from anywhere under the provider. */
 export function useCommandMenu(): CommandMenuState {
   const state = useContext(CommandMenuContext);
-  if (!state) throw new Error("useCommandMenu needs a CommandMenuProvider above it. Mount one in src/app/layout.tsx.");
+  if (!state)
+    throw new Error(
+      "useCommandMenu needs a CommandMenuProvider above it. Mount one in src/app/layout.tsx.",
+    );
   return state;
 }
 
@@ -129,7 +139,9 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
     { heading: "Changes", rows: changeRows },
   ].filter((group) => group.rows.length > 0);
   // Each group's first row number, so the staggered entrance counts rows across groups without mutating a counter while rendering.
-  const firstRowOfGroup = groups.map((_, index) => groups.slice(0, index).reduce((rows, group) => rows + group.rows.length, 0));
+  const firstRowOfGroup = groups.map((_, index) =>
+    groups.slice(0, index).reduce((rows, group) => rows + group.rows.length, 0),
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -138,7 +150,7 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
         aria-describedby={undefined}
         // The entrance is the motion element below; the exit is the dialog's own shorter fade.
         style={{ top: `${MENU_TOP_DVH}dvh` }}
-        className="max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 data-open:animate-none motion-reduce:data-closed:animate-none sm:max-w-160"
+        className="max-w-[calc(100%-2rem)] translate-y-0 gap-0 overflow-hidden rounded-menu border border-border-strong bg-surface-panel p-0 ring-0 sm:max-w-160 data-open:animate-none motion-reduce:data-closed:animate-none"
         onCloseAutoFocus={(event) => {
           // Return focus to the button that opened the menu, not whatever Radix remembered.
           if (trigger?.isConnected) {
@@ -148,9 +160,15 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
         }}
       >
         <DialogTitle className="sr-only">Quick actions</DialogTitle>
-        <DialogDescription className="sr-only">Search changes, pages and actions.</DialogDescription>
+        <DialogDescription className="sr-only">
+          Search changes, pages and actions.
+        </DialogDescription>
         {/* min-w-0: the dialog is a grid; without it the list grows to its longest row and spills past a phone screen. */}
-        <motion.div {...menuEntrance} className="min-w-0" style={{ transformOrigin: originFor(trigger) }}>
+        <motion.div
+          {...menuEntrance}
+          className="min-w-0"
+          style={{ transformOrigin: originFor(trigger) }}
+        >
           <Command className="rounded-menu! bg-transparent p-0">
             <CommandInput
               value={query}
@@ -159,14 +177,22 @@ export function CommandMenu({ changes }: Readonly<{ changes: ShellChange[] }>) {
               aria-label="Search or run a command"
             />
             {/* The list takes what is left under the top offset, less the input and footer, so a short window scrolls the list instead of cutting the menu. */}
-            <CommandList className="p-1" style={{ maxHeight: `min(25rem, calc(100dvh - ${MENU_TOP_DVH}dvh - 9rem))` }}>
+            <CommandList
+              className="p-1"
+              style={{ maxHeight: `min(25rem, calc(100dvh - ${MENU_TOP_DVH}dvh - 9rem))` }}
+            >
               <CommandEmpty className="px-3 py-7 text-text-muted">
                 No match for “{query}”. Try a change id, a requirement or a page.
               </CommandEmpty>
               {groups.map((group, groupIndex) => (
                 <CommandGroup key={group.heading} heading={group.heading} className="p-1.5">
                   {group.rows.map((row, rowIndex) => (
-                    <MenuRow key={row.id} row={row} index={firstRowOfGroup[groupIndex] + rowIndex} onChoose={choose} />
+                    <MenuRow
+                      key={row.id}
+                      row={row}
+                      index={firstRowOfGroup[groupIndex] + rowIndex}
+                      onChoose={choose}
+                    />
                   ))}
                 </CommandGroup>
               ))}
@@ -217,7 +243,13 @@ function buildQuickActions(
   }
   if (changeInView) {
     const command = countersignCommand("sign", changeInView.id);
-    rows.push({ id: "copy-sign", label: "Copy sign command", meta: command, icon: Copy, run: () => copySignCommand(command) });
+    rows.push({
+      id: "copy-sign",
+      label: "Copy sign command",
+      meta: command,
+      icon: Copy,
+      run: () => copySignCommand(command),
+    });
   }
   return rows;
 }
@@ -240,7 +272,11 @@ function buildPages(needsReviewCount: number): Row[] {
   }));
 }
 
-function MenuRow({ row, index, onChoose }: Readonly<{ row: Row; index: number; onChoose: (row: Row) => void }>) {
+function MenuRow({
+  row,
+  index,
+  onChoose,
+}: Readonly<{ row: Row; index: number; onChoose: (row: Row) => void }>) {
   const Icon = row.icon;
   const entrance = useStaggeredPreset(fadeUpItem, index);
   return (

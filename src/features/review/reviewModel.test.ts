@@ -17,7 +17,13 @@ import {
   isOwnTestOnly,
   OWN_TEST_LABEL,
 } from "./reviewModel";
-import { highlightedLinesOf, highlightedLinesOfSelection, isLineHighlighted, scrollTargetOf, splitCitations } from "./citationHighlights";
+import {
+  highlightedLinesOf,
+  highlightedLinesOfSelection,
+  isLineHighlighted,
+  scrollTargetOf,
+  splitCitations,
+} from "./citationHighlights";
 import { evidenceAlert } from "./ReviewStates";
 
 const fixtureRoot = "data/fixtures";
@@ -43,14 +49,19 @@ async function sectionsOf(review: Review, reportCard: ReportCardInput, escapes =
 describe("the PR's own test", () => {
   const ownTestClaims = { "mp-2283": "c6", "mp-2129": "c2", "mp-2234": "c3", "mp-2297": "c4" };
 
-  it.each(Object.entries(ownTestClaims))("%s: claim %s is backed only by the PR's own test", async (changeId, claimId) => {
-    const review = await load(changeId);
-    const claim = review.claims.find((candidate) => candidate.id === claimId);
-    expect(claim && isOwnTestOnly(claim)).toBe(true);
-  });
+  it.each(Object.entries(ownTestClaims))(
+    "%s: claim %s is backed only by the PR's own test",
+    async (changeId, claimId) => {
+      const review = await load(changeId);
+      const claim = review.claims.find((candidate) => candidate.id === claimId);
+      expect(claim && isOwnTestOnly(claim)).toBe(true);
+    },
+  );
 
   it("is not own-test-only once a differential test backs the claim too", async () => {
-    const claim = structuredClone((await load("mp-2283")).claims.find((candidate) => candidate.id === "c6")!);
+    const claim = structuredClone(
+      (await load("mp-2283")).claims.find((candidate) => candidate.id === "c6")!,
+    );
     claim.evidence.push({ ...claim.evidence[0], kind: "differential-test" });
     expect(isOwnTestOnly(claim)).toBe(false);
   });
@@ -58,11 +69,16 @@ describe("the PR's own test", () => {
   it("labels the hunk's evidence line and flags it for the idea label", async () => {
     const review = await load("mp-2283");
     const { sections } = await sectionsOf(review, await readableCard());
-    const entry = [...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h8");
+    const entry = [...sections.read, ...sections.covered].find(
+      (candidate) => candidate.hunk.id === "h8",
+    );
     expect(entry?.evidence.startsWith(OWN_TEST_LABEL)).toBe(true);
     expect(entry?.evidence).toMatch(/quote checked at AnalyzerTests\.cs:\d+$/);
     expect(entry?.isOwnTest).toBe(true);
-    expect([...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h5")?.isOwnTest).toBe(false);
+    expect(
+      [...sections.read, ...sections.covered].find((candidate) => candidate.hunk.id === "h5")
+        ?.isOwnTest,
+    ).toBe(false);
   });
 });
 
@@ -70,9 +86,13 @@ describe("evidence line", () => {
   it("names the test for a verified hunk, the checked quote for a supported one, the finding for a read one", async () => {
     const review = await load("mp-2283");
     const { sections } = await sectionsOf(review, await readableCard());
-    const byHunk = Object.fromEntries([...sections.read, ...sections.covered].map((entry) => [entry.hunk.id, entry.evidence]));
+    const byHunk = Object.fromEntries(
+      [...sections.read, ...sections.covered].map((entry) => [entry.hunk.id, entry.evidence]),
+    );
 
-    expect(byHunk.h1).toBe("Test passes on this change: GenerationTests.ClosedGenericStructFromReferencedAssembly");
+    expect(byHunk.h1).toBe(
+      "Test passes on this change: GenerationTests.ClosedGenericStructFromReferencedAssembly",
+    );
     expect(byHunk.h5).toBe("Quote checked: GenerationTests.cs:120");
     expect(byHunk.h3).toContain("Catch block hides other IndexOutOfRangeExceptions");
     expect(byHunk.h3).toContain("Refused under R7");
@@ -83,7 +103,9 @@ describe("evidence line", () => {
     const { sections } = await sectionsOf(review, await readableCard());
     const h7 = sections.covered.find((entry) => entry.hunk.id === "h7");
     // c5 covers h7 with a citation at GenerationTests.cs:120, which is in h5, not in h7 (lines 331-338).
-    expect(h7?.evidence).toBe("Supported by c5 · quote checked at GenerationTests.cs:120, outside this hunk");
+    expect(h7?.evidence).toBe(
+      "Supported by c5 · quote checked at GenerationTests.cs:120, outside this hunk",
+    );
   });
 
   it("names the Verified claim on a Shadow hunk, so Verified and Read this don't look like a contradiction", async () => {
@@ -97,44 +119,71 @@ describe("evidence line", () => {
 
   it("says a Shadow hunk no claim covers has no track record", async () => {
     const review = await load("mp-2283");
-    const uncovered = { ...review, claims: review.claims.filter((claim) => !claim.hunkIds.includes("h1")) };
+    const uncovered = {
+      ...review,
+      claims: review.claims.filter((claim) => !claim.hunkIds.includes("h1")),
+    };
     const { sections } = await sectionsOf(uncovered, { state: "missing" });
-    expect(sections.read.find((entry) => entry.hunk.id === "h1")?.evidence).toBe("Area is at Shadow: no track record");
+    expect(sections.read.find((entry) => entry.hunk.id === "h1")?.evidence).toBe(
+      "Area is at Shadow: no track record",
+    );
   });
 
   it("throws a clear error for a hunk whose file is not in the file list", async () => {
     const review = await load("mp-2283");
-    const broken = { ...review, files: review.files.filter((file) => file.path !== review.hunks[0].file) };
+    const broken = {
+      ...review,
+      files: review.files.filter((file) => file.path !== review.hunks[0].file),
+    };
     const { decision, levels } = decideChange(broken, await readableCard(), {});
-    expect(() => buildSections(broken, decision, levels)).toThrow(/mp-2283.*h1.*pnpm review run mp-2283/);
+    expect(() => buildSections(broken, decision, levels)).toThrow(
+      /mp-2283.*h1.*pnpm review run mp-2283/,
+    );
   });
 
   it("throws instead of showing developer text when a covered hunk has no claim at its level", async () => {
     const review = await load("mp-2283");
     const { decision, levels } = decideChange(review, await readableCard(), {});
-    const withoutVerified = { ...review, claims: review.claims.filter((claim) => claim.level !== "verified") };
-    expect(() => buildSections(withoutVerified, decision, levels)).toThrow(/mp-2283.*Verified.*pnpm review run mp-2283/);
+    const withoutVerified = {
+      ...review,
+      claims: review.claims.filter((claim) => claim.level !== "verified"),
+    };
+    expect(() => buildSections(withoutVerified, decision, levels)).toThrow(
+      /mp-2283.*Verified.*pnpm review run mp-2283/,
+    );
   });
 });
 
 describe("sections", () => {
-  it.each(changeIds)("%s: every hunk lands in exactly one section, in the state route() gave it", async (changeId) => {
-    const review = await load(changeId);
-    const { decision, sections } = await sectionsOf(review, await readableCard());
-    const all = [...sections.read, ...sections.covered, ...sections.generated];
+  it.each(changeIds)(
+    "%s: every hunk lands in exactly one section, in the state route() gave it",
+    async (changeId) => {
+      const review = await load(changeId);
+      const { decision, sections } = await sectionsOf(review, await readableCard());
+      const all = [...sections.read, ...sections.covered, ...sections.generated];
 
-    expect(all.map((entry) => entry.hunk.id).sort()).toEqual(review.hunks.map((hunk) => hunk.id).sort());
-    for (const entry of all) expect(entry.coverage).toBe(decision.coverage[entry.hunk.id]);
-    expect(sections.read.every((entry) => entry.coverage === "read")).toBe(true);
-    expect([...sections.covered, ...sections.generated].every((entry) => entry.coverage !== "read")).toBe(true);
-    expect(sections.generated.every((entry) => entry.file.kind === "generated")).toBe(true);
-  });
+      expect(all.map((entry) => entry.hunk.id).sort()).toEqual(
+        review.hunks.map((hunk) => hunk.id).sort(),
+      );
+      for (const entry of all) expect(entry.coverage).toBe(decision.coverage[entry.hunk.id]);
+      expect(sections.read.every((entry) => entry.coverage === "read")).toBe(true);
+      expect(
+        [...sections.covered, ...sections.generated].every((entry) => entry.coverage !== "read"),
+      ).toBe(true);
+      expect(sections.generated.every((entry) => entry.file.kind === "generated")).toBe(true);
+    },
+  );
 
   it("re-routes with simulated escapes: an escape in an area makes more of its hunks read", async () => {
     const review = await load("mp-2283");
     const card = await readableCard();
     const before = decideChange(review, card, {});
-    const after = decideChange(review, card, { generator: 3, analyzer: 3, security: 3, performance: 3 });
+    const after = decideChange(review, card, {
+      generator: 3,
+      analyzer: 3,
+      security: 3,
+      performance: 3,
+    });
     expect(after.decision.readHunks).toBeGreaterThan(before.decision.readHunks);
     expect(Object.values(after.levels).every((level) => level === "shadow")).toBe(true);
   });
@@ -171,14 +220,22 @@ describe("navigator", () => {
 
     expect(sections.generated.map((entry) => entry.hunk.id)).toEqual(["h3", "h4"]);
     expect(generated?.hunkCount).toBe(2);
-    expect(generated?.items).toEqual([expect.objectContaining({ label: "2 generated snapshot files", isGenerated: true, hunkId: "h3" })]);
+    expect(generated?.items).toEqual([
+      expect.objectContaining({
+        label: "2 generated snapshot files",
+        isGenerated: true,
+        hunkId: "h3",
+      }),
+    ]);
   });
 });
 
 describe("coverage line", () => {
   it("leaves the full-read time out when it equals the reading time", async () => {
     const { decision } = await sectionsOf(await load("mp-2283"), await readableCard());
-    expect(coverageLineText({ ...decision, readMinutes: 3, fullMinutes: 3 })).not.toContain("full read");
+    expect(coverageLineText({ ...decision, readMinutes: 3, fullMinutes: 3 })).not.toContain(
+      "full read",
+    );
   });
 
   it("names the generated hunks the count leaves out", async () => {
@@ -193,7 +250,9 @@ describe("coverage line", () => {
 
   it("leaves the estimate out when nothing needs reading, as the inbox row does", async () => {
     const { decision } = await sectionsOf(await load("mp-2283"), await readableCard());
-    expect(coverageLineText({ ...decision, readHunks: 0, readMinutes: 0 })).toBe("read 0 of 8 hunks (full read ~3 min)");
+    expect(coverageLineText({ ...decision, readHunks: 0, readMinutes: 0 })).toBe(
+      "read 0 of 8 hunks (full read ~3 min)",
+    );
   });
 
   it("summarises covered hunks by kind", async () => {
@@ -209,40 +268,56 @@ describe("one decision for every screen", () => {
     ["an unreadable report card", async () => ({ state: "unreadable", error: "bad file" })],
   ];
 
-  it.each(cards)("the inbox row equals the review decision for every fixture with %s", async (_name, makeCard) => {
-    const card = await makeCard();
-    const changes = await loadChanges(fixtureRoot);
-    if (changes.status !== "ok") throw new Error("fixture changes did not load");
-    const sources: InboxSource[] = await Promise.all(
-      changes.data.map(async (change) => ({ change, review: { state: "ok" as const, data: await load(change.id) }, receipt: null })),
-    );
+  it.each(cards)(
+    "the inbox row equals the review decision for every fixture with %s",
+    async (_name, makeCard) => {
+      const card = await makeCard();
+      const changes = await loadChanges(fixtureRoot);
+      if (changes.status !== "ok") throw new Error("fixture changes did not load");
+      const sources: InboxSource[] = await Promise.all(
+        changes.data.map(async (change) => ({
+          change,
+          review: { state: "ok" as const, data: await load(change.id) },
+          receipt: null,
+        })),
+      );
 
-    const rows = buildInboxModel(sources, card, {}).rows.filter(isReviewed);
-    expect(rows).toHaveLength(changeIds.length);
-    for (const row of rows) {
-      const review = await load(row.id);
-      const { decision } = decideChange(review, card, {});
-      expect([row.tier, row.readHunks, row.totalHunks, row.readMinutes]).toEqual([
-        decision.tier,
-        decision.readHunks,
-        decision.totalHunks,
-        decision.readMinutes,
-      ]);
-    }
-  });
+      const rows = buildInboxModel(sources, card, {}).rows.filter(isReviewed);
+      expect(rows).toHaveLength(changeIds.length);
+      for (const row of rows) {
+        const review = await load(row.id);
+        const { decision } = decideChange(review, card, {});
+        expect([row.tier, row.readHunks, row.totalHunks, row.readMinutes]).toEqual([
+          decision.tier,
+          decision.readHunks,
+          decision.totalHunks,
+          decision.readMinutes,
+        ]);
+      }
+    },
+  );
 
-  it.each(changeIds)("%s without a readable report card is Full, every hunk is read, and no reason quotes another count", async (changeId) => {
-    const review = await load(changeId);
-    for (const card of [{ state: "missing" }, { state: "unreadable" }] as const) {
-      const { decision, isEvidenceAvailable } = decideChange(review, card, {});
-      expect(isEvidenceAvailable).toBe(false);
-      expect(decision.tier).toBe("full");
-      expect(decision.readHunks).toBe(review.hunks.length);
-      expect(Object.values(decision.coverage).every((coverage) => coverage === "read")).toBe(true);
-      expect(decision.reasons.at(-1)?.ruleId).toBe("R-no-track-record");
-      expect(decision.reasons.some((reason) => reason.ruleId === "R-read-share" || reason.ruleId === "R-unread")).toBe(false);
-    }
-  });
+  it.each(changeIds)(
+    "%s without a readable report card is Full, every hunk is read, and no reason quotes another count",
+    async (changeId) => {
+      const review = await load(changeId);
+      for (const card of [{ state: "missing" }, { state: "unreadable" }] as const) {
+        const { decision, isEvidenceAvailable } = decideChange(review, card, {});
+        expect(isEvidenceAvailable).toBe(false);
+        expect(decision.tier).toBe("full");
+        expect(decision.readHunks).toBe(review.hunks.length);
+        expect(Object.values(decision.coverage).every((coverage) => coverage === "read")).toBe(
+          true,
+        );
+        expect(decision.reasons.at(-1)?.ruleId).toBe("R-no-track-record");
+        expect(
+          decision.reasons.some(
+            (reason) => reason.ruleId === "R-read-share" || reason.ruleId === "R-unread",
+          ),
+        ).toBe(false);
+      }
+    },
+  );
 
   it("words the alert for a missing and an unreadable card", async () => {
     const { decision } = decideChange(await load("mp-2283"), { state: "missing" }, {});
@@ -250,9 +325,13 @@ describe("one decision for every screen", () => {
       title: "No report card yet",
       verb: "Run",
       command: "pnpm evals",
-      consequence: "Until then nothing counts as covered, so this change is Full: read 8 of 8 hunks.",
+      consequence:
+        "Until then nothing counts as covered, so this change is Full: read 8 of 8 hunks.",
     });
-    expect(evidenceAlert("unreadable", decision)).toMatchObject({ title: "Couldn't read the report card", verb: "Re-run" });
+    expect(evidenceAlert("unreadable", decision)).toMatchObject({
+      title: "Couldn't read the report card",
+      verb: "Re-run",
+    });
   });
 });
 
@@ -277,7 +356,8 @@ describe("hunk text and highlights", () => {
     const hunk = review.hunks[0];
     const added = hunk.lines.find((line) => line.kind === "add");
     const removed = hunk.lines.find((line) => line.kind === "del");
-    if (!added?.newLine || !removed?.oldLine) throw new Error("fixture hunk has no added and removed line");
+    if (!added?.newLine || !removed?.oldLine)
+      throw new Error("fixture hunk has no added and removed line");
     const highlights = highlightedLinesOf([
       { file: hunk.file, side: "new", startLine: added.newLine, endLine: added.newLine, quote: "" },
     ]);
@@ -292,7 +372,9 @@ describe("selection highlights", () => {
   it("highlights a claim's found citations and nothing for a retracted claim", async () => {
     const review = await load("mp-2283");
     const claim = review.claims[0];
-    expect(highlightedLinesOfSelection(review, { kind: "claim", id: claim.id })).toEqual(highlightedLinesOf(claim.citations));
+    expect(highlightedLinesOfSelection(review, { kind: "claim", id: claim.id })).toEqual(
+      highlightedLinesOf(claim.citations),
+    );
     expect(highlightedLinesOfSelection(review, { kind: "claim", id: "c8" })).toEqual([]);
     expect(highlightedLinesOfSelection(review, null)).toEqual([]);
   });
@@ -301,7 +383,13 @@ describe("selection highlights", () => {
     const review = structuredClone(await load("mp-2283"));
     const finding = review.findings[0];
     // A3 numbered this finding 2 before the check dropped its first one, so its id (f1) differs from the item id.
-    review.quoteCheck.failures = [{ itemId: "a3-f2", citation: finding.citations[0], reason: "Quote is not in the cited lines." }];
+    review.quoteCheck.failures = [
+      {
+        itemId: "a3-f2",
+        citation: finding.citations[0],
+        reason: "Quote is not in the cited lines.",
+      },
+    ];
     expect(splitCitations(review, finding.id, finding.citations)[0].isQuoteFound).toBe(false);
     expect(highlightedLinesOfSelection(review, { kind: "finding", id: finding.id })).toEqual([]);
   });
@@ -309,8 +397,12 @@ describe("selection highlights", () => {
   it("treats a failure without a citation as matching no citation", async () => {
     const review = structuredClone(await load("mp-2283"));
     const finding = review.findings[0];
-    review.quoteCheck.failures = [{ itemId: "a3-r1", citation: null, reason: 'unknown rule id "R8"' }];
-    expect(splitCitations(review, finding.id, finding.citations).every((entry) => entry.isQuoteFound)).toBe(true);
+    review.quoteCheck.failures = [
+      { itemId: "a3-r1", citation: null, reason: 'unknown rule id "R8"' },
+    ];
+    expect(
+      splitCitations(review, finding.id, finding.citations).every((entry) => entry.isQuoteFound),
+    ).toBe(true);
   });
 
   it("scrolls to the focused citation when it is highlighted, else to the first line", () => {

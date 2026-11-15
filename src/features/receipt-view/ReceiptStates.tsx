@@ -4,7 +4,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 
 /** The change has no receipt: says who can sign, shows the command and links back to the review. */
-export function NoReceipt({ changeId, signCommand }: Readonly<{ changeId: string; signCommand: string }>) {
+export function NoReceipt({
+  changeId,
+  signCommand,
+}: Readonly<{ changeId: string; signCommand: string }>) {
   return (
     <EmptyState
       icon={<FileSignature />}
@@ -23,8 +26,10 @@ export function InvalidReceipt({ changeId, error }: Readonly<{ changeId: string;
       title="This receipt couldn't be read"
       body={
         <>
-          <span className="font-mono text-sm">data/receipts/{changeId}.json</span> doesn&apos;t match the receipt schema. Re-export it with{" "}
-          <span className="font-mono text-sm">pnpm countersign export {changeId}</span> and rebuild the site.
+          <span className="font-mono text-sm">data/receipts/{changeId}.json</span> doesn&apos;t
+          match the receipt schema. Re-export it with{" "}
+          <span className="font-mono text-sm">pnpm countersign export {changeId}</span> and rebuild
+          the site.
         </>
       }
       details={error}

@@ -11,7 +11,13 @@ import type { ReportCardInput } from "@/lib/decideChange";
 
 /** What the dashboard needs, or the validation errors that stop it. */
 export type DashboardSources =
-  | { status: "ok"; sources: InboxSource[]; reportCard: ReportCardInput; repo: string | null; usesFixture: boolean }
+  | {
+      status: "ok";
+      sources: InboxSource[];
+      reportCard: ReportCardInput;
+      repo: string | null;
+      usesFixture: boolean;
+    }
   | { status: "invalid"; errors: string[] };
 
 /**

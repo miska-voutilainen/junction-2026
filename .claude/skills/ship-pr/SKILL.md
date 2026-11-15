@@ -9,11 +9,11 @@ Subagents start cold and re-read everything; each costs tens of thousands of tok
 
 Under "go", run every step without asking; otherwise merge only when your user says so. Pick the tier first and state it in one line.
 
-| Tier | When | Subagents (step 5) |
-| --- | --- | --- |
-| **S** | Copy, styling, config or docs only; under ~50 lines; not touching AI, auth, data or contracts | None. You update the docs and write the PR body yourself. |
-| **M** | A normal feature or fix | **One:** `code-reviewer` (it includes the security and AI-robustness pass). `ux-reviewer` only if a demo-path screen changed. Docs and the PR body: yourself |
-| **L** | Demo-path core, AI pipeline, auth, data model, contracts, or over ~300 lines | `code-reviewer`, plus `ux-reviewer` if UI changed. With `PLAN=max`, pass `effort: "xhigh"` to `code-reviewer` for the demo-path core and AI pipeline; with `PLAN=pro`, ask Miska for one review of those from his machine (`delegation.md`). `docs-keeper` and `pr-writer` only for a large sync or a hard-to-describe PR |
+| Tier  | When                                                                                          | Subagents (step 5)                                                                                                                                                                                                                                                                                                        |
+| ----- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S** | Copy, styling, config or docs only; under ~50 lines; not touching AI, auth, data or contracts | None. You update the docs and write the PR body yourself.                                                                                                                                                                                                                                                                 |
+| **M** | A normal feature or fix                                                                       | **One:** `code-reviewer` (it includes the security and AI-robustness pass). `ux-reviewer` only if a demo-path screen changed. Docs and the PR body: yourself                                                                                                                                                              |
+| **L** | Demo-path core, AI pipeline, auth, data model, contracts, or over ~300 lines                  | `code-reviewer`, plus `ux-reviewer` if UI changed. With `PLAN=max`, pass `effort: "xhigh"` to `code-reviewer` for the demo-path core and AI pipeline; with `PLAN=pro`, ask Miska for one review of those from his machine (`delegation.md`). `docs-keeper` and `pr-writer` only for a large sync or a hard-to-describe PR |
 
 Any tier: add `tidy` if the PR adds a top-level folder or root file.
 

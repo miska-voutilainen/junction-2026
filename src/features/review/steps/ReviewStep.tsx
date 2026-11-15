@@ -48,6 +48,9 @@ export function ReviewStepProvider({ children }: Readonly<{ children: ReactNode 
 /** The open step and its setters; must sit inside `ReviewStepProvider`. */
 export function useReviewStep(): ReviewStep {
   const value = useContext(ReviewStepContext);
-  if (value === null) throw new Error("useReviewStep needs a ReviewStepProvider above it. ReviewScreen mounts one around the steps panel; render this inside it.");
+  if (value === null)
+    throw new Error(
+      "useReviewStep needs a ReviewStepProvider above it. ReviewScreen mounts one around the steps panel; render this inside it.",
+    );
   return value;
 }

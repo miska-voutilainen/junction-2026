@@ -34,7 +34,8 @@ export function RefusedStep({ refusals, onShowHunk }: Readonly<RefusedStepProps>
       </header>
       {refusals.items.length === 0 && (
         <p className="text-sm text-text-secondary">
-          Nothing refused. Policy {refusals.policyVersion} has {refusals.ruleCount} rules. None applied to this change.
+          Nothing refused. Policy {refusals.policyVersion} has {refusals.ruleCount} rules. None
+          applied to this change.
         </p>
       )}
       <ul className="flex flex-col">
@@ -46,19 +47,32 @@ export function RefusedStep({ refusals, onShowHunk }: Readonly<RefusedStepProps>
   );
 }
 
-function RefusalItem({ refusal, onShowHunk }: Readonly<{ refusal: RefusalView } & Pick<RefusedStepProps, "onShowHunk">>) {
+function RefusalItem({
+  refusal,
+  onShowHunk,
+}: Readonly<{ refusal: RefusalView } & Pick<RefusedStepProps, "onShowHunk">>) {
   return (
     <li className="flex flex-col gap-2 border-t border-border-subtle py-4 first:border-t-0 first:pt-0">
       <p className="flex items-baseline gap-2">
-        <span className="shrink-0 rounded-chip border border-border-default px-1.5 font-mono text-xs text-text-secondary">{refusal.ruleId}</span>
-        <span data-written-text className="text-base font-medium text-text-primary">{refusal.title}</span>
+        <span className="shrink-0 rounded-chip border border-border-default px-1.5 font-mono text-xs text-text-secondary">
+          {refusal.ruleId}
+        </span>
+        <span data-written-text className="text-base font-medium text-text-primary">
+          {refusal.title}
+        </span>
       </p>
       <RaisedBy source={refusal.source} />
-      <p data-written-text className="text-sm text-text-secondary">{refusal.reason}</p>
+      <p data-written-text className="text-sm text-text-secondary">
+        {refusal.reason}
+      </p>
       {refusal.locations.length > 0 && (
         <div className="flex flex-wrap gap-x-3 gap-y-0.5">
           {refusal.locations.map((location) => (
-            <LocationButton key={location.hunkId} label={location.label} onShow={() => onShowHunk(location.hunkId)} />
+            <LocationButton
+              key={location.hunkId}
+              label={location.label}
+              onShow={() => onShowHunk(location.hunkId)}
+            />
           ))}
         </div>
       )}
@@ -78,7 +92,8 @@ function RefusalItem({ refusal, onShowHunk }: Readonly<{ refusal: RefusalView } 
   );
 }
 
-const FIXED_RULE_NOTE = "A fixed policy rule raised this, no model involved. It always reaches a person, whatever the model says.";
+const FIXED_RULE_NOTE =
+  "A fixed policy rule raised this, no model involved. It always reaches a person, whatever the model says.";
 
 /**
  * Who raised the refusal: a small neutral chip. "Fixed rule" is a code rule
@@ -95,11 +110,16 @@ function RaisedBy({ source }: Readonly<{ source: RefusalView["source"] }>) {
     <TooltipProvider>
       <Tooltip open={isOpen} onOpenChange={setIsOpen}>
         <TooltipTrigger asChild>
-          <button type="button" onClick={(event) => {
+          <button
+            type="button"
+            onClick={(event) => {
               // Radix closes the tooltip on press; stopping that default lets the tap open it.
               event.preventDefault();
               setIsOpen(true);
-            }} aria-label={`Fixed rule. ${FIXED_RULE_NOTE}`} className={`${chip} focus-visible:outline-2 focus-visible:outline-focus-ring`}>
+            }}
+            aria-label={`Fixed rule. ${FIXED_RULE_NOTE}`}
+            className={`${chip} focus-visible:outline-2 focus-visible:outline-focus-ring`}
+          >
             Fixed rule
           </button>
         </TooltipTrigger>

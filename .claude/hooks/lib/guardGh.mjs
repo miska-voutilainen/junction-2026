@@ -35,10 +35,12 @@ export function ghRows(args, env, add) {
     const n = rest.find((w) => !w.startsWith("-")) ?? null;
     const author = io.prAuthor(n, cwd, repo);
     const me = io.ghUser(cwd);
-    if (!author || !me) add("ask", "could not check the PR author (gh failed); only the author merges");
+    if (!author || !me)
+      add("ask", "could not check the PR author (gh failed); only the author merges");
     else if (author.toLowerCase() !== me.toLowerCase()) add("deny", "only the author merges");
   }
-  if (key === "pr review" && rest.some((w) => w === "--approve" || w === "-a")) add("deny", "approvals are human");
+  if (key === "pr review" && rest.some((w) => w === "--approve" || w === "-a"))
+    add("deny", "approvals are human");
 
   if (group === "issue" && ["close", "edit", "reopen"].includes(action)) {
     const hit = rest.some((w, i) => {
@@ -62,7 +64,9 @@ export function ghRows(args, env, add) {
         // `--body-file "$file"` can't be resolved without running the shell; say so instead of "not found".
         const why = /[$%`]/.test(f)
           ? ` (body file ${f} is computed, so the guard can't read it: pass a literal path)`
-          : first == null ? ` (body file ${f} not found)` : "";
+          : first == null
+            ? ` (body file ${f} not found)`
+            : "";
         add("deny", `agent-written GitHub text starts with [agent:${lane ?? "<lane>"}]${why}`);
       }
       if (t != null) trailerTexts.push(t);

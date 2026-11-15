@@ -40,9 +40,11 @@ export function SelectionProvider({ children }: Readonly<{ children: ReactNode }
     () => ({
       selection,
       selectedClaimId: selection?.kind === "claim" ? selection.id : null,
-      setSelectedClaimId: (id, focus) => setSelection(id === null ? null : { kind: "claim", id, focus }),
+      setSelectedClaimId: (id, focus) =>
+        setSelection(id === null ? null : { kind: "claim", id, focus }),
       selectedFindingId: selection?.kind === "finding" ? selection.id : null,
-      setSelectedFindingId: (id, focus) => setSelection(id === null ? null : { kind: "finding", id, focus }),
+      setSelectedFindingId: (id, focus) =>
+        setSelection(id === null ? null : { kind: "finding", id, focus }),
     }),
     [selection],
   );
@@ -52,6 +54,9 @@ export function SelectionProvider({ children }: Readonly<{ children: ReactNode }
 /** The selected claim or finding and their setters; must sit inside `SelectionProvider`. */
 export function useSelection(): SelectionState {
   const value = useContext(SelectionContext);
-  if (value === null) throw new Error("useSelection needs a SelectionProvider above it. ReviewScreen mounts one around the diff and the steps panel; render this component inside it.");
+  if (value === null)
+    throw new Error(
+      "useSelection needs a SelectionProvider above it. ReviewScreen mounts one around the diff and the steps panel; render this component inside it.",
+    );
   return value;
 }

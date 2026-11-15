@@ -21,8 +21,13 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("shows what signing covered, with every number from the recorded data", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "mobile", "the facts strip and the table are the desktop layout");
+test("shows what signing covered, with every number from the recorded data", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === "mobile",
+    "the facts strip and the table are the desktop layout",
+  );
   const problems = watchConsole(page);
   await page.goto("/dashboard");
 
@@ -38,9 +43,14 @@ test("shows what signing covered, with every number from the recorded data", asy
 
   const table = page.getByRole("table", { name: "Accepted risk" });
   const signedRow = table.getByRole("row").filter({ hasText: "mp-2283" });
-  await expect(signedRow.getByRole("link", { name: "mp-2283" })).toHaveAttribute("href", "/changes/mp-2283");
+  await expect(signedRow.getByRole("link", { name: "mp-2283" })).toHaveAttribute(
+    "href",
+    "/changes/mp-2283",
+  );
   await expect(signedRow).toContainText("Holds: code unchanged");
-  await expect(table.getByRole("row").filter({ hasText: "mp-2129" })).toContainText("Stale: code changed");
+  await expect(table.getByRole("row").filter({ hasText: "mp-2129" })).toContainText(
+    "Stale: code changed",
+  );
 
   for (const tier of ["Light", "Focused", "Full"]) {
     await expect(page.getByRole("img", { name: new RegExp(`^${tier}: `) })).toBeVisible();
@@ -49,14 +59,19 @@ test("shows what signing covered, with every number from the recorded data", asy
 
   await page.getByRole("button", { name: /Why changes were escalated above Light/ }).click();
   await page.getByRole("button", { name: /Reviewer trust by area/ }).click();
-  await expect(page.getByRole("link", { name: "Open the report card" })).toHaveAttribute("href", "/reviewer");
+  await expect(page.getByRole("link", { name: "Open the report card" })).toHaveAttribute(
+    "href",
+    "/reviewer",
+  );
 
   await expectNoHorizontalScroll(page);
   await page.screenshot({ path: ".review/dashboard-1440.png", fullPage: true });
   expect(problems).toEqual([]);
 });
 
-test("stacks the phone layout: summary, open decisions, accepted risk, attention", async ({ page }, testInfo) => {
+test("stacks the phone layout: summary, open decisions, accepted risk, attention", async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "375 px layout");
   const problems = watchConsole(page);
   await page.goto("/dashboard");
@@ -65,7 +80,9 @@ test("stacks the phone layout: summary, open decisions, accepted risk, attention
   const headings = await page.getByRole("heading", { level: 2 }).allTextContents();
   expect(headings).toEqual(["Open decisions", "Accepted risk", "Attention by tier"]);
   await expect(page.getByText("Median time to sign")).toBeHidden();
-  await expect(page.getByRole("row").filter({ hasText: "mp-2283" })).toContainText("Holds: code unchanged");
+  await expect(page.getByRole("row").filter({ hasText: "mp-2283" })).toContainText(
+    "Holds: code unchanged",
+  );
   await expect(page.getByRole("img", { name: /^Full: / })).toBeVisible();
 
   await expectNoHorizontalScroll(page);
@@ -91,6 +108,8 @@ test("has no horizontal scroll from 320 to 1920 px", async ({ page }, testInfo) 
 });
 
 async function expectNoHorizontalScroll(page: Page): Promise<void> {
-  const hasHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  const hasHorizontalScroll = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   expect(hasHorizontalScroll).toBe(false);
 }

@@ -15,7 +15,13 @@ export default async function NotFound() {
   const data = await loadInboxData();
   const repo = data.status === "ok" ? (data.repo ?? FALLBACK_REPO) : FALLBACK_REPO;
   return (
-    <AppShell changes={[]} repo={repo} title="Page not found" backHref="/" breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Not found" }]}>
+    <AppShell
+      changes={[]}
+      repo={repo}
+      title="Page not found"
+      backHref="/"
+      breadcrumb={[{ label: "Inbox", href: "/" }, { label: "Not found" }]}
+    >
       <div className="mx-auto w-full max-w-content px-4 py-6 compact:px-8 compact:py-7">
         <EmptyState
           title="No page at this address."

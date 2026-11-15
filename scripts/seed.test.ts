@@ -11,12 +11,7 @@ let logged: string[];
 let errors: string[];
 let changes: SampleChange[];
 
-const BRANCHES = [
-  "ju26-issue-2283",
-  "ju26-issue-2234",
-  "ju26-issue-2129",
-  "ju26-issue-2297",
-];
+const BRANCHES = ["ju26-issue-2283", "ju26-issue-2234", "ju26-issue-2129", "ju26-issue-2297"];
 
 function git(cwd: string, ...args: string[]): string {
   return execFileSync(
@@ -92,9 +87,7 @@ describe("seed", { timeout: GIT_TEST_TIMEOUT_MS }, () => {
 
     expect(run(clone)).toBe(0);
 
-    expect(git(clone, "notes", "--ref=countersign", "show", "main")).toBe(
-      "receipt",
-    );
+    expect(git(clone, "notes", "--ref=countersign", "show", "main")).toBe("receipt");
     expect(logged).not.toContain("No receipts yet");
   });
 

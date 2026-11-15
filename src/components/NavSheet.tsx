@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
-import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,7 +21,10 @@ import { cn } from "@/lib/utils";
  * @param needsReviewCount The badge on Inbox in the sheet.
  * @param className Placement in the header; the button itself is a 44 px touch target.
  */
-export function NavSheet({ needsReviewCount, className }: Readonly<{ needsReviewCount: number; className?: string }>) {
+export function NavSheet({
+  needsReviewCount,
+  className,
+}: Readonly<{ needsReviewCount: number; className?: string }>) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -31,7 +40,11 @@ export function NavSheet({ needsReviewCount, className }: Readonly<{ needsReview
           <Menu aria-hidden="true" strokeWidth={2.25} className="size-5" />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" showCloseButton={false} className="w-nav gap-0 bg-surface-raised p-0 sm:max-w-nav">
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="w-nav gap-0 bg-surface-raised p-0 sm:max-w-nav"
+      >
         <SheetTitle className="sr-only">Navigation</SheetTitle>
         <SheetDescription className="sr-only">Pages and keyboard shortcuts.</SheetDescription>
         <AppNav needsReviewCount={needsReviewCount} onNavigate={() => setIsOpen(false)} />

@@ -33,12 +33,16 @@ test.describe("command menu position", () => {
 
 test.describe("navigation sheet", () => {
   for (const width of [375, 800]) {
-    test(`at ${width} px opens, traps focus, marks the page, navigates and closes on Esc`, async ({ page }) => {
+    test(`at ${width} px opens, traps focus, marks the page, navigates and closes on Esc`, async ({
+      page,
+    }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");
       await page.waitForLoadState("networkidle");
 
-      const menuButton = page.getByRole("button", { name: "Open navigation" }).locator("visible=true");
+      const menuButton = page
+        .getByRole("button", { name: "Open navigation" })
+        .locator("visible=true");
       const box = await menuButton.boundingBox();
       expect(box!.width).toBeGreaterThanOrEqual(44);
       expect(box!.height).toBeGreaterThanOrEqual(44);
@@ -46,7 +50,10 @@ test.describe("navigation sheet", () => {
       await menuButton.click();
       const sheet = page.getByRole("dialog", { name: "Navigation" });
       await expect(sheet).toBeVisible();
-      await expect(sheet.getByRole("link", { name: /Inbox/ })).toHaveAttribute("aria-current", "page");
+      await expect(sheet.getByRole("link", { name: /Inbox/ })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
       await expect(sheet.getByText("Insights")).toBeVisible();
 
       // Focus stays inside the sheet however many times Tab is pressed.
@@ -60,7 +67,10 @@ test.describe("navigation sheet", () => {
       await expect(menuButton).toBeFocused();
 
       await menuButton.click();
-      await page.getByRole("dialog", { name: "Navigation" }).getByRole("link", { name: "Dashboard" }).click();
+      await page
+        .getByRole("dialog", { name: "Navigation" })
+        .getByRole("link", { name: "Dashboard" })
+        .click();
       await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByRole("dialog", { name: "Navigation" })).toBeHidden();
     });
@@ -74,7 +84,9 @@ test.describe("navigation sheet", () => {
     const sheet = page.getByRole("dialog", { name: "Navigation" });
     await expect(sheet).toBeVisible();
     // A click while the sheet is still sliding in does not dismiss it, so wait for the animation to end.
-    await sheet.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+    await sheet.evaluate((element) =>
+      Promise.all(element.getAnimations().map((animation) => animation.finished)),
+    );
     await page.mouse.click(360, 400);
     await expect(page.getByRole("dialog", { name: "Navigation" })).toBeHidden();
   });
@@ -88,15 +100,19 @@ test.describe("navigation sheet", () => {
       await page.waitForLoadState("networkidle");
       await page.getByRole("button", { name: "Open navigation" }).locator("visible=true").click();
       await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
-      const running = await page.evaluate(() =>
-        document.getAnimations().filter((animation) => animation.playState === "running").length,
+      const running = await page.evaluate(
+        () =>
+          document.getAnimations().filter((animation) => animation.playState === "running").length,
       );
       expect(running).toBe(0);
     });
   });
 });
 
-test("the keyboard shortcuts control stays on screen before and after scrolling to the bottom", async ({ page, isMobile }) => {
+test("the keyboard shortcuts control stays on screen before and after scrolling to the bottom", async ({
+  page,
+  isMobile,
+}) => {
   test.skip(isMobile, "the side nav exists from 900 px");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/changes/mp-2283");

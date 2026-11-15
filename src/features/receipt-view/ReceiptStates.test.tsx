@@ -9,7 +9,9 @@ describe("NoReceipt", () => {
     render(<NoReceipt changeId="mp-2234" signCommand="pnpm countersign sign mp-2234" />);
     expect(screen.getByRole("heading", { name: "No receipt for mp-2234 yet." })).toBeTruthy();
     expect(screen.getByText("pnpm countersign sign mp-2234")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Back to the review" }).getAttribute("href")).toBe("/changes/mp-2234");
+    expect(screen.getByRole("link", { name: "Back to the review" }).getAttribute("href")).toBe(
+      "/changes/mp-2234",
+    );
   });
 });
 

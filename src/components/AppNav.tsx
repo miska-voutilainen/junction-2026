@@ -8,7 +8,13 @@ import { LayoutGroup, motion } from "motion/react";
 import { Keyboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Disclosure } from "@/components/Disclosure";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/ui/kbd";
 import { useEnterTransition } from "@/lib/motion";
@@ -53,13 +59,29 @@ export function AppNav({
   const searchShortcut = useSearchShortcutLabel();
 
   return (
-    <nav aria-label="Main" className={cn("flex h-full flex-col gap-5 pt-4 pb-3 text-sm", isRail ? "px-1.5" : "px-2.5")}>
+    <nav
+      aria-label="Main"
+      className={cn("flex h-full flex-col gap-5 pt-4 pb-3 text-sm", isRail ? "px-1.5" : "px-2.5")}
+    >
       <LayoutGroup id={groupId}>
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="flex flex-col gap-0.5">
-            <div className={cn("px-2.5 pb-1.5 text-xs font-semibold text-text-faint", isRail && "sr-only")}>{group.label}</div>
+            <div
+              className={cn(
+                "px-2.5 pb-1.5 text-xs font-semibold text-text-faint",
+                isRail && "sr-only",
+              )}
+            >
+              {group.label}
+            </div>
             {group.items.map((item) => (
-              <NavLink key={item.href} item={item} needsReviewCount={needsReviewCount} onNavigate={onNavigate} isRail={isRail} />
+              <NavLink
+                key={item.href}
+                item={item}
+                needsReviewCount={needsReviewCount}
+                onNavigate={onNavigate}
+                isRail={isRail}
+              />
             ))}
           </div>
         ))}
@@ -91,7 +113,12 @@ function NavLink({
   needsReviewCount,
   onNavigate,
   isRail,
-}: Readonly<{ item: NavItem; needsReviewCount: number; onNavigate?: () => void; isRail: boolean }>) {
+}: Readonly<{
+  item: NavItem;
+  needsReviewCount: number;
+  onNavigate?: () => void;
+  isRail: boolean;
+}>) {
   const pathname = usePathname();
   const slide = useEnterTransition();
   const isActive = isCurrent(item.href, pathname);
@@ -122,7 +149,10 @@ function NavLink({
         {item.hasBadge && needsReviewCount > 0 && isRail && (
           // The count does not fit the rail; a dot says "something waits" and the label carries the number.
           <>
-            <span aria-hidden="true" className="absolute top-1 right-1.5 size-2 rounded-full bg-text-muted" />
+            <span
+              aria-hidden="true"
+              className="absolute top-1 right-1.5 size-2 rounded-full bg-text-muted"
+            />
             <span className="sr-only">{needsReviewCount} need review</span>
           </>
         )}
@@ -138,7 +168,11 @@ function NavLink({
 }
 
 /** The rail's name for a link: a tooltip that opens on focus as well as hover, so a keyboard user sees it too. Outside the rail the label is visible and there is nothing to add. */
-function RailTip({ label, isRail, children }: Readonly<{ label: string; isRail: boolean; children: ReactElement }>) {
+function RailTip({
+  label,
+  isRail,
+  children,
+}: Readonly<{ label: string; isRail: boolean; children: ReactElement }>) {
   if (!isRail) return children;
   return (
     <TooltipProvider>
@@ -162,16 +196,26 @@ function ShortcutsDialog({ searchShortcut }: Readonly<{ searchShortcut: string }
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>Keyboard shortcuts</DialogTitle>
-        <DialogDescription className="sr-only">Every shortcut the review app binds.</DialogDescription>
+        <DialogDescription className="sr-only">
+          Every shortcut the review app binds.
+        </DialogDescription>
         <ShortcutList searchShortcut={searchShortcut} className="text-sm" />
       </DialogContent>
     </Dialog>
   );
 }
 
-function ShortcutList({ searchShortcut, className }: Readonly<{ searchShortcut: string; className?: string }>) {
+function ShortcutList({
+  searchShortcut,
+  className,
+}: Readonly<{ searchShortcut: string; className?: string }>) {
   return (
-    <dl className={cn("grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 text-xs text-text-muted", className)}>
+    <dl
+      className={cn(
+        "grid grid-cols-[auto_1fr] items-center gap-x-2.5 gap-y-2 text-xs text-text-muted",
+        className,
+      )}
+    >
       <ShortcutRow keys={[searchShortcut]} label="Search and actions" />
       {SHORTCUT_LIST.map((shortcut) => (
         <ShortcutRow key={shortcut.label} keys={shortcut.keys} label={shortcut.label} />

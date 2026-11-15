@@ -4,30 +4,30 @@ The main session is the orchestrator: it holds the plan, makes the judgment call
 
 ## Who does what
 
-| Task | Agent | Model | Why this model |
-| --- | --- | --- | --- |
-| Plan, architecture, hard bugs, UX and product direction, integrating results, talking to your user | main session | opus | Judgment and the full context |
-| Review a diff for bugs, security, AI robustness | `code-reviewer` | inherit (opus on Max, sonnet on Pro) | Misses here cost the demo |
-| Review UI from screenshots | `ux-reviewer` | inherit (opus on Max, sonnet on Pro) | Visual judgment |
-| Judge the idea, demo and pitch | `product-critic` | opus | Strategic judgment |
-| Build a well-specified change from a written brief (a component from the design system, an endpoint to a contract, seed data, a refactor across files) | `builder` | sonnet | Strong coding, cheaper and faster than opus |
-| Write unit and e2e tests | `test-writer` | inherit (opus on Max, sonnet on Pro) | Coding with a spec |
-| A large doc sync (small ones: the main session) | `docs-keeper` | sonnet | Clear writing from a diff |
-| A hard-to-tell tier L PR description | `pr-writer` | sonnet | Well-written prose from facts |
-| Research an external API, SDK or library (docs, examples, limits) | `researcher` | sonnet | Accurate reading of long docs |
-| Find code, trace a call, dig through logs or test output | `scout` | haiku | Fast and cheap; returns only the conclusion |
-| Check and fix the file tree, names, stray files | `tidy` | haiku | Mechanical rules |
+| Task                                                                                                                                                   | Agent            | Model                                | Why this model                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------------------------------------ | ------------------------------------------- |
+| Plan, architecture, hard bugs, UX and product direction, integrating results, talking to your user                                                     | main session     | opus                                 | Judgment and the full context               |
+| Review a diff for bugs, security, AI robustness                                                                                                        | `code-reviewer`  | inherit (opus on Max, sonnet on Pro) | Misses here cost the demo                   |
+| Review UI from screenshots                                                                                                                             | `ux-reviewer`    | inherit (opus on Max, sonnet on Pro) | Visual judgment                             |
+| Judge the idea, demo and pitch                                                                                                                         | `product-critic` | opus                                 | Strategic judgment                          |
+| Build a well-specified change from a written brief (a component from the design system, an endpoint to a contract, seed data, a refactor across files) | `builder`        | sonnet                               | Strong coding, cheaper and faster than opus |
+| Write unit and e2e tests                                                                                                                               | `test-writer`    | inherit (opus on Max, sonnet on Pro) | Coding with a spec                          |
+| A large doc sync (small ones: the main session)                                                                                                        | `docs-keeper`    | sonnet                               | Clear writing from a diff                   |
+| A hard-to-tell tier L PR description                                                                                                                   | `pr-writer`      | sonnet                               | Well-written prose from facts               |
+| Research an external API, SDK or library (docs, examples, limits)                                                                                      | `researcher`     | sonnet                               | Accurate reading of long docs               |
+| Find code, trace a call, dig through logs or test output                                                                                               | `scout`          | haiku                                | Fast and cheap; returns only the conclusion |
+| Check and fix the file tree, names, stray files                                                                                                        | `tidy`           | haiku                                | Mechanical rules                            |
 
 ## Plans and effort
 
 The team: **Miska on Max 5x; Elias and Veijo on Pro.** `PLAN` in each machine's `.claude/settings.local.json` says which (setup.md section 3), and the briefing shows it.
 
-| | Max (`PLAN=max`) | Pro (`PLAN=pro`) |
-| --- | --- | --- |
-| Main session | Opus at **`/effort medium`** for routine "go" work (the builder subagents do the writing); `high` for an integration or a tricky bug; **`max` only for kickoff and a bug stuck after two attempts**, then straight back to `medium` | Sonnet (`"model": "sonnet"`), effort capped at `medium` by `CLAUDE_CODE_EFFORT_LEVEL` |
-| Subagents | `code-reviewer`, `ux-reviewer` and `test-writer` follow the session model (`model: inherit`), so Opus here; `code-reviewer` at `high`, `ux-reviewer` at `medium` effort; `product-critic` opus at `max` (three runs in the event); `builder`, `docs-keeper`, `pr-writer`, `researcher` on sonnet; `scout`, `tidy` on haiku | The same files resolve to Sonnet here (they follow the Sonnet session), and the machine caps their effort at `medium`. No per-call override needed; never run `product-critic` here |
-| `product-critic`, `polish-pass`, the full Graphify pass | Run here | Ask Miska: they run on the Max account |
-| A tier L PR | `code-reviewer` on opus, passing `effort: "xhigh"` only for the demo-path core and the AI pipeline | `code-reviewer` on sonnet; for the demo-path core or the AI pipeline, ask Miska to run one opus review from his machine (`gh pr checkout <n>`, then `code-reviewer`) |
+|                                                         | Max (`PLAN=max`)                                                                                                                                                                                                                                                                                                           | Pro (`PLAN=pro`)                                                                                                                                                                    |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main session                                            | Opus at **`/effort medium`** for routine "go" work (the builder subagents do the writing); `high` for an integration or a tricky bug; **`max` only for kickoff and a bug stuck after two attempts**, then straight back to `medium`                                                                                        | Sonnet (`"model": "sonnet"`), effort capped at `medium` by `CLAUDE_CODE_EFFORT_LEVEL`                                                                                               |
+| Subagents                                               | `code-reviewer`, `ux-reviewer` and `test-writer` follow the session model (`model: inherit`), so Opus here; `code-reviewer` at `high`, `ux-reviewer` at `medium` effort; `product-critic` opus at `max` (three runs in the event); `builder`, `docs-keeper`, `pr-writer`, `researcher` on sonnet; `scout`, `tidy` on haiku | The same files resolve to Sonnet here (they follow the Sonnet session), and the machine caps their effort at `medium`. No per-call override needed; never run `product-critic` here |
+| `product-critic`, `polish-pass`, the full Graphify pass | Run here                                                                                                                                                                                                                                                                                                                   | Ask Miska: they run on the Max account                                                                                                                                              |
+| A tier L PR                                             | `code-reviewer` on opus, passing `effort: "xhigh"` only for the demo-path core and the AI pipeline                                                                                                                                                                                                                         | `code-reviewer` on sonnet; for the demo-path core or the AI pipeline, ask Miska to run one opus review from his machine (`gh pr checkout <n>`, then `code-reviewer`)                |
 
 Effort and model cost usage together: one opus review at `xhigh` can use more of a Pro window than an hour of sonnet building.
 

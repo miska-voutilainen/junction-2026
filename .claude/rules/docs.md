@@ -4,17 +4,17 @@ Partner engineers read the repo. A judge should understand what it does, how it 
 
 ## What exists
 
-| Doc | Contents | Changed by |
-| --- | --- | --- |
-| `docs/spec.md` | What we build: product, demo path, screens, data, contracts, AI behaviour, work plan | A PR the affected lane owners agreed on; never silently by an agent |
-| `README.md` | One-line pitch, GIF or screenshot, live URL, features, how it uses the partner's tech, quick start, stack, team, how AI tools were used | Every user-visible change |
-| `docs/architecture.md` | One SVG diagram (light and dark), each component in two lines, the demo path's data flow, the AI pipeline (models, prompts, evals) | Every structural change |
-| `docs/decisions.md` | Decision log: date, decision, why, alternatives rejected | When a decision is made |
-| `docs/api.md` (or generated OpenAPI) | Every endpoint: method, path, request, response, errors, an example | Every API change |
-| `docs/development.md` | Clone to running, env vars (names only), commands, testing, deploy, troubleshooting | Every tooling change |
-| `docs/demo.md`, `docs/pitch.md` | Demo script and pitch | `demo-prep` |
-| `CLAUDE.md` | Agent instructions: lanes, commands, file tree, workflow | When any of those change |
-| Doc comments | Every exported function, component, hook, route handler and type: summary, why when not obvious, params, returns, throws | Same commit as the code |
+| Doc                                  | Contents                                                                                                                                | Changed by                                                          |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `docs/spec.md`                       | What we build: product, demo path, screens, data, contracts, AI behaviour, work plan                                                    | A PR the affected lane owners agreed on; never silently by an agent |
+| `README.md`                          | One-line pitch, GIF or screenshot, live URL, features, how it uses the partner's tech, quick start, stack, team, how AI tools were used | Every user-visible change                                           |
+| `docs/architecture.md`               | One SVG diagram (light and dark), each component in two lines, the demo path's data flow, the AI pipeline (models, prompts, evals)      | Every structural change                                             |
+| `docs/decisions.md`                  | Decision log: date, decision, why, alternatives rejected                                                                                | When a decision is made                                             |
+| `docs/api.md` (or generated OpenAPI) | Every endpoint: method, path, request, response, errors, an example                                                                     | Every API change                                                    |
+| `docs/development.md`                | Clone to running, env vars (names only), commands, testing, deploy, troubleshooting                                                     | Every tooling change                                                |
+| `docs/demo.md`, `docs/pitch.md`      | Demo script and pitch                                                                                                                   | `demo-prep`                                                         |
+| `CLAUDE.md`                          | Agent instructions: lanes, commands, file tree, workflow                                                                                | When any of those change                                            |
+| Doc comments                         | Every exported function, component, hook, route handler and type: summary, why when not obvious, params, returns, throws                | Same commit as the code                                             |
 
 ## Rules
 

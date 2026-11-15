@@ -8,7 +8,12 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * means for this diff.
  */
 export function VerifySection({ view }: Readonly<{ view: ReceiptDocumentView }>) {
-  const Icon = { signed: ShieldCheck, unchecked: ShieldCheck, stale: TriangleAlert, unverified: ShieldX }[view.status];
+  const Icon = {
+    signed: ShieldCheck,
+    unchecked: ShieldCheck,
+    stale: TriangleAlert,
+    unverified: ShieldX,
+  }[view.status];
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-medium text-text-muted">Verify</h2>

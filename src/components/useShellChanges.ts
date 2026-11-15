@@ -13,7 +13,10 @@ import { useEscapes } from "@/lib/simulation/escapes";
  * model, routed with the current simulated escapes, so the nav badge and
  * command menu order match the inbox and change when an escape is recorded.
  */
-export function useShellChanges(sources: InboxSource[], reportCard: ReportCardInput): ShellChange[] {
+export function useShellChanges(
+  sources: InboxSource[],
+  reportCard: ReportCardInput,
+): ShellChange[] {
   const { escapes } = useEscapes();
   return useMemo(
     () => toShellChanges(buildInboxModel(sources, reportCard, escapes).rows),

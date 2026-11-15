@@ -12,5 +12,7 @@ test("the inbox opens with a clean console", async ({ page }) => {
 
 test("the reviewer report card opens with a clean console", async ({ page }) => {
   await page.goto("/reviewer");
-  await expect(page.getByRole("heading", { level: 1, name: "Reviewer report card" })).toBeAttached();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Reviewer report card" }),
+  ).toBeAttached();
 });

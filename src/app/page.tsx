@@ -15,7 +15,13 @@ export default async function InboxPage() {
   const data = await loadInboxData();
   if (data.status === "invalid") {
     return (
-      <AppShell changes={[]} repo={FALLBACK_REPO} title="Inbox" breadcrumb={[{ label: "Inbox" }]} escapeSlot={<EscapeCounter />}>
+      <AppShell
+        changes={[]}
+        repo={FALLBACK_REPO}
+        title="Inbox"
+        breadcrumb={[{ label: "Inbox" }]}
+        escapeSlot={<EscapeCounter />}
+      >
         <InboxError details={data.error} />
       </AppShell>
     );

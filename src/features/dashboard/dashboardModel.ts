@@ -120,7 +120,11 @@ export function buildDashboardModel(
     deciderQueues: collectDeciderQueues(sources),
     attention: collectAttention(inbox),
     escalationReasons: collectEscalationReasons(sources, reportCard, escapes),
-    trust: AreaSchema.options.map((area) => ({ area, label: areaLabel[area], level: levels[area] })),
+    trust: AreaSchema.options.map((area) => ({
+      area,
+      label: areaLabel[area],
+      level: levels[area],
+    })),
   };
 }
 
@@ -139,7 +143,8 @@ function collectFacts(inbox: InboxModel, escapes: Partial<Record<Area, number>>)
 
 /** Narrows a status to the ones a signed receipt can have; a receipt exists here, so "needs-review" cannot happen. */
 function riskStatusOf(status: ReceiptStatusValue): RiskStatus {
-  if (status === "needs-review") throw new Error("A receipt exists, so its status cannot be needs-review.");
+  if (status === "needs-review")
+    throw new Error("A receipt exists, so its status cannot be needs-review.");
   return status;
 }
 
@@ -156,7 +161,9 @@ function collectAcceptedRisks(sources: InboxSource[]): AcceptedRisk[] {
       status: riskStatusOf(receiptStatus(review.data, receipt)),
     });
   }
-  return risks.sort((a, b) => RISK_ORDER[a.status] - RISK_ORDER[b.status] || a.changeId.localeCompare(b.changeId));
+  return risks.sort(
+    (a, b) => RISK_ORDER[a.status] - RISK_ORDER[b.status] || a.changeId.localeCompare(b.changeId),
+  );
 }
 
 /** The policy rule behind a refusal id; undefined for an id the policy does not list. */
@@ -188,7 +195,9 @@ function collectDeciderQueues(sources: InboxSource[]): DeciderQueue[] {
       decisionsByRule.set(refusal.ruleId, decision);
     }
   }
-  return groupByDecider([...decisionsByRule.values()].sort((a, b) => a.ruleId.localeCompare(b.ruleId)));
+  return groupByDecider(
+    [...decisionsByRule.values()].sort((a, b) => a.ruleId.localeCompare(b.ruleId)),
+  );
 }
 
 function groupByDecider(decisions: OpenDecision[]): DeciderQueue[] {
@@ -218,16 +227,26 @@ function collectAttention(inbox: InboxModel): TierAttention[] {
 }
 
 /** Rules that asked for more than Light, by the number of changes each fired in, most frequent first. */
-function collectEscalationReasons(sources: InboxSource[], reportCard: ReportCardInput, escapes: Partial<Record<Area, number>>): EscalationReason[] {
+function collectEscalationReasons(
+  sources: InboxSource[],
+  reportCard: ReportCardInput,
+  escapes: Partial<Record<Area, number>>,
+): EscalationReason[] {
   const byRule = new Map<string, { changes: number; text: string; lastChange: string }>();
   for (const { change, review } of sources) {
     if (review.state !== "ok") continue;
-    const escalating = decideChange(review.data, reportCard, escapes).decision.reasons.filter((reason) => reason.tier !== "light");
+    const escalating = decideChange(review.data, reportCard, escapes).decision.reasons.filter(
+      (reason) => reason.tier !== "light",
+    );
     for (const reason of escalating) {
       const seen = byRule.get(reason.ruleId);
       // R-area-level can fire once per area in one change; count the change once.
       if (seen && seen.lastChange === change.id) continue;
-      byRule.set(reason.ruleId, { changes: (seen?.changes ?? 0) + 1, text: seen?.text ?? reason.text, lastChange: change.id });
+      byRule.set(reason.ruleId, {
+        changes: (seen?.changes ?? 0) + 1,
+        text: seen?.text ?? reason.text,
+        lastChange: change.id,
+      });
     }
   }
   return [...byRule]

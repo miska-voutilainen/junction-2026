@@ -31,14 +31,18 @@ function watchConsole(page: Page): string[] {
 }
 
 async function hasHorizontalScroll(page: Page): Promise<boolean> {
-  return page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  return page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
 }
 
 test.beforeEach(async ({ page }) => {
   await bypassVercelAuth(page);
 });
 
-test("a signed receipt shows the seal, the diff hash and the verify output", async ({ page }, testInfo) => {
+test("a signed receipt shows the seal, the diff hash and the verify output", async ({
+  page,
+}, testInfo) => {
   const problems = watchConsole(page);
   // Reduced motion shows the seal at rest, so the screenshots never catch the pulse.
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -51,36 +55,61 @@ test("a signed receipt shows the seal, the diff hash and the verify output", asy
   await expect(page.getByRole("heading", { name: "Not checked" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Residual risk" })).toBeVisible();
   await expect(page.getByText("Signature valid · diff unchanged")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).or(page.getByRole("link", { name: "Back" }))).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Breadcrumb" })
+      .or(page.getByRole("link", { name: "Back" })),
+  ).toBeVisible();
 
   const width = testInfo.project.name === "mobile" ? 375 : 1440;
   await page.screenshot({ path: `.review/receipt-${width}.png`, fullPage: true });
   expect(problems).toEqual([]);
 });
 
-test("a receipt for an older diff shows the stale notice and no seal", async ({ page }, testInfo) => {
+test("a receipt for an older diff shows the stale notice and no seal", async ({
+  page,
+}, testInfo) => {
   const problems = watchConsole(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/changes/mp-2129/receipt");
 
-  await expect(page.getByRole("heading", { name: "Stale: the code changed after signing." })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Diff hashes" })).toContainText(/Signed diff\s+[0-9a-f]{12}\s+Reviewed diff\s+[0-9a-f]{12}/);
+  await expect(
+    page.getByRole("heading", { name: "Stale: the code changed after signing." }),
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Diff hashes" })).toContainText(
+    /Signed diff\s+[0-9a-f]{12}\s+Reviewed diff\s+[0-9a-f]{12}/,
+  );
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "sign command" })).toContainText("pnpm countersign sign mp-2129");
-  await page.screenshot({ path: `.review/receipt-stale-${testInfo.project.name === "mobile" ? 375 : 1440}.png`, fullPage: true });
+  await expect(page.getByRole("region", { name: "sign command" })).toContainText(
+    "pnpm countersign sign mp-2129",
+  );
+  await page.screenshot({
+    path: `.review/receipt-stale-${testInfo.project.name === "mobile" ? 375 : 1440}.png`,
+    fullPage: true,
+  });
   expect(problems).toEqual([]);
 });
 
-test("a change without a receipt says so and shows the sign command", async ({ page }, testInfo) => {
+test("a change without a receipt says so and shows the sign command", async ({
+  page,
+}, testInfo) => {
   const problems = watchConsole(page);
   await page.goto("/changes/mp-2234/receipt");
 
   await expect(page.getByRole("heading", { name: "No receipt for mp-2234 yet." })).toBeVisible();
-  await expect(page.getByText("Only a named human can sign. Review the change, then run this command:")).toBeVisible();
+  await expect(
+    page.getByText("Only a named human can sign. Review the change, then run this command:"),
+  ).toBeVisible();
   await expect(page.getByText("pnpm countersign sign mp-2234")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Back to the review" })).toHaveAttribute("href", "/changes/mp-2234");
+  await expect(page.getByRole("link", { name: "Back to the review" })).toHaveAttribute(
+    "href",
+    "/changes/mp-2234",
+  );
   await expect(page.getByText("Signature verified", { exact: true })).toHaveCount(0);
-  await page.screenshot({ path: `.review/receipt-unsigned-${testInfo.project.name === "mobile" ? 375 : 1440}.png`, fullPage: true });
+  await page.screenshot({
+    path: `.review/receipt-unsigned-${testInfo.project.name === "mobile" ? 375 : 1440}.png`,
+    fullPage: true,
+  });
   expect(problems).toEqual([]);
 });
 
@@ -132,13 +161,18 @@ test("the review page links to the full receipt", async ({ page }) => {
   await expect(page).toHaveURL(/\/changes\/mp-2129\/receipt$/);
 });
 
-test("the toolbar copies the verify command and an absolute link to the page", async ({ page, context }) => {
+test("the toolbar copies the verify command and an absolute link to the page", async ({
+  page,
+  context,
+}) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/changes/mp-2283/receipt");
 
   await page.getByRole("button", { name: "Copy verify command" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Copied" })).toHaveCount(1);
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm countersign verify mp-2283");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "pnpm countersign verify mp-2283",
+  );
 
   await page.getByRole("button", { name: "Copy link" }).click();
   const link = await page.evaluate(() => navigator.clipboard.readText());

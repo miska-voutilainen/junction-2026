@@ -48,11 +48,15 @@ export function Disclosure({
         aria-expanded={isOpen}
         aria-controls={contentId}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 rounded-item px-1 py-1.5 max-compact:min-h-11 text-left text-base text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary"
+        className="flex w-full items-center gap-2 rounded-item px-1 py-1.5 text-left text-base text-text-secondary transition-colors duration-(--duration-fast) ease-out hover:text-text-primary max-compact:min-h-11"
       >
         <span className="relative size-4 shrink-0">
           <AnimatePresence initial={false} mode="popLayout">
-            <motion.span key={isOpen ? "open" : "closed"} {...iconSwap} className="absolute inset-0 flex">
+            <motion.span
+              key={isOpen ? "open" : "closed"}
+              {...iconSwap}
+              className="absolute inset-0 flex"
+            >
               {isOpen ? (
                 <ChevronDown aria-hidden="true" className="size-4" />
               ) : (
@@ -66,11 +70,7 @@ export function Disclosure({
       <div id={contentId}>
         <AnimatePresence initial={false}>
           {isOpen && (
-            <motion.div
-              key="content"
-              {...contentReveal}
-              className="pt-1"
-            >
+            <motion.div key="content" {...contentReveal} className="pt-1">
               {children}
             </motion.div>
           )}

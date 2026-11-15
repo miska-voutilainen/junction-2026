@@ -14,7 +14,12 @@ export function SkeletonBlock({ className }: Readonly<{ className?: string }>) {
 /** What a page shows while its data loads: a title line and three blocks, announced as "Loading". */
 export function PageSkeleton({ className }: Readonly<{ className?: string }>) {
   return (
-    <div role="status" aria-busy="true" aria-label="Loading" className={cn("flex flex-col gap-4", className)}>
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+      className={cn("flex flex-col gap-4", className)}
+    >
       <SkeletonLine className="h-6 w-1/3" />
       <SkeletonBlock />
       <SkeletonBlock />

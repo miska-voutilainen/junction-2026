@@ -4,7 +4,10 @@
  */
 export function MockDataBanner() {
   return (
-    <div role="status" className="bg-surface-panel border-b border-border-subtle text-text-muted text-sm px-4 py-2">
+    <div
+      role="status"
+      className="border-b border-border-subtle bg-surface-panel px-4 py-2 text-sm text-text-muted"
+    >
       Showing mock data
     </div>
   );

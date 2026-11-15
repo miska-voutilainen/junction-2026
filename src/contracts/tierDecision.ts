@@ -4,9 +4,7 @@ import { CoverageSchema, TierSchema } from "./common";
 /** Output of route(), embedded as Review.routing in data/runs/<changeId>/review.json (producer: engine lane). */
 export const TierDecisionSchema = z.strictObject({
   tier: TierSchema,
-  reasons: z.array(
-    z.strictObject({ ruleId: z.string(), text: z.string(), tier: TierSchema }),
-  ),
+  reasons: z.array(z.strictObject({ ruleId: z.string(), text: z.string(), tier: TierSchema })),
   coverage: z.record(z.string(), CoverageSchema), // key: hunkId
   readHunks: z.number().int().nonnegative(),
   totalHunks: z.number().int().nonnegative(),

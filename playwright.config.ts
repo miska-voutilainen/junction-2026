@@ -15,7 +15,9 @@ const fixtureDataRoot = path.join(process.cwd(), ".review", "e2e-data-root");
 if (process.env.TEST_WORKER_INDEX === undefined && !externalBaseUrl) {
   rmSync(fixtureDataRoot, { recursive: true, force: true });
   mkdirSync(fixtureDataRoot, { recursive: true });
-  cpSync(path.join(process.cwd(), "data", "fixtures"), path.join(fixtureDataRoot, "fixtures"), { recursive: true });
+  cpSync(path.join(process.cwd(), "data", "fixtures"), path.join(fixtureDataRoot, "fixtures"), {
+    recursive: true,
+  });
 }
 
 export default defineConfig({
@@ -30,13 +32,22 @@ export default defineConfig({
     {
       name: "mobile",
       testIgnore: ["screenshots.spec.ts", "real-data.spec.ts"],
-      use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
     },
     // Reads the committed data/ as it is, on the second server.
     {
       name: "real-data",
       testMatch: "real-data.spec.ts",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, baseURL: externalBaseUrl ?? `http://localhost:${realDataPort}` },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 900 },
+        baseURL: externalBaseUrl ?? `http://localhost:${realDataPort}`,
+      },
     },
     // Sets its own viewports per test; only `pnpm screenshots` runs it.
     {

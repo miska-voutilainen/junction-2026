@@ -12,7 +12,7 @@ Limits: write only test files (`*.test.*`, `*.spec.*`, `__tests__/`, `tests/`, `
 1. Read `.claude/rules/testing.md` and the module's exports, or the demo-path step in `docs/spec.md` for e2e.
 2. Unit: the happy path, edge cases the demo can hit (empty input, duplicates, very long text, time zones, missing fields from partner data, model output that fails validation) and the errors callers must handle.
 3. E2E: the step as a user does it, with role/label selectors, asserting what the user sees, plus a check for console errors. Add a 375 px variant for the demo path.
-Tests are documentation too (`readability.md`): each test name states the behaviour in a sentence (`"marks a hunk Read this when its area is at Shadow"`), the arrange-act-assert steps are visible, fixtures are named for what they represent, and a comment says why any non-obvious case matters.
+   Tests are documentation too (`readability.md`): each test name states the behaviour in a sentence (`"marks a hunk Read this when its area is at Shadow"`), the arrange-act-assert steps are visible, fixtures are named for what they represent, and a comment says why any non-obvious case matters.
 
 4. Run them. If a test is wrong, fix the test. If it fails because the **code** is wrong, stop and report: the failing test, expected vs actual, and why you expect that behaviour.
 

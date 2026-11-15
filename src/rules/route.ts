@@ -27,7 +27,10 @@ type Hunk = Review["hunks"][number];
 type Reason = TierDecision["reasons"][number];
 
 /** The parts of a review route() reads; its routing and receipt draft are what it produces or ignores. */
-type RoutedReview = Pick<Review, "files" | "hunks" | "claims" | "findings" | "refusals" | "legacyTouchPoints">;
+type RoutedReview = Pick<
+  Review,
+  "files" | "hunks" | "claims" | "findings" | "refusals" | "legacyTouchPoints"
+>;
 
 const tierRank: Record<Tier, number> = { light: 0, focused: 1, full: 2 };
 
@@ -55,7 +58,16 @@ export function route(
   const totalLines = sumChangedLines(review.hunks);
   const readLines = sumChangedLines(readHunkList);
 
-  const reasons = collectReasons({ review, levels, policy, areaOf, escapes, readHunks, totalHunks, generatedHunks });
+  const reasons = collectReasons({
+    review,
+    levels,
+    policy,
+    areaOf,
+    escapes,
+    readHunks,
+    totalHunks,
+    generatedHunks,
+  });
   const tier = highestTier(reasons);
 
   return {
@@ -73,7 +85,10 @@ export function route(
 
 /** The tier the strictest fired rule asks for; light when none fired. */
 function highestTier(reasons: readonly Reason[]): Tier {
-  return reasons.reduce<Tier>((highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest), "light");
+  return reasons.reduce<Tier>(
+    (highest, reason) => (tierRank[reason.tier] > tierRank[highest] ? reason.tier : highest),
+    "light",
+  );
 }
 
 /** `word` for a count of one, `manyWord` otherwise: plural(2, "place", "places") is "places". */
@@ -88,7 +103,9 @@ function coverHunks(
   areaOf: Map<string, Area | null>,
 ): Record<string, Coverage> {
   const kindOf = new Map(review.files.map((file) => [file.path, file.kind]));
-  const flagged = new Set([...review.findings, ...review.refusals].flatMap((flaggedItem) => flaggedItem.hunkIds));
+  const flagged = new Set(
+    [...review.findings, ...review.refusals].flatMap((flaggedItem) => flaggedItem.hunkIds),
+  );
   const coverage: Record<string, Coverage> = {};
   for (const hunk of review.hunks) {
     const area = areaOf.get(hunk.file) ?? null;
@@ -96,7 +113,8 @@ function coverHunks(
     // A finding or refusal still sends a generated hunk to a person: someone flagged it.
     // Generated files have area null (policy/areas.ts), so the Shadow test never
     // catches them and they reach the generated branch below.
-    if (flagged.has(hunk.id) || (area !== null && levels[area] === "shadow")) coverage[hunk.id] = "read";
+    if (flagged.has(hunk.id) || (area !== null && levels[area] === "shadow"))
+      coverage[hunk.id] = "read";
     else if (kindOf.get(hunk.file) === "generated") coverage[hunk.id] = "generated";
     else if (claims.some((claim) => claim.level === "verified")) coverage[hunk.id] = "verified";
     else if (claims.some((claim) => claim.level === "supported")) coverage[hunk.id] = "supported";
@@ -154,30 +172,52 @@ function collectReasons(input: RuleInput): Reason[] {
 
   const refusals = review.refusals.length;
   if (refusals > 0) {
-    reasons.push({ ruleId: "R-refusal", tier: "focused", text: `${refusals} ${plural(refusals, "item", "items")} refused: a human decides` });
+    reasons.push({
+      ruleId: "R-refusal",
+      tier: "focused",
+      text: `${refusals} ${plural(refusals, "item", "items")} refused: a human decides`,
+    });
   }
 
   reasons.push(...legacyReasons(review), ...legacyGuardReasons(review));
 
-  const contradictions = review.findings.filter((finding) => finding.kind === "contradiction").length;
+  const contradictions = review.findings.filter(
+    (finding) => finding.kind === "contradiction",
+  ).length;
   if (contradictions > 0) {
-    reasons.push({ ruleId: "R-contradiction", tier: "focused", text: `The PR description contradicts the code in ${contradictions} ${plural(contradictions, "place", "places")}` });
+    reasons.push({
+      ruleId: "R-contradiction",
+      tier: "focused",
+      text: `The PR description contradicts the code in ${contradictions} ${plural(contradictions, "place", "places")}`,
+    });
   }
 
   const defects = review.findings.filter((finding) => finding.kind === "defect").length;
   if (defects > 0) {
-    reasons.push({ ruleId: "R-defect", tier: "focused", text: `${defects} ${plural(defects, "defect", "defects")} found` });
+    reasons.push({
+      ruleId: "R-defect",
+      tier: "focused",
+      text: `${defects} ${plural(defects, "defect", "defects")} found`,
+    });
   }
 
   const sensitiveLabels = sensitiveLabelsTouched(review.hunks, policy);
   if (sensitiveLabels.length > 0) {
-    reasons.push({ ruleId: "R-sensitive-path", tier: "focused", text: `Touches ${sensitiveLabels.join(", ")}` });
+    reasons.push({
+      ruleId: "R-sensitive-path",
+      tier: "focused",
+      text: `Touches ${sensitiveLabels.join(", ")}`,
+    });
   }
 
   reasons.push(...areaLevelReasons(input));
 
   if (readHunks > 0 && reasons.length === 0) {
-    reasons.push({ ruleId: "R-unread", tier: "focused", text: `${readHunks} ${plural(readHunks, "hunk has", "hunks have")} no checked evidence` });
+    reasons.push({
+      ruleId: "R-unread",
+      tier: "focused",
+      text: `${readHunks} ${plural(readHunks, "hunk has", "hunks have")} no checked evidence`,
+    });
   }
   // Last, and at tier light, so it explains the count without raising the tier or hiding R-unread.
   if (generatedHunks > 0) {
@@ -188,9 +228,17 @@ function collectReasons(input: RuleInput): Reason[] {
 
 /** Rule 2: Full when the change is too big to read closely, not counting generated files. */
 function sizeReasons(review: RoutedReview, policy: RoutingPolicy): Reason[] {
-  const sizedLines = review.files.filter((file) => file.kind !== "generated").reduce((sum, file) => sum + file.added + file.removed, 0);
+  const sizedLines = review.files
+    .filter((file) => file.kind !== "generated")
+    .reduce((sum, file) => sum + file.added + file.removed, 0);
   if (sizedLines <= policy.sizeLimit) return [];
-  return [{ ruleId: "R-size", tier: "full", text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})` }];
+  return [
+    {
+      ruleId: "R-size",
+      tier: "full",
+      text: `${sizedLines} changed lines outside generated files (limit ${policy.sizeLimit})`,
+    },
+  ];
 }
 
 /**
@@ -203,15 +251,25 @@ function sizeReasons(review: RoutedReview, policy: RoutingPolicy): Reason[] {
  */
 function legacyReasons(review: RoutedReview): Reason[] {
   const touched = legacyZones
-    .map((zone) => ({ zone, count: review.hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone).length }))
+    .map((zone) => ({
+      zone,
+      count: review.hunks.filter((hunk) => legacyZoneOf(hunk.file) === zone).length,
+    }))
     .filter(({ count }) => count > 0);
-  const zoneHunks = new Set(review.hunks.filter((hunk) => legacyZoneOf(hunk.file) !== null).map((hunk) => hunk.id));
-  const reachIns = (review.legacyTouchPoints ?? []).filter((touch) => touch.kind === "legacy-code" && touch.hunkIds.some((id) => !zoneHunks.has(id)));
-  const reachInHunks = new Set(reachIns.flatMap((touch) => touch.hunkIds).filter((id) => !zoneHunks.has(id)));
+  const zoneHunks = new Set(
+    review.hunks.filter((hunk) => legacyZoneOf(hunk.file) !== null).map((hunk) => hunk.id),
+  );
+  const reachIns = (review.legacyTouchPoints ?? []).filter(
+    (touch) => touch.kind === "legacy-code" && touch.hunkIds.some((id) => !zoneHunks.has(id)),
+  );
+  const reachInHunks = new Set(
+    reachIns.flatMap((touch) => touch.hunkIds).filter((id) => !zoneHunks.has(id)),
+  );
   const total = zoneHunks.size + reachInHunks.size;
   const tier: Tier = total >= legacyTouchFull ? "full" : "focused";
   // Named whenever it lifts the tier, so a Full on "3 hunks" says where the other 2 came from.
-  const reaching = reachInHunks.size > 0 && tier === "full" ? `, plus ${reachInHunks.size} reaching in` : "";
+  const reaching =
+    reachInHunks.size > 0 && tier === "full" ? `, plus ${reachInHunks.size} reaching in` : "";
   const zoneReasons = touched.map(({ zone, count }): Reason => ({
     ruleId: "R-legacy",
     tier,
@@ -220,7 +278,13 @@ function legacyReasons(review: RoutedReview): Reason[] {
   // Reach-ins alone have no zone reason to carry the Full tier, so they get their own.
   if (zoneReasons.length > 0 || tier !== "full") return zoneReasons;
   const owners = [...new Set(reachIns.map((touch) => touch.owner))].join(" and the ");
-  return [{ ruleId: "R-legacy", tier, text: `Legacy code: reaches into the legacy zones from ${reachInHunks.size} hunks, the ${owners} decides` }];
+  return [
+    {
+      ruleId: "R-legacy",
+      tier,
+      text: `Legacy code: reaches into the legacy zones from ${reachInHunks.size} hunks, the ${owners} decides`,
+    },
+  ];
 }
 
 /**
@@ -240,16 +304,35 @@ function legacyGuardReasons(review: RoutedReview): Reason[] {
     const where = `${legacyTouchKindLabel[touch.kind]}: ${touch.detail}${inHunks}`;
     // With no hunk there is no R8 to keep the change at Focused, so the guard reason does it.
     const guardedTier: Tier = count === 0 ? "focused" : "light";
-    if (status === "guarded") return { ruleId: "R-legacy-guard", tier: guardedTier, text: `${where}, guarded: ${evidence}` };
+    if (status === "guarded")
+      return {
+        ruleId: "R-legacy-guard",
+        tier: guardedTier,
+        text: `${where}, guarded: ${evidence}`,
+      };
     const tier: Tier = status === "unguarded" ? "full" : "focused";
-    return { ruleId: "R-legacy-guard", tier, text: `${where}, ${evidence}; the ${touch.owner} decides` };
+    return {
+      ruleId: "R-legacy-guard",
+      tier,
+      text: `${where}, ${evidence}; the ${touch.owner} decides`,
+    };
   });
 }
 
 /** Rule 3: Full when checked evidence covers so little that the AI saved the reader no effort. */
-function readShareReasons(readHunks: number, readableHunks: number, policy: RoutingPolicy): Reason[] {
+function readShareReasons(
+  readHunks: number,
+  readableHunks: number,
+  policy: RoutingPolicy,
+): Reason[] {
   if (readableHunks === 0 || readHunks / readableHunks < policy.readShareFull) return [];
-  return [{ ruleId: "R-read-share", tier: "full", text: `Read ${readHunks} of ${readableHunks} hunks: most of the change needs a human` }];
+  return [
+    {
+      ruleId: "R-read-share",
+      tier: "full",
+      text: `Read ${readHunks} of ${readableHunks} hunks: most of the change needs a human`,
+    },
+  ];
 }
 
 /** How many hunks route() marked "generated": the ones the reading count leaves out. */
@@ -313,5 +396,8 @@ function areaLevelReasons(input: RuleInput): Reason[] {
 }
 
 function sumChangedLines(hunks: Hunk[]): number {
-  return hunks.reduce((sum, hunk) => sum + hunk.lines.filter((line) => line.kind !== "context").length, 0);
+  return hunks.reduce(
+    (sum, hunk) => sum + hunk.lines.filter((line) => line.kind !== "context").length,
+    0,
+  );
 }

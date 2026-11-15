@@ -40,7 +40,10 @@ export function DashboardScreen({
   usesFixture: boolean;
 }>) {
   const { escapes } = useEscapes();
-  const model = useMemo(() => buildDashboardModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
+  const model = useMemo(
+    () => buildDashboardModel(sources, reportCard, escapes),
+    [sources, reportCard, escapes],
+  );
   const { facts } = model;
 
   return (
@@ -57,7 +60,8 @@ export function DashboardScreen({
         {model.hasReceipts ? (
           <>
             <p className="text-sm text-text-secondary compact:hidden">
-              {facts.signed} of {facts.changes} changes signed · {facts.readHunks} of {facts.totalHunks} hunks read by a person
+              {facts.signed} of {facts.changes} changes signed · {facts.readHunks} of{" "}
+              {facts.totalHunks} hunks read by a person
             </p>
             <FactsStrip
               facts={facts}

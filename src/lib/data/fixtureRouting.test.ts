@@ -14,7 +14,8 @@ describe("fixture routing", () => {
   it.each(tietoChangeIds)("%s stores the routing route() computes", async (changeId) => {
     const review = await loadReview(changeId, fixtureRoot);
     const reportCard = await loadReportCard(fixtureRoot);
-    if (review.status !== "ok" || reportCard.status !== "ok") throw new Error(`fixture for ${changeId} did not load`);
+    if (review.status !== "ok" || reportCard.status !== "ok")
+      throw new Error(`fixture for ${changeId} did not load`);
 
     const levels = levelsFromReportCard(reportCard.data);
     expect(route(review.data, levels)).toEqual(review.data.routing);

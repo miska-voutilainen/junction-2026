@@ -16,7 +16,9 @@ export function FindingLocations({ view }: Readonly<{ view: FindingView }>) {
   const { selection, setSelectedFindingId } = useSelection();
   if (view.citations.length === 0) return null;
   const isFocusedOn = (citation: (typeof view.citations)[number]["citation"]) =>
-    selection?.kind === "finding" && selection.id === view.finding.id && selection.focus === citation;
+    selection?.kind === "finding" &&
+    selection.id === view.finding.id &&
+    selection.focus === citation;
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -25,7 +27,8 @@ export function FindingLocations({ view }: Readonly<{ view: FindingView }>) {
         if (!isQuoteFound) {
           return (
             <p key={key} className="font-mono text-xs break-all text-text-muted">
-              {citationLabel(citation)} <span className="font-sans">· Quote not found in the code</span>
+              {citationLabel(citation)}{" "}
+              <span className="font-sans">· Quote not found in the code</span>
             </p>
           );
         }
@@ -33,7 +36,9 @@ export function FindingLocations({ view }: Readonly<{ view: FindingView }>) {
           <LocationButton
             key={key}
             label={citationLabel(citation)}
-            onShow={() => setSelectedFindingId(isFocusedOn(citation) ? null : view.finding.id, citation)}
+            onShow={() =>
+              setSelectedFindingId(isFocusedOn(citation) ? null : view.finding.id, citation)
+            }
           />
         );
       })}

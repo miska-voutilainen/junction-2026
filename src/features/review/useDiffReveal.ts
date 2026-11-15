@@ -95,11 +95,23 @@ export function useDiffReveal(sections: HunkSections): DiffReveal {
       header.focus({ preventScroll: true });
       return;
     }
-    const line = document.querySelector(`[data-hunk-id="${CSS.escape(target.hunkId)}"] tr[data-highlighted]`);
+    const line = document.querySelector(
+      `[data-hunk-id="${CSS.escape(target.hunkId)}"] tr[data-highlighted]`,
+    );
     if (!line) return;
     pending.current = null;
     line.scrollIntoView({ block: "center", behavior });
   });
 
-  return { isCoveredOpen, setCoveredOpen, isGeneratedOpen, setGeneratedOpen, expandedIds, toggleExpanded, activeHunkId, jumpTo, showHighlight };
+  return {
+    isCoveredOpen,
+    setCoveredOpen,
+    isGeneratedOpen,
+    setGeneratedOpen,
+    expandedIds,
+    toggleExpanded,
+    activeHunkId,
+    jumpTo,
+    showHighlight,
+  };
 }

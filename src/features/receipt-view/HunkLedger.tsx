@@ -17,7 +17,11 @@ import type { LedgerRow, ReceiptDocumentStatus } from "./receiptModel";
  * @param owner The signer's login, named in the note.
  * @param status The receipt's state; "unverified" changes the heading and the note.
  */
-export function HunkLedger({ rows, owner, status }: Readonly<{ rows: LedgerRow[]; owner: string; status: ReceiptDocumentStatus }>) {
+export function HunkLedger({
+  rows,
+  owner,
+  status,
+}: Readonly<{ rows: LedgerRow[]; owner: string; status: ReceiptDocumentStatus }>) {
   const isUnverified = status === "unverified";
   const lines = ledgerLines(rows);
   return (
@@ -27,7 +31,11 @@ export function HunkLedger({ rows, owner, status }: Readonly<{ rows: LedgerRow[]
           ? "The signature over this ledger failed verification."
           : `Part of the signed payload: the signature covers which hunks ${owner} read and which checks covered the rest.`}
       </p>
-      <Console label={isUnverified ? "Hunk ledger" : "Hunk ledger · signed"} kind="output" text={lines.map((line) => line.text).join("\n")}>
+      <Console
+        label={isUnverified ? "Hunk ledger" : "Hunk ledger · signed"}
+        kind="output"
+        text={lines.map((line) => line.text).join("\n")}
+      >
         <div>
           {lines.map((line) => (
             <div key={line.hunkId} className={cn(line.isRead && "text-amber-light")}>
@@ -45,8 +53,16 @@ function ledgerLines(rows: LedgerRow[]): { hunkId: string; text: string; isRead:
   const fileWidth = Math.max(...rows.map((row) => row.file.length));
   const coverageWidth = Math.max(...rows.map((row) => coverageLabel[row.coverage].length));
   return rows.map((row) => {
-    const columns = [row.hunkId.padEnd(idWidth), row.file.padEnd(fileWidth), coverageLabel[row.coverage].padEnd(coverageWidth)];
+    const columns = [
+      row.hunkId.padEnd(idWidth),
+      row.file.padEnd(fileWidth),
+      coverageLabel[row.coverage].padEnd(coverageWidth),
+    ];
     if (row.readBy !== null) columns.push(`Read by ${row.readBy}`);
-    return { hunkId: row.hunkId, text: columns.join("  ").trimEnd(), isRead: row.coverage === "read" };
+    return {
+      hunkId: row.hunkId,
+      text: columns.join("  ").trimEnd(),
+      isRead: row.coverage === "read",
+    };
   });
 }

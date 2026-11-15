@@ -46,10 +46,7 @@
       "area": "analyzer",
       "added": 6,
       "removed": 4,
-      "hunkIds": [
-        "h1",
-        "h2"
-      ]
+      "hunkIds": ["h1", "h2"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",
@@ -57,10 +54,7 @@
       "area": null,
       "added": 17,
       "removed": 0,
-      "hunkIds": [
-        "h3",
-        "h4"
-      ]
+      "hunkIds": ["h3", "h4"]
     }
   ],
   "hunks": [
@@ -424,9 +418,7 @@
         "expectedBehaviours": [
           "With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types."
         ],
-        "likelyAreas": [
-          "analyzer"
-        ],
+        "likelyAreas": ["analyzer"],
         "expectedTests": [
           "A test that exercises: With SuppressSourceGeneration set to true, the analyzer still reports its diagnostics for [MessagePackObject] types"
         ]
@@ -436,9 +428,7 @@
         "expectedBehaviours": [
           "Behaviour with SuppressSourceGeneration unset or false is the same as before."
         ],
-        "likelyAreas": [
-          "analyzer"
-        ],
+        "likelyAreas": ["analyzer"],
         "expectedTests": [
           "A test that exercises: Behaviour with SuppressSourceGeneration unset or false is the same as before"
         ]
@@ -463,9 +453,7 @@
       "text": "Diagnostics are reported when SuppressSourceGeneration is true.",
       "kind": "behaviour",
       "level": "verified",
-      "hunkIds": [
-        "h1"
-      ],
+      "hunkIds": ["h1"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -497,9 +485,7 @@
       "text": "The partial-class check still runs when the generator is on.",
       "kind": "behaviour",
       "level": "supported",
-      "hunkIds": [
-        "h2"
-      ],
+      "hunkIds": ["h2"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Analyzers/MsgPack00xMessagePackAnalyzer.cs",
@@ -525,10 +511,7 @@
       "text": "Adds two analyzer tests for the option set to true.",
       "kind": "test",
       "level": "supported",
-      "hunkIds": [
-        "h3",
-        "h4"
-      ],
+      "hunkIds": ["h3", "h4"],
       "citations": [
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/AnalyzerTests.cs",

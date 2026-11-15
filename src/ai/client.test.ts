@@ -75,10 +75,7 @@ describe("model client", () => {
   });
 
   it("retries once with the validation error and logs both responses", async () => {
-    const { transport, prompts } = answering(
-      '{"verdict":"maybe"}',
-      '{"verdict":"bad"}',
-    );
+    const { transport, prompts } = answering('{"verdict":"maybe"}', '{"verdict":"bad"}');
     const client = createModelClient({
       mode: "live",
       transport,
@@ -91,9 +88,7 @@ describe("model client", () => {
     expect(prompts).toHaveLength(2);
     expect(prompts[1]).toContain("verdict");
     expect(prompts[1]).toContain("rendered prompt");
-    expect(prompts[1]).toContain(
-      '<previous-answer>\n{"verdict":"maybe"}\n</previous-answer>',
-    );
+    expect(prompts[1]).toContain('<previous-answer>\n{"verdict":"maybe"}\n</previous-answer>');
     expect(entries.map((entry) => entry.outcome)).toEqual(["invalid", "ok"]);
   });
 
@@ -106,9 +101,7 @@ describe("model client", () => {
       usageSink,
     });
 
-    await expect(client.call(request)).rejects.toBeInstanceOf(
-      ModelValidationError,
-    );
+    await expect(client.call(request)).rejects.toBeInstanceOf(ModelValidationError);
     expect(prompts).toHaveLength(2);
   });
 
@@ -124,14 +117,12 @@ describe("model client", () => {
   });
 
   it("fails the step on a refusal without retrying", async () => {
-    const transport = vi.fn<Transport>(
-      async (): Promise<TransportResponse> => ({
-        text: "",
-        usage,
-        model,
-        isRefusal: true,
-      }),
-    );
+    const transport = vi.fn<Transport>(async (): Promise<TransportResponse> => ({
+      text: "",
+      usage,
+      model,
+      isRefusal: true,
+    }));
     const client = createModelClient({
       mode: "live",
       transport,
@@ -139,9 +130,7 @@ describe("model client", () => {
       usageSink,
     });
 
-    await expect(client.call(request)).rejects.toBeInstanceOf(
-      ModelRefusalError,
-    );
+    await expect(client.call(request)).rejects.toBeInstanceOf(ModelRefusalError);
     expect(transport).toHaveBeenCalledTimes(1);
   });
 
@@ -191,11 +180,21 @@ describe("model client", () => {
 
   it("reuses a recording with the same key in record mode instead of calling the model", async () => {
     const first = answering('{"verdict":"ok"}');
-    await createModelClient({ mode: "record", transport: first.transport, recordingsDirectory: directory, usageSink }).call(request);
+    await createModelClient({
+      mode: "record",
+      transport: first.transport,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
     const stderr = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const second = vi.fn<Transport>();
-    const reused = await createModelClient({ mode: "record", transport: second, recordingsDirectory: directory, usageSink }).call(request);
+    const reused = await createModelClient({
+      mode: "record",
+      transport: second,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
 
     expect(reused).toEqual({ verdict: "ok" });
     expect(second).not.toHaveBeenCalled();
@@ -207,11 +206,21 @@ describe("model client", () => {
 
   it("asks the model again in record mode when the recording no longer passes the schema", async () => {
     const stale = answering('{"verdict":"ok"}');
-    await createModelClient({ mode: "record", transport: stale.transport, recordingsDirectory: directory, usageSink }).call(request);
+    await createModelClient({
+      mode: "record",
+      transport: stale.transport,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call(request);
     const stricterSchema = z.object({ verdict: z.enum(["bad"]) });
 
     const fresh = answering('{"verdict":"bad"}');
-    const answer = await createModelClient({ mode: "record", transport: fresh.transport, recordingsDirectory: directory, usageSink }).call({ ...request, schema: stricterSchema });
+    const answer = await createModelClient({
+      mode: "record",
+      transport: fresh.transport,
+      recordingsDirectory: directory,
+      usageSink,
+    }).call({ ...request, schema: stricterSchema });
 
     expect(answer).toEqual({ verdict: "bad" });
     expect(fresh.prompts).toHaveLength(1);
@@ -271,9 +280,7 @@ describe("model client", () => {
       usageSink,
     }).call(request);
     const [name] = await readdir(directory);
-    expect(await readFile(path.join(directory, name), "utf8")).toContain(
-      "```json",
-    );
+    expect(await readFile(path.join(directory, name), "utf8")).toContain("```json");
 
     // A recording that no longer passes its own schema, e.g. a hand edit or a schema change that kept the key.
     const file = path.join(directory, name);
@@ -286,9 +293,7 @@ describe("model client", () => {
       recordingsDirectory: directory,
       usageSink,
     });
-    await expect(replayed.call(request)).rejects.toBeInstanceOf(
-      RecordingStaleError,
-    );
+    await expect(replayed.call(request)).rejects.toBeInstanceOf(RecordingStaleError);
   });
 
   it("counts refusals and rejected answers in the usage log", async () => {
@@ -316,22 +321,14 @@ describe("model client", () => {
       .call(request)
       .catch(() => undefined);
 
-    expect(entries.map((entry) => entry.outcome)).toEqual([
-      "refusal",
-      "invalid",
-      "invalid",
-    ]);
+    expect(entries.map((entry) => entry.outcome)).toEqual(["refusal", "invalid", "invalid"]);
   });
 });
 
 describe("cost", () => {
   it("prefers the cost the backend reported", () => {
-    expect(
-      costOf({ inputTokens: 1_000_000, outputTokens: 0, costUsd: 0.5 }),
-    ).toBe(0.5);
-    expect(costOf({ inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBe(
-      24,
-    );
+    expect(costOf({ inputTokens: 1_000_000, outputTokens: 0, costUsd: 0.5 })).toBe(0.5);
+    expect(costOf({ inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBe(24);
   });
 });
 
@@ -341,12 +338,11 @@ describe("recording key", () => {
     // Changing the key derivation orphans every committed recording; this test says so first.
     const prompt = 'Return {"greeting": "hello", "sum": <the sum of 2 and 3>}.';
     const smokeSchema = z.object({ greeting: z.string(), sum: z.number() });
-    const key = recordingKey({ promptVersion: "smoke.v1", system: smokeSystem, prompt, schema: smokeSchema }, 0);
-    const file = path.join(
-      "data",
-      "recordings",
-      `smoke.v1-${key.slice(0, 16)}.json`,
+    const key = recordingKey(
+      { promptVersion: "smoke.v1", system: smokeSystem, prompt, schema: smokeSchema },
+      0,
     );
+    const file = path.join("data", "recordings", `smoke.v1-${key.slice(0, 16)}.json`);
     const recording = JSON.parse(await readFile(file, "utf8"));
     expect(recording.promptVersion).toBe("smoke.v1");
     expect(JSON.parse(recording.rawAnswer)).toEqual({
@@ -396,24 +392,14 @@ describe("claude code result", () => {
 
   it("reads the error envelope of a non-zero exit before the exit code", () => {
     expect(() =>
-      toTransportResult(
-        1,
-        envelope({ is_error: true, result: "Not logged in" }),
-        "stderr text",
-      ),
+      toTransportResult(1, envelope({ is_error: true, result: "Not logged in" }), "stderr text"),
     ).toThrow(/logged in/);
     expect(
-      toTransportResult(
-        1,
-        envelope({ is_error: true, stop_reason: "refusal" }),
-        "",
-      ).isRefusal,
+      toTransportResult(1, envelope({ is_error: true, stop_reason: "refusal" }), "").isRefusal,
     ).toBe(true);
   });
 
   it("falls back to the exit code and stderr when stdout is not JSON", () => {
-    expect(() => toTransportResult(2, "", "boom: bad flag")).toThrow(
-      /code 2.*boom: bad flag/,
-    );
+    expect(() => toTransportResult(2, "", "boom: bad flag")).toThrow(/code 2.*boom: bad flag/);
   });
 });

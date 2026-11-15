@@ -46,7 +46,10 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
       <div className="sticky top-topbar flex max-h-below-topbar flex-col gap-4 overflow-y-auto py-4 pr-1">
         {groups.map((group) => (
           <section key={group.coverage} aria-labelledby={`navigator-${group.coverage}`}>
-            <h2 id={`navigator-${group.coverage}`} className="flex items-baseline justify-between px-2 pb-1 text-xs font-medium text-text-muted">
+            <h2
+              id={`navigator-${group.coverage}`}
+              className="flex items-baseline justify-between px-2 pb-1 text-xs font-medium text-text-muted"
+            >
               <span className={cn(group.coverage === "read" && "text-amber")}>{group.title}</span>
               <span className="tabular-nums">{groupCount(group, readIds)}</span>
             </h2>
@@ -65,7 +68,10 @@ export function HunkNavigator({ groups, activeHunkId, readIds, onJump }: Readonl
                         same line left only "Type…" of TypeCollector.cs. */}
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
                       {/* The name loses its start, not its end ("…Formatter.cs"): files of one family share a prefix and differ at the end. The full path is in the title. */}
-                      <span title={item.label} className="flex w-full min-w-0 font-mono text-xs text-text-secondary">
+                      <span
+                        title={item.label}
+                        className="flex w-full min-w-0 font-mono text-xs text-text-secondary"
+                      >
                         {item.lineRange === null ? (
                           <FileName name={item.fileName} />
                         ) : (
@@ -119,7 +125,11 @@ function groupCount(group: NavigatorGroup, readIds: ReadonlySet<string>): string
  * so it works with every keyboard and screen reader and opens the platform's
  * own picker on a phone.
  */
-export function HunkDropdown({ groups, activeHunkId, onJump }: Readonly<Omit<NavigatorProps, "readIds">>) {
+export function HunkDropdown({
+  groups,
+  activeHunkId,
+  onJump,
+}: Readonly<Omit<NavigatorProps, "readIds">>) {
   return (
     <div className="hidden compact:block wide:hidden">
       <label htmlFor="hunk-dropdown" className="sr-only">

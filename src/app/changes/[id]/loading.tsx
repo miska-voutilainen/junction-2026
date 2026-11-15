@@ -7,7 +7,12 @@ import { SkeletonBlock, SkeletonLine } from "@/components/PageSkeleton";
  */
 export default function Loading() {
   return (
-    <div role="status" aria-busy="true" aria-label="Loading" className="flex min-h-screen flex-col bg-surface-bg">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+      className="flex min-h-screen flex-col bg-surface-bg"
+    >
       <div className="hidden h-topbar shrink-0 border-b border-border-subtle bg-surface-raised compact:block" />
       <div className="h-topbar shrink-0 border-b border-border-subtle bg-surface-raised compact:hidden" />
       <div className="flex flex-1">
@@ -16,7 +21,9 @@ export default function Loading() {
           <SkeletonLine className="h-6 w-2/3 max-w-md" />
           <div className="rounded-control border border-dashed border-border-default px-4 py-3">
             <p className="text-base font-medium text-text-secondary">Tier pending</p>
-            <p className="text-base text-text-muted">No hunk is marked covered until its evidence is in.</p>
+            <p className="text-base text-text-muted">
+              No hunk is marked covered until its evidence is in.
+            </p>
           </div>
           <div className="flex items-start gap-6">
             <div className="hidden w-navigator shrink-0 flex-col gap-2 wide:flex">

@@ -26,7 +26,10 @@ beforeAll(async () => {
 function withFailedCheck(id: string): InboxSource[] {
   return sources.map((source) =>
     source.change.id === id && source.receipt !== null && source.receipt !== "unreadable"
-      ? { ...source, receipt: { ...source.receipt, verify: { ...source.receipt.verify, ok: false } } }
+      ? {
+          ...source,
+          receipt: { ...source.receipt, verify: { ...source.receipt.verify, ok: false } },
+        }
       : source,
   );
 }
@@ -40,14 +43,19 @@ describe("buildDashboardModel facts", () => {
     expect(facts.totalHunks).toBe(inbox.summary.totalHunks);
     const contradictions = sources.reduce(
       (total, { review }) =>
-        total + (review.state === "ok" ? review.data.findings.filter((finding) => finding.kind === "contradiction").length : 0),
+        total +
+        (review.state === "ok"
+          ? review.data.findings.filter((finding) => finding.kind === "contradiction").length
+          : 0),
       0,
     );
     expect(facts.contradictions).toBe(contradictions);
   });
 
   it("adds simulated escapes across areas", () => {
-    expect(buildDashboardModel(sources, reportCard, { generator: 1, security: 2 }).facts.escapes).toBe(3);
+    expect(
+      buildDashboardModel(sources, reportCard, { generator: 1, security: 2 }).facts.escapes,
+    ).toBe(3);
   });
 });
 
@@ -67,12 +75,15 @@ describe("accepted risk", () => {
     const normal = buildDashboardModel(sources, reportCard, {});
     expect(failed.facts.signed).toBe(0);
     expect(failed.acceptedRisks[0]).toMatchObject({ changeId: "mp-2283", status: "unverified" });
-    const open = (queues: typeof normal.deciderQueues) => queues.reduce((sum, queue) => sum + queue.count, 0);
+    const open = (queues: typeof normal.deciderQueues) =>
+      queues.reduce((sum, queue) => sum + queue.count, 0);
     expect(open(failed.deciderQueues)).toBeGreaterThan(open(normal.deciderQueues));
   });
 
   it("counts a stale-only set of receipts as receipts, so the rows still show", () => {
-    const staleOnly = sources.map((source) => (source.change.id === "mp-2283" ? { ...source, receipt: null } : source));
+    const staleOnly = sources.map((source) =>
+      source.change.id === "mp-2283" ? { ...source, receipt: null } : source,
+    );
     const model = buildDashboardModel(staleOnly, reportCard, {});
     expect(model.hasReceipts).toBe(true);
     expect(model.facts.signed).toBe(0);
@@ -94,7 +105,8 @@ describe("open decisions", () => {
       {},
     );
     const withReceipts = buildDashboardModel(sources, reportCard, {});
-    const total = (queues: typeof withReceipts.deciderQueues) => queues.reduce((sum, queue) => sum + queue.count, 0);
+    const total = (queues: typeof withReceipts.deciderQueues) =>
+      queues.reduce((sum, queue) => sum + queue.count, 0);
 
     const signedSource = sources.find((source) => source.change.id === "mp-2283");
     const accepted =
@@ -134,7 +146,13 @@ describe("attention by tier", () => {
   });
 
   it("describes a bar with its numbers", () => {
-    const row = { tier: "focused", changes: 2, readHunks: 2, totalHunks: 8, readMinutes: 3 } as const;
+    const row = {
+      tier: "focused",
+      changes: 2,
+      readHunks: 2,
+      totalHunks: 8,
+      readMinutes: 3,
+    } as const;
     expect(attentionSummary(row)).toBe("Focused: a person read 2 of 8 hunks, about 3 min");
     expect(attentionSummary({ ...row, changes: 0 })).toBe("Focused: no changes");
   });
@@ -145,7 +163,9 @@ describe("escalation reasons", () => {
     const { escalationReasons } = buildDashboardModel(sources, reportCard, {});
     expect(escalationReasons.length).toBeGreaterThan(0);
     for (let index = 1; index < escalationReasons.length; index++) {
-      expect(escalationReasons[index - 1].changes).toBeGreaterThanOrEqual(escalationReasons[index].changes);
+      expect(escalationReasons[index - 1].changes).toBeGreaterThanOrEqual(
+        escalationReasons[index].changes,
+      );
     }
     for (const reason of escalationReasons) {
       expect(reason.changes).toBeLessThanOrEqual(sources.length);
@@ -157,9 +177,12 @@ describe("escalation reasons", () => {
     const before = buildDashboardModel(sources, reportCard, {});
     const escapes = { generator: 1, analyzer: 1, security: 1, performance: 1 } as const;
     const after = buildDashboardModel(sources, reportCard, escapes);
-    const areaChanges = (model: typeof before) => model.escalationReasons.find((reason) => reason.ruleId === "R-area-level")?.changes ?? 0;
+    const areaChanges = (model: typeof before) =>
+      model.escalationReasons.find((reason) => reason.ruleId === "R-area-level")?.changes ?? 0;
     expect(areaChanges(after)).toBeGreaterThanOrEqual(areaChanges(before));
-    expect(after.trust.every((area) => area.level === "shadow" || area.level === "calibrated")).toBe(true);
+    expect(
+      after.trust.every((area) => area.level === "shadow" || area.level === "calibrated"),
+    ).toBe(true);
     // Shadow areas send every hunk to a person, so no hunk is read by evidence alone.
     expect(after.facts.readHunks).toBeGreaterThanOrEqual(before.facts.readHunks);
   });
@@ -167,8 +190,12 @@ describe("escalation reasons", () => {
 
 describe("reasonLabel", () => {
   it("names the routing rules it knows", () => {
-    expect(reasonLabel("R-area-level", "Security: Shadow, the AI's output routes nothing here")).toBe("Area not yet Trusted");
-    expect(reasonLabel("R-escape", "Security: a bug escaped here, the next changes get a full read")).toBe("A bug escaped in this area");
+    expect(
+      reasonLabel("R-area-level", "Security: Shadow, the AI's output routes nothing here"),
+    ).toBe("Area not yet Trusted");
+    expect(
+      reasonLabel("R-escape", "Security: a bug escaped here, the next changes get a full read"),
+    ).toBe("A bug escaped in this area");
   });
 
   it("falls back to the sentence route() gave for a rule it has no label for", () => {
@@ -179,13 +206,22 @@ describe("reasonLabel", () => {
 describe("reviewer trust by area", () => {
   it("lists the four areas and treats a missing report card as Shadow everywhere", () => {
     const model = buildDashboardModel(sources, { state: "missing" }, {});
-    expect(model.trust.map((area) => area.area)).toEqual(["generator", "analyzer", "security", "performance"]);
+    expect(model.trust.map((area) => area.area)).toEqual([
+      "generator",
+      "analyzer",
+      "security",
+      "performance",
+    ]);
     expect(model.trust.every((area) => area.level === "shadow")).toBe(true);
   });
 
   it("drops the level of an area by one per escape", () => {
-    const before = buildDashboardModel(sources, reportCard, {}).trust.find((area) => area.area === "generator");
-    const after = buildDashboardModel(sources, reportCard, { generator: 1 }).trust.find((area) => area.area === "generator");
+    const before = buildDashboardModel(sources, reportCard, {}).trust.find(
+      (area) => area.area === "generator",
+    );
+    const after = buildDashboardModel(sources, reportCard, { generator: 1 }).trust.find(
+      (area) => area.area === "generator",
+    );
     if (before?.level === "shadow") expect(after?.level).toBe("shadow");
     else expect(after?.level).not.toBe(before?.level);
   });
@@ -194,12 +230,16 @@ describe("reviewer trust by area", () => {
 describe("unrecorded changes", () => {
   it("counts a change without a review in the total but not in the hunks, and says how many were reviewed", () => {
     const unreviewed = sources.map((source) =>
-      source.change.id === "mp-2234" ? { ...source, review: { state: "missing" } as const } : source,
+      source.change.id === "mp-2234"
+        ? { ...source, review: { state: "missing" } as const }
+        : source,
     );
     const model = buildDashboardModel(unreviewed, reportCard, {});
     expect(model.facts.changes).toBe(sources.length);
     expect(model.facts.reviewedChanges).toBe(sources.length - 1);
-    expect(model.facts.totalHunks).toBeLessThan(buildDashboardModel(sources, reportCard, {}).facts.totalHunks);
+    expect(model.facts.totalHunks).toBeLessThan(
+      buildDashboardModel(sources, reportCard, {}).facts.totalHunks,
+    );
   });
 });
 

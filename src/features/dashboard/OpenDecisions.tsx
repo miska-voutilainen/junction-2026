@@ -10,7 +10,9 @@ export function OpenDecisions({ queues }: Readonly<{ queues: DeciderQueue[] }>) 
   return (
     <DashboardSection title="Open decisions" subtitle="Refusals waiting on their decider">
       {queues.length === 0 ? (
-        <p className="rounded-page border border-border-subtle bg-surface-panel px-4 py-3 text-sm text-text-muted">No decisions waiting.</p>
+        <p className="rounded-page border border-border-subtle bg-surface-panel px-4 py-3 text-sm text-text-muted">
+          No decisions waiting.
+        </p>
       ) : (
         <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
           {queues.map((queue) => (
@@ -22,7 +24,8 @@ export function OpenDecisions({ queues }: Readonly<{ queues: DeciderQueue[] }>) 
               <ul className="flex flex-col gap-1.5">
                 {queue.decisions.map((decision) => (
                   <li key={decision.ruleId} className="text-sm text-text-secondary">
-                    <span className="font-mono text-xs text-text-muted">{decision.ruleId}</span> {decision.title}
+                    <span className="font-mono text-xs text-text-muted">{decision.ruleId}</span>{" "}
+                    {decision.title}
                     <span className="text-text-muted">
                       {" "}
                       · {decision.count} in{" "}
@@ -32,7 +35,7 @@ export function OpenDecisions({ queues }: Readonly<{ queues: DeciderQueue[] }>) 
                           {index > 0 && ", "}
                           <Link
                             href={`/changes/${changeId}`}
-                            className="whitespace-nowrap font-mono text-xs text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+                            className="font-mono text-xs whitespace-nowrap text-link underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
                           >
                             {changeId}
                           </Link>

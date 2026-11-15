@@ -2,3 +2,4 @@ data/receipts/**
 data/recordings/**
 data/runs/**
 docs/spec.md
+pnpm-lock.yaml

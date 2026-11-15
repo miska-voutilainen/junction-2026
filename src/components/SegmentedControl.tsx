@@ -40,7 +40,10 @@ export function SegmentedControl<Value extends string>({
     <div
       role="group"
       aria-label={label}
-      className={cn("inline-flex gap-0.5 rounded-control border border-border-subtle bg-surface-panel p-0.5", className)}
+      className={cn(
+        "inline-flex gap-0.5 rounded-control border border-border-subtle bg-surface-panel p-0.5",
+        className,
+      )}
     >
       {segments.map((segment) => {
         const isSelected = segment.value === value;

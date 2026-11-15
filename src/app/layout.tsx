@@ -19,8 +19,7 @@ export const metadata: Metadata = {
   // Resolves the social preview image to an absolute URL, which link crawlers need.
   metadataBase: new URL("https://countersign-junction.com"),
   title: "Countersign",
-  description:
-    "AI reviews. A named human countersigns, on evidence they can check.",
+  description: "AI reviews. A named human countersigns, on evidence they can check.",
   // X shows the small card unless asked; the preview image is made for the large one.
   twitter: { card: "summary_large_image" },
 };
@@ -31,11 +30,8 @@ export const metadata: Metadata = {
  */
 export default function RootLayout({ children }: Readonly<LayoutProps<"/">>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${jetBrainsMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${inter.variable} ${jetBrainsMono.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
         <MotionProvider>
           <CommandMenuProvider>{children}</CommandMenuProvider>
           <Toaster theme="dark" />
