@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { bypassVercelAuth } from "./bypassVercelAuth";
+import { expectNoSemicolonsOrArrows } from "./copyPunctuation";
 
 // Regression guard for the acceptance checklist: contrast and semantics (axe),
 // reflow (WCAG 1.4.10), keyboard, reduced motion and the no-percentage rule.
@@ -255,23 +256,6 @@ test.describe("no confidence percentages", () => {
 });
 
 test.describe("copy punctuation", () => {
-  // Our copy uses no semicolons and no arrows. Code, console output and text written by the
-  // model or by people (marked data-written-text) are shown as they are.
-  async function expectNoSemicolonsOrArrows(page: Page): Promise<void> {
-    const offending = await page.evaluate(() => {
-      const skipped = "[data-console], [data-written-text], pre, code, script, style, noscript";
-      const found: string[] = [];
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        const text = node.textContent ?? "";
-        if (/[;→]/.test(text) && !node.parentElement?.closest(skipped))
-          found.push(text.trim().slice(0, 120));
-      }
-      return found;
-    });
-    expect(offending).toEqual([]);
-  }
-
   for (const route of ROUTES) {
     test(`${route} has no semicolons or arrows in its copy`, async ({ page }) => {
       await page.goto(route);

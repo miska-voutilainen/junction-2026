@@ -6,6 +6,12 @@ const port = process.env.PORT ?? "3000";
 // The real-data project gets its own server, one port up.
 const realDataPort = String(Number(port) + 1);
 const externalBaseUrl = process.env.E2E_BASE_URL;
+// A deployed site serves the committed data, never the fixtures, so against one the
+// desktop and mobile projects keep only the specs that hold on any data; the
+// real-data project covers the rest. Without this, every fixture assertion fails there.
+const fixtureFreeSpecs = externalBaseUrl
+  ? { testMatch: ["smoke.spec.ts", "security-headers.spec.ts"] }
+  : {};
 
 // The behaviour specs run on fixture data so they stay deterministic while the
 // recorded data changes. The loaders look in `<root>/fixtures`, so the fixture
@@ -27,11 +33,13 @@ export default defineConfig({
     {
       name: "desktop",
       testIgnore: ["screenshots.spec.ts", "real-data.spec.ts"],
+      ...fixtureFreeSpecs,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
     {
       name: "mobile",
       testIgnore: ["screenshots.spec.ts", "real-data.spec.ts"],
+      ...fixtureFreeSpecs,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 375, height: 812 },

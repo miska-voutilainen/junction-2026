@@ -90,7 +90,7 @@ function Contradictions({ contradictions }: Readonly<{ contradictions: FindingVi
             </p>
             <p className="text-sm text-text-secondary">
               <span className="font-medium text-text-muted">The code does: </span>
-              {view.finding.detail}
+              <span data-written-text>{view.finding.detail}</span>
             </p>
             <FindingLocations view={view} />
           </li>
@@ -148,7 +148,9 @@ function FindingList({
             <p data-written-text className="text-base font-medium text-text-primary">
               {view.finding.title}
             </p>
-            <p className="text-sm text-text-secondary">{view.finding.detail}</p>
+            <p data-written-text className="text-sm text-text-secondary">
+              {view.finding.detail}
+            </p>
             <FindingLocations view={view} />
           </li>
         ))}

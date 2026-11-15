@@ -2559,7 +2559,7 @@
       "id": "r2",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "hunkIds": [
         "h3"
       ]
@@ -2647,7 +2647,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and MsgPack004 help page now publicly document new behaviour: diagnostics about members of referenced-assembly types are no longer reported in the consuming project, and closed generic value types from referenced assemblies are officially supported as members. That documented contract is for the maintainers to decide. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "text": "r1 (R7): The README and MsgPack004 help page now publicly document new behaviour: diagnostics about members of referenced-assembly types are no longer reported in the consuming project, and closed generic value types from referenced assemblies are officially supported as members. That documented contract is for the maintainers to decide. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },

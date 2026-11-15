@@ -31792,7 +31792,7 @@
       "id": "r1",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK (unguarded: no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.Tests targets net8.0); the platform owner (the maintainers) decides",
+      "reason": "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK (unguarded: no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.Tests targets net8.0), the platform owner (the maintainers) decides",
       "hunkIds": [
         "h3",
         "h4",
@@ -31959,7 +31959,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R8): Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK (unguarded: no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.Tests targets net8.0); the platform owner (the maintainers) decides",
+      "text": "r1 (R8): Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK (unguarded: no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.Tests targets net8.0), the platform owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
@@ -31983,7 +31983,7 @@
       "owner": "platform owner (the maintainers)",
       "guard": {
         "status": "unguarded",
-        "evidence": "no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.Tests targets net8.0",
+        "evidence": "no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.Tests targets net8.0",
         "files": [
           "tests/MessagePack.SourceGenerator.ExecutionTests/MessagePack.SourceGenerator.ExecutionTests.csproj",
           "tests/MessagePack.SourceGenerator.MapModeExecutionTests/MessagePack.SourceGenerator.MapModeExecutionTests.csproj",
@@ -32007,7 +32007,7 @@
       },
       {
         "ruleId": "R-legacy-guard",
-        "text": "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK in 11 hunks, no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0; tests/MessagePack.SourceGenerator.Tests targets net8.0; the platform owner (the maintainers) decides",
+        "text": "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK in 11 hunks, no test runs it on netstandard or .NET Framework: tests/MessagePack.SourceGenerator.ExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.MapModeExecutionTests targets net8.0 · tests/MessagePack.SourceGenerator.Tests targets net8.0, the platform owner (the maintainers) decides",
         "tier": "full"
       },
       {

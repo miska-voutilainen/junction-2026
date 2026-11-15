@@ -3,6 +3,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
 import { bypassHeaders, bypassVercelAuth } from "./bypassVercelAuth";
+import { expectNoSemicolonsOrArrows } from "./copyPunctuation";
 
 // Runs in the `real-data` project against a build of the committed data/ as it is.
 // Everything expected here is read from data/ at test time, so the spec keeps
@@ -84,6 +85,15 @@ for (const id of changeIds) {
             .map((element) => element.textContent?.slice(0, 60)),
         );
       expect(overflowing, `${id}, step ${step.source}`).toEqual([]);
+    }
+  });
+
+  test(`the copy of ${id} has no semicolons or arrows on any step`, async ({ page }) => {
+    await page.goto(`/changes/${id}`);
+    await expectNoSemicolonsOrArrows(page, `${id}, page`);
+    for (const step of [/^Read/, /^Blind check/, /^Refused/, /^Sign/]) {
+      await page.getByRole("tab", { name: step }).click();
+      await expectNoSemicolonsOrArrows(page, `${id}, step ${step.source}`);
     }
   });
 }

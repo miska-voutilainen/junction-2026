@@ -2519,7 +2519,7 @@
       "id": "r2",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "hunkIds": [
         "h3"
       ]
@@ -2611,7 +2611,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The change sets and documents a new rule for diagnostics: problems in members of types from referenced assemblies are no longer reported in the consuming project, only in the defining one. That changes documented analyzer behaviour. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "text": "r1 (R7): The change sets and documents a new rule for diagnostics: problems in members of types from referenced assemblies are no longer reported in the consuming project, only in the defining one. That changes documented analyzer behaviour. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },

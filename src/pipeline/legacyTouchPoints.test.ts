@@ -421,7 +421,7 @@ describe("legacyTouchRefusalsFor", () => {
     );
     expect(refusal).toMatchObject({ ruleId: "R8", source: "rule", hunkIds: ["h2"] });
     expect(refusal.reason).toBe(
-      "Old platform: #if NETFRAMEWORK (unguarded: no test runs it); the platform owner (the maintainers) decides",
+      "Old platform: #if NETFRAMEWORK (unguarded: no test runs it), the platform owner (the maintainers) decides",
     );
   });
 

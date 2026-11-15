@@ -256,7 +256,7 @@ export function legacyTouchRefusalsFor(
       {
         ruleId: "R8",
         source: "rule" as const,
-        reason: `${legacyTouchKindLabel[touch.kind]}: ${touch.detail} (${touch.guard.status}: ${touch.guard.evidence}); the ${touch.owner} decides`,
+        reason: `${legacyTouchKindLabel[touch.kind]}: ${touch.detail} (${touch.guard.status}: ${touch.guard.evidence}), the ${touch.owner} decides`,
         hunkIds,
       },
     ];

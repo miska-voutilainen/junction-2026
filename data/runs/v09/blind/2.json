@@ -2733,7 +2733,7 @@
       "id": "r2",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md); the API owner (the maintainers) decides",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md), the API owner (the maintainers) decides",
       "hunkIds": [
         "h2"
       ]
@@ -2829,7 +2829,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The new README section sets the public, documented contract for which analyzer rules apply to SuppressSourceGeneration types (MsgPack003, 004, 005, 012, 015) and which do not (MsgPack011, 016, 017), and that is for the maintainers to decide. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md); the API owner (the maintainers) decides",
+      "text": "r1 (R7): The new README section sets the public, documented contract for which analyzer rules apply to SuppressSourceGeneration types (MsgPack003, 004, 005, 012, 015) and which do not (MsgPack011, 016, 017), and that is for the maintainers to decide. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md), the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },

@@ -8584,7 +8584,7 @@
       "id": "r2",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides",
+      "reason": "Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more), the API owner (the maintainers) decides",
       "hunkIds": [
         "h9",
         "h10",
@@ -8746,7 +8746,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): Changes the public attributes r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more); the API owner (the maintainers) decides",
+      "text": "r1 (R7): Changes the public attributes r2 (R8): Consumer contract: contract paths, public surface, diagnostic ids (guarded: the same change updates README.md, MsgPack019.md, MsgPack020.md and 4 more), the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },
