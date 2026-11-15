@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-14T14:37:41.104Z",
+  "generatedAt": "2026-11-14T23:59:28.804Z",
   "reviewer": {
     "version": "rv2",
     "model": "claude-opus-5-5"
@@ -144,60 +144,60 @@
   ],
   "anchoredVsBlind": {
     "plants": 5,
-    "runsPerMode": 2,
+    "runsPerMode": 3,
     "anchored": {
-      "caught": 10,
-      "total": 10
+      "caught": 15,
+      "total": 15
     },
     "blind": {
-      "caught": 10,
-      "total": 10
+      "caught": 15,
+      "total": 15
     },
     "perPlant": [
       {
         "plantId": "cp0",
         "changeId": "mp-2283",
         "statement": "The change also adds a new analyzer diagnostic, MsgPack023, that warns when a member's type comes from a referenced assembly.",
-        "anchoredCaught": 2,
-        "blindCaught": 2,
-        "runs": 2
+        "anchoredCaught": 3,
+        "blindCaught": 3,
+        "runs": 3
       },
       {
         "plantId": "cp1",
         "changeId": "mp-2283",
         "statement": "The new helper falls back to the location of the containing type when the property has no source declaration.",
-        "anchoredCaught": 2,
-        "blindCaught": 2,
-        "runs": 2
+        "anchoredCaught": 3,
+        "blindCaught": 3,
+        "runs": 3
       },
       {
         "plantId": "cp2",
         "changeId": "mp-2283",
         "statement": "Diagnostics whose location is outside the compilation being analysed are now reported with no location instead of being dropped, so the consuming project still sees them.",
-        "anchoredCaught": 2,
-        "blindCaught": 2,
-        "runs": 2
+        "anchoredCaught": 3,
+        "blindCaught": 3,
+        "runs": 3
       },
       {
         "plantId": "cp3",
         "changeId": "mp-2234",
         "statement": "A member with a mismatched key kind is skipped before its diagnostic is reported.",
-        "anchoredCaught": 2,
-        "blindCaught": 2,
-        "runs": 2
+        "anchoredCaught": 3,
+        "blindCaught": 3,
+        "runs": 3
       },
       {
         "plantId": "cp4",
         "changeId": "mp-2129",
         "statement": "Generic types are supported as long as every type argument is closed.",
-        "anchoredCaught": 2,
-        "blindCaught": 2,
-        "runs": 2
+        "anchoredCaught": 3,
+        "blindCaught": 3,
+        "runs": 3
       }
     ]
   },
   "hallucinations": {
-    "quotesChecked": 1422,
+    "quotesChecked": 1680,
     "quoteFailures": 1,
     "claimsRetracted": 0,
     "findingsDropped": 0
