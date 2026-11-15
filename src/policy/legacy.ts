@@ -31,6 +31,12 @@ export interface LegacyZone {
   owner: string;
   /** What old systems rely on, in one sentence. */
   contract: string;
+  /**
+   * True when the zone holds a copy of the library's own code (the Unity client
+   * ships the library's sources). Its symbol names are then also declared outside
+   * the zone, so a call matched to the zone by name alone is ambiguous.
+   */
+  copiesLibrary?: boolean;
 }
 
 /**
@@ -63,6 +69,7 @@ export const legacyZones: LegacyZone[] = [
     globs: ["src/MessagePack.UnityClient/**", "src/MessagePack.SourceGenerator.Unity/**"],
     owner: "Unity owner (the maintainers)",
     contract: "old Unity and IL2CPP runtimes that can't be upgraded with the library",
+    copiesLibrary: true,
   },
 ];
 

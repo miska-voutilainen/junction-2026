@@ -49,6 +49,7 @@ Reach-in by symbol name found nothing on the four diffs. The prototype's only hi
 
 - **Name matching is coarse.** Reach-in matches identifiers by name, not by type, so `this.Write` in a template looks like a call into `MessagePackWriter.Write`. We drop calls through `this` and common framework names. A false touch costs one read; it never lets a hunk skip one.
 - **A test that mentions a symbol may not test it.** A guarded touch means an old test names the code, not that it checks the behaviour that matters. Running the guard tests on base and head is the next step (not built).
+- **Non-source files and shared names.** A non-source file in a zone (a licence, a Unity `.meta`, a package) is never guarded by a test, only read by its owner, and one folder's files share one card. A call to a name that a file outside the zones also declares (`Add`, `Serialize`) is not a touch, because the Unity client holds a copy of the library and the name can't say which one is meant. Both came from running the guard over 28 real commits of the fork's history ([lessons](../lessons.md)).
 - **A web service has other contract shapes.** For one, the same rule reads endpoint shapes (`[HttpGet]`/`[Route]`, `MapGet`, route files, OpenAPI specs). Not built: Tieto's sample has none.
 - **The zone map is ours,** written from the repository's layout, not from Tieto's systems.
 

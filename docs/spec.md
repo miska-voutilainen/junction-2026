@@ -437,7 +437,7 @@ A React context provider mounted in the root layout plus `useEscapes(): { escape
 - **Input:** the author description and A2's story and claims (with citations).
 - **Output:** `{ statements: { statement: string /* exact sentence from the description */, verdict: "supported" | "contradicted" | "unsupported", claimIds: string[], explanation: string, citations }[] }`. `contradicted` and `unsupported` statements become `contradiction` findings (area null, severity medium; high when contradicted).
 - **Anchored run for comparison:** with `--anchored`, A2 sees the author description first and A1 is skipped; A4 runs the same (A3 and A5 are skipped in the comparison runs, 9.1 T16). A planted contradiction counts as caught in a run when A4 marks the planted sentence (case- and whitespace-insensitive match, or ≥ 80% token overlap) as `contradicted` or `unsupported`.
-- **Eval cases:** the 5 contradiction plants (`cp0`–`cp4`), 2 runs per mode.
+- **Eval cases:** the 5 contradiction plants (`cp0`–`cp4`), 3 runs per mode.
 
 ### A5 · Differential test evidence (`a5.v2`, offline inside `pnpm review run`)
 
@@ -607,10 +607,10 @@ All dependencies (incl. shiki, parse-diff, zod, the Anthropic SDK, Vitest, Playw
 **T16 · eval details.**
 - **Runs and output paths:**
   - **Planted bugs:** 3 blind runs per plant (A1–A3; no A4, no A5; `--plant-runs <n>` to change). Run 1 goes to `data/runs/<plantId>/review.json` (e.g. `data/runs/v01/review.json`, the file the app links to), runs 2..n to `data/runs/<plantId>/blind/<k>.json`. A re-run overwrites. Why 3: a single run flips on security plants; three give a majority and a per-plant rate.
-  - **Contradiction plants:** 2 blind runs (A1, A2, A4) and 2 anchored runs (A2 with the description first, A4) per plant. A3 and A5 are skipped in these runs.
+  - **Contradiction plants:** 3 blind runs (A1, A2, A4) and 3 anchored runs (A2 with the description first, A4) per plant. A3 and A5 are skipped in these runs.
     - `cp1`–`cp4` write to `data/runs/<plantId>/{blind,anchored}/<k>.json`.
     - `cp0`, the false statement in `mp-2283`'s own description, writes to `data/runs/mp-2283/{blind,anchored}/<k>.json`.
-  - **Count:** all five plants feed the count (5 plants × 2 runs = 10 per mode). Moment 2's example copy reads "caught <a> of 10".
+  - **Count:** all five plants feed the count (5 plants × 3 runs = 15 per mode). Moment 2's example copy reads "caught <a> of 15".
 - **Mapping:** `cp1` and `cp2` belong to `mp-2283`, `cp3` to `mp-2234`, `cp4` to `mp-2129`. In answer keys and in `anchoredVsBlind.perPlant`, `changeId` is that Tieto change (`cp0` → `mp-2283`).
 - **Planted-bug match:**
   - A finding matches when its kind is `defect` or `missing` and its `area` equals the answer key's (null never matches). It also needs a citation with `side: "new"` in the answer key's file whose `[startLine, endLine]` intersects `[keyStart − 3, keyEnd + 3]`; any one such citation is enough.

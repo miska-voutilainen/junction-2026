@@ -24,9 +24,9 @@ What the AI does in the product, what stays with rules and people, and why the r
 
 ## See them working
 
-**Live:** https://countersign-junction.com. Start at the review of `mp-2283`; each idea is labelled where it appears and links to its page.
+**Live:** https://countersign-junction.com. Start at the review of `mp-2283`, or `mp-2297` for the legacy guard; each idea is labelled where it appears and links to its page.
 
-<img src="docs/img/review-mp-2283.png" alt="The review page for mp-2283: the tier line 'Full, read 6 of 8 hunks', the routing reasons with their rule ids, the reading list of hunks with their coverage state, a hunk refused under rule R7, and the steps sidebar: Read, Blind check, Refused, Sign." width="880">
+<img src="docs/img/review-mp-2297-legacy-guard.png" alt="The review page for mp-2297: the tier line 'Full, read 21 of 423 hunks', the routing reasons with their rule ids including R-legacy-guard, 'Who reads what' giving 11 hunks to the platform owner, and a Legacy touch point on an old-platform #if block that no test project runs, marked Unguarded." width="880">
 
 | Screen                               | What it answers                                                                                                                                           |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |

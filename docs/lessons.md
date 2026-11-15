@@ -36,6 +36,12 @@ The entry below, "Security caught 0 of 3 planted bugs: all three are real misses
 - **Result on rv2:** v06 is caught in 3 of 3 runs. v03 and v10 got no finding in any of 3 runs, so on rv2 they are detection misses. Security is 1 of 3 and stays at Shadow; the R2 and R6 refusals still send every security hunk to a person, which is the point of the ladder.
 - **Scorer:** not changed after seeing results.
 
+## 2026-11-15 · The legacy guard on 28 real commits: three misses, two fixed by rule and one by grouping
+
+- **What happened:** We ran the touch-point detectors over 28 commits from the fork's history (legacy zones, `#if` blocks, csproj files, public-API files, renames, restructures of 140 to 440 files) and read each result against the diff. The slowest, a 442-file restructure, took 5.6 s with no model call.
+- **What it means:** Three kinds of error. (1) A non-source file in a zone, such as a licence, a Unity `.meta` or a package DLL, read as "guarded" because a test file contains its stem ("System", "LICENSE", "lib"): the dangerous kind, a touch that skips its owner. (2) A call to `Add`, `Create` or `Serialize` read as "calls into Unity client", because the Unity client holds a copy of the library: a false touch that costs a read and trust. (3) One card per file: 1156 cards for one restructure.
+- **What we changed:** Non-source zone files are never guarded by a test, and their text changes share one card per folder (937 cards on that commit, the rest being real per-file and per-symbol touches of a restructure). A call to a name that a file outside the zones also declares is no longer a touch. Each has a test that failed before. The four `mp-*` reviews are unchanged by the fixes. Not changed: `#if NET6_0_OR_GREATER` becoming `#if NET` (commit fe644c73) is not a touch, since net5.0 is not an old platform; and a test that names a common type such as `Formatters` still guards, the limit the idea page already states.
+
 ## 2026-11-14 · Security caught 0 of 3 planted bugs: all three are real misses
 
 - **What happened:** The eval scored v03, v06 and v10, the three security plants, as missed (one run each). Miska, who can read the answer keys, compared each key with its run's findings using the eval's own matching rule. In all three runs no defect or missing finding cites the planted file at all. They are not near misses: no finding sits a few lines off or carries the wrong area.
@@ -64,3 +70,9 @@ The entry below, "Security caught 0 of 3 planted bugs: all three are real misses
 No-go: no advantage for blind-first, so the pitch drops the claim. Blind-first caught 10 of 10, anchored 10 of 10 (5 plants, 2 runs per mode).
 
 Both modes caught every contradiction plant in every run (10 of 10 each), so at n = 2 runs per mode the count cannot separate them; the plants were likely too easy. The blind runs of cp0, cp1 and cp2 share A1 and A2 per run number (same recording, one Tieto change), so those runs are not independent. What we changed: the pitch drops the blind-first claim, and moment 2 leads with the contradiction and the refusals.
+
+## 2026-11-15 01:59 · Anchored versus blind-first
+
+No-go: no advantage for blind-first, so the pitch drops the claim. Blind-first caught 15 of 15, anchored 15 of 15 (5 plants, 3 runs per mode).
+
+The third run per mode (#216) didn't move the count: the plants are still at the ceiling. Five harder plants, `cp5` to `cp9` (false sentences that are mostly true and wrong in one detail), are written blind and sit unmerged on `feat/t216-harder-plants`. Running them is 30 more reviews (about 30 minutes, about $20), deferred until after judging. What we changed: nothing in the pitch; it already drops the blind-first claim.
