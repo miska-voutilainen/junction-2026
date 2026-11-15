@@ -168,9 +168,7 @@ export const ReviewSchema = z.strictObject({
   story: z.strictObject({
     what: z.string(),
     why: z.string(),
-    touches: z.array(
-      z.strictObject({ symbol: z.string(), file: z.string(), note: z.string() }),
-    ),
+    touches: z.array(z.strictObject({ symbol: z.string(), file: z.string(), note: z.string() })),
   }),
   claims: z.array(ClaimSchema),
   findings: z.array(FindingSchema),

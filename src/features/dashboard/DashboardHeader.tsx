@@ -10,7 +10,9 @@ export function DashboardHeader({ reviewNext }: Readonly<{ reviewNext: ReviewedR
     <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-text-muted">What signing covered, what it didn&apos;t, and who still has to decide.</p>
+        <p className="text-text-muted">
+          What signing covered, what it didn&apos;t, and who still has to decide.
+        </p>
       </div>
       {reviewNext && <ReviewNextLink changeId={reviewNext.id} />}
     </div>

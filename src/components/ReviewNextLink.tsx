@@ -11,7 +11,10 @@ import { cn } from "@/lib/utils";
  * @param changeId The change to open.
  * @param className Layout classes, e.g. to hide it on a phone.
  */
-export function ReviewNextLink({ changeId, className }: Readonly<{ changeId: string; className?: string }>) {
+export function ReviewNextLink({
+  changeId,
+  className,
+}: Readonly<{ changeId: string; className?: string }>) {
   return (
     <Link
       href={`/changes/${changeId}`}
@@ -22,7 +25,9 @@ export function ReviewNextLink({ changeId, className }: Readonly<{ changeId: str
     >
       <span>Review next</span>
       <span className="font-mono text-xs font-medium">{changeId}</span>
-      <Kbd className="hidden bg-primary-foreground/15 text-primary-foreground compact:inline-flex">N</Kbd>
+      <Kbd className="hidden bg-primary-foreground/15 text-primary-foreground compact:inline-flex">
+        N
+      </Kbd>
       <ArrowRight aria-hidden="true" className="size-4" />
     </Link>
   );

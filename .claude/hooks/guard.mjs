@@ -8,13 +8,40 @@ import { classifyPath, isOutside, loadLanes, normalisePath, readSetting } from "
 import { envHit, shellRows } from "./lib/guardShell.mjs";
 
 const FILE_TOOLS = new Set(["Read", "Edit", "Write", "MultiEdit", "NotebookEdit"]);
-const BANNED_SEGMENTS = new Set(["copy", "backup", "old", "final", "v2", "temp", "tmp", "untitled"]);
-const ROOT_FILES = new Set([
-  "README.md", "CLAUDE.md", "AGENTS.md", "LICENSE", ".gitignore", ".gitattributes", ".env.example",
-  ".editorconfig", ".nvmrc", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml",
-  "components.json", "vercel.json", "pyproject.toml", "uv.lock",
+const BANNED_SEGMENTS = new Set([
+  "copy",
+  "backup",
+  "old",
+  "final",
+  "v2",
+  "temp",
+  "tmp",
+  "untitled",
 ]);
-const ROOT_PATTERNS = [/^tsconfig.*\.json$/, /^[^/]+\.config\.(js|cjs|mjs|ts)$/, /^\.prettierrc/, /^requirements.*\.txt$/];
+const ROOT_FILES = new Set([
+  "README.md",
+  "CLAUDE.md",
+  "AGENTS.md",
+  "LICENSE",
+  ".gitignore",
+  ".gitattributes",
+  ".env.example",
+  ".editorconfig",
+  ".nvmrc",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "components.json",
+  "vercel.json",
+  "pyproject.toml",
+  "uv.lock",
+]);
+const ROOT_PATTERNS = [
+  /^tsconfig.*\.json$/,
+  /^[^/]+\.config\.(js|cjs|mjs|ts)$/,
+  /^\.prettierrc/,
+  /^requirements.*\.txt$/,
+];
 const SCRATCH_OK = ["public/", "docs/", ".scratch/", ".review/"];
 const SECRET_PATTERNS = [
   /(?<![A-Za-z0-9_-])(?:sk-ant-|sk-|nvapi-)[A-Za-z0-9_-]{10,}/g,
@@ -49,31 +76,43 @@ function fileRows(input, ctx, add) {
   const lrel = rel.toLowerCase();
   const base = rel.split("/").pop();
 
-  if (envHit(rel))
-    add("deny", ".env holds secrets; use .env.example", true);
+  if (envHit(rel)) add("deny", ".env holds secrets; use .env.example", true);
   if (tool === "Read") return;
 
   if (/(^|\/)secrets\//.test(lrel) || /\.pem$/.test(lrel) || /^id_rsa/.test(lrel.split("/").pop()))
     add("deny", "secrets and private keys must not be written by the agent", true);
-  if (hasSecret(writtenText(tool, ti))) add("deny", "put it in .env and read it from the environment", true);
+  if (hasSecret(writtenText(tool, ti)))
+    add("deny", "put it in .env and read it from the environment", true);
 
   const cls = classifyPath(rel, ctx.lanes);
   if (ctx.lanes && !["local", "open", "outside"].includes(cls.kind)) {
     if (!ctx.lane) add("ask", "set env.LANE in .claude/settings.local.json");
     if (cls.kind === "lane" && ctx.lane && cls.lane !== ctx.lane)
-      add("ask", `${rel} belongs to lane ${cls.lane} (owner ${cls.owner}); talk to them or open a handoff`);
+      add(
+        "ask",
+        `${rel} belongs to lane ${cls.lane} (owner ${cls.owner}); talk to them or open a handoff`,
+      );
     if (cls.kind === "shared") add("ask", "shared path: agree the change with the affected lanes");
   }
   if (lrel === ".claude/lanes.json")
-    add("ask", "lane map: change it together with the Lanes table in CLAUDE.md, with the team's agreement");
+    add(
+      "ask",
+      "lane map: change it together with the Lanes table in CLAUDE.md, with the team's agreement",
+    );
   if (lrel.startsWith(".claude/hooks/") || lrel === ".claude/settings.json")
     add("ask", "harness file: it decides what every agent may do; agree the change with the team");
 
   if (tool !== "Write") return;
   const segments = base.toLowerCase().split(/[-_. ]+/);
-  if (segments.some((s) => BANNED_SEGMENTS.has(s))) add("deny", "name it for what it is (structure.md)");
+  if (segments.some((s) => BANNED_SEGMENTS.has(s)))
+    add("deny", "name it for what it is (structure.md)");
   const rootFile = !isOutside(rel) && !rel.includes("/");
-  if (rootFile && !ROOT_FILES.has(rel) && !ROOT_PATTERNS.some((re) => re.test(rel)) && !ctx.io.fileExists(resolve(ctx.root, rel)))
+  if (
+    rootFile &&
+    !ROOT_FILES.has(rel) &&
+    !ROOT_PATTERNS.some((re) => re.test(rel)) &&
+    !ctx.io.fileExists(resolve(ctx.root, rel))
+  )
     add("ask", "put it in a folder, or add it to the File tree in CLAUDE.md first");
   const scratchy = /\.(png|jpe?g|gif|webp|bmp|log)$/i.test(base) || segments.includes("scratch");
   if (scratchy && !isOutside(rel) && !SCRATCH_OK.some((p) => lrel.startsWith(p)))
@@ -97,12 +136,13 @@ export function decide(input, ctx) {
     const ti = input.tool_input ?? {};
     if ([ti.path, ti.glob].some((v) => typeof v === "string" && envHit(normalisePath(v, ctx.root))))
       add("deny", ".env holds secrets; use .env.example", true);
-  }
-  else if (tool === "Bash" || tool === "PowerShell") {
+  } else if (tool === "Bash" || tool === "PowerShell") {
     const command = input.tool_input?.command;
     if (typeof command === "string") shellRows(command, ctx, input, add);
   }
-  const pick = (kind) => [...new Set(findings.filter((f) => f.decision === kind).map((f) => f.reason))];
+  const pick = (kind) => [
+    ...new Set(findings.filter((f) => f.decision === kind).map((f) => f.reason)),
+  ];
   for (const decision of ["deny", "ask"]) {
     const reasons = pick(decision);
     if (reasons.length) return { decision, reason: reasons.join("; ") };
@@ -121,7 +161,13 @@ export function safeDecide(input, ctx) {
 
 function run(cmd, args, cwd, timeout = 5000) {
   try {
-    const out = execFileSync(cmd, args, { cwd, timeout, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
+    const out = execFileSync(cmd, args, {
+      cwd,
+      timeout,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      windowsHide: true,
+    });
     return out.trim() || null;
   } catch {
     return null;
@@ -141,7 +187,22 @@ function realIo(root) {
     // Lookups run where the command runs: a worktree has its own branch.
     currentBranch: (cwd = root) => run("git", ["rev-parse", "--abbrev-ref", "HEAD"], cwd),
     ghUser: (cwd = root) => run("gh", ["api", "user", "--jq", ".login"], cwd, 3000),
-    prAuthor: (n, cwd = root, repo = null) => run("gh", ["pr", "view", ...(n ? [n] : []), ...(repo ? ["-R", repo] : []),"--json", "author", "--jq", ".author.login"], cwd, 3000),
+    prAuthor: (n, cwd = root, repo = null) =>
+      run(
+        "gh",
+        [
+          "pr",
+          "view",
+          ...(n ? [n] : []),
+          ...(repo ? ["-R", repo] : []),
+          "--json",
+          "author",
+          "--jq",
+          ".author.login",
+        ],
+        cwd,
+        3000,
+      ),
   };
 }
 
@@ -167,7 +228,11 @@ function main() {
   if (result)
     process.stdout.write(
       JSON.stringify({
-        hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: result.decision, permissionDecisionReason: result.reason },
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          permissionDecision: result.decision,
+          permissionDecisionReason: result.reason,
+        },
       }),
     );
 }

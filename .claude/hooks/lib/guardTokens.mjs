@@ -96,7 +96,10 @@ export function splitCommand(cmd, esc = "\\") {
       i++;
     } else if (c === "&" && (cmd[i - 1] === ">" || cmd[i - 1] === "<" || cmd[i + 1] === ">")) {
       keep(c);
-    } else if (c === "(" || (c === "{" && atCommandStart && (esc === "`" || /\s/.test(cmd[i + 1] ?? " ")))) {
+    } else if (
+      c === "(" ||
+      (c === "{" && atCommandStart && (esc === "`" || /\s/.test(cmd[i + 1] ?? " ")))
+    ) {
       endPart();
       groupDepth++;
     } else if (c === ")" || (esc === "`" && c === "}")) {

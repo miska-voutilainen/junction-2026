@@ -1,17 +1,13 @@
 import type { z } from "zod";
 
 /** Result of checking a model answer against a schema; `problem` is written to be sent back to the model. */
-export type Checked<T> =
-  { ok: true; value: T } | { ok: false; problem: string };
+export type Checked<T> = { ok: true; value: T } | { ok: false; problem: string };
 
 /**
  * Parses the model's raw text as JSON and validates it. Used both for fresh answers and for
  * replayed recordings, so a recording passes exactly the check the live answer passed.
  */
-export function validateAnswer<T>(
-  text: string,
-  schema: z.ZodType<T>,
-): Checked<T> {
+export function validateAnswer<T>(text: string, schema: z.ZodType<T>): Checked<T> {
   let json: unknown;
   try {
     json = JSON.parse(stripCodeFence(text));

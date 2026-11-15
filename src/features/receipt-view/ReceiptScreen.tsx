@@ -41,7 +41,10 @@ export function ReceiptScreen({
 }>) {
   const changes = useShellChanges(sources, reportCard);
   const source = sources.find((candidate) => candidate.change.id === changeId);
-  const view = useMemo(() => (source ? buildReceiptView(source, receiptError, receiptText) : null), [source, receiptError, receiptText]);
+  const view = useMemo(
+    () => (source ? buildReceiptView(source, receiptError, receiptText) : null),
+    [source, receiptError, receiptText],
+  );
 
   const reopened = useReceiptUnderEscapes(
     source?.review.state === "ok" ? source.review.data : null,
@@ -55,18 +58,27 @@ export function ReceiptScreen({
       repo={repo}
       title="Receipt"
       backHref={`/changes/${changeId}`}
-      breadcrumb={[{ label: "Inbox", href: "/" }, { label: changeId, href: `/changes/${changeId}` }, { label: "Receipt" }]}
+      breadcrumb={[
+        { label: "Inbox", href: "/" },
+        { label: changeId, href: `/changes/${changeId}` },
+        { label: "Receipt" },
+      ]}
       escapeSlot={<EscapeCounter />}
     >
       {usesFixture && <MockDataBanner />}
       <div className="mx-auto w-full max-w-prose px-4 py-6 compact:px-7 compact:py-10">
         {view?.kind === "document" && reopened?.status === "reopened" && (
           <div className="mb-4">
-            <ReopenedNotice areas={reopened.escapedAreas} hunkCount={reopened.reopenedHunkIds.length} />
+            <ReopenedNotice
+              areas={reopened.escapedAreas}
+              hunkCount={reopened.reopenedHunkIds.length}
+            />
           </div>
         )}
         {view?.kind === "document" && <ReceiptDocument view={view} />}
-        {view?.kind === "none" && <NoReceipt changeId={view.changeId} signCommand={view.signCommand} />}
+        {view?.kind === "none" && (
+          <NoReceipt changeId={view.changeId} signCommand={view.signCommand} />
+        )}
         {view?.kind === "invalid" && <InvalidReceipt changeId={view.changeId} error={view.error} />}
       </div>
     </AppShell>

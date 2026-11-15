@@ -26,7 +26,12 @@ export function EmptyState({
   className?: string;
 }>) {
   return (
-    <section className={cn("mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center", className)}>
+    <section
+      className={cn(
+        "mx-auto flex max-w-md flex-col items-center gap-3 py-12 text-center",
+        className,
+      )}
+    >
       {icon && (
         <div aria-hidden="true" className="text-text-muted [&_svg]:size-6">
           {icon}
@@ -34,7 +39,9 @@ export function EmptyState({
       )}
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="text-text-muted">{body}</p>
-      {command && <Console label="Command" text={command} kind="output" className="w-full text-left" />}
+      {command && (
+        <Console label="Command" text={command} kind="output" className="w-full text-left" />
+      )}
       {actions && <div className="flex flex-wrap justify-center gap-2">{actions}</div>}
     </section>
   );

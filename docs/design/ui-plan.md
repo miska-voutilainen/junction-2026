@@ -14,17 +14,17 @@ How the design canvas ([Countersign design](https://claude.ai/artifact/PAtNks6ii
 
 One file, CSS custom properties on `:root`, dark only. `globals.css` maps them into Tailwind's `@theme`, and maps shadcn's variables (`--background`, `--card`, `--popover`, `--primary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--destructive`) onto them, so shadcn primitives render in our palette. The light theme block goes.
 
-| Group | Tokens |
-| --- | --- |
+| Group    | Tokens                                                                                                                                                                                                                                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Surfaces | `bg #0D0F12`, `raised #0F1216` (top bar, nav), `panel #111418` (tables, cards), `code #0B0D10`, `hover #13171E`, `control #22272E` / `control-hover #2A3038` (inputs), `selected #1A1F27` (active nav item, active command row), `scrim` (overlay, rgba of bg) |
-| Borders | `subtle #1F242B`, `default #262C34`, `strong #2A3038` |
-| Text | `primary #E6E8EB`, `secondary #C4CAD3`, `muted #9AA3AF`, `faint #939CA8` (floor). The canvas's in-between greys (`#8A939F`, `#8C95A2`, `#AEB6C1`, `#B7BFCA`) map to the nearest token at or above the floor. |
-| Brand | `brand #3558E8`, `brand-hover #4566F2`, `focus-ring #4566F2`, `focus-ring-on-brand #93AAFF`, `link #93AAFF`, logo colours (logo only) |
-| Semantic | `amber`/`amber-light` (Read this, Unverified, Stale), `rose`/`rose-light` (contradiction, escape, error), `green`/`green-light` (only "Signature verified") |
-| Type | Inter (sans) and JetBrains Mono (mono). Scale: `xs 12` (floor; the canvas's 10.5 px kbd chips go up to 12), `sm 13`, `base 14`, `md 15`, `lg 18`, `xl 22`, `2xl 24`. `tabular-nums` everywhere, `text-wrap: balance` on headings. |
-| Radius | `page 12`, `menu 14` (command menu), `control 10`, `button 9`, `item 7` (nav and menu rows), `chip 4`. Nested radius = outer minus padding. |
-| Layout | `topbar 56`, `nav 248`, `navigator 264`, `steps-panel 392`, `content-max 1280`, `prose-max 820` (receipt) |
-| Motion | `ease-out cubic-bezier(.2,.8,.2,1)`, `ease-in-out cubic-bezier(.4,0,.2,1)`, `dur-fast 150`, `dur-base 200`, `dur-slow 250`, `stagger 30` (cap 10 rows), exits at 0.8× |
+| Borders  | `subtle #1F242B`, `default #262C34`, `strong #2A3038`                                                                                                                                                                                                          |
+| Text     | `primary #E6E8EB`, `secondary #C4CAD3`, `muted #9AA3AF`, `faint #939CA8` (floor). The canvas's in-between greys (`#8A939F`, `#8C95A2`, `#AEB6C1`, `#B7BFCA`) map to the nearest token at or above the floor.                                                   |
+| Brand    | `brand #3558E8`, `brand-hover #4566F2`, `focus-ring #4566F2`, `focus-ring-on-brand #93AAFF`, `link #93AAFF`, logo colours (logo only)                                                                                                                          |
+| Semantic | `amber`/`amber-light` (Read this, Unverified, Stale), `rose`/`rose-light` (contradiction, escape, error), `green`/`green-light` (only "Signature verified")                                                                                                    |
+| Type     | Inter (sans) and JetBrains Mono (mono). Scale: `xs 12` (floor; the canvas's 10.5 px kbd chips go up to 12), `sm 13`, `base 14`, `md 15`, `lg 18`, `xl 22`, `2xl 24`. `tabular-nums` everywhere, `text-wrap: balance` on headings.                              |
+| Radius   | `page 12`, `menu 14` (command menu), `control 10`, `button 9`, `item 7` (nav and menu rows), `chip 4`. Nested radius = outer minus padding.                                                                                                                    |
+| Layout   | `topbar 56`, `nav 248`, `navigator 264`, `steps-panel 392`, `content-max 1280`, `prose-max 820` (receipt)                                                                                                                                                      |
+| Motion   | `ease-out cubic-bezier(.2,.8,.2,1)`, `ease-in-out cubic-bezier(.4,0,.2,1)`, `dur-fast 150`, `dur-base 200`, `dur-slow 250`, `stagger 30` (cap 10 rows), exits at 0.8×                                                                                          |
 
 Spacing stays on Tailwind's 4 px scale.
 
@@ -33,6 +33,7 @@ Spacing stays on Tailwind's 4 px scale.
 `src/components/AppShell.tsx`: top bar, nav and content. Every page uses it.
 
 **TopBar** (56 px, `raised`)
+
 - Wordmark, linking to `/`.
 - Repository label: the static mono text of `ChangeInput.repo` ("miska-voutilainen/junction26-messagepack-csharp", Tieto's fork), ellipsis when narrow. It's a label, not a switcher: there is one repository.
 - Breadcrumb (Inbox / `mp-2283` / Receipt).
@@ -41,6 +42,7 @@ Spacing stays on Tailwind's 4 px scale.
 - Cut: notifications, account avatar.
 
 **AppNav** (248 px, ≥ 900 px; below that a menu button in the top bar opens it as a sheet). On S2 it is a 56 px icon rail (names as tooltips, the inbox count as a dot) so the diff gets about 700 px at 1440; the hunk navigator there is 208 px, each item the file name and line range with the area chip below.
+
 - Review: Inbox, with a badge for the number of changes needing review.
 - Insights: Dashboard, Reviewer.
 - Footer: "Keyboard shortcuts" disclosure, listing only the shortcuts we build.
@@ -48,6 +50,7 @@ Spacing stays on Tailwind's 4 px scale.
 - Cut: "Calibration · Synthetic changes" (planted bugs never appear as changes; the report card lists them), Settings.
 
 **CommandMenu** (⌘K / Ctrl+K)
+
 - A Radix Dialog with a cmdk list. It opens from the search button's position (scale .95 to 1, opacity) and closes back to it. Esc returns focus to the trigger; arrow keys move; Enter opens.
 - Quick actions: Review next change (the first in inbox order), Copy sign command (for the change in view, else the next), Record an escape (to `/reviewer`).
 - Go to: Inbox, Dashboard, Reviewer report card.
@@ -65,22 +68,22 @@ Spacing stays on Tailwind's 4 px scale.
 
 **Shared** (`src/components/`):
 
-| Component | What it is |
-| --- | --- |
-| `AppShell`, `TopBar`, `AppNav`, `MobileHeader`, `CommandMenu`, `Wordmark` | Shell, above |
-| `IdeaLabel` | "Idea N · Name ↗". Small, muted, focusable, new tab. All nine ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "Separation of duties", idea 9 "Legacy guard" |
-| `EvidenceMark` + `EvidenceBadge` | Verified: filled dot. Supported: ring. Unverified: amber dashed ring. Refused: ring with slash. Always with the text label |
-| `CoverageMark` | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid) |
-| `TierBadge` | Signal bars (1–3) and "Light", "Focused" or "Full" |
-| `ReceiptStatus` | "Needs review", "Signed by <owner>", "Stale" or "Signature failed verification" (spec T06). The Inbox shows all four; the Review header shows only Stale and the failed state, because the roles line owns "Signed by" |
-| `RolesLine` | Idea 8: "Written by <author agent> · Reviewed by <reviewer version> · Signed by <owner>", a muted "Not signed yet", "Receipt couldn't be read" or "Signature failed verification" instead of a name unless a verified receipt exists (a stale receipt still names its signer); with no readable review the reviewer part is left out. The version is mono, names are sans. Below 760 px the three roles stack one per line without separators; from 760 px they share a line with "·" separators, each pair kept whole. Used on its own row in the Review header and in the Receipt identity fields |
-| `LevelLadder` | Shadow, Calibrated and Trusted, three steps, current one marked |
-| `Console` | Code or output box with a Wrap/Copy toolbar (section 6) |
-| `CopyButton` | Copy-to-check icon crossfade for 1.5 s, fixed width, "Copied" announced politely |
-| `Disclosure` | Accordion with `aria-expanded`/`aria-controls` and a clip reveal (no height jank) |
-| `SegmentedControl` | Filter pills with a shared-layout selected segment |
-| `EmptyState`, `ErrorState`, `PageSkeleton` | The States boards' layouts. `ErrorState` takes the real error into a `Console` |
-| `MockDataBanner` | Spec: "Showing mock data" whenever a fixture fed the page |
+| Component                                                                 | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppShell`, `TopBar`, `AppNav`, `MobileHeader`, `CommandMenu`, `Wordmark` | Shell, above                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `IdeaLabel`                                                               | "Idea N · Name ↗". Small, muted, focusable, new tab. All nine ideas are defined once in `src/lib/ideaLinks.ts` with their short name and their page in `docs/ideas/` (spec section 1 table, section 3 "Idea labels"); idea 8 is "Separation of duties", idea 9 "Legacy guard"                                                                                                                                                                                                                                                                                                                       |
+| `EvidenceMark` + `EvidenceBadge`                                          | Verified: filled dot. Supported: ring. Unverified: amber dashed ring. Refused: ring with slash. Always with the text label                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `CoverageMark`                                                            | Gutter bar and label: Read this (amber solid), Supported (grey dashed), Verified (grey solid)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `TierBadge`                                                               | Signal bars (1–3) and "Light", "Focused" or "Full"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `ReceiptStatus`                                                           | "Needs review", "Signed by <owner>", "Stale" or "Signature failed verification" (spec T06). The Inbox shows all four; the Review header shows only Stale and the failed state, because the roles line owns "Signed by"                                                                                                                                                                                                                                                                                                                                                                              |
+| `RolesLine`                                                               | Idea 8: "Written by <author agent> · Reviewed by <reviewer version> · Signed by <owner>", a muted "Not signed yet", "Receipt couldn't be read" or "Signature failed verification" instead of a name unless a verified receipt exists (a stale receipt still names its signer); with no readable review the reviewer part is left out. The version is mono, names are sans. Below 760 px the three roles stack one per line without separators; from 760 px they share a line with "·" separators, each pair kept whole. Used on its own row in the Review header and in the Receipt identity fields |
+| `LevelLadder`                                                             | Shadow, Calibrated and Trusted, three steps, current one marked                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `Console`                                                                 | Code or output box with a Wrap/Copy toolbar (section 6)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `CopyButton`                                                              | Copy-to-check icon crossfade for 1.5 s, fixed width, "Copied" announced politely                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Disclosure`                                                              | Accordion with `aria-expanded`/`aria-controls` and a clip reveal (no height jank)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `SegmentedControl`                                                        | Filter pills with a shared-layout selected segment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `EmptyState`, `ErrorState`, `PageSkeleton`                                | The States boards' layouts. `ErrorState` takes the real error into a `Console`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `MockDataBanner`                                                          | Spec: "Showing mock data" whenever a fixture fed the page                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 **Lib:** `src/lib/motion.ts` (presets: fade-up item, popover, crossfade, press), `src/lib/useWrapPreference.ts` (localStorage, try/catch), `src/lib/useShortcut.ts`, `src/lib/ideaLinks.ts`. Data comes from T06's loaders in `src/lib/data/` and simulated escapes from `src/lib/simulation/`.
 
@@ -89,6 +92,7 @@ Spacing stays on Tailwind's 4 px scale.
 Each screen ships with its loading (`loading.tsx` skeleton as drawn), empty and error states, keyboard support, and layouts at 320–1920 px. Each is deployed on its own.
 
 **Prerequisites (Phase 3, in parallel with the shell):**
+
 - T06: loaders, fixtures, `receiptStatus()`, the escape store.
 - T11: `route()` and the ladder (engine lane, also mine).
 
@@ -155,18 +159,18 @@ The Inbox computes tiers in the browser with `route()`. Fixtures stand in until 
 
 Only these scroll sideways, inside their own box. Copy takes the raw text. The Wrap choice is remembered per console kind.
 
-| Console | Screen | Default |
-| --- | --- | --- |
-| Diff hunk (Read-this cards and expanded covered hunks) | Review | No wrap |
-| Read-only hunks | Review, mobile | No wrap |
-| Verified claim test output (base fails / head passes) | Review step 1 | No wrap |
-| Sign commands (`countersign draft`, `sign`) | Review step 4 | No wrap |
-| `countersign verify` output | Review step 4, Receipt | No wrap |
-| Stale: both diff hashes | Review step 4, Receipt | No wrap |
-| Hunk ledger, when its lines exceed the width | Receipt | No wrap |
-| Plant-a-bug steps | Reviewer dialog | No wrap |
-| Error details (validation error, file path) | Every error state | Wrap (prose-like) |
-| `pnpm review run` / `pnpm evals` in empty states | Inbox, Reviewer | No wrap |
+| Console                                                | Screen                 | Default           |
+| ------------------------------------------------------ | ---------------------- | ----------------- |
+| Diff hunk (Read-this cards and expanded covered hunks) | Review                 | No wrap           |
+| Read-only hunks                                        | Review, mobile         | No wrap           |
+| Verified claim test output (base fails / head passes)  | Review step 1          | No wrap           |
+| Sign commands (`countersign draft`, `sign`)            | Review step 4          | No wrap           |
+| `countersign verify` output                            | Review step 4, Receipt | No wrap           |
+| Stale: both diff hashes                                | Review step 4, Receipt | No wrap           |
+| Hunk ledger, when its lines exceed the width           | Receipt                | No wrap           |
+| Plant-a-bug steps                                      | Reviewer dialog        | No wrap           |
+| Error details (validation error, file path)            | Every error state      | Wrap (prose-like) |
+| `pnpm review run` / `pnpm evals` in empty states       | Inbox, Reviewer        | No wrap           |
 
 Claim quotes and the contradiction snippet stay plain mono blocks that wrap, without a toolbar: they're one or two lines, and the Copy affordance belongs to the hunk they cite.
 
@@ -182,8 +186,8 @@ My recommendation is first in each.
 
 ## 8. Phases
 
-| Phase | Builds | PRs |
-| --- | --- | --- |
-| 3 | `chore(deps)`; tokens and shadcn mapping; shell (TopBar, AppNav, CommandMenu, MobileHeader); shared components; T06 data and T11 `route()` in parallel; Inbox with all states | ~5, each under 400 lines |
-| 4 | Review (header and navigator; diff and consoles; Review steps), Receipt, Reviewer, Dashboard | ~6, deployed after each screen |
-| 5 | axe, keyboard pass, 320–1920 px sweep, reduced motion, copy and spacing against the canvas | fixes |
+| Phase | Builds                                                                                                                                                                        | PRs                            |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| 3     | `chore(deps)`; tokens and shadcn mapping; shell (TopBar, AppNav, CommandMenu, MobileHeader); shared components; T06 data and T11 `route()` in parallel; Inbox with all states | ~5, each under 400 lines       |
+| 4     | Review (header and navigator; diff and consoles; Review steps), Receipt, Reviewer, Dashboard                                                                                  | ~6, deployed after each screen |
+| 5     | axe, keyboard pass, 320–1920 px sweep, reduced motion, copy and spacing against the canvas                                                                                    | fixes                          |

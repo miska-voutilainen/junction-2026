@@ -51,14 +51,14 @@
 Ordered by what makes a change safe to trust, first. The numbers are fixed; idea 9 was added last.
 
 9. [The legacy guard](ideas/legacy-guard.md): every touch on what old systems rely on goes to its named owner with its guard; an unguarded touch raises the tier.
-6. [Evidence levels instead of confidence](ideas/evidence-levels.md): a claim is labelled by what backs it.
-8. [The author never checks its own work](ideas/separation-of-duties.md): an agent's own test is Supported at most, and a person signs.
-1. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
-3. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
-5. [A written refusal policy](ideas/refusal-policy.md): the things the AI never decides, each with the role that does.
-4. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
-2. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
-7. [The signed receipt in git](ideas/signed-receipt.md): the owner signs what was checked, bound to the exact diff.
+10. [Evidence levels instead of confidence](ideas/evidence-levels.md): a claim is labelled by what backs it.
+11. [The author never checks its own work](ideas/separation-of-duties.md): an agent's own test is Supported at most, and a person signs.
+12. [Planted-bug calibration and a trust ladder](ideas/trust-ladder.md): the measured catch rate per area sets how much a person reads.
+13. [The hunk coverage map](ideas/coverage-map.md): every hunk is Verified, Supported or Read this (and Generated, outside the reading count).
+14. [A written refusal policy](ideas/refusal-policy.md): the things the AI never decides, each with the role that does.
+15. [A mechanical quote check](ideas/quote-check.md): code confirms each quote is in the cited lines.
+16. [Blind-first review](ideas/blind-first.md): the reviewer states what the requirement should produce before it reads the code.
+17. [The signed receipt in git](ideas/signed-receipt.md): the owner signs what was checked, bound to the exact diff.
 
 Next ideas, **not built**: registered pull requests (the owner signs the tests before the agent codes); audit sampling for very large PRs; round-trip property tests for serializers; post-merge reverts as the live source of escapes; running the guard tests on base and head, so a guard means "still passes"; optional signing (the receipt's value is a named owner accepting a record tied to the diff, not the key).
 

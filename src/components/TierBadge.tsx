@@ -18,7 +18,11 @@ export function TierBadge({ tier, className }: Readonly<{ tier: Tier; className?
   const lit = TIER_BARS[tier];
   return (
     <span
-      className={cn("inline-flex items-center gap-1.5 text-xs font-medium", TIER_COLOUR[tier], className)}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs font-medium",
+        TIER_COLOUR[tier],
+        className,
+      )}
     >
       <span aria-hidden="true" className="flex h-3.5 items-end gap-0.5">
         {BAR_HEIGHTS.map((height, index) => (

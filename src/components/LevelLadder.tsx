@@ -9,7 +9,10 @@ const STEPS: readonly LadderLevel[] = ["shadow", "calibrated", "trusted"];
  * one marked. One image to assistive tech, so it reads "Level: Calibrated, step
  * 2 of 3" instead of three loose words.
  */
-export function LevelLadder({ level, className }: Readonly<{ level: LadderLevel; className?: string }>) {
+export function LevelLadder({
+  level,
+  className,
+}: Readonly<{ level: LadderLevel; className?: string }>) {
   const current = STEPS.indexOf(level);
   return (
     <span

@@ -57,11 +57,16 @@ export function ReviewerScreen({
   // rather than a fixed sentence, and hands the changed ids to S1's highlight.
   const recordEscape = useCallback(
     (area: Area) => {
-      const after = buildInboxModel(sources, reportCard, { ...escapes, [area]: (escapes[area] ?? 0) + 1 });
+      const after = buildInboxModel(sources, reportCard, {
+        ...escapes,
+        [area]: (escapes[area] ?? 0) + 1,
+      });
       const { changedIds, sentence } = describeReroute(model.rows, after.rows);
       markRerouted(changedIds);
       record(area);
-      toast(`Escape recorded in ${areaLabel[area]} (simulated). ${sentence}.`, { id: ESCAPE_TOAST_ID });
+      toast(`Escape recorded in ${areaLabel[area]} (simulated). ${sentence}.`, {
+        id: ESCAPE_TOAST_ID,
+      });
     },
     [sources, reportCard, escapes, model.rows, record],
   );

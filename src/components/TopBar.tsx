@@ -55,18 +55,27 @@ export function TopBar({
 
 function Breadcrumb({ items }: Readonly<{ items: BreadcrumbItem[] }>) {
   return (
-    <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-text-muted compact:flex">
+    <nav
+      aria-label="Breadcrumb"
+      className="hidden min-w-0 items-center gap-2 text-text-muted compact:flex"
+    >
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
         return (
           <Fragment key={`${item.label}-${index}`}>
             <span aria-hidden="true">/</span>
             {isLast || !item.href ? (
-              <span aria-current={isLast ? "page" : undefined} className="truncate font-mono text-xs text-text-primary">
+              <span
+                aria-current={isLast ? "page" : undefined}
+                className="truncate font-mono text-xs text-text-primary"
+              >
                 {item.label}
               </span>
             ) : (
-              <Link href={item.href} className="truncate text-text-secondary hover:text-text-primary">
+              <Link
+                href={item.href}
+                className="truncate text-text-secondary hover:text-text-primary"
+              >
                 {item.label}
               </Link>
             )}

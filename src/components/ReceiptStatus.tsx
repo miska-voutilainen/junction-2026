@@ -8,7 +8,10 @@ import type { ReceiptState } from "@/lib/receiptUnderEscapes";
  * icon so the state is not carried by colour alone) are the ones that ask for action.
  * `owner` is the receipt's GitHub login and is shown only when signed.
  */
-export function ReceiptStatus({ status, owner }: Readonly<{ status: ReceiptState; owner?: string }>) {
+export function ReceiptStatus({
+  status,
+  owner,
+}: Readonly<{ status: ReceiptState; owner?: string }>) {
   if (status === "unverified") {
     return (
       <span className="inline-flex items-center gap-1 text-rose-light">

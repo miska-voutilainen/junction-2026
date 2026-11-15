@@ -140,7 +140,10 @@ export async function listComparisonRuns(changeId: string): Promise<ComparisonRu
 /** Every change with a folder under data/runs, sorted: Tieto's changes, the planted bugs and the contradiction plants. */
 export async function listRecordedChanges(): Promise<string[]> {
   const entries = await readdir(insideData(RUNS), { withFileTypes: true });
-  return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
 }
 
 /** True when data/runs/<changeId>/review.json exists. */

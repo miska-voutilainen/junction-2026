@@ -23,7 +23,10 @@ export function ReceiptDocument({ view }: Readonly<{ view: ReceiptDocumentView }
     <div className="flex flex-col gap-5">
       <ReceiptToolbar verifyCommand={view.verifyCommand} />
       <ReceiptNotice view={view} />
-      <article aria-label={`Receipt for ${view.changeId}`} className="flex flex-col gap-7 rounded-page border border-border-default bg-surface-code p-5 compact:p-10">
+      <article
+        aria-label={`Receipt for ${view.changeId}`}
+        className="flex flex-col gap-7 rounded-page border border-border-default bg-surface-code p-5 compact:p-10"
+      >
         <header className="flex flex-col-reverse gap-5 compact:flex-row compact:items-start compact:gap-6">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <span className="font-mono text-sm text-text-muted">
@@ -36,7 +39,9 @@ export function ReceiptDocument({ view }: Readonly<{ view: ReceiptDocumentView }
         </header>
         <IdentityList rows={view.identity} roles={view.roles} />
         <SignedSections view={view} />
-        {view.ledger.length > 0 && <HunkLedger rows={view.ledger} owner={view.owner} status={view.status} />}
+        {view.ledger.length > 0 && (
+          <HunkLedger rows={view.ledger} owner={view.owner} status={view.status} />
+        )}
         {showVerify && <VerifySection view={view} />}
         <Disclosure title="Receipt JSON">
           <Console label="Receipt JSON" kind="log" text={view.recordJson} />
@@ -47,8 +52,9 @@ export function ReceiptDocument({ view }: Readonly<{ view: ReceiptDocumentView }
         </footer>
       </article>
       <p className="text-sm text-text-muted">
-        Stored in git as a note under <span className="font-mono text-xs">refs/notes/countersign</span>. If the code changes after signing,
-        this receipt goes stale and the inbox asks for a new signature.
+        Stored in git as a note under{" "}
+        <span className="font-mono text-xs">refs/notes/countersign</span>. If the code changes after
+        signing, this receipt goes stale and the inbox asks for a new signature.
       </p>
     </div>
   );

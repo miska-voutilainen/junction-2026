@@ -1,12 +1,7 @@
 import { spawn } from "node:child_process";
 import os from "node:os";
 import { z } from "zod";
-import {
-  CLI_ARGUMENT_LIMIT_CHARS,
-  EFFORT,
-  ERROR_EXCERPT_CHARS,
-  MODEL,
-} from "./limits";
+import { CLI_ARGUMENT_LIMIT_CHARS, EFFORT, ERROR_EXCERPT_CHARS, MODEL } from "./limits";
 import type { Transport, TransportResponse } from "./types";
 
 /** The fields of `claude -p --output-format json` that the client reads. */
@@ -39,10 +34,7 @@ const BILLING_ENV_VARIABLES = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"];
  * `--system-prompt-file` exists), so their size is guarded. Cost is what Claude Code reports.
  * Spec section 6.
  */
-export const claudeCodeTransport: Transport = async (
-  { system, prompt, schema },
-  signal,
-) => {
+export const claudeCodeTransport: Transport = async ({ system, prompt, schema }, signal) => {
   const args = buildArguments(system, schema);
   const result = await runClaude(args, prompt, signal);
   return toTransportResult(result.code, result.stdout, result.stderr);
@@ -101,10 +93,7 @@ export function toTransportResult(
   try {
     envelope = JSON.parse(stdout);
   } catch {
-    const excerpt = (stderr.trim() || stdout.trim()).slice(
-      0,
-      ERROR_EXCERPT_CHARS,
-    );
+    const excerpt = (stderr.trim() || stdout.trim()).slice(0, ERROR_EXCERPT_CHARS);
     throw new Error(
       `claude exited with code ${code} and printed no JSON result: "${excerpt}". ` +
         `Run claude in a terminal to check it works and you are logged in, then run the step again.`,
@@ -121,14 +110,7 @@ function readEnvelope(envelope: unknown): TransportResponse {
         `Update Claude Code (claude update) and run the step again.`,
     );
   }
-  const {
-    is_error,
-    result,
-    structured_output,
-    stop_reason,
-    total_cost_usd,
-    usage,
-  } = parsed.data;
+  const { is_error, result, structured_output, stop_reason, total_cost_usd, usage } = parsed.data;
   const isRefusal = stop_reason === "refusal";
   if (is_error && !isRefusal) {
     throw new Error(
@@ -137,10 +119,7 @@ function readEnvelope(envelope: unknown): TransportResponse {
     );
   }
   return {
-    text:
-      structured_output !== undefined
-        ? JSON.stringify(structured_output)
-        : (result ?? ""),
+    text: structured_output !== undefined ? JSON.stringify(structured_output) : (result ?? ""),
     model: MODEL,
     isRefusal,
     usage: {
@@ -160,11 +139,7 @@ interface ProcessResult {
   stderr: string;
 }
 
-function runClaude(
-  args: string[],
-  stdin: string,
-  signal: AbortSignal,
-): Promise<ProcessResult> {
+function runClaude(args: string[], stdin: string, signal: AbortSignal): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
     // Never `shell: true`: the system text is an argument, and a shell would interpret it.
     const child = spawn("claude", args, {

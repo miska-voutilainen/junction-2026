@@ -35,11 +35,27 @@ interface ConsoleProps {
  * choice is remembered per `kind`. The scroll region takes focus when it
  * scrolls, so arrow keys work without a mouse. UI plan section 6.
  */
-export function Console({ label, text, kind, defaultWrap = false, heading, actions, isFlush = false, children, className }: Readonly<ConsoleProps>) {
+export function Console({
+  label,
+  text,
+  kind,
+  defaultWrap = false,
+  heading,
+  actions,
+  isFlush = false,
+  children,
+  className,
+}: Readonly<ConsoleProps>) {
   const [isWrapped, setIsWrapped] = useWrapPreference(kind, defaultWrap);
 
   return (
-    <div data-console className={cn("min-w-0 rounded-control border border-border-subtle bg-surface-code", className)}>
+    <div
+      data-console
+      className={cn(
+        "min-w-0 rounded-control border border-border-subtle bg-surface-code",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-1 pr-1.5 pl-3">
         {heading ?? <span className="truncate text-xs text-text-muted">{label}</span>}
         <div className="flex shrink-0 items-center gap-0.5 print:hidden">
@@ -55,7 +71,7 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
           !isFlush && "p-3",
           isWrapped
             ? "[overflow-wrap:anywhere] whitespace-pre-wrap [&_pre]:whitespace-pre-wrap"
-            : "overflow-x-auto whitespace-pre print:overflow-visible print:whitespace-pre-wrap print:[overflow-wrap:anywhere]",
+            : "overflow-x-auto whitespace-pre print:overflow-visible print:[overflow-wrap:anywhere] print:whitespace-pre-wrap",
         )}
       >
         {children ?? <pre className="font-[inherit]">{text}</pre>}
@@ -64,7 +80,10 @@ export function Console({ label, text, kind, defaultWrap = false, heading, actio
   );
 }
 
-function WrapButton({ isWrapped, onToggle }: Readonly<{ isWrapped: boolean; onToggle: () => void }>) {
+function WrapButton({
+  isWrapped,
+  onToggle,
+}: Readonly<{ isWrapped: boolean; onToggle: () => void }>) {
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -73,7 +92,9 @@ function WrapButton({ isWrapped, onToggle }: Readonly<{ isWrapped: boolean; onTo
   // hover or keyboard focus, which `:hover` and `:focus-visible` tell apart from script focus.
   function onTooltipOpenChange(next: boolean) {
     const button = buttonRef.current;
-    setIsTooltipOpen(!next || (button !== null && (button.matches(":hover") || button.matches(":focus-visible"))));
+    setIsTooltipOpen(
+      !next || (button !== null && (button.matches(":hover") || button.matches(":focus-visible"))),
+    );
   }
 
   return (

@@ -23,20 +23,36 @@ export type SignView =
   | { status: "needs-review"; draft: Review["receiptDraft"]; commands: SignCommands }
   | { status: "signed"; receipt: Receipt; verify: ReceiptRecord["verify"]; commands: SignCommands }
   | { status: "stale"; receipt: Receipt; reviewDiffSha256: string; commands: SignCommands }
-  | { status: "unverified"; receipt: Receipt; verify: ReceiptRecord["verify"]; commands: SignCommands };
+  | {
+      status: "unverified";
+      receipt: Receipt;
+      verify: ReceiptRecord["verify"];
+      commands: SignCommands;
+    };
 
 /**
  * What the Sign step shows for `signState`. The caller passes the same state the badges use (from `receiptStatus()`, or "unreadable"), so the panel and the badges agree.
  */
-export function buildSignView(review: Review, record: ReceiptRecord | null, signState: SignState): SignView {
+export function buildSignView(
+  review: Review,
+  record: ReceiptRecord | null,
+  signState: SignState,
+): SignView {
   const commands: SignCommands = {
     draft: countersignCommand("draft", review.changeId),
     sign: countersignCommand("sign", review.changeId),
     verify: countersignCommand("verify", review.changeId),
   };
   if (signState === "unreadable") return { status: signState, commands };
-  if (record === null || signState === "needs-review") return { status: "needs-review", draft: review.receiptDraft, commands };
-  if (signState === "stale") return { status: signState, receipt: record.receipt, reviewDiffSha256: review.diff.diffSha256, commands };
+  if (record === null || signState === "needs-review")
+    return { status: "needs-review", draft: review.receiptDraft, commands };
+  if (signState === "stale")
+    return {
+      status: signState,
+      receipt: record.receipt,
+      reviewDiffSha256: review.diff.diffSha256,
+      commands,
+    };
   return { status: signState, receipt: record.receipt, verify: record.verify, commands };
 }
 

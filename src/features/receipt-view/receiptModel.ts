@@ -117,9 +117,18 @@ export function buildReceiptView(
   receiptError: string | null,
   receiptText: string | null,
 ): ReceiptView {
-  if (receiptFile === null) return { kind: "none", changeId: change.id, signCommand: countersignCommand("sign", change.id) };
+  if (receiptFile === null)
+    return {
+      kind: "none",
+      changeId: change.id,
+      signCommand: countersignCommand("sign", change.id),
+    };
   if (receiptFile === "unreadable") {
-    return { kind: "invalid", changeId: change.id, error: receiptError ?? `data/receipts/${change.id}.json failed validation.` };
+    return {
+      kind: "invalid",
+      changeId: change.id,
+      error: receiptError ?? `data/receipts/${change.id}.json failed validation.`,
+    };
   }
 
   const record = receiptFile;
@@ -138,13 +147,23 @@ export function buildReceiptView(
     notChecked: receipt.notChecked,
     residualRisk: { text: receipt.residualRisk.text, accepted: acceptedRefusals(record, review) },
     ledger: hunkLedger(receipt.hunks),
-    roles: { authorAgent: change.authorAgent, reviewerVersion: receipt.reviewerVersion, signer: signerOf(record) },
+    roles: {
+      authorAgent: change.authorAgent,
+      reviewerVersion: receipt.reviewerVersion,
+      signer: signerOf(record),
+    },
     owner: receipt.owner,
     signedAt: formatSignedAt(receipt.signedAt),
     verifyCommand: verify.command,
     verifyText: `$ ${verify.command}\n${verify.output}`,
     verifyLine: verifyLine(status),
-    staleHashes: status === "stale" && review !== null ? { signedDiff: shortHash(receipt.diffSha256), reviewedDiff: shortHash(review.diff.diffSha256) } : null,
+    staleHashes:
+      status === "stale" && review !== null
+        ? {
+            signedDiff: shortHash(receipt.diffSha256),
+            reviewedDiff: shortHash(review.diff.diffSha256),
+          }
+        : null,
     signCommand: countersignCommand("sign", change.id),
     recordJson: receiptText ?? JSON.stringify(record, null, 2),
   };
@@ -161,7 +180,10 @@ function statusOf(review: Review | null, record: ReceiptRecord): ReceiptDocument
 export function readingSummary({ routing }: Review): string {
   const generated = countGenerated(routing.coverage);
   const covered = routing.totalHunks - routing.readHunks - generated;
-  const generatedNote = generated > 0 ? ` ${countOf(generated, "generated hunk")} ${generated === 1 ? "was" : "were"} not read.` : "";
+  const generatedNote =
+    generated > 0
+      ? ` ${countOf(generated, "generated hunk")} ${generated === 1 ? "was" : "were"} not read.`
+      : "";
   return `${tierLabel[routing.tier]} review. A person read ${routing.readHunks} of ${routing.totalHunks} hunks. Tests or checked quotes covered the other ${covered}.${generatedNote}`;
 }
 
@@ -183,9 +205,15 @@ function identityRows({ receipt }: ReceiptRecord): IdentityRow[] {
 function acceptedRefusals({ receipt }: ReceiptRecord, review: Review | null): AcceptedRefusal[] {
   const isSameRun = review !== null && review.run.id === receipt.reviewRunId;
   return receipt.residualRisk.acceptedRefusalIds.map((refusalId) => {
-    const ruleId = isSameRun ? review.refusals.find((refusal) => refusal.id === refusalId)?.ruleId : undefined;
+    const ruleId = isSameRun
+      ? review.refusals.find((refusal) => refusal.id === refusalId)?.ruleId
+      : undefined;
     const rule = allRefusalRules.find((candidate) => candidate.id === ruleId);
-    return { refusalId, rule: rule ? { id: rule.id, title: rule.title } : null, runId: receipt.reviewRunId };
+    return {
+      refusalId,
+      rule: rule ? { id: rule.id, title: rule.title } : null,
+      runId: receipt.reviewRunId,
+    };
   });
 }
 
@@ -197,6 +225,7 @@ function shortHash(hash: string): string {
 
 /** One row per signed hunk, the ones a person read first, in the signed order within each group. */
 function hunkLedger(signedHunks: ReceiptRecord["receipt"]["hunks"]): LedgerRow[] {
-  return COVERAGE_READING_ORDER.flatMap((coverage) => signedHunks.filter((hunk) => hunk.coverage === coverage));
+  return COVERAGE_READING_ORDER.flatMap((coverage) =>
+    signedHunks.filter((hunk) => hunk.coverage === coverage),
+  );
 }
-

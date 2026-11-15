@@ -37,5 +37,7 @@ export type SignerState =
 export function signerOf(receipt: ReceiptRecord | "unreadable" | null): SignerState {
   if (receipt === null) return { kind: "unsigned" };
   if (receipt === "unreadable") return { kind: "unreadable" };
-  return receipt.verify.ok ? { kind: "signed", owner: receipt.receipt.owner } : { kind: "unverified" };
+  return receipt.verify.ok
+    ? { kind: "signed", owner: receipt.receipt.owner }
+    : { kind: "unverified" };
 }

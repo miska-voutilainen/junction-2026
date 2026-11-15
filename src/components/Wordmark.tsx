@@ -10,21 +10,14 @@ const SIZES = {
  * @param size "sm" for the top bar and mobile header, "lg" for a larger mark.
  * @param showName False shows the mark alone, for the mobile header where the page title sits next to it.
  */
-export function Wordmark({ size = "lg", showName = true }: Readonly<{ size?: keyof typeof SIZES; showName?: boolean }>) {
+export function Wordmark({
+  size = "lg",
+  showName = true,
+}: Readonly<{ size?: keyof typeof SIZES; showName?: boolean }>) {
   const { text, logoWidth, logoHeight } = SIZES[size];
   return (
-    <span
-      role="img"
-      aria-label="Countersign"
-      className="inline-flex items-center gap-3"
-    >
-      <svg
-        width={logoWidth}
-        height={logoHeight}
-        viewBox="0 0 30 24"
-        fill="none"
-        aria-hidden="true"
-      >
+    <span role="img" aria-label="Countersign" className="inline-flex items-center gap-3">
+      <svg width={logoWidth} height={logoHeight} viewBox="0 0 30 24" fill="none" aria-hidden="true">
         <rect x="1" y="3" width="13" height="3.2" rx="1.6" fill="var(--logo-muted)" />
         <rect x="1" y="10.4" width="17.5" height="3.2" rx="1.6" fill="var(--logo-strong)" />
         <rect x="1" y="17.8" width="10" height="3.2" rx="1.6" fill="var(--logo-muted)" />

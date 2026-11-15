@@ -3,8 +3,14 @@ import { ShieldX } from "lucide-react";
 import { DashboardSection } from "./DashboardSection";
 import type { AcceptedRisk, RiskStatus } from "./dashboardModel";
 
-const ROW_COLUMNS = "compact:grid compact:grid-cols-[minmax(0,1fr)_12rem_8rem_12rem] compact:items-start compact:gap-x-6";
-const SIGNED_DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const ROW_COLUMNS =
+  "compact:grid compact:grid-cols-[minmax(0,1fr)_12rem_8rem_12rem] compact:items-start compact:gap-x-6";
+const SIGNED_DATE = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 // Only the states that ask for action get a colour; unverified also gets an icon, so colour is never the only cue.
 const STATUS: Record<RiskStatus, { text: string; className: string }> = {
@@ -22,9 +28,19 @@ const STATUS: Record<RiskStatus, { text: string; className: string }> = {
  */
 export function AcceptedRiskTable({ risks }: Readonly<{ risks: AcceptedRisk[] }>) {
   return (
-    <DashboardSection title="Accepted risk" subtitle="Residual risk lines from signed receipts, and whether their code still holds">
-      <div role="table" aria-label="Accepted risk" className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
-        <div role="row" className={`max-compact:sr-only border-b border-border-subtle px-4 py-2.5 text-xs text-text-muted ${ROW_COLUMNS}`}>
+    <DashboardSection
+      title="Accepted risk"
+      subtitle="Residual risk lines from signed receipts, and whether their code still holds"
+    >
+      <div
+        role="table"
+        aria-label="Accepted risk"
+        className="overflow-hidden rounded-page border border-border-subtle bg-surface-panel"
+      >
+        <div
+          role="row"
+          className={`border-b border-border-subtle px-4 py-2.5 text-xs text-text-muted max-compact:sr-only ${ROW_COLUMNS}`}
+        >
           <span role="columnheader">Risk, in the signer&apos;s words</span>
           <span role="columnheader">Accepted by</span>
           <span role="columnheader">Change</span>
@@ -41,7 +57,10 @@ export function AcceptedRiskTable({ risks }: Readonly<{ risks: AcceptedRisk[] }>
             </span>
             <span role="cell" className="min-w-0 break-words text-text-secondary">
               {risk.owner}
-              <span className="text-text-muted"> · {SIGNED_DATE.format(new Date(risk.signedAt))}</span>
+              <span className="text-text-muted">
+                {" "}
+                · {SIGNED_DATE.format(new Date(risk.signedAt))}
+              </span>
             </span>
             <span role="cell">
               <Link
@@ -52,7 +71,9 @@ export function AcceptedRiskTable({ risks }: Readonly<{ risks: AcceptedRisk[] }>
               </Link>
             </span>
             <span role="cell" className={STATUS[risk.status].className}>
-              {risk.status === "unverified" && <ShieldX aria-hidden="true" className="mr-1 inline size-3.5 align-text-bottom" />}
+              {risk.status === "unverified" && (
+                <ShieldX aria-hidden="true" className="mr-1 inline size-3.5 align-text-bottom" />
+              )}
               {STATUS[risk.status].text}
             </span>
           </div>

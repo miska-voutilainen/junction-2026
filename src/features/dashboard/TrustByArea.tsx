@@ -11,7 +11,10 @@ import type { ReportCardInput } from "@/lib/decideChange";
  * come from the planted-bug eval, so the list links to the report card that
  * earned them. Without a report card every area is Shadow, and the section says why.
  */
-export function TrustByArea({ trust, reportCard }: Readonly<{ trust: AreaTrust[]; reportCard: ReportCardInput }>) {
+export function TrustByArea({
+  trust,
+  reportCard,
+}: Readonly<{ trust: AreaTrust[]; reportCard: ReportCardInput }>) {
   return (
     <Disclosure
       title={
@@ -24,11 +27,16 @@ export function TrustByArea({ trust, reportCard }: Readonly<{ trust: AreaTrust[]
       }
     >
       {reportCard.state === "missing" && (
-        <p className="px-1 pb-2 text-sm text-text-muted">No evaluation recorded yet, so every area counts as Shadow.</p>
+        <p className="px-1 pb-2 text-sm text-text-muted">
+          No evaluation recorded yet, so every area counts as Shadow.
+        </p>
       )}
       <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
         {trust.map((area) => (
-          <li key={area.area} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-4 py-2.5 text-sm">
+          <li
+            key={area.area}
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-4 py-2.5 text-sm"
+          >
             <span className="font-medium">{area.label}</span>
             <LevelLadder level={area.level} />
           </li>

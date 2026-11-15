@@ -34,19 +34,27 @@ export function HunkCard({
 }>) {
   const { hunk, coverage } = entry;
   return (
-    <article data-hunk-card data-hunk-id={hunk.id} data-coverage={coverage} className="scroll-mt-4 compact:scroll-mt-scroll-clear">
+    <article
+      data-hunk-card
+      data-hunk-id={hunk.id}
+      data-coverage={coverage}
+      className="scroll-mt-4 compact:scroll-mt-scroll-clear"
+    >
       <Console
         label={`hunk ${hunk.header} in ${hunk.file}`}
         text={hunkRawText(hunk)}
         kind="diff"
         isFlush
         heading={<HunkHeading entry={entry} />}
-        actions={
-          <MarkReadButton isRead={isRead} onToggle={onToggleRead} />
-        }
+        actions={<MarkReadButton isRead={isRead} onToggle={onToggleRead} />}
         className="rounded-control"
       >
-        <DiffTable hunk={hunk} coverage={coverage} tokens={tokens} highlightedLines={highlightedLines} />
+        <DiffTable
+          hunk={hunk}
+          coverage={coverage}
+          tokens={tokens}
+          highlightedLines={highlightedLines}
+        />
       </Console>
     </article>
   );

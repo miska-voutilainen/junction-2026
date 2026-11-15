@@ -66,7 +66,12 @@ export interface NavigatorGroup {
 }
 
 /** The coverage states in the order a person works through them: what needs reading first, generated files last. */
-export const COVERAGE_READING_ORDER: readonly Coverage[] = ["read", "supported", "verified", "generated"];
+export const COVERAGE_READING_ORDER: readonly Coverage[] = [
+  "read",
+  "supported",
+  "verified",
+  "generated",
+];
 
 /** Last path segment: "src/a/Foo.cs" -> "Foo.cs". */
 export function fileName(path: string): string {
@@ -86,12 +91,19 @@ export function hunkRange(hunk: Hunk): string {
  * A generated file's hunk only collapses when route() marks it "generated": one
  * a finding or refusal names comes back as "read", so it stays in `read`.
  */
-export function buildSections(review: Review, decision: TierDecision, levels: Record<Area, LadderLevel>): HunkSections {
+export function buildSections(
+  review: Review,
+  decision: TierDecision,
+  levels: Record<Area, LadderLevel>,
+): HunkSections {
   const fileOf = new Map(review.files.map((file) => [file.path, file]));
   const sections: HunkSections = { read: [], covered: [], generated: [] };
   for (const hunk of review.hunks) {
     const file = fileOf.get(hunk.file);
-    if (!file) throw new Error(`Review ${review.changeId} has hunk ${hunk.id} in ${hunk.file}, which is not in its file list. Re-record it with pnpm review run ${review.changeId}.`);
+    if (!file)
+      throw new Error(
+        `Review ${review.changeId} has hunk ${hunk.id} in ${hunk.file}, which is not in its file list. Re-record it with pnpm review run ${review.changeId}.`,
+      );
     const coverage = decision.coverage[hunk.id];
     const entry: HunkEntry = {
       hunk,
@@ -117,14 +129,21 @@ export function buildSections(review: Review, decision: TierDecision, levels: Re
  *
  * @param areaLevel trust level of the hunk's area, null when the file has no area
  */
-function evidenceLine(review: Review, hunk: Hunk, coverage: Coverage, areaLevel: LadderLevel | null): string {
+function evidenceLine(
+  review: Review,
+  hunk: Hunk,
+  coverage: Coverage,
+  areaLevel: LadderLevel | null,
+): string {
   // The generated section title says why these hunks are outside the count, so a row repeats nothing.
   if (coverage === "generated") return "";
   if (coverage === "read") return readReason(review, hunk, areaLevel);
   const claims = claimsAtLevel(review, hunk, coverage);
   // route() covers a hunk only through a claim at that level, so none here means the recorded review and its routing disagree.
   if (claims.length === 0) {
-    throw new Error(`Review ${review.changeId} routes hunk ${hunk.id} as ${coverageLabel[coverage]} but no claim at that level names it. Re-record it with pnpm review run ${review.changeId}.`);
+    throw new Error(
+      `Review ${review.changeId} routes hunk ${hunk.id} as ${coverageLabel[coverage]} but no claim at that level names it. Re-record it with pnpm review run ${review.changeId}.`,
+    );
   }
   if (coverage === "verified") return verifiedLine(claims);
   if (isCoveredByOwnTestOnly(review, hunk, coverage)) return ownTestLine(hunk, claims);
@@ -139,12 +158,16 @@ export const OWN_TEST_LABEL = "Supported · the PR's own test";
 /** The own-test label, followed by the checked quote the claim also cites, when it cites one: "Supported · the PR's own test · quote checked at Foo.cs:12". */
 function ownTestLine(hunk: Hunk, claims: Claim[]): string {
   const citations = claims.flatMap((claim) => claim.citations);
-  const citation = citations.find((candidate) => citationOverlapsHunk(candidate, hunk)) ?? citations[0];
-  return citation ? `${OWN_TEST_LABEL} · quote checked at ${fileName(citation.file)}:${citation.startLine}` : OWN_TEST_LABEL;
+  const citation =
+    citations.find((candidate) => citationOverlapsHunk(candidate, hunk)) ?? citations[0];
+  return citation
+    ? `${OWN_TEST_LABEL} · quote checked at ${fileName(citation.file)}:${citation.startLine}`
+    : OWN_TEST_LABEL;
 }
 
 /** Why such a claim stops at Supported (idea 8): shown as the label's description. */
-export const OWN_TEST_NOTE = "The same agent wrote the code and this test, so it can't make the claim Verified.";
+export const OWN_TEST_NOTE =
+  "The same agent wrote the code and this test, so it can't make the claim Verified.";
 
 /**
  * Whether a claim's only test evidence is the test the PR ships. Only a
@@ -167,7 +190,9 @@ function claimsAtLevel(review: Review, hunk: Hunk, level: Coverage): Claim[] {
 }
 
 function verifiedLine(claims: Claim[]): string {
-  const testName = claims.flatMap((claim) => claim.evidence).find((item) => item.testName !== null)?.testName;
+  const testName = claims
+    .flatMap((claim) => claim.evidence)
+    .find((item) => item.testName !== null)?.testName;
   if (testName) return `Test passes on this change: ${testName}`;
   return `Verified by claim ${claims[0].id}: ${claims[0].text}`;
 }
@@ -178,11 +203,14 @@ function verifiedLine(claims: Claim[]): string {
  * then the line says so, instead of pointing at lines the hunk doesn't show.
  */
 function supportedLine(hunk: Hunk, claims: Claim[]): string {
-  const inside = claims.flatMap((claim) => claim.citations).find((citation) => citationOverlapsHunk(citation, hunk));
+  const inside = claims
+    .flatMap((claim) => claim.citations)
+    .find((citation) => citationOverlapsHunk(citation, hunk));
   if (inside) return `Quote checked: ${fileName(inside.file)}:${inside.startLine}`;
   const claim = claims[0];
   const outside = claim.citations[0];
-  if (outside) return `Supported by ${claim.id} · quote checked at ${fileName(outside.file)}:${outside.startLine}, outside this hunk`;
+  if (outside)
+    return `Supported by ${claim.id} · quote checked at ${fileName(outside.file)}:${outside.startLine}, outside this hunk`;
   return `Supported by ${claim.id}: ${claim.evidence[0]?.summary ?? claim.text}`;
 }
 
@@ -192,8 +220,12 @@ function citationOverlapsHunk(citation: Citation, hunk: Hunk): boolean {
 }
 
 function readReason(review: Review, hunk: Hunk, areaLevel: LadderLevel | null): string {
-  const findings = review.findings.filter((finding) => finding.hunkIds.includes(hunk.id)).map((finding) => finding.title);
-  const refusals = review.refusals.filter((refusal) => refusal.hunkIds.includes(hunk.id)).map((refusal) => `Refused under ${refusal.ruleId}`);
+  const findings = review.findings
+    .filter((finding) => finding.hunkIds.includes(hunk.id))
+    .map((finding) => finding.title);
+  const refusals = review.refusals
+    .filter((refusal) => refusal.hunkIds.includes(hunk.id))
+    .map((refusal) => `Refused under ${refusal.ruleId}`);
   const flagged = [...findings, ...refusals];
   if (flagged.length > 0) return flagged.join(" · ");
   if (areaLevel === "shadow") return shadowReason(review, hunk);
@@ -210,7 +242,8 @@ function readReason(review: Review, hunk: Hunk, areaLevel: LadderLevel | null): 
 function shadowReason(review: Review, hunk: Hunk): string {
   for (const level of ["verified", "supported"] as const) {
     const claim = claimsAtLevel(review, hunk, level)[0];
-    if (claim) return `Area is at Shadow: claim ${claim.id} is ${coverageLabel[level]}, but evidence here routes nothing yet`;
+    if (claim)
+      return `Area is at Shadow: claim ${claim.id} is ${coverageLabel[level]}, but evidence here routes nothing yet`;
   }
   return "Area is at Shadow: no track record";
 }
@@ -223,7 +256,9 @@ function shadowReason(review: Review, hunk: Hunk): string {
 export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
   const groups: NavigatorGroup[] = [];
   for (const coverage of COVERAGE_READING_ORDER) {
-    const hunkEntries = [...sections.read, ...sections.covered].filter((entry) => entry.coverage === coverage);
+    const hunkEntries = [...sections.read, ...sections.covered].filter(
+      (entry) => entry.coverage === coverage,
+    );
     const generated = coverage === "generated" ? sections.generated : [];
     const items: NavigatorItem[] = hunkEntries.map((entry) => ({
       hunkId: entry.hunk.id,
@@ -247,7 +282,12 @@ export function buildNavigator(sections: HunkSections): NavigatorGroup[] {
       });
     }
     if (items.length === 0) continue;
-    groups.push({ coverage, title: coverageLabel[coverage], hunkCount: hunkEntries.length + generated.length, items });
+    groups.push({
+      coverage,
+      title: coverageLabel[coverage],
+      hunkCount: hunkEntries.length + generated.length,
+      items,
+    });
   }
   return groups;
 }
@@ -262,14 +302,20 @@ export function coverageLineText(decision: TierDecision): string {
   const generated = countGenerated(decision.coverage);
   const generatedNote = generated > 0 ? ` · ${generated} generated` : "";
   const reading = decision.readMinutes > 0 ? ` · ~${decision.readMinutes} min` : "";
-  const fullRead = decision.fullMinutes === decision.readMinutes ? "" : ` (full read ~${decision.fullMinutes} min)`;
+  const fullRead =
+    decision.fullMinutes === decision.readMinutes
+      ? ""
+      : ` (full read ~${decision.fullMinutes} min)`;
   return `read ${decision.readHunks} of ${decision.totalHunks} hunks${generatedNote}${reading}${fullRead}`;
 }
 
 /** The line under a collapsed covered section: "4 verified · 5 supported", a zero part left out. */
 export function coveredSummary(entries: HunkEntry[]): string {
-  const count = (coverage: Coverage) => entries.filter((entry) => entry.coverage === coverage).length;
-  return [`${count("verified")} verified`, `${count("supported")} supported`].filter((part) => !part.startsWith("0 ")).join(" · ");
+  const count = (coverage: Coverage) =>
+    entries.filter((entry) => entry.coverage === coverage).length;
+  return [`${count("verified")} verified`, `${count("supported")} supported`]
+    .filter((part) => !part.startsWith("0 "))
+    .join(" · ");
 }
 
 /** Raw unified text of a hunk, as `git diff` prints it; what Copy puts on the clipboard. */

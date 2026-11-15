@@ -31,7 +31,10 @@ export function InboxScreen({
   usesFixture: boolean;
 }>) {
   const { escapes } = useEscapes();
-  const model = useMemo(() => buildInboxModel(sources, reportCard, escapes), [sources, reportCard, escapes]);
+  const model = useMemo(
+    () => buildInboxModel(sources, reportCard, escapes),
+    [sources, reportCard, escapes],
+  );
   const highlightedIds = useRecentlyRerouted();
   const hasAnyReview = sources.some((source) => source.review.state === "ok");
 
@@ -45,7 +48,11 @@ export function InboxScreen({
     >
       {usesFixture && <MockDataBanner />}
       {hasAnyReview ? (
-        <InboxView model={model} highlightedIds={highlightedIds} notice={reportCardNotice(reportCard)} />
+        <InboxView
+          model={model}
+          highlightedIds={highlightedIds}
+          notice={reportCardNotice(reportCard)}
+        />
       ) : (
         <EmptyState
           title="No recorded reviews yet."

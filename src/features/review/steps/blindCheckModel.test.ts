@@ -12,7 +12,9 @@ describe("blind check", () => {
 
   it("shows this change's planted contradiction and the overall count from the report card", async () => {
     const blindCheck = buildBlindCheck(await loadFixtureReview("mp-2283"), await readableCard());
-    expect(blindCheck.readingOrder.map((row) => [row.anchoredCaught, row.blindCaught, row.runs])).toEqual([[1, 3, 3]]);
+    expect(
+      blindCheck.readingOrder.map((row) => [row.anchoredCaught, row.blindCaught, row.runs]),
+    ).toEqual([[1, 3, 3]]);
     expect(blindCheck.overallLine).toBe(
       "Across 5 planted contradictions × 3 runs: given the description first caught 4 of 15 · blind-first caught 12 of 15",
     );

@@ -38,7 +38,10 @@ export function ReportLists({
 }
 
 /** What the eval missed: each planted bug the reviewer did not find, with a link to the variant commit. */
-function MissedPlantsCard({ reportCard, hasRealVariants }: Readonly<{ reportCard: ReportCard; hasRealVariants: boolean }>) {
+function MissedPlantsCard({
+  reportCard,
+  hasRealVariants,
+}: Readonly<{ reportCard: ReportCard; hasRealVariants: boolean }>) {
   const missed = missedPlants(reportCard);
   const planted = plantedTotal(reportCard);
   return (
@@ -79,12 +82,19 @@ function MissedPlantsCard({ reportCard, hasRealVariants }: Readonly<{ reportCard
 }
 
 /** What the mechanical checks caught: the eval's counts, then the quotes and refusals struck in the recorded reviews (idea 4). */
-function HallucinationsCard({ reportCard, reviews }: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[] }>) {
+function HallucinationsCard({
+  reportCard,
+  reviews,
+}: Readonly<{ reportCard: ReportCard; reviews: ReviewOfChange[] }>) {
   const quotes = failedQuotes(reviews);
   const unknownRules = unknownRuleRefusals(reviews);
   const inReviews = inRecordedReviews(reviews);
   return (
-    <ListCard title="Hallucinations caught" count={quotes.length + unknownRules.length} hasIdeaLabel>
+    <ListCard
+      title="Hallucinations caught"
+      count={quotes.length + unknownRules.length}
+      hasIdeaLabel
+    >
       <Scope>Across the eval runs and recorded reviews</Scope>
       <ul className="flex flex-col gap-1 text-text-secondary">
         {hallucinationLines(reportCard).map((line) => (

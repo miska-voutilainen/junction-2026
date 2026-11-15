@@ -156,9 +156,7 @@ describe("a2", () => {
     expect(schema.safeParse({ story, claims: [range(1, MAX_CITATION_LINES + 1)] }).success).toBe(
       false,
     );
-    expect(schema.safeParse({ story, claims: [range(1, MAX_CITATION_LINES)] }).success).toBe(
-      true,
-    );
+    expect(schema.safeParse({ story, claims: [range(1, MAX_CITATION_LINES)] }).success).toBe(true);
   });
 
   it("keeps a closing tag in the author description from closing its block", () => {
@@ -219,7 +217,9 @@ describe("a3", () => {
   });
 
   it("rejects a finding that names an area", () => {
-    expect(schema.safeParse({ findings: [{ ...finding, area: "security" }], refusals: [] }).success).toBe(false);
+    expect(
+      schema.safeParse({ findings: [{ ...finding, area: "security" }], refusals: [] }).success,
+    ).toBe(false);
   });
 
   it("reports a missing test only when no test in the change exercises the item", () => {
@@ -307,7 +307,9 @@ describe("a4", () => {
     const wrapped = ["Adds a resolver", "for `Foo` types."].join(String.fromCharCode(10));
     const wrappedSchema = a4.outputSchema({ authorDescription: wrapped, claimIds: ["c1"] });
     for (const copied of ["Adds a resolver for `Foo` types.", "Adds a resolver | for `Foo` types."])
-      expect(wrappedSchema.safeParse({ statements: [statement({ statement: copied })] }).success).toBe(true);
+      expect(
+        wrappedSchema.safeParse({ statements: [statement({ statement: copied })] }).success,
+      ).toBe(true);
   });
 
   it("tells the model statement is copied exactly, backticks included, though other fields are plain text", () => {
@@ -324,6 +326,8 @@ describe("a4", () => {
   });
 
   it("accepts a contradiction without a citation: the quote check keeps it, so one bad answer fails no run", () => {
-    expect(schema.safeParse({ statements: [statement({ verdict: "contradicted" })] }).success).toBe(true);
+    expect(schema.safeParse({ statements: [statement({ verdict: "contradicted" })] }).success).toBe(
+      true,
+    );
   });
 });

@@ -40,9 +40,7 @@ export const apiTransport: Transport = async (
   // Cut-off JSON would fail validation and burn a retry that cuts off at the same place.
   if (message.stop_reason === "max_tokens")
     throw new ModelTruncatedError(promptVersion, API_MAX_TOKENS);
-  const text = message.content
-    .map((block) => (block.type === "text" ? block.text : ""))
-    .join("");
+  const text = message.content.map((block) => (block.type === "text" ? block.text : "")).join("");
   return {
     text,
     model: message.model,

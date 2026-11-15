@@ -33,7 +33,9 @@ export function describeReroute(before: InboxRow[], after: InboxRow[]): Reroute 
   const earlier = new Map(before.filter(isReviewed).map((row) => [row.id, row]));
   const changed = after.filter(isReviewed).flatMap((row) => {
     const was = earlier.get(row.id);
-    return was && (was.tier !== row.tier || was.readHunks !== row.readHunks) ? [{ was, now: row }] : [];
+    return was && (was.tier !== row.tier || was.readHunks !== row.readHunks)
+      ? [{ was, now: row }]
+      : [];
   });
   if (changed.length === 0) return { changedIds: [], sentence: "No change re-routed" };
 

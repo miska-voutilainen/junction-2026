@@ -20,14 +20,18 @@ export function BlindFirstSection({ reportCard }: Readonly<{ reportCard: ReportC
       <p className="text-text-muted">{overall}</p>
       <ul className="flex flex-col divide-y divide-border-subtle overflow-hidden rounded-page border border-border-subtle bg-surface-panel">
         {rows.map((row) => (
-          <li key={row.plantId} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-4 py-3">
+          <li
+            key={row.plantId}
+            className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-4 py-3"
+          >
             <span className="min-w-0 flex-1 basis-72 text-text-secondary">
               <span className="mr-2 font-mono text-sm text-text-muted">{row.plantId}</span>
               {row.statement}
             </span>
             <span className="flex gap-4 text-sm text-text-muted">
               <span>
-                Described first <b className="font-semibold text-text-primary">{row.describedFirst}</b>
+                Described first{" "}
+                <b className="font-semibold text-text-primary">{row.describedFirst}</b>
               </span>
               <span>
                 Blind-first <b className="font-semibold text-text-primary">{row.blindFirst}</b>

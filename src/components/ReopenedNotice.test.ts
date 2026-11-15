@@ -9,11 +9,17 @@ describe("reopenedText", () => {
   });
 
   it("uses the singular for one hunk", () => {
-    expect(reopenedText(["analyzer"], 1)).toContain("1 hunk the signer didn't read now needs a person.");
+    expect(reopenedText(["analyzer"], 1)).toContain(
+      "1 hunk the signer didn't read now needs a person.",
+    );
   });
 
   it("joins several areas", () => {
-    expect(reopenedText(["generator", "analyzer", "security"], 3)).toContain("An escape in Generator, Analyzer and Security re-routed");
-    expect(reopenedText(["generator", "analyzer"], 3)).toContain("An escape in Generator and Analyzer re-routed");
+    expect(reopenedText(["generator", "analyzer", "security"], 3)).toContain(
+      "An escape in Generator, Analyzer and Security re-routed",
+    );
+    expect(reopenedText(["generator", "analyzer"], 3)).toContain(
+      "An escape in Generator and Analyzer re-routed",
+    );
   });
 });

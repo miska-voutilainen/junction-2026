@@ -53,12 +53,23 @@ export function AppShell({
         Skip to content
       </a>
       <div className="sticky top-0 z-30 hidden compact:block print:hidden">
-        <TopBar repo={repo} breadcrumb={breadcrumb} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
+        <TopBar
+          repo={repo}
+          breadcrumb={breadcrumb}
+          escapeSlot={escapeSlot}
+          needsReviewCount={needsReviewCount}
+        />
       </div>
-      <MobileHeader title={title} backHref={backHref} escapeSlot={escapeSlot} needsReviewCount={needsReviewCount} />
+      <MobileHeader
+        title={title}
+        backHref={backHref}
+        escapeSlot={escapeSlot}
+        needsReviewCount={needsReviewCount}
+      />
       <div className="flex flex-1">
         {/* Sticky at the height of what is left below the top bar, so the shortcuts at the foot stay on screen on a long page; a short window scrolls the nav itself. */}
-        <aside className={cn(
+        <aside
+          className={cn(
             "sticky top-topbar hidden h-below-topbar shrink-0 self-start overflow-y-auto border-r border-border-subtle bg-surface-raised nav:block print:hidden",
             isNavRail ? "w-nav-rail" : "w-nav",
           )}

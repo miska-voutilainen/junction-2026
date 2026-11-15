@@ -22,7 +22,9 @@ export function SignButton({ signState }: Readonly<{ signState: SignState }>) {
       className="hidden items-center gap-2 rounded-button bg-brand py-2 pr-2.5 pl-4 text-sm font-semibold text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring-on-brand compact:inline-flex"
     >
       {signActionLabel(signState)}
-      <Kbd aria-hidden="true" className="bg-primary-foreground/15 text-primary-foreground">4</Kbd>
+      <Kbd aria-hidden="true" className="bg-primary-foreground/15 text-primary-foreground">
+        4
+      </Kbd>
     </button>
   );
 }

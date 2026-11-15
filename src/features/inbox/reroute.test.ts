@@ -3,7 +3,14 @@ import type { InboxRow, ReviewedRow } from "./inboxModel";
 import { describeReroute } from "./reroute";
 
 function row(id: string, overrides: Partial<ReviewedRow> = {}): ReviewedRow {
-  return { id, state: "reviewed", tier: "focused", readHunks: 3, totalHunks: 8, ...overrides } as ReviewedRow;
+  return {
+    id,
+    state: "reviewed",
+    tier: "focused",
+    readHunks: 3,
+    totalHunks: 8,
+    ...overrides,
+  } as ReviewedRow;
 }
 
 describe("describeReroute", () => {
@@ -13,7 +20,10 @@ describe("describeReroute", () => {
   });
 
   it("names the new reading count when only the count changed", () => {
-    const result = describeReroute([row("mp-2283", { tier: "full", readHunks: 7 })], [row("mp-2283", { tier: "full", readHunks: 8 })]);
+    const result = describeReroute(
+      [row("mp-2283", { tier: "full", readHunks: 7 })],
+      [row("mp-2283", { tier: "full", readHunks: 8 })],
+    );
     expect(result.sentence).toBe("mp-2283 now reads 8 of 8");
   });
 

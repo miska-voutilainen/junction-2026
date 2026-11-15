@@ -5,8 +5,15 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  globToRegExp, matchesGlob, normalisePath, isOutside, classifyPath, lanesTouched, readSetting,
-  compareWithClaudeMd, loadLanes,
+  globToRegExp,
+  matchesGlob,
+  normalisePath,
+  isOutside,
+  classifyPath,
+  lanesTouched,
+  readSetting,
+  compareWithClaudeMd,
+  loadLanes,
 } from "./lanes.mjs";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -51,7 +58,11 @@ test("classifyPath order", () => {
   assert.equal(k("docs/api.md").kind, "open");
   assert.equal(k(".claude/settings.local.json").kind, "local");
   assert.equal(k(".claude/rules/git.md").kind, "shared");
-  assert.deepEqual(k("src/rules/route.ts"), { kind: "lane", lane: "engine", owner: "miska-voutilainen" });
+  assert.deepEqual(k("src/rules/route.ts"), {
+    kind: "lane",
+    lane: "engine",
+    owner: "miska-voutilainen",
+  });
   assert.equal(k("e2e/x.spec.ts").lane, "app");
   assert.equal(k("scripts/seed.ts").lane, "evidence");
   assert.equal(k("src/contracts/review.ts").kind, "shared");
@@ -61,7 +72,14 @@ test("classifyPath order", () => {
 });
 
 test("lanesTouched", () => {
-  const files = ["src/ai/a.ts", "src/app/p.tsx", "docs/api.md", ".claude/settings.local.json", "package.json", "foo.ts"];
+  const files = [
+    "src/ai/a.ts",
+    "src/app/p.tsx",
+    "docs/api.md",
+    ".claude/settings.local.json",
+    "package.json",
+    "foo.ts",
+  ];
   assert.deepEqual(lanesTouched(files, config), ["app", "engine", "shared"]);
   assert.deepEqual(lanesTouched(["docs/api.md"], config), []);
 });
@@ -71,7 +89,10 @@ test("readSetting", () => {
   const root = mkdtempSync(join(tmpdir(), "lanes-test-"));
   try {
     mkdirSync(join(root, ".claude"));
-    writeFileSync(join(root, ".claude", "settings.local.json"), JSON.stringify({ env: { LANE: "evidence", PLAN: "" } }));
+    writeFileSync(
+      join(root, ".claude", "settings.local.json"),
+      JSON.stringify({ env: { LANE: "evidence", PLAN: "" } }),
+    );
     assert.equal(readSetting("LANE", root, {}), "evidence");
     assert.equal(readSetting("LANE", root, { LANE: "app" }), "app");
     assert.equal(readSetting("LANE", root, { LANE: "" }), "evidence");
@@ -94,7 +115,10 @@ test("compareWithClaudeMd", () => {
 });
 
 test("normalisePath collapses dot segments", () => {
-  assert.equal(normalisePath("src/../.claude/hooks/guard.mjs", "C:/repo"), ".claude/hooks/guard.mjs");
+  assert.equal(
+    normalisePath("src/../.claude/hooks/guard.mjs", "C:/repo"),
+    ".claude/hooks/guard.mjs",
+  );
   assert.equal(normalisePath("C:\\repo\\src\\..\\.claude\\x", "c:/repo"), ".claude/x");
   assert.equal(isOutside(normalisePath("src/../..", "C:/repo")), true);
   assert.equal(isOutside(normalisePath("C:/repo/../other/a.ts", "C:/repo")), true);

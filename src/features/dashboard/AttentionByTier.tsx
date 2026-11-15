@@ -11,14 +11,22 @@ import type { TierAttention } from "./dashboardModel";
  */
 export function AttentionByTier({ rows }: Readonly<{ rows: TierAttention[] }>) {
   return (
-    <DashboardSection title="Attention by tier" subtitle="Hunks a person read against hunks covered by evidence">
+    <DashboardSection
+      title="Attention by tier"
+      subtitle="Hunks a person read against hunks covered by evidence"
+    >
       <ul className="flex flex-col gap-3.5 rounded-page border border-border-subtle bg-surface-panel px-4 py-4">
         {rows.map((row) => (
-          <li key={row.tier} className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 text-sm">
+          <li
+            key={row.tier}
+            className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 text-sm"
+          >
             <span className="font-medium">{tierLabel[row.tier]}</span>
             <AttentionBar row={row} />
             <span className="col-start-2 text-text-muted">
-              {row.changes === 0 ? "No changes" : `${row.readHunks} of ${row.totalHunks} hunks · ~${row.readMinutes} min`}
+              {row.changes === 0
+                ? "No changes"
+                : `${row.readHunks} of ${row.totalHunks} hunks · ~${row.readMinutes} min`}
             </span>
           </li>
         ))}
@@ -28,7 +36,8 @@ export function AttentionByTier({ rows }: Readonly<{ rows: TierAttention[] }>) {
           <span aria-hidden="true" className="size-2 rounded-chip bg-amber" /> Read by a person
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="size-2 rounded-chip bg-border-strong" /> Covered by evidence
+          <span aria-hidden="true" className="size-2 rounded-chip bg-border-strong" /> Covered by
+          evidence
         </span>
       </p>
     </DashboardSection>
@@ -38,7 +47,11 @@ export function AttentionByTier({ rows }: Readonly<{ rows: TierAttention[] }>) {
 function AttentionBar({ row }: Readonly<{ row: TierAttention }>) {
   const readShare = row.totalHunks === 0 ? 0 : (row.readHunks / row.totalHunks) * 100;
   return (
-    <span role="img" aria-label={attentionSummary(row)} className="flex h-2.5 overflow-hidden rounded-chip bg-surface-bg">
+    <span
+      role="img"
+      aria-label={attentionSummary(row)}
+      className="flex h-2.5 overflow-hidden rounded-chip bg-surface-bg"
+    >
       {row.totalHunks > 0 && (
         <>
           <span

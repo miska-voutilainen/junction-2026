@@ -13,11 +13,15 @@ import { loadChange, loadChanges, loadReceipt, loadReceiptText } from "@/lib/dat
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   const changes = await loadChanges();
   if (changes.status !== "ok") return [];
-  return changes.data.filter((change) => change.kind === "tieto").map((change) => ({ id: change.id }));
+  return changes.data
+    .filter((change) => change.kind === "tieto")
+    .map((change) => ({ id: change.id }));
 }
 
 /** Tab title "Receipt · <requirement> · Countersign"; plain "Countersign" when the change can't be read. */
-export async function generateMetadata({ params }: Readonly<{ params: Promise<{ id: string }> }>): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>): Promise<Metadata> {
   const { id } = await params;
   const change = await loadChange(id);
   if (change.status === "missing") return { title: `No change with id ${id} · Countersign` };
@@ -31,7 +35,9 @@ export async function generateMetadata({ params }: Readonly<{ params: Promise<{ 
  * The inbox reader reports a bad receipt only as "unreadable", so the page
  * reads the file once more for its validation error.
  */
-export default async function ReceiptPage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+export default async function ReceiptPage({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
   const data = await loadInboxData();
   if (data.status === "invalid") {

@@ -62,7 +62,9 @@ export function AreaCard({
         <h3 id={headingId} className="text-lg font-semibold">
           {name}
         </h3>
-        <span className={cn("rounded-chip border px-1.5 py-0.5 text-xs font-medium", LEVEL_PILL[level])}>
+        <span
+          className={cn("rounded-chip border px-1.5 py-0.5 text-xs font-medium", LEVEL_PILL[level])}
+        >
           {ladderLevelLabel[level]}
         </span>
         <LevelLadder level={level} className="ml-auto" />
@@ -78,13 +80,20 @@ export function AreaCard({
       </dl>
 
       {escapeDrop && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-rose/40 px-3 py-2 text-sm text-rose-light"
-        >
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-rose/40 px-3 py-2 text-sm text-rose-light">
           <span>
-            Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to {ladderLevelLabel[escapeDrop.to]}
+            Escape recorded (simulated) · dropped from {ladderLevelLabel[escapeDrop.from]} to{" "}
+            {ladderLevelLabel[escapeDrop.to]}
             {` · ${countOf(escapes, "simulated escape")}`}
           </span>
-          <Button ref={undoButton} type="button" variant="ghost" size="sm" onClick={() => onUndo(area)} className="text-rose-light">
+          <Button
+            ref={undoButton}
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onUndo(area)}
+            className="text-rose-light"
+          >
             Undo
           </Button>
         </div>
@@ -112,7 +121,11 @@ export function AreaCard({
   );
 }
 
-function Row({ term, detail, note }: Readonly<{ term: string; detail: string; note?: string | null }>) {
+function Row({
+  term,
+  detail,
+  note,
+}: Readonly<{ term: string; detail: string; note?: string | null }>) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-xs text-text-muted">{term}</dt>

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Area, LadderLevel, ReportCard } from "../contracts";
 import { applyEscapes, ladderLevel, levelsForReviewer, levelsFromReportCard } from "./ladder";
 
-const record = (planted: number, caught: number, spotChecksClean = 0) => ({ planted, caught, spotChecksClean });
+const record = (planted: number, caught: number, spotChecksClean = 0) => ({
+  planted,
+  caught,
+  spotChecksClean,
+});
 
 describe("ladderLevel", () => {
   it("is shadow with fewer than 3 planted bugs, even when all were caught", () => {
@@ -22,11 +26,15 @@ describe("ladderLevel", () => {
     expect(ladderLevel(record(4, 4, 4))).toBe("calibrated");
     expect(ladderLevel(record(4, 4, 5))).toBe("trusted");
   });
-
 });
 
 describe("applyEscapes", () => {
-  const levels: Record<Area, LadderLevel> = { generator: "trusted", analyzer: "calibrated", security: "shadow", performance: "trusted" };
+  const levels: Record<Area, LadderLevel> = {
+    generator: "trusted",
+    analyzer: "calibrated",
+    security: "shadow",
+    performance: "trusted",
+  };
 
   it("drops only the named areas and floors at shadow", () => {
     expect(applyEscapes(levels, { generator: 1, analyzer: 1, security: 2 })).toEqual({
@@ -45,12 +53,27 @@ describe("applyEscapes", () => {
 
 describe("levelsFromReportCard", () => {
   it("makes every area shadow when there is no report card", () => {
-    expect(Object.values(levelsFromReportCard(null))).toEqual(["shadow", "shadow", "shadow", "shadow"]);
+    expect(Object.values(levelsFromReportCard(null))).toEqual([
+      "shadow",
+      "shadow",
+      "shadow",
+      "shadow",
+    ]);
   });
 
   it("reads the recorded level per area and leaves areas it lacks at shadow", () => {
-    const card = { areas: [{ area: "generator", level: "calibrated" }, { area: "security", level: "trusted" }] } as unknown as ReportCard;
-    expect(levelsFromReportCard(card)).toEqual({ generator: "calibrated", analyzer: "shadow", security: "trusted", performance: "shadow" });
+    const card = {
+      areas: [
+        { area: "generator", level: "calibrated" },
+        { area: "security", level: "trusted" },
+      ],
+    } as unknown as ReportCard;
+    expect(levelsFromReportCard(card)).toEqual({
+      generator: "calibrated",
+      analyzer: "shadow",
+      security: "trusted",
+      performance: "shadow",
+    });
   });
 });
 
@@ -65,7 +88,12 @@ describe("levelsForReviewer", () => {
   });
 
   it("routes every area as shadow for a model the card did not measure", () => {
-    expect(Object.values(levelsForReviewer(card, "model-b"))).toEqual(["shadow", "shadow", "shadow", "shadow"]);
+    expect(Object.values(levelsForReviewer(card, "model-b"))).toEqual([
+      "shadow",
+      "shadow",
+      "shadow",
+      "shadow",
+    ]);
   });
 
   it("is all shadow without a report card", () => {

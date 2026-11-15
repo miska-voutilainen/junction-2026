@@ -6,11 +6,23 @@ import { ladderPolicy } from "@/policy/ladder";
  * @param spotChecksClean Clean spot checks recorded across all areas; the Trusted cell says "none" only when it is 0.
  */
 export function LevelsLegend({ spotChecksClean }: Readonly<{ spotChecksClean: number }>) {
-  const recorded = spotChecksClean === 0 ? "none are recorded in this reference" : `${spotChecksClean} recorded so far`;
+  const recorded =
+    spotChecksClean === 0
+      ? "none are recorded in this reference"
+      : `${spotChecksClean} recorded so far`;
   const levels = [
-    { name: "Shadow", text: "Reviews every change, but routes nothing: a person reads every hunk in the area, even one a Verified claim covers." },
-    { name: "Calibrated", text: "Can lower a change to Focused at best, never to Light. Reached by catching planted bugs blind." },
-    { name: "Trusted", text: `Can lower a change to Light. Needs ${ladderPolicy.spotChecksForTrusted} clean spot checks, ${recorded}.` },
+    {
+      name: "Shadow",
+      text: "Reviews every change, but routes nothing: a person reads every hunk in the area, even one a Verified claim covers.",
+    },
+    {
+      name: "Calibrated",
+      text: "Can lower a change to Focused at best, never to Light. Reached by catching planted bugs blind.",
+    },
+    {
+      name: "Trusted",
+      text: `Can lower a change to Light. Needs ${ladderPolicy.spotChecksForTrusted} clean spot checks, ${recorded}.`,
+    },
   ];
   return (
     <Disclosure
@@ -25,7 +37,10 @@ export function LevelsLegend({ spotChecksClean }: Readonly<{ spotChecksClean: nu
     >
       <dl className="grid grid-cols-1 gap-3 pt-1 nav:grid-cols-3">
         {levels.map(({ name, text }) => (
-          <div key={name} className="rounded-control border border-border-subtle bg-surface-panel p-3.5">
+          <div
+            key={name}
+            className="rounded-control border border-border-subtle bg-surface-panel p-3.5"
+          >
             <dt className="font-semibold">{name}</dt>
             <dd className="mt-1 text-text-muted">{text}</dd>
           </div>

@@ -12,8 +12,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ChangeInputSchema } from "../src/contracts";
 
-const FORK_URL =
-  "https://github.com/miska-voutilainen/junction26-messagepack-csharp.git";
+const FORK_URL = "https://github.com/miska-voutilainen/junction26-messagepack-csharp.git";
 
 const NOTES_REF = "refs/notes/countersign";
 
@@ -61,11 +60,7 @@ function requireSampleRepoDir(sampleRepoDir: string | undefined): string {
   return sampleRepoDir;
 }
 
-function cloneIfMissing(
-  dir: string,
-  forkUrl: string,
-  log: (line: string) => void,
-): void {
+function cloneIfMissing(dir: string, forkUrl: string, log: (line: string) => void): void {
   // `git clone` accepts an empty folder, so only a folder with content is left alone.
   if (existsSync(dir) && readdirSync(dir).length > 0) return;
   log(`Cloning ${forkUrl} into ${dir}`);
@@ -124,11 +119,7 @@ function fetchBranchesAndNotes(dir: string, log: (line: string) => void): void {
  * here and not as a confusing diff error later.
  * Example line: `mp-2283 9df83c38409c8bfad0517aebffe48211eda4a5b4`.
  */
-function checkChangeHeads(
-  dir: string,
-  changes: SampleChange[],
-  log: (line: string) => void,
-): void {
+function checkChangeHeads(dir: string, changes: SampleChange[], log: (line: string) => void): void {
   const missing: string[] = [];
   for (const change of changes) {
     for (const sha of [change.baseSha, change.headSha]) {
@@ -152,20 +143,15 @@ function checkChangeHeads(
  * The folder is found from this file, so the script runs from any directory.
  */
 function loadSampleChanges(): SampleChange[] {
-  const changesDir = fileURLToPath(
-    new URL("../data/sample/changes", import.meta.url),
-  );
+  const changesDir = fileURLToPath(new URL("../data/sample/changes", import.meta.url));
   return readdirSync(changesDir)
     .filter((file) => file.endsWith(".json"))
     .sort()
     .map((file) => {
       try {
-        return ChangeInputSchema.parse(
-          JSON.parse(readFileSync(join(changesDir, file), "utf8")),
-        );
+        return ChangeInputSchema.parse(JSON.parse(readFileSync(join(changesDir, file), "utf8")));
       } catch (failure) {
-        const reason =
-          failure instanceof Error ? failure.message : String(failure);
+        const reason = failure instanceof Error ? failure.message : String(failure);
         throw new Error(
           `data/sample/changes/${file} is invalid: ${reason}. Run pnpm test scripts/sampleData.test.ts`,
         );
@@ -189,12 +175,8 @@ function git(args: string[], cwd: string, failureMessage?: string): string {
     }).trim();
   } catch (failure) {
     const stderr =
-      failure instanceof Error && "stderr" in failure
-        ? String(failure.stderr).trim()
-        : "";
-    throw new Error(
-      `${failureMessage ?? `git ${args[0]} failed`}${stderr ? `: ${stderr}` : ""}`,
-    );
+      failure instanceof Error && "stderr" in failure ? String(failure.stderr).trim() : "";
+    throw new Error(`${failureMessage ?? `git ${args[0]} failed`}${stderr ? `: ${stderr}` : ""}`);
   }
 }
 
@@ -213,8 +195,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 `),
     });
   } catch (failure) {
-    process.stderr
-      .write(`${failure instanceof Error ? failure.message : String(failure)}
+    process.stderr.write(`${failure instanceof Error ? failure.message : String(failure)}
 `);
     process.exitCode = 1;
   }

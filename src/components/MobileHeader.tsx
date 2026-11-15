@@ -8,7 +8,8 @@ import { useCommandMenu } from "@/components/CommandMenu";
 import { NavSheet } from "@/components/NavSheet";
 import { Wordmark } from "@/components/Wordmark";
 
-const TOUCH_TARGET = "grid size-11 place-items-center rounded-control text-text-secondary hover:bg-surface-hover hover:text-text-primary";
+const TOUCH_TARGET =
+  "grid size-11 place-items-center rounded-control text-text-secondary hover:bg-surface-hover hover:text-text-primary";
 
 /**
  * The header below 760 px, replacing the top bar: a menu button, a back link (or the

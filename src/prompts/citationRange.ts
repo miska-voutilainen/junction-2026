@@ -19,7 +19,9 @@ export const MAX_CITATION_LINES = 12;
  * @example citationRangeProblem({ ...citation, startLine: 1014, endLine: 1026 })
  * // "citation lines 1014-1026 are 13 lines (both ends count); the range must be 1 to 12 lines, for example 1014-1025"
  */
-export function citationRangeProblem(citation: Pick<Citation, "startLine" | "endLine">): string | null {
+export function citationRangeProblem(
+  citation: Pick<Citation, "startLine" | "endLine">,
+): string | null {
   const { startLine, endLine } = citation;
   const lines = endLine - startLine + 1;
   if (lines >= 1 && lines <= MAX_CITATION_LINES) return null;

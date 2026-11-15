@@ -10,7 +10,10 @@ export function ReviewRoles({ roles }: Readonly<{ roles: ReviewRole[] }>) {
   if (roles.length === 0) return null;
   return (
     <section aria-labelledby="review-roles-heading" className="flex flex-col gap-2">
-      <h2 id="review-roles-heading" className="flex flex-wrap items-center gap-x-3 text-md font-medium text-text-primary">
+      <h2
+        id="review-roles-heading"
+        className="flex flex-wrap items-center gap-x-3 text-md font-medium text-text-primary"
+      >
         Who reads what
         <IdeaLabel n={5} />
       </h2>
@@ -22,7 +25,9 @@ export function ReviewRoles({ roles }: Readonly<{ roles: ReviewRole[] }>) {
           >
             <span className="font-medium text-text-primary">{entry.role}</span>
             <span>{countOf(entry.hunkIds.length, "hunk")}</span>
-            <span className="min-w-0 break-words text-text-muted">· {entry.reasons.join(", ")}</span>
+            <span className="min-w-0 break-words text-text-muted">
+              · {entry.reasons.join(", ")}
+            </span>
           </li>
         ))}
       </ul>

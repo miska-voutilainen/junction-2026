@@ -49,7 +49,13 @@ export function CopyButton({
   return (
     <TooltipProvider>
       {variant === "text" ? (
-        <Button type="button" variant="secondary" onClick={copyText} aria-describedby={describedBy} className={cn("min-h-8", className)}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={copyText}
+          aria-describedby={describedBy}
+          className={cn("min-h-8", className)}
+        >
           <span className="relative size-4 shrink-0">{icon}</span>
           {label}
         </Button>

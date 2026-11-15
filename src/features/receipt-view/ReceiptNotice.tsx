@@ -12,17 +12,27 @@ import type { ReceiptDocumentView } from "./receiptModel";
  * icon so the state is never colour alone.
  */
 export function ReceiptNotice({ view }: Readonly<{ view: ReceiptDocumentView }>) {
-  if (view.status === "stale" && view.staleHashes) return <StaleNotice view={view} hashes={view.staleHashes} />;
+  if (view.status === "stale" && view.staleHashes)
+    return <StaleNotice view={view} hashes={view.staleHashes} />;
   if (view.status === "unverified") return <UnverifiedNotice view={view} />;
   return null;
 }
 
-function StaleNotice({ view, hashes }: Readonly<{ view: ReceiptDocumentView; hashes: { signedDiff: string; reviewedDiff: string } }>) {
+function StaleNotice({
+  view,
+  hashes,
+}: Readonly<{ view: ReceiptDocumentView; hashes: { signedDiff: string; reviewedDiff: string } }>) {
   // Labels first and padded to one width, so the hashes line up and nothing wraps at 320 px.
   const hashLines = `Signed diff    ${hashes.signedDiff}\nReviewed diff  ${hashes.reviewedDiff}`;
   return (
-    <section aria-labelledby="stale-title" className="flex flex-col gap-3 rounded-page border border-amber/50 bg-surface-panel p-4 compact:p-5">
-      <h2 id="stale-title" className="flex items-start gap-2 text-md font-semibold text-amber-light">
+    <section
+      aria-labelledby="stale-title"
+      className="flex flex-col gap-3 rounded-page border border-amber/50 bg-surface-panel p-4 compact:p-5"
+    >
+      <h2
+        id="stale-title"
+        className="flex items-start gap-2 text-md font-semibold text-amber-light"
+      >
         <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         {STALE_TITLE}
       </h2>
@@ -35,8 +45,14 @@ function StaleNotice({ view, hashes }: Readonly<{ view: ReceiptDocumentView; has
 
 function UnverifiedNotice({ view }: Readonly<{ view: ReceiptDocumentView }>) {
   return (
-    <section aria-labelledby="unverified-title" className="flex flex-col gap-3 rounded-page border border-rose/50 bg-surface-panel p-4 compact:p-5">
-      <h2 id="unverified-title" className="flex items-start gap-2 text-md font-semibold text-rose-light">
+    <section
+      aria-labelledby="unverified-title"
+      className="flex flex-col gap-3 rounded-page border border-rose/50 bg-surface-panel p-4 compact:p-5"
+    >
+      <h2
+        id="unverified-title"
+        className="flex items-start gap-2 text-md font-semibold text-rose-light"
+      >
         <ShieldX aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         {verifyLine("unverified")}
       </h2>

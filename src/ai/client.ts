@@ -84,11 +84,7 @@ export function createModelClient(options: ModelClientOptions): ModelClient {
         if (existing !== null) return existing.answer;
       }
 
-      const accepted = await askUntilValid(
-        options.transport,
-        request,
-        logUsage,
-      );
+      const accepted = await askUntilValid(options.transport, request, logUsage);
       if (options.mode === "record") {
         await writeRecording(file, {
           model: accepted.model,
@@ -115,17 +111,12 @@ export function createModelClientFromEnv(
   env: NodeJS.ProcessEnv = process.env,
   usageSink?: UsageSink,
 ): ModelClient {
-  const backend = parseChoice<AiBackend>(
-    "AI_BACKEND",
-    env.AI_BACKEND,
+  const backend = parseChoice<AiBackend>("AI_BACKEND", env.AI_BACKEND, "claude-code", [
     "claude-code",
-    ["claude-code", "api", "kimi"],
-  );
-  const mode = parseChoice<AiMode>("AI_MODE", env.AI_MODE, "record", [
-    "record",
-    "replay",
-    "live",
+    "api",
+    "kimi",
   ]);
+  const mode = parseChoice<AiMode>("AI_MODE", env.AI_MODE, "record", ["record", "replay", "live"]);
   return createModelClient({
     mode,
     transport: transports[backend],
@@ -152,11 +143,7 @@ function parseChoice<T extends string>(
   );
 }
 
-async function replay<T>(
-  request: TypedRequest<T>,
-  file: string,
-  logUsage: UsageSink,
-): Promise<T> {
+async function replay<T>(request: TypedRequest<T>, file: string, logUsage: UsageSink): Promise<T> {
   const recording = await readRecording(file);
   if (!recording) throw new RecordingMissingError(request.promptVersion, file);
   // Same check as a fresh answer. A failure means the schema changed without a prompt version bump.
@@ -180,7 +167,9 @@ async function reuseRecording<T>(
   if (!recording) return null;
   const checked = validateAnswer(recording.rawAnswer, request.schema);
   if (!checked.ok) return null;
-  console.error(`${request.promptVersion}: reusing the recording ${path.basename(file)}, no model call`);
+  console.error(
+    `${request.promptVersion}: reusing the recording ${path.basename(file)}, no model call`,
+  );
   logReplayed(request, recording, logUsage);
   return { answer: checked.value };
 }
@@ -315,11 +304,7 @@ async function askOnce<T>(
       signal,
     );
   } catch (error) {
-    if (signal.aborted)
-      throw new ModelTimeoutError(
-        request.promptVersion,
-        CALL_TIMEOUT_MS / 1000,
-      );
+    if (signal.aborted) throw new ModelTimeoutError(request.promptVersion, CALL_TIMEOUT_MS / 1000);
     throw error;
   } finally {
     clearTimeout(budgetWarningTimer);

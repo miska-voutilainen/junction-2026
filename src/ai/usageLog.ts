@@ -1,7 +1,4 @@
-import {
-  INPUT_USD_PER_MILLION_TOKENS,
-  OUTPUT_USD_PER_MILLION_TOKENS,
-} from "./limits";
+import { INPUT_USD_PER_MILLION_TOKENS, OUTPUT_USD_PER_MILLION_TOKENS } from "./limits";
 import type { Usage, UsageEntry } from "./types";
 
 /** Cost in US dollars: what the backend reported, else tokens times the partner price. */
@@ -19,7 +16,5 @@ export type UsageSink = (entry: UsageEntry) => void;
 
 /** Default sink: one JSON line per call on stderr with model, version, tokens, cost and time, never content. */
 export const stderrUsageSink: UsageSink = (entry) => {
-  process.stderr.write(
-    `${JSON.stringify({ event: "model-call", ...entry })}\n`,
-  );
+  process.stderr.write(`${JSON.stringify({ event: "model-call", ...entry })}\n`);
 };

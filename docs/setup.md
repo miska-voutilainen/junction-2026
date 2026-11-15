@@ -10,7 +10,6 @@ The harness has three jobs: **keep agents safe** (guard), **keep quality up wher
 
 Nothing is installed before the event: only this Markdown comes with you, plus two plain-text config files (`.gitignore` and `.gitattributes`, no code). Miska's machine is set up before kickoff (it needs Claude Code, Git, `gh`, Node, Python and Graphify). Everyone else runs this list in the background from the moment the repo exists, while kickoff runs (about 20 minutes, mostly downloads; skip anything already installed), so it's done before the skeleton PR merges. The night before, only read: this kit, the rulebook, the plan limits.
 
-
 - [ ] **Claude Code** installed and logged in (`claude` in a terminal, or the VS Code extension). Plans and usage: [.claude/rules/delegation.md](../.claude/rules/delegation.md).
 - [ ] **Git** with name and **the email of your GitHub account** (or its `…@users.noreply.github.com` address; the dry run showed a different email makes every squash merge add a stray `Co-authored-by` line) (on Windows: Git for Windows, which includes Git Bash; Claude Code needs it); **GitHub CLI** logged in (`gh auth login`) as your own account. Send your GitHub login to whoever creates the repo.
 - [ ] **Node.js LTS** (hooks are Node scripts so they run the same on Windows, macOS and Linux) and **Playwright browsers** (`npx playwright install` in any scratch folder; the download is large, so start it first and let it run). Install whatever the likely stack needs (Python, Docker), but don't configure anything yet.
@@ -41,11 +40,11 @@ Nothing is installed before the event: only this Markdown comes with you, plus t
 
 ### `.claude/settings.json` (committed, shared)
 
-| List | Entries | Why |
-| --- | --- | --- |
-| **allow** | the stack's dev, test, e2e, evals, screenshot, lint, typecheck, format and build commands; `git status/diff/log/show/branch/switch/add/commit/fetch/pull/merge/push`; `gh pr create/view/list/checks/diff/comment/merge`; `gh issue list/view/create/comment/edit`; `gh run list/view` | "go" runs without prompts; the guard enforces the safety of pushes, merges and GitHub text |
-| **ask** | `gh api`, deploy commands outside the PR flow, package installs, database resets outside the seed command | A human sees every new dependency and anything that bypasses the PR flow |
-| **deny** | `Read`/`Edit` of the real secret files by name (`.env`, `.env.local`, `.env.*.local`, `.env.production`; a deny rule can't except `.env.example`, so the guard covers other `.env.*`); `git push --force` / `-f`; `git push origin main`; `rm -rf /`, `rm -rf ~`; `gh repo edit`; `gh repo delete`; `gh pr review` | Secrets, irreversible actions, approvals are human |
+| List      | Entries                                                                                                                                                                                                                                                                                                            | Why                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **allow** | the stack's dev, test, e2e, evals, screenshot, lint, typecheck, format and build commands; `git status/diff/log/show/branch/switch/add/commit/fetch/pull/merge/push`; `gh pr create/view/list/checks/diff/comment/merge`; `gh issue list/view/create/comment/edit`; `gh run list/view`                             | "go" runs without prompts; the guard enforces the safety of pushes, merges and GitHub text |
+| **ask**   | `gh api`, deploy commands outside the PR flow, package installs, database resets outside the seed command                                                                                                                                                                                                          | A human sees every new dependency and anything that bypasses the PR flow                   |
+| **deny**  | `Read`/`Edit` of the real secret files by name (`.env`, `.env.local`, `.env.*.local`, `.env.production`; a deny rule can't except `.env.example`, so the guard covers other `.env.*`); `git push --force` / `-f`; `git push origin main`; `rm -rf /`, `rm -rf ~`; `gh repo edit`; `gh repo delete`; `gh pr review` | Secrets, irreversible actions, approvals are human                                         |
 
 Shape (fill in the stack's package manager and commands; strict JSON, no comments or trailing commas):
 
@@ -55,32 +54,84 @@ Shape (fill in the stack's package manager and commands; strict JSON, no comment
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
-      "Bash(pnpm run *)", "Bash(pnpm exec playwright *)",
-      "Bash(git status *)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)", "Bash(git branch *)",
-      "Bash(git switch *)", "Bash(git add *)", "Bash(git commit *)", "Bash(git fetch *)", "Bash(git pull *)",
-      "Bash(git merge *)", "Bash(git push *)",
-      "Bash(gh pr create *)", "Bash(gh pr view *)", "Bash(gh pr list *)", "Bash(gh pr checks *)",
-      "Bash(gh pr diff *)", "Bash(gh pr comment *)", "Bash(gh pr merge *)",
-      "Bash(gh issue list *)", "Bash(gh issue view *)", "Bash(gh issue create *)",
-      "Bash(gh issue comment *)", "Bash(gh issue edit *)", "Bash(gh run list *)", "Bash(gh run view *)",
-      "Bash(graphify query *)", "Bash(graphify explain *)", "Bash(graphify path *)", "Bash(graphify update *)",
-      "Bash(python -m graphify *)", "Bash(py -m graphify *)"
+      "Bash(pnpm run *)",
+      "Bash(pnpm exec playwright *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(git switch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr comment *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh issue list *)",
+      "Bash(gh issue view *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(graphify query *)",
+      "Bash(graphify explain *)",
+      "Bash(graphify path *)",
+      "Bash(graphify update *)",
+      "Bash(python -m graphify *)",
+      "Bash(py -m graphify *)"
     ],
     "ask": ["Bash(gh api *)", "Bash(pnpm add *)", "Bash(pnpm install *)"],
     "deny": [
-      "Read(./.env)", "Read(./.env.local)", "Read(./.env.*.local)", "Read(./.env.production)",
-      "Edit(./.env)", "Edit(./.env.local)", "Edit(./.env.*.local)", "Edit(./.env.production)",
-      "Bash(git push --force *)", "Bash(git push -f *)", "Bash(git push origin main *)",
-      "Bash(gh repo delete *)", "Bash(gh repo edit *)", "Bash(gh pr review *)"
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.production)",
+      "Edit(./.env)",
+      "Edit(./.env.local)",
+      "Edit(./.env.*.local)",
+      "Edit(./.env.production)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push origin main *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh pr review *)"
     ]
   },
   "hooks": {
     "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-brief.mjs"], "timeout": 45 }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-brief.mjs"],
+            "timeout": 45
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "matcher": "Read|Edit|Write|NotebookEdit|Bash|PowerShell",
-        "hooks": [{ "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs"], "timeout": 10 }] }
+      {
+        "matcher": "Read|Edit|Write|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
@@ -113,7 +164,9 @@ Written by the `join` skill; nobody edits it by hand. Per machine. **Max** (Misk
 ```json
 {
   "env": {
-    "LANE": "backend", "PLAN": "pro", "VAULT": "C:/Users/you/Obsidian/Junction",
+    "LANE": "backend",
+    "PLAN": "pro",
+    "VAULT": "C:/Users/you/Obsidian/Junction",
     "CLAUDE_CODE_EFFORT_LEVEL": "medium"
   },
   "permissions": { "additionalDirectories": ["C:/Users/you/Obsidian/Junction"] },
@@ -135,17 +188,29 @@ Written at kickoff from the Lanes table in `CLAUDE.md`, changed only together wi
 - `shared`: glob patterns for contracts, design tokens, root configs, the package manifest and lockfile, `docs/spec.md`, `.github/**` and `.claude/**` (the rules, skills, agents, hooks and settings decide what every agent does).
 - `open`: `README.md`, `CLAUDE.md`, `AGENTS.md` and `docs/**` (except `docs/spec.md`). Docs change with the code in every PR, so these never trigger the guard's lane questions or the CI lane check. The Lanes table in `CLAUDE.md` still changes only together with `lanes.json`.
 - Every other tracked path matches exactly one lane or `shared`.
-Shape (paths are examples; kickoff writes the real ones):
+  Shape (paths are examples; kickoff writes the real ones):
 
 ```json
 {
   "lanes": {
-    "frontend": { "owner": "<github-login>", "paths": ["src/app/**", "src/features/**/ui/**", "e2e/**"] },
-    "backend":  { "owner": "<github-login>", "paths": ["src/server/**", "src/features/**/api/**"] },
-    "ai":       { "owner": "<github-login>", "paths": ["src/lib/ai/**", "src/prompts/**", "evals/**"] }
+    "frontend": {
+      "owner": "<github-login>",
+      "paths": ["src/app/**", "src/features/**/ui/**", "e2e/**"]
+    },
+    "backend": { "owner": "<github-login>", "paths": ["src/server/**", "src/features/**/api/**"] },
+    "ai": { "owner": "<github-login>", "paths": ["src/lib/ai/**", "src/prompts/**", "evals/**"] }
   },
-  "shared": ["src/contracts/**", "src/styles/tokens.css", "package.json", "pnpm-lock.yaml", "tsconfig.json",
-             "*.config.*", "docs/spec.md", ".github/**", ".claude/**"],
+  "shared": [
+    "src/contracts/**",
+    "src/styles/tokens.css",
+    "package.json",
+    "pnpm-lock.yaml",
+    "tsconfig.json",
+    "*.config.*",
+    "docs/spec.md",
+    ".github/**",
+    ".claude/**"
+  ],
   "open": ["README.md", "CLAUDE.md", "AGENTS.md", "docs/**"]
 }
 ```
@@ -160,12 +225,12 @@ Claude Code runs hooks as shell commands on lifecycle events with a JSON payload
 
 ### 4.1 Protocol reference
 
-| Event | Fires | stdin has | To block or give feedback |
-| --- | --- | --- | --- |
-| `SessionStart` | session start, resume, `/clear`, compact | `session_id`, `cwd`, `source` | stdout is added to the agent's context |
-| `PreToolUse` | before a tool call | `tool_name`, `tool_input` (`file_path`, `command`, `content`, `old_string`, `new_string`...) | print `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny"\|"ask"\|"allow","permissionDecisionReason":"..."}}`, or exit 2 with the reason on stderr |
-| `PostToolUse` | after a tool call succeeds | the same, plus `tool_response` | print `{"decision":"block","reason":"..."}` to feed the reason back to the agent |
-| `Stop` | the agent is about to end its turn | `stop_hook_active` (true when a Stop hook already made it continue) | print `{"decision":"block","reason":"..."}` to make it keep working; exit silently to let it stop |
+| Event          | Fires                                    | stdin has                                                                                    | To block or give feedback                                                                                                                                                       |
+| -------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SessionStart` | session start, resume, `/clear`, compact | `session_id`, `cwd`, `source`                                                                | stdout is added to the agent's context                                                                                                                                          |
+| `PreToolUse`   | before a tool call                       | `tool_name`, `tool_input` (`file_path`, `command`, `content`, `old_string`, `new_string`...) | print `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny"\|"ask"\|"allow","permissionDecisionReason":"..."}}`, or exit 2 with the reason on stderr |
+| `PostToolUse`  | after a tool call succeeds               | the same, plus `tool_response`                                                               | print `{"decision":"block","reason":"..."}` to feed the reason back to the agent                                                                                                |
+| `Stop`         | the agent is about to end its turn       | `stop_hook_active` (true when a Stop hook already made it continue)                          | print `{"decision":"block","reason":"..."}` to make it keep working; exit silently to let it stop                                                                               |
 
 Subagent tool calls go through the same hooks. For every hook: read stdin fully and strip a leading BOM, but when `process.stdin.isTTY` is true (run by hand from a terminal) skip stdin and use defaults, otherwise it waits forever; normalise backslashes to forward slashes before matching paths; finish well within the timeout; exit 0 with no output to allow; never print secrets. Checked against the Claude Code hooks docs on 2026-11-12.
 
@@ -182,37 +247,37 @@ A pure function `decide(input, root, lane)` so it can be unit-tested; the CLI wr
 
 **Lite mode (the escape hatch):** with `GUARD=lite` in the environment (`env` in `.claude/settings.local.json`, then a new session), only the safety rows apply: `.env`, secrets and private keys, likely secrets in written text, force push, push to `main`, `rm -rf` outside the repo, and the canary. Lane, naming, scratch and GitHub-text rows are skipped. For a guard bug that blocks work; remove it as soon as the fix merges.
 
-| Tool | Condition | Decision and reason (deny: the agent sees it; ask: the person sees it) |
-| --- | --- | --- |
-| Read, Edit, Write | path matches `(^\|/)\.env(\.\|$)` and is not `.env.example` | deny: ".env holds secrets; use .env.example" |
-| Edit, Write | path under `secrets/` or a private key file (`*.pem`, `id_rsa*`) | deny |
-| Edit, Write | written text contains a likely secret: a whole token `sk-ant-…`, `sk-…` or `nvapi-…` of 20+ characters, `ghp_`/`github_pat_` + 30+, `AKIA` + 16 capitals or digits, or `-----BEGIN … PRIVATE KEY`. Never the bare prefix: `task-list` and `risk-badge` contain `sk-` | deny: "put it in .env and read it from the environment" |
-| Edit, Write | `LANE` is unset | ask: "set env.LANE in .claude/settings.local.json" |
-| Edit, Write | path belongs to another lane in `lanes.json` | ask: "<path> belongs to lane <x> (owner <login>); talk to them or open a handoff" |
-| Edit, Write | path is `shared` in `lanes.json` | ask: "shared path: agree the change with the affected lanes" |
-| Edit, Write | `.claude/settings.local.json` | allow (per machine, gitignored; checked before the shared row) |
-| Edit, Write | `.claude/lanes.json` | ask: "lane map: change it together with the Lanes table in CLAUDE.md, with the team's agreement" |
-| Edit, Write | `.claude/hooks/**` or `.claude/settings.json` | ask: "harness file: it decides what every agent may do; agree the change with the team" |
-| Write | a new file at the repo root that isn't on the root allowlist (`.claude/rules/structure.md`) | ask: "put it in a folder, or add it to the File tree in CLAUDE.md first" |
-| Write | a file name with a whole segment (base name split on `-`, `_`, `.` and spaces, lowercased) equal to `copy`, `backup`, `old`, `final`, `v2`, `temp`, `tmp` or `untitled`; substrings don't count, so `template.tsx`, `CopyButton.tsx`, `temperature.ts`, `finalize.ts` pass | deny: "name it for what it is (structure.md)" |
-| Write | an image, log or scratch file outside the asset folder, `docs/`, `.scratch/`, `.review/` | ask: "scratch goes in .scratch/ (gitignored)" |
-| Shell | a command with a `.env` file other than `.env.example` as an argument (`cat .env`, `Get-Content .env.local`, `grep KEY .env`) | deny: ".env holds secrets; use .env.example" |
-| Shell | `git push` with `-f`, `--force`, `--force-with-lease` or a `+branch` refspec | deny |
-| Shell | `git push` whose target refspec is `main`, `HEAD:main` or `refs/heads/main`, or a bare `git push` while the current branch is `main` | deny: "open a PR (ship-pr)" |
-| Shell | `git rebase` (except `--abort`/`--continue`) | ask: "never rebase a pushed branch; merge origin/main instead" |
-| Shell | `rm -rf` / `rm -fr`, or PowerShell `Remove-Item -Recurse`, with a target outside the repo (`/`, `~`, a drive letter, `..`) | deny |
-| Shell | `git reset --hard`, `git clean -fd`, `git checkout -- .` | ask: "discards uncommitted work" |
-| Shell | the wrong package manager (e.g. `npm install` in a pnpm repo) | deny, naming the right one |
-| Shell | `gh pr merge` on a PR whose author isn't the current `gh` user (`gh pr view <n> --json author` vs `gh api user`, 5 s timeout; if the check fails: ask) | deny: "only the author merges" |
-| Shell | `gh pr review` with `--approve` / `-a` | deny: "approvals are human" |
-| Shell | `gh issue create`, `gh issue comment`, `gh pr create`, `gh pr comment` without `--body-file` (or `-F`) | deny: "write the text to a file and pass --body-file" |
-| Shell | `gh issue create`, `gh issue comment`, `gh pr create`, `gh pr comment` whose body file is missing, or whose first line doesn't start with `[agent:<LANE>]` | deny: "agent-written GitHub text starts with [agent:<lane>]" |
-| Shell | `gh issue close`, `gh issue edit` or `gh issue reopen` whose issue argument is exactly `1` or `#1` (a whole token, so `10`-`19` pass), and any `gh issue delete` | deny: "#1 is the agent sync log; it stays open and unchanged" |
-| Shell | a command that names `.claude/hooks/` or `.claude/settings.json` and writes to it (`>`, `>>`, `sed -i`, `mv`, `cp`, `rm`, `tee`, `Set-Content`, `Out-File`, `Remove-Item`, `Move-Item`) | ask: "harness file: use Edit so the change is visible, and agree it with the team" |
-| Shell | `git commit` whose message, or `gh pr create`, `gh pr edit` or `gh pr merge` whose title (`--title`/`-t`, `--subject`) or body (`--body`, `--body-file`), contains an emoji (any `\p{Extended_Pictographic}` character, U+FE0F, or a `:shortcode:` gitmoji) | deny: "no emoji in commit messages or PRs (team rule); plain text only" |
-| Shell | `git commit` whose message (`-m` text or the `-F` file), or `gh pr create`, `gh pr comment`, `gh issue create`, `gh issue comment` whose body file, contains a `Co-Authored-By:` trailer naming Claude or Anthropic, or the boilerplate link `Generated with [Claude Code](` | deny: "no AI trailers or boilerplate; declare AI use in the PR's AI use section (git.md)" |
-| Shell | `graphify claude install` (also as `python -m graphify` / `py -m graphify`) | deny: "it rewrites CLAUDE.md and the shared hooks; the kit's rule is .claude/rules/tools.md" |
-| Shell | `echo guard-check` | deny with "guard is active" (the canary) |
+| Tool              | Condition                                                                                                                                                                                                                                                                    | Decision and reason (deny: the agent sees it; ask: the person sees it)                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Read, Edit, Write | path matches `(^\|/)\.env(\.\|$)` and is not `.env.example`                                                                                                                                                                                                                  | deny: ".env holds secrets; use .env.example"                                                     |
+| Edit, Write       | path under `secrets/` or a private key file (`*.pem`, `id_rsa*`)                                                                                                                                                                                                             | deny                                                                                             |
+| Edit, Write       | written text contains a likely secret: a whole token `sk-ant-…`, `sk-…` or `nvapi-…` of 20+ characters, `ghp_`/`github_pat_` + 30+, `AKIA` + 16 capitals or digits, or `-----BEGIN … PRIVATE KEY`. Never the bare prefix: `task-list` and `risk-badge` contain `sk-`         | deny: "put it in .env and read it from the environment"                                          |
+| Edit, Write       | `LANE` is unset                                                                                                                                                                                                                                                              | ask: "set env.LANE in .claude/settings.local.json"                                               |
+| Edit, Write       | path belongs to another lane in `lanes.json`                                                                                                                                                                                                                                 | ask: "<path> belongs to lane <x> (owner <login>); talk to them or open a handoff"                |
+| Edit, Write       | path is `shared` in `lanes.json`                                                                                                                                                                                                                                             | ask: "shared path: agree the change with the affected lanes"                                     |
+| Edit, Write       | `.claude/settings.local.json`                                                                                                                                                                                                                                                | allow (per machine, gitignored; checked before the shared row)                                   |
+| Edit, Write       | `.claude/lanes.json`                                                                                                                                                                                                                                                         | ask: "lane map: change it together with the Lanes table in CLAUDE.md, with the team's agreement" |
+| Edit, Write       | `.claude/hooks/**` or `.claude/settings.json`                                                                                                                                                                                                                                | ask: "harness file: it decides what every agent may do; agree the change with the team"          |
+| Write             | a new file at the repo root that isn't on the root allowlist (`.claude/rules/structure.md`)                                                                                                                                                                                  | ask: "put it in a folder, or add it to the File tree in CLAUDE.md first"                         |
+| Write             | a file name with a whole segment (base name split on `-`, `_`, `.` and spaces, lowercased) equal to `copy`, `backup`, `old`, `final`, `v2`, `temp`, `tmp` or `untitled`; substrings don't count, so `template.tsx`, `CopyButton.tsx`, `temperature.ts`, `finalize.ts` pass   | deny: "name it for what it is (structure.md)"                                                    |
+| Write             | an image, log or scratch file outside the asset folder, `docs/`, `.scratch/`, `.review/`                                                                                                                                                                                     | ask: "scratch goes in .scratch/ (gitignored)"                                                    |
+| Shell             | a command with a `.env` file other than `.env.example` as an argument (`cat .env`, `Get-Content .env.local`, `grep KEY .env`)                                                                                                                                                | deny: ".env holds secrets; use .env.example"                                                     |
+| Shell             | `git push` with `-f`, `--force`, `--force-with-lease` or a `+branch` refspec                                                                                                                                                                                                 | deny                                                                                             |
+| Shell             | `git push` whose target refspec is `main`, `HEAD:main` or `refs/heads/main`, or a bare `git push` while the current branch is `main`                                                                                                                                         | deny: "open a PR (ship-pr)"                                                                      |
+| Shell             | `git rebase` (except `--abort`/`--continue`)                                                                                                                                                                                                                                 | ask: "never rebase a pushed branch; merge origin/main instead"                                   |
+| Shell             | `rm -rf` / `rm -fr`, or PowerShell `Remove-Item -Recurse`, with a target outside the repo (`/`, `~`, a drive letter, `..`)                                                                                                                                                   | deny                                                                                             |
+| Shell             | `git reset --hard`, `git clean -fd`, `git checkout -- .`                                                                                                                                                                                                                     | ask: "discards uncommitted work"                                                                 |
+| Shell             | the wrong package manager (e.g. `npm install` in a pnpm repo)                                                                                                                                                                                                                | deny, naming the right one                                                                       |
+| Shell             | `gh pr merge` on a PR whose author isn't the current `gh` user (`gh pr view <n> --json author` vs `gh api user`, 5 s timeout; if the check fails: ask)                                                                                                                       | deny: "only the author merges"                                                                   |
+| Shell             | `gh pr review` with `--approve` / `-a`                                                                                                                                                                                                                                       | deny: "approvals are human"                                                                      |
+| Shell             | `gh issue create`, `gh issue comment`, `gh pr create`, `gh pr comment` without `--body-file` (or `-F`)                                                                                                                                                                       | deny: "write the text to a file and pass --body-file"                                            |
+| Shell             | `gh issue create`, `gh issue comment`, `gh pr create`, `gh pr comment` whose body file is missing, or whose first line doesn't start with `[agent:<LANE>]`                                                                                                                   | deny: "agent-written GitHub text starts with [agent:<lane>]"                                     |
+| Shell             | `gh issue close`, `gh issue edit` or `gh issue reopen` whose issue argument is exactly `1` or `#1` (a whole token, so `10`-`19` pass), and any `gh issue delete`                                                                                                             | deny: "#1 is the agent sync log; it stays open and unchanged"                                    |
+| Shell             | a command that names `.claude/hooks/` or `.claude/settings.json` and writes to it (`>`, `>>`, `sed -i`, `mv`, `cp`, `rm`, `tee`, `Set-Content`, `Out-File`, `Remove-Item`, `Move-Item`)                                                                                      | ask: "harness file: use Edit so the change is visible, and agree it with the team"               |
+| Shell             | `git commit` whose message, or `gh pr create`, `gh pr edit` or `gh pr merge` whose title (`--title`/`-t`, `--subject`) or body (`--body`, `--body-file`), contains an emoji (any `\p{Extended_Pictographic}` character, U+FE0F, or a `:shortcode:` gitmoji)                  | deny: "no emoji in commit messages or PRs (team rule); plain text only"                          |
+| Shell             | `git commit` whose message (`-m` text or the `-F` file), or `gh pr create`, `gh pr comment`, `gh issue create`, `gh issue comment` whose body file, contains a `Co-Authored-By:` trailer naming Claude or Anthropic, or the boilerplate link `Generated with [Claude Code](` | deny: "no AI trailers or boilerplate; declare AI use in the PR's AI use section (git.md)"        |
+| Shell             | `graphify claude install` (also as `python -m graphify` / `py -m graphify`)                                                                                                                                                                                                  | deny: "it rewrites CLAUDE.md and the shared hooks; the kit's rule is .claude/rules/tools.md"     |
+| Shell             | `echo guard-check`                                                                                                                                                                                                                                                           | deny with "guard is active" (the canary)                                                         |
 
 Split a shell command on `&&`, `\|\|`, `;`, `\|` and newlines before matching, so chaining can't dodge a rule (the same separators cover PowerShell; Windows PowerShell 5.1 has no `&&`/`\|\|` but chains with `;`). It's a seatbelt, not a shell parser; the permission lists are the other half. Lane rules are `ask`, not `deny`: at one table a quick "may I?" beats a blocked teammate. Until `.claude/lanes.json` exists (during kickoff), the lane rows don't apply; the CI lane check passes the kickoff PR the same way.
 
@@ -309,8 +374,7 @@ One test file for `decide()` (one case per guard-table row, plus lane cases: own
 
 1. **`ci`** on `pull_request` and push to `main`:
    - `concurrency` per branch with `cancel-in-progress: true`; no `paths-ignore` (a required check that never runs leaves a docs-only PR blocked forever; skip the slow steps instead when only `*.md` changed); `timeout-minutes: 10`.
-   - One job on `ubuntu-latest`: checkout, runtime setup with the package-manager cache, frozen-lockfile install, then in this order (fail fast):
-     0. **Message check** (PRs): the PR title, the PR body and every commit message in the PR (`git log --format=%B origin/main..HEAD`) contain no emoji (`\p{Extended_Pictographic}`, U+FE0F, `:shortcode:`) and no AI `Co-Authored-By` trailer or "Generated with [Claude Code](" boilerplate. Title and body reach the script through `env:`.
+   - One job on `ubuntu-latest`: checkout, runtime setup with the package-manager cache, frozen-lockfile install, then in this order (fail fast): 0. **Message check** (PRs): the PR title, the PR body and every commit message in the PR (`git log --format=%B origin/main..HEAD`) contain no emoji (`\p{Extended_Pictographic}`, U+FE0F, `:shortcode:`) and no AI `Co-Authored-By` trailer or "Generated with [Claude Code](" boilerplate. Title and body reach the script through `env:`.
      1. **Lane check** (PRs): the lanes the PR touches, from its files and `lanes.json`. Fails if it touches another lane than its author's, or a shared path, without the `cross-lane` label; fails if `lanes.json` and the Lanes table in `CLAUDE.md` disagree. Posts the lanes touched in the job summary.
      2. **Tree check:** root files against the allowlist, top-level folders against the File tree, banned names, committed scratch or build output.
      3. Hook and lane-logic tests (section 4.6).

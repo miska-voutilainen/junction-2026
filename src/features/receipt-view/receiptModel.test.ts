@@ -16,7 +16,10 @@ function source(changeId: string, receipt?: InboxSource["receipt"]): InboxSource
   return {
     change: ChangeInputSchema.parse(fixture(`sample/changes/${changeId}.json`)),
     review: { state: "ok", data: ReviewSchema.parse(fixture(`runs/${changeId}/review.json`)) },
-    receipt: receipt === undefined ? ReceiptRecordSchema.parse(fixture(`receipts/${changeId}.json`)) : receipt,
+    receipt:
+      receipt === undefined
+        ? ReceiptRecordSchema.parse(fixture(`receipts/${changeId}.json`))
+        : receipt,
   };
 }
 
@@ -37,13 +40,19 @@ describe("buildReceiptView", () => {
 
   it("labels who checked each item", () => {
     const view = documentOf(source("mp-2283"));
-    expect(view.checked.map((entry) => entry.by)).toEqual(expect.arrayContaining(["Tool", "AI, supported", "Human"]));
+    expect(view.checked.map((entry) => entry.by)).toEqual(
+      expect.arrayContaining(["Tool", "AI, supported", "Human"]),
+    );
   });
 
   it("names author, reviewer version and signer once, in the roles line, not as identity rows", () => {
     const input = source("mp-2283");
     const view = documentOf(input);
-    expect(view.roles).toEqual({ authorAgent: input.change.authorAgent, reviewerVersion: "rv1", signer: { kind: "signed", owner: "miska-voutilainen" } });
+    expect(view.roles).toEqual({
+      authorAgent: input.change.authorAgent,
+      reviewerVersion: "rv1",
+      signer: { kind: "signed", owner: "miska-voutilainen" },
+    });
     expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["author"]));
     expect(view.identity.map((row) => row.label)).not.toEqual(expect.arrayContaining(["signer"]));
   });
@@ -69,12 +78,17 @@ describe("buildReceiptView", () => {
 
   it("names nobody as signer when the recorded signature check failed", () => {
     const record = ReceiptRecordSchema.parse(fixture("receipts/mp-2283.json"));
-    const view = documentOf(source("mp-2283", { ...record, verify: { ...record.verify, ok: false } }));
+    const view = documentOf(
+      source("mp-2283", { ...record, verify: { ...record.verify, ok: false } }),
+    );
     expect(view.roles.signer).toEqual({ kind: "unverified" });
   });
 
   it("still names the signer of a stale receipt", () => {
-    expect(documentOf(source("mp-2129")).roles.signer).toEqual({ kind: "signed", owner: "miska-voutilainen" });
+    expect(documentOf(source("mp-2129")).roles.signer).toEqual({
+      kind: "signed",
+      owner: "miska-voutilainen",
+    });
   });
 
   it("offers the sign command when there is no receipt", () => {
@@ -86,8 +100,16 @@ describe("buildReceiptView", () => {
   });
 
   it("carries the validation error of an unreadable receipt", () => {
-    const view = buildReceiptView(source("mp-2283", "unreadable"), "data/receipts/mp-2283.json: owner: Required", null);
-    expect(view).toEqual({ kind: "invalid", changeId: "mp-2283", error: "data/receipts/mp-2283.json: owner: Required" });
+    const view = buildReceiptView(
+      source("mp-2283", "unreadable"),
+      "data/receipts/mp-2283.json: owner: Required",
+      null,
+    );
+    expect(view).toEqual({
+      kind: "invalid",
+      changeId: "mp-2283",
+      error: "data/receipts/mp-2283.json: owner: Required",
+    });
   });
 
   it("calls a verified receipt unchecked, not signed, when no review can be compared with it", () => {
@@ -102,7 +124,10 @@ describe("buildReceiptView", () => {
 
   it("keeps a failed check unverified when there is no review either", () => {
     const record = ReceiptRecordSchema.parse(fixture("receipts/mp-2283.json"));
-    const input: InboxSource = { ...source("mp-2283", { ...record, verify: { ...record.verify, ok: false } }), review: { state: "unreadable" } };
+    const input: InboxSource = {
+      ...source("mp-2283", { ...record, verify: { ...record.verify, ok: false } }),
+      review: { state: "unreadable" },
+    };
     expect(documentOf(input).status).toBe("unverified");
   });
 
@@ -126,7 +151,9 @@ describe("hunk ledger", () => {
     const readRows = view.ledger.filter((row) => row.coverage === "read");
     expect(view.ledger.slice(0, readRows.length)).toEqual(readRows);
     expect(readRows.every((row) => row.readBy === view.owner)).toBe(true);
-    expect(view.ledger.filter((row) => row.coverage !== "read").every((row) => row.readBy === null)).toBe(true);
+    expect(
+      view.ledger.filter((row) => row.coverage !== "read").every((row) => row.readBy === null),
+    ).toBe(true);
   });
 
   it("reads the signed hunks, not the review: a review that disagrees changes nothing", () => {
@@ -158,7 +185,14 @@ describe("accepted refusals", () => {
 
 describe("readingSummary", () => {
   const routing = (coverage: Record<string, "read" | "verified" | "generated">) =>
-    ({ routing: { tier: "focused", coverage, readHunks: 1, totalHunks: Object.keys(coverage).length } }) as unknown as Review;
+    ({
+      routing: {
+        tier: "focused",
+        coverage,
+        readHunks: 1,
+        totalHunks: Object.keys(coverage).length,
+      },
+    }) as unknown as Review;
 
   it("says what a person read and what checks covered", () => {
     expect(readingSummary(routing({ h1: "read", h2: "verified" }))).toBe(

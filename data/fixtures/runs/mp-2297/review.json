@@ -46,9 +46,7 @@
       "area": "security",
       "added": 1,
       "removed": 0,
-      "hunkIds": [
-        "h1"
-      ]
+      "hunkIds": ["h1"]
     },
     {
       "path": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
@@ -56,9 +54,7 @@
       "area": "security",
       "added": 1,
       "removed": 0,
-      "hunkIds": [
-        "h2"
-      ]
+      "hunkIds": ["h2"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/GeneratedMessagePackResolver.g.cs",
@@ -66,9 +62,7 @@
       "area": null,
       "added": 1,
       "removed": 0,
-      "hunkIds": [
-        "h3"
-      ]
+      "hunkIds": ["h3"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/Resources/MessagePackObject/SimpleFormatter.g.cs",
@@ -76,9 +70,7 @@
       "area": null,
       "added": 1,
       "removed": 0,
-      "hunkIds": [
-        "h4"
-      ]
+      "hunkIds": ["h4"]
     },
     {
       "path": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",
@@ -86,9 +78,7 @@
       "area": null,
       "added": 6,
       "removed": 0,
-      "hunkIds": [
-        "h5"
-      ]
+      "hunkIds": ["h5"]
     }
   ],
   "hunks": [
@@ -325,9 +315,7 @@
         "expectedBehaviours": [
           "Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage."
         ],
-        "likelyAreas": [
-          "security"
-        ],
+        "likelyAreas": ["security"],
         "expectedTests": [
           "A test that exercises: Every formatter class the source generator emits is decorated with ExcludeFromCodeCoverage"
         ]
@@ -337,9 +325,7 @@
         "expectedBehaviours": [
           "The generated resolver class is decorated with ExcludeFromCodeCoverage."
         ],
-        "likelyAreas": [
-          "security"
-        ],
+        "likelyAreas": ["security"],
         "expectedTests": [
           "A test that exercises: The generated resolver class is decorated with ExcludeFromCodeCoverage"
         ]
@@ -369,10 +355,7 @@
       "text": "Generated formatters carry ExcludeFromCodeCoverage.",
       "kind": "behaviour",
       "level": "verified",
-      "hunkIds": [
-        "h1",
-        "h4"
-      ],
+      "hunkIds": ["h1", "h4"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
@@ -404,10 +387,7 @@
       "text": "The generated resolver carries ExcludeFromCodeCoverage.",
       "kind": "behaviour",
       "level": "verified",
-      "hunkIds": [
-        "h2",
-        "h3"
-      ],
+      "hunkIds": ["h2", "h3"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
@@ -439,10 +419,7 @@
       "text": "No setting or option is added.",
       "kind": "structure",
       "level": "supported",
-      "hunkIds": [
-        "h1",
-        "h2"
-      ],
+      "hunkIds": ["h1", "h2"],
       "citations": [
         {
           "file": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
@@ -468,9 +445,7 @@
       "text": "Adds a test asserting every generated source contains the attribute.",
       "kind": "test",
       "level": "supported",
-      "hunkIds": [
-        "h5"
-      ],
+      "hunkIds": ["h5"],
       "citations": [
         {
           "file": "tests/MessagePack.SourceGenerator.Tests/GenerationTests.cs",

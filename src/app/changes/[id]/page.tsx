@@ -17,7 +17,9 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 }
 
 /** Tab title "<requirement> · <change title> · Countersign"; plain "Countersign" when the change can't be read. */
-export async function generateMetadata({ params }: Readonly<{ params: Params }>): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: Readonly<{ params: Params }>): Promise<Metadata> {
   const { id } = await params;
   const change = await loadChange(id);
   if (change.status === "missing") return { title: `No change with id ${id} · Countersign` };
@@ -35,9 +37,19 @@ export default async function ReviewPage({ params }: Readonly<{ params: Params }
   const data = await loadInboxData();
   if (data.status === "invalid") {
     return (
-      <AppShell changes={[]} repo={FALLBACK_REPO} title="Review" backHref="/" breadcrumb={[{ label: "Inbox", href: "/" }, { label: id }]}>
+      <AppShell
+        changes={[]}
+        repo={FALLBACK_REPO}
+        title="Review"
+        backHref="/"
+        breadcrumb={[{ label: "Inbox", href: "/" }, { label: id }]}
+      >
         <div className="mx-auto w-full max-w-content px-4 py-6 compact:px-8 compact:py-7">
-          <ErrorState title="The changes couldn't be read." body="Nothing was changed. Fix the file named below, then reload." details={data.error} />
+          <ErrorState
+            title="The changes couldn't be read."
+            body="Nothing was changed. Fix the file named below, then reload."
+            details={data.error}
+          />
         </div>
       </AppShell>
     );
@@ -45,9 +57,12 @@ export default async function ReviewPage({ params }: Readonly<{ params: Params }
   const current = data.sources.find((source) => source.change.id === id);
   if (!current) notFound();
 
-  const tokens = current.review.state === "ok" ? await highlightHunks(current.review.data.hunks) : {};
+  const tokens =
+    current.review.state === "ok" ? await highlightHunks(current.review.data.hunks) : {};
   // Validation errors name the file; this change's review file has its id in the path.
-  const reviewError = data.problems.find((problem) => problem.includes(id) && problem.includes("review.json")) ?? null;
+  const reviewError =
+    data.problems.find((problem) => problem.includes(id) && problem.includes("review.json")) ??
+    null;
   return (
     <ReviewScreen
       sources={data.sources}

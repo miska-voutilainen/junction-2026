@@ -144,12 +144,16 @@ export function compareWithClaudeMd(config, claudeMd) {
   }));
   const tableLanes = new Map(rows.map((r) => [r.lane, r.owner]));
   for (const [lane, def] of Object.entries(config.lanes ?? {})) {
-    if (!tableLanes.has(lane)) problems.push(`lane "${lane}" is in lanes.json but not in the CLAUDE.md Lanes table`);
+    if (!tableLanes.has(lane))
+      problems.push(`lane "${lane}" is in lanes.json but not in the CLAUDE.md Lanes table`);
     else if (tableLanes.get(lane) !== def.owner)
-      problems.push(`lane "${lane}": owner ${def.owner} in lanes.json, ${tableLanes.get(lane)} in CLAUDE.md`);
+      problems.push(
+        `lane "${lane}": owner ${def.owner} in lanes.json, ${tableLanes.get(lane)} in CLAUDE.md`,
+      );
   }
   for (const lane of tableLanes.keys()) {
-    if (!(lane in (config.lanes ?? {}))) problems.push(`lane "${lane}" is in CLAUDE.md but not in lanes.json`);
+    if (!(lane in (config.lanes ?? {})))
+      problems.push(`lane "${lane}" is in CLAUDE.md but not in lanes.json`);
   }
   return problems;
 }

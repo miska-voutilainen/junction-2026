@@ -22,7 +22,10 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
         ) : (
           <ul className="flex flex-col gap-2">
             {checked.map(({ item, by }) => (
-              <li key={item} className="flex flex-col gap-0.5 compact:flex-row compact:justify-between compact:gap-6">
+              <li
+                key={item}
+                className="flex flex-col gap-0.5 compact:flex-row compact:justify-between compact:gap-6"
+              >
                 <span className={`min-w-0 ${SIGNED_TEXT}`}>{item}</span>
                 <span className="shrink-0 text-sm text-text-muted">{by}</span>
               </li>
@@ -45,9 +48,14 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
         )}
       </Section>
       <Section title="Residual risk">
-        <p data-written-text className={SIGNED_TEXT}>{residualRisk.text}</p>
+        <p data-written-text className={SIGNED_TEXT}>
+          {residualRisk.text}
+        </p>
         {residualRisk.accepted.length > 0 && (
-          <ul aria-label="Accepted refusals" className="flex flex-col gap-1 text-sm text-text-secondary">
+          <ul
+            aria-label="Accepted refusals"
+            className="flex flex-col gap-1 text-sm text-text-secondary"
+          >
             {residualRisk.accepted.map(({ refusalId, rule, runId }) => (
               <li key={refusalId}>
                 {rule ? (
@@ -56,7 +64,8 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
                   </>
                 ) : (
                   <>
-                    <span className="font-mono text-text-primary">{refusalId}</span> · recorded in run <span className="font-mono">{runId}</span>
+                    <span className="font-mono text-text-primary">{refusalId}</span> · recorded in
+                    run <span className="font-mono">{runId}</span>
                   </>
                 )}
               </li>

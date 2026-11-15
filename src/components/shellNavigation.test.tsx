@@ -13,8 +13,22 @@ vi.mock("next/navigation", () => ({
 }));
 
 const changes: ShellChange[] = [
-  { id: "mp-2283", title: "Reject oversized extension payloads", requirementId: "REQ-12", tierLabel: "Focused", statusLabel: "needs review", needsReview: true },
-  { id: "mp-2301", title: "Cache the resolver lookup", requirementId: "REQ-14", tierLabel: "Light", statusLabel: "signed", needsReview: false },
+  {
+    id: "mp-2283",
+    title: "Reject oversized extension payloads",
+    requirementId: "REQ-12",
+    tierLabel: "Focused",
+    statusLabel: "needs review",
+    needsReview: true,
+  },
+  {
+    id: "mp-2301",
+    title: "Cache the resolver lookup",
+    requirementId: "REQ-14",
+    tierLabel: "Light",
+    statusLabel: "signed",
+    needsReview: false,
+  },
 ];
 
 beforeEach(() => {
@@ -46,20 +60,26 @@ describe("AppNav", () => {
     navigation.pathname = "/changes/mp-2283";
     render(<AppNav needsReviewCount={2} />);
     expect(screen.getByRole("link", { name: /Inbox/ }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
+    expect(
+      screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current")),
+    ).toHaveLength(1);
   });
 
   it("marks Dashboard, not Inbox, on /dashboard", () => {
     navigation.pathname = "/dashboard";
     render(<AppNav needsReviewCount={2} />);
-    expect(screen.getByRole("link", { name: /Dashboard/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Dashboard/ }).getAttribute("aria-current")).toBe(
+      "page",
+    );
     expect(screen.getByRole("link", { name: /Inbox/ }).hasAttribute("aria-current")).toBe(false);
   });
 
   it("marks Reviewer, not Inbox, on the report card", () => {
     navigation.pathname = "/reviewer";
     render(<AppNav needsReviewCount={2} />);
-    expect(screen.getByRole("link", { name: /Reviewer/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: /Reviewer/ }).getAttribute("aria-current")).toBe(
+      "page",
+    );
     expect(screen.getByRole("link", { name: /Inbox/ }).hasAttribute("aria-current")).toBe(false);
   });
 
@@ -102,7 +122,9 @@ describe("CommandMenu", () => {
     renderShell();
     await user.click(screen.getByRole("button", { name: "Search and quick actions" }));
     await user.type(await screen.findByRole("combobox"), "zzzz");
-    expect(await screen.findByText(/No match for “zzzz”\. Try a change id, a requirement or a page\./)).toBeTruthy();
+    expect(
+      await screen.findByText(/No match for “zzzz”\. Try a change id, a requirement or a page\./),
+    ).toBeTruthy();
   });
 
   it("copies the raw sign command for the next change and announces it", async () => {

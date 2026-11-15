@@ -34,12 +34,7 @@
     },
     "evidence": {
       "owner": "Kasanen",
-      "paths": [
-        "src/receipt/**",
-        "data/sample/**",
-        "data/receipts/**",
-        "scripts/**"
-      ]
+      "paths": ["src/receipt/**", "data/sample/**", "data/receipts/**", "scripts/**"]
     }
   },
   "shared": [

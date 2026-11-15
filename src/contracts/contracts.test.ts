@@ -133,7 +133,12 @@ describe("contracts", () => {
         blind: { caught: 0, total: 0 },
         perPlant: [],
       },
-      hallucinations: { quotesChecked: 0, quoteFailures: 0, claimsRetracted: 0, findingsDropped: 0 },
+      hallucinations: {
+        quotesChecked: 0,
+        quoteFailures: 0,
+        claimsRetracted: 0,
+        findingsDropped: 0,
+      },
       findingsOnPlants: { total: 0, matchedPlant: 0 },
       routingSpread: {
         changes: 0,

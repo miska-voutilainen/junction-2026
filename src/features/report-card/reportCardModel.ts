@@ -42,7 +42,8 @@ const EFFECT: Record<LadderLevel, string> = {
 };
 
 /** Said where Trusted is the next step and the area has no clean spot check: this reference has no way to record one. */
-export const NO_SPOT_CHECKS_NOTE = "This reference records no spot checks, so no area can reach Trusted.";
+export const NO_SPOT_CHECKS_NOTE =
+  "This reference records no spot checks, so no area can reach Trusted.";
 
 /**
  * Builds one area's card.
@@ -50,7 +51,11 @@ export const NO_SPOT_CHECKS_NOTE = "This reference records no spot checks, so no
  * @param escapes simulated escapes in this area
  * Example: Calibrated with 1 escape shows Shadow, dropped from Calibrated to Shadow.
  */
-export function areaCardModel(area: Area, entry: ReportCardArea | undefined, escapes: number): AreaCardModel {
+export function areaCardModel(
+  area: Area,
+  entry: ReportCardArea | undefined,
+  escapes: number,
+): AreaCardModel {
   const earned = entry?.level ?? "shadow";
   const level = levelAfter(area, earned, escapes);
   const planted = entry?.planted ?? 0;
@@ -59,10 +64,16 @@ export function areaCardModel(area: Area, entry: ReportCardArea | undefined, esc
   return {
     area,
     level,
-    headline: planted > 0 ? `${caught} of ${planted} planted bugs caught · planted blind to the prompts` : "No track record",
+    headline:
+      planted > 0
+        ? `${caught} of ${planted} planted bugs caught · planted blind to the prompts`
+        : "No track record",
     effect: EFFECT[level],
     nextStep: nextStep({ level, earned, planted, caught, spotChecksClean, escapes }),
-    nextStepNote: level === "calibrated" && level === earned && spotChecksClean === 0 ? NO_SPOT_CHECKS_NOTE : null,
+    nextStepNote:
+      level === "calibrated" && level === earned && spotChecksClean === 0
+        ? NO_SPOT_CHECKS_NOTE
+        : null,
     escapes,
     escapeDrop: escapeDrop(area, earned, escapes),
     canRecordEscape: level !== "shadow",
@@ -72,13 +83,22 @@ export function areaCardModel(area: Area, entry: ReportCardArea | undefined, esc
 /** The four cards in order, from the report card (or none) and the escapes. */
 export function areaCardModels(reportCard: ReportCard | null, escapes: Escapes): AreaCardModel[] {
   return AreaSchema.options.map((area) =>
-    areaCardModel(area, reportCard?.areas.find((entry) => entry.area === area), escapes[area] ?? 0),
+    areaCardModel(
+      area,
+      reportCard?.areas.find((entry) => entry.area === area),
+      escapes[area] ?? 0,
+    ),
   );
 }
 
 // The same applyEscapes the inbox routes with, so a card and the routing can never disagree.
 function levelAfter(area: Area, earned: LadderLevel, escapes: number): LadderLevel {
-  const levels: Record<Area, LadderLevel> = { generator: "shadow", analyzer: "shadow", security: "shadow", performance: "shadow" };
+  const levels: Record<Area, LadderLevel> = {
+    generator: "shadow",
+    analyzer: "shadow",
+    security: "shadow",
+    performance: "shadow",
+  };
   return applyEscapes({ ...levels, [area]: earned }, { [area]: escapes })[area];
 }
 
@@ -101,7 +121,9 @@ function nextStep(input: {
   const { level, earned, planted, caught, spotChecksClean, escapes } = input;
   if (level !== earned) {
     const [count, verb, undo] =
-      escapes === 1 ? ["1 simulated escape", "holds", "Undo the escape"] : [`${escapes} simulated escapes`, "hold", "Undo the escapes"];
+      escapes === 1
+        ? ["1 simulated escape", "holds", "Undo the escape"]
+        : [`${escapes} simulated escapes`, "hold", "Undo the escapes"];
     return `Earned ${ladderLevelLabel[earned]}. ${count} ${verb} it at ${ladderLevelLabel[level]}. ${undo} to restore it.`;
   }
   if (level === "trusted") return "Top level. It holds while no escape is recorded.";
@@ -185,7 +207,10 @@ export function failedQuotes(reviews: ReviewOfChange[]): FailedQuote[] {
   return reviews.flatMap(({ changeId, review }) =>
     review.quoteCheck.failures.flatMap(({ itemId, citation, reason }) => {
       if (citation === null || isUnknownRuleFailure({ citation, reason })) return [];
-      const location = citation.startLine === citation.endLine ? `${citation.file}:${citation.startLine}` : `${citation.file}:${citation.startLine}-${citation.endLine}`;
+      const location =
+        citation.startLine === citation.endLine
+          ? `${citation.file}:${citation.startLine}`
+          : `${citation.file}:${citation.startLine}-${citation.endLine}`;
       return [{ changeId, itemId, location, quote: citation.quote, reason }];
     }),
   );
@@ -201,13 +226,16 @@ export interface UnknownRuleRefusal {
 /** Refusals struck for an unknown rule id, across the recorded reviews. */
 export function unknownRuleRefusals(reviews: ReviewOfChange[]): UnknownRuleRefusal[] {
   return reviews.flatMap(({ changeId, review }) =>
-    review.quoteCheck.failures.filter(isUnknownRuleFailure).map(({ itemId }) => ({ changeId, itemId })),
+    review.quoteCheck.failures
+      .filter(isUnknownRuleFailure)
+      .map(({ itemId }) => ({ changeId, itemId })),
   );
 }
 
 /** The counts the spec words as "Quotes checked: 40 · failed the check: 2 (not posted)". */
 export function hallucinationLines(reportCard: ReportCard): string[] {
-  const { quotesChecked, quoteFailures, claimsRetracted, findingsDropped } = reportCard.hallucinations;
+  const { quotesChecked, quoteFailures, claimsRetracted, findingsDropped } =
+    reportCard.hallucinations;
   return [
     `Quotes checked: ${quotesChecked} · failed the check: ${quoteFailures} (not posted)`,
     `Claims retracted by a failing test: ${claimsRetracted}`,
@@ -229,7 +257,9 @@ export function retractedClaims(reviews: ReviewOfChange[]): RetractedClaim[] {
     review.retractions.map(({ claimId, reason }) => ({
       changeId,
       claimId,
-      claimText: review.claims.find((claim) => claim.id === claimId)?.text ?? `claim ${claimId} (text not found)`,
+      claimText:
+        review.claims.find((claim) => claim.id === claimId)?.text ??
+        `claim ${claimId} (text not found)`,
       reason,
     })),
   );
@@ -244,7 +274,10 @@ export interface BlindFirstRow {
 }
 
 /** The comparison: the overall sentence and one row per planted contradiction. */
-export function blindFirstSummary(reportCard: ReportCard): { overall: string; rows: BlindFirstRow[] } {
+export function blindFirstSummary(reportCard: ReportCard): {
+  overall: string;
+  rows: BlindFirstRow[];
+} {
   const { plants, runsPerMode, anchored, blind, perPlant } = reportCard.anchoredVsBlind;
   return {
     overall:
