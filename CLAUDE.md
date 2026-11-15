@@ -51,6 +51,7 @@ pnpm screenshots                  # into .review/, for ux-reviewer (T03)
 pnpm evals                        # planted-bug eval and report card, costs model credits
 pnpm review run <changeId>      # record one review into data/runs/
 pnpm review legacy <changeId>   # add legacy touch points to its review and comparison runs, no model
+pnpm review replay <id | all>   # rebuild recorded runs with the model replayed; exits 1 on any difference
 pnpm review comment <changeId>  # print the PR comment CI posts (--receipt-exit <code>)
 pnpm countersign sign <changeId>  # draft | sign | verify | export a receipt
 pnpm seed                         # clone our fork of Tieto's repo into SAMPLE_REPO_DIR and fetch notes (T07)

@@ -66,3 +66,4 @@ Reach-in by symbol name found nothing on the four diffs. The prototype's only hi
 - [`src/pipeline/addLegacyGuard.ts`](../../src/pipeline/addLegacyGuard.ts): adds touch points to a recorded review
 - [`src/rules/route.ts`](../../src/rules/route.ts): `R-legacy` and `R-legacy-guard`
 - Shown on S2: the legacy touch list under the tier banner
+- Tests: detector examples, adversarial inputs, invariants over every recorded review, and the S2 check; listed in [development.md](../development.md#testing)
