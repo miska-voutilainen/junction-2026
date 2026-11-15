@@ -88,7 +88,7 @@ function ClaimGroupList({
 }: Readonly<{ group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">>) {
   return (
     <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
-      {/* The heading quotes the requirement item as its author wrote it. */}
+      {/* The requirement's author wrote this heading, so it is shown as written and the copy checks skip it. */}
       <h4 data-written-text className="text-xs font-medium text-text-muted">
         {group.heading}
       </h4>

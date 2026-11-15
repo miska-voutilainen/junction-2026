@@ -26,7 +26,9 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
                 key={item}
                 className="flex flex-col gap-0.5 compact:flex-row compact:justify-between compact:gap-6"
               >
-                <span className={`min-w-0 ${SIGNED_TEXT}`}>{item}</span>
+                <span data-written-text className={`min-w-0 ${SIGNED_TEXT}`}>
+                  {item}
+                </span>
                 <span className="shrink-0 text-sm text-text-muted">{by}</span>
               </li>
             ))}
@@ -40,8 +42,12 @@ export function SignedSections({ view }: Readonly<{ view: ReceiptDocumentView }>
           <ul className="flex flex-col gap-2">
             {notChecked.map(({ item, reason }) => (
               <li key={item} className="flex flex-col gap-0.5">
-                <span className={SIGNED_TEXT}>{item}</span>
-                <span className="text-sm text-text-muted">{reason}</span>
+                <span data-written-text className={SIGNED_TEXT}>
+                  {item}
+                </span>
+                <span data-written-text className="text-sm text-text-muted">
+                  {reason}
+                </span>
               </li>
             ))}
           </ul>
