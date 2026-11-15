@@ -92,7 +92,9 @@ function scoreArea(area: Area, plantedBugs: readonly PlantedBugRun[]): ReportCar
   const plants = plantedBugs
     .filter((plant) => plant.key.area === area)
     .map(({ key, change, reviews }) => {
-      const matches = reviews.map((review) => (review ? findPlantedBugMatch(review.findings, key) : null));
+      const matches = reviews.map((review) =>
+        review ? findPlantedBugMatch(review.findings, key) : null,
+      );
       const caughtRuns = matches.filter((match) => match !== null).length;
       // Strict majority: 2 of 3 caught, 1 of 3 not; a tie (1 of 2) is not caught.
       const isCaught = caughtRuns * 2 > reviews.length;

@@ -76,7 +76,12 @@ export async function checkAreaFindings(
   const findings: UnnumberedFinding[] = [];
   // One finding at a time: failures are listed in the order the model wrote the findings.
   for (const [index, draft] of drafts.entries()) {
-    const citations = await passingCitations(`a3-f${index + 1}`, draft.citations, readSide, quoteCheck);
+    const citations = await passingCitations(
+      `a3-f${index + 1}`,
+      draft.citations,
+      readSide,
+      quoteCheck,
+    );
     if (citations.length === 0) {
       quoteCheck.dropped++;
       continue;
@@ -113,12 +118,20 @@ export async function checkContradictions(
   // One statement at a time: failures are listed in the order the model wrote the statements.
   for (const [index, statement] of statements.entries()) {
     if (statement.verdict === "supported") continue;
-    const citations = await passingCitations(`a4-s${index + 1}`, statement.citations, readSide, quoteCheck);
+    const citations = await passingCitations(
+      `a4-s${index + 1}`,
+      statement.citations,
+      readSide,
+      quoteCheck,
+    );
     findings.push({
       kind: "contradiction",
       area: null,
       severity: statement.verdict === "contradicted" ? "high" : "medium",
-      title: statement.verdict === "contradicted" ? "The code contradicts the description" : "The description is not backed by the code",
+      title:
+        statement.verdict === "contradicted"
+          ? "The code contradicts the description"
+          : "The description is not backed by the code",
       detail: statement.explanation,
       statement: statement.statement,
       hunkIds: hunksOfStatement(statement, citations, claims, hunks),
@@ -139,7 +152,9 @@ function hunksOfStatement(
   hunks: readonly Hunk[],
 ): string[] {
   const ids = new Set<string>(
-    claims.filter((claim) => statement.claimIds.includes(claim.id)).flatMap((claim) => claim.hunkIds),
+    claims
+      .filter((claim) => statement.claimIds.includes(claim.id))
+      .flatMap((claim) => claim.hunkIds),
   );
   for (const hunk of hunks) if (isHunkCited(hunk, citations)) ids.add(hunk.id);
   return [...ids];
@@ -166,7 +181,12 @@ export function checkRefusals(
       });
       continue;
     }
-    refusals.push({ ruleId: draft.ruleId, source: "ai", reason: draft.reason, hunkIds: draft.hunkIds });
+    refusals.push({
+      ruleId: draft.ruleId,
+      source: "ai",
+      reason: draft.reason,
+      hunkIds: draft.hunkIds,
+    });
   }
   return refusals;
 }
@@ -176,7 +196,14 @@ export function fixedRefusalsFor(hunks: readonly Hunk[]): UnnumberedRefusal[] {
   return fixedRefusals.flatMap((fixed) => {
     const matched = hunksMatchingGlob(fixed.glob, hunks);
     if (matched.length === 0) return [];
-    return [{ ruleId: fixed.ruleId, source: "rule" as const, reason: fixed.reason, hunkIds: matched.map((hunk) => hunk.id) }];
+    return [
+      {
+        ruleId: fixed.ruleId,
+        source: "rule" as const,
+        reason: fixed.reason,
+        hunkIds: matched.map((hunk) => hunk.id),
+      },
+    ];
   });
 }
 
@@ -257,4 +284,3 @@ export function mergeFixedRefusals(
   });
   return [...aiRefusals, ...addedFixed];
 }
-

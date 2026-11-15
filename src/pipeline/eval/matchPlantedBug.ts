@@ -41,10 +41,7 @@ export function isPlantedBugMatch(finding: Finding, key: AnswerKey): boolean {
 }
 
 /** The first matching finding in output order; its id becomes the report card's findingId. */
-export function findPlantedBugMatch(
-  findings: readonly Finding[],
-  key: AnswerKey,
-): Finding | null {
+export function findPlantedBugMatch(findings: readonly Finding[], key: AnswerKey): Finding | null {
   return findings.find((finding) => isPlantedBugMatch(finding, key)) ?? null;
 }
 

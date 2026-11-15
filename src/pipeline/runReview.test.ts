@@ -228,7 +228,13 @@ describe("runReview with a fake model", () => {
   it("keeps a refusal with a known rule id and records the unknown one", async () => {
     const { result } = await review([goodClaim]);
     expect(result.refusals).toEqual([
-      { id: "r1", ruleId: "R7", source: "ai", reason: "Changes documented behaviour.", hunkIds: ["h2"] },
+      {
+        id: "r1",
+        ruleId: "R7",
+        source: "ai",
+        reason: "Changes documented behaviour.",
+        hunkIds: ["h2"],
+      },
     ]);
     expect(result.quoteCheck.failures.at(-1)).toMatchObject({
       itemId: "a3-r2",
