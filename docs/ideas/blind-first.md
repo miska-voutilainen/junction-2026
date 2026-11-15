@@ -21,11 +21,11 @@ An agent-written pull request arrives with the agent's own story. A reviewer who
    - **Anchored:** A2 reads the description first; A1 is skipped.
    - **Blind-first:** A1, A2, A4 in order (A3 and A5 skipped).
 
-   A plant is caught when A4 marks it `contradicted` or `unsupported`. The result is "anchored caught x of 10, blind-first caught y of 10", with each plant's count per run so a lucky run shows.
+   A plant is caught when A4 marks it `contradicted` or `unsupported`. The result is "anchored caught x of 15, blind-first caught y of 15", with each plant's count per run so a lucky run shows.
 
 ## What we measured
 
-From the report card: 5 planted false sentences (`cp0`–`cp2` on MP-2283, `cp3` on MP-2234, `cp4` on MP-2129), 2 runs per mode. Anchored caught 10 of 10; blind-first caught 10 of 10. Every plant was caught in both runs of both modes, so these plants show no anchoring effect. Our reading: each false sentence contradicts code the reviewer reads anyway, so subtler plants are the next test. These are our own recorded runs, not a preregistered study.
+From the report card: 5 planted false sentences (`cp0`–`cp2` on MP-2283, `cp3` on MP-2234, `cp4` on MP-2129), 3 runs per mode. Anchored caught 15 of 15; blind-first caught 15 of 15. Every plant was caught in every run of both modes, so these plants sit at the ceiling and show no anchoring effect; the third run per mode (#216) did not change that. Our reading: each false sentence contradicts code the reviewer reads anyway, so subtler plants are the next test. Five of them (`cp5` to `cp9`, mostly true and wrong in one detail) are written by an isolated agent blind to the prompts, but not yet run ([lessons.md](../lessons.md)). These are our own recorded runs, not a preregistered study.
 
 ## How to adopt it
 
