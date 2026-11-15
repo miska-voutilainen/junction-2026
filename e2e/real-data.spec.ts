@@ -192,7 +192,9 @@ function legacyReviews(): Map<string, RecordedLegacyReview> {
       refusals: { id: string; ruleId: string }[];
       routing: { reasons: { ruleId: string; text: string }[] };
     } | null;
-    if (!review?.legacyTouchPoints) continue;
+    // An empty list means the guard ran and found nothing, which the page shows as no
+    // legacy section at all, so it belongs with the reviews recorded before the guard.
+    if (!review?.legacyTouchPoints?.length) continue;
     found.set(id, {
       touchPoints: review.legacyTouchPoints,
       legacyReasons: review.routing.reasons
