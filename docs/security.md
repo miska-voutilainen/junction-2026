@@ -18,6 +18,7 @@ Old code that other systems rely on is guarded by rules, not by the model.
 - **No claim or ladder level takes an R8 hunk off the reading list, and an unguarded touch always routes Full.** These invariants run over every recorded review in `data/runs/`: [`legacyGuardInvariants.test.ts`](../src/rules/legacyGuardInvariants.test.ts).
 - **Detectors** are tested with and without adversarial inputs: [`legacyTouchPoints.test.ts`](../src/pipeline/legacyTouchPoints.test.ts), [`addLegacyGuard.test.ts`](../src/pipeline/addLegacyGuard.test.ts), [`legacyGuardAdversarial.test.ts`](../src/pipeline/legacyGuardAdversarial.test.ts). The list of all of them is in the Testing section of [`development.md`](development.md#testing).
 - **On screen:** [`real-data.spec.ts`](../e2e/real-data.spec.ts) checks the guard on S2 for every recorded review that has touch points.
+- **On the recorded runs:** `pnpm review replay all` rebuilds every run in `data/runs/` with the model replayed and fails if one differs, so a change to the guard that would alter a recorded tier or touch point shows up before anything is re-recorded ([development.md](development.md#testing)).
 
 ## The author never checks its own work
 
@@ -37,7 +38,7 @@ A receipt is an SSH signature on a git note, tied to the exact diff. [`receipt.t
 ## What is not covered
 
 - **Reach-in matches names, not types.** `this.Write` in a template can look like a call into another class. A false touch costs one read; it never lets a hunk skip one. See [the legacy guard's limits](ideas/legacy-guard.md#limits-and-failure-modes).
-- **Gaps the tests record as known failures.** `legacyGuardAdversarial.test.ts` marks each case the code gets wrong with `it.fails`. Open: an old-only `#if` block when the `#if` line is context (#247), a net472 target inside an XML comment (#248), targets set by `Directory.Build.props` (#249), a call to a generic method (#251), declarations with nested generics or tuple returns (#253), and a zone file with no hunks (#254).
+- **An old-only block opened above the hunk.** A changed line inside `#if NETFRAMEWORK` counts as an old-platform touch only when the `#if` is in the same hunk; the detector reads the diff, not the whole file. `legacyGuardAdversarial.test.ts` marks any case the code gets wrong with `it.fails`; none is open.
 - **A guarded touch means an old test names the code**, not that it checks the behaviour that matters. Running the guard tests on base and head is not built.
 - **The zone map is ours**, written from the repository's layout, not from Tieto's systems.
 - **Wrong findings are not scored.** 93 of 117 findings on planted-bug runs match no plant, so the false-positive rate is unknown ([`lessons.md`](lessons.md)).
