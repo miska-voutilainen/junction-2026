@@ -46,7 +46,7 @@ pnpm lint                         # autofix: pnpm lint:fix (a11y and no-console 
 pnpm typecheck
 pnpm test                         # unit, Vitest (config: T02)
 pnpm test:hooks                   # harness hook tests, node --test (T00)
-pnpm e2e                          # Playwright (T03); E2E_BASE_URL=<url> for a preview or production
+pnpm e2e                          # Playwright (T03); E2E_BASE_URL=<url>: real-data and data-free specs against a preview or production
 pnpm screenshots                  # into .review/, for ux-reviewer (T03)
 pnpm evals                        # planted-bug eval and report card, costs model credits
 pnpm review run <changeId>      # record one review into data/runs/

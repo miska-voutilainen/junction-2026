@@ -783,7 +783,7 @@ describe("legacy guard", () => {
       expect(route(review, trustedEverywhere).reasons).toContainEqual({
         ruleId: "R-legacy-guard",
         tier: "full",
-        text: "Legacy code: Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no text hunks: binary, mode change or rename), no test at the base commit names Plugin; the Unity owner (the maintainers) decides",
+        text: "Legacy code: Unity client: src/MessagePack.UnityClient/Assets/Plugin.dll (no text hunks: binary, mode change or rename), no test at the base commit names Plugin, the Unity owner (the maintainers) decides",
       });
     });
 
@@ -811,7 +811,7 @@ describe("legacy guard", () => {
       expect(decision.reasons).toContainEqual({
         ruleId: "R-legacy-guard",
         tier: "full",
-        text: "Old platform: #if !NETFRAMEWORK in 1 hunk, no test runs it on .NET Framework; the platform owner (the maintainers) decides",
+        text: "Old platform: #if !NETFRAMEWORK in 1 hunk, no test runs it on .NET Framework, the platform owner (the maintainers) decides",
       });
       expect(decision.tier).toBe("full");
     });

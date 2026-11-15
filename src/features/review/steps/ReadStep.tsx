@@ -88,7 +88,10 @@ function ClaimGroupList({
 }: Readonly<{ group: ClaimGroup } & Pick<ReadStepProps, "onOpenRefused">>) {
   return (
     <div className="flex flex-col gap-1.5 border-t border-border-subtle pt-3">
-      <h4 className="text-xs font-medium text-text-muted">{group.heading}</h4>
+      {/* The requirement's author wrote this heading, so it is shown as written and the copy checks skip it. */}
+      <h4 data-written-text className="text-xs font-medium text-text-muted">
+        {group.heading}
+      </h4>
       <ul className="flex flex-col gap-1">
         {group.claims.map((storyClaim) => (
           <ClaimRow
@@ -325,7 +328,9 @@ function Defects({ defects }: Readonly<{ defects: Story["defects"] }>) {
             <p data-written-text className="text-base font-medium text-text-primary">
               {view.finding.title}
             </p>
-            <p className="text-sm text-text-secondary">{view.finding.detail}</p>
+            <p data-written-text className="text-sm text-text-secondary">
+              {view.finding.detail}
+            </p>
             <FindingLocations view={view} />
           </li>
         ))}

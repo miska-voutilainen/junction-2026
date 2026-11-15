@@ -2498,7 +2498,7 @@
       "id": "r2",
       "ruleId": "R8",
       "source": "rule",
-      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "reason": "Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "hunkIds": [
         "h3"
       ]
@@ -2586,7 +2586,7 @@
       }
     ],
     "residualRisk": {
-      "text": "r1 (R7): The README and the MsgPack004 docs now state, as documented public behaviour, that diagnostics about members of a type from a referenced assembly are reported only by the defining project and not by the consuming project. That is a decision about the public analyzer contract and belongs to the maintainers. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md); the API owner (the maintainers) decides",
+      "text": "r1 (R7): The README and the MsgPack004 docs now state, as documented public behaviour, that diagnostics about members of a type from a referenced assembly are reported only by the defining project and not by the consuming project. That is a decision about the public analyzer contract and belongs to the maintainers. r2 (R8): Consumer contract: contract paths (guarded: the same change updates README.md, MsgPack004.md), the API owner (the maintainers) decides",
       "acceptedRefusalIds": []
     }
   },

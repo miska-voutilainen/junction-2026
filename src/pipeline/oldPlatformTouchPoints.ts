@@ -165,7 +165,8 @@ async function guardByTestTargets(sourceProjects: string[], tree: BaseTree): Pro
   );
   const evidence =
     projects.length > 0
-      ? projects.map(describeTargets).join("; ")
+      ? // A middle dot, not a comma: each project's own framework list is already comma-separated.
+        projects.map(describeTargets).join(" · ")
       : `no test project under tests/ matches ${sourceProjects.join(", ")}`;
   const files = csprojs.slice(0, maxListedFiles);
 

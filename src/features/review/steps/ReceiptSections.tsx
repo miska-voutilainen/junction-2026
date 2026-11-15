@@ -39,7 +39,7 @@ export function ReceiptSections({
       >
         {body.checked.map((entry) => (
           <li key={entry.item} className="text-sm text-text-secondary">
-            {entry.item}{" "}
+            <span data-written-text>{entry.item}</span>{" "}
             <span className="text-xs text-text-muted">· {checkedByLabel[entry.by]}</span>
           </li>
         ))}

@@ -3,6 +3,7 @@ import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
 import { bypassHeaders, bypassVercelAuth } from "./bypassVercelAuth";
+import { expectNoSemicolonsOrArrows } from "./copyPunctuation";
 
 // Runs in the `real-data` project against a build of the committed data/ as it is.
 // Everything expected here is read from data/ at test time, so the spec keeps
@@ -40,6 +41,8 @@ function expectsMockDataBanner(changeIds: string[]): boolean {
 }
 
 const changeIds = tietoChangeIds();
+/** The S2 step tabs, in order. */
+const STEP_TABS = [/^Read/, /^Blind check/, /^Refused/, /^Sign/];
 const mockDataBanner = (page: import("@playwright/test").Page) =>
   page.getByText("Showing mock data");
 
@@ -73,7 +76,7 @@ for (const id of changeIds) {
   test(`no step text of ${id} runs past its panel at 375 px`, async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`/changes/${id}`);
-    for (const step of [/^Read/, /^Blind check/, /^Refused/, /^Sign/]) {
+    for (const step of STEP_TABS) {
       await page.getByRole("tab", { name: step }).click();
       const overflowing = await page
         .getByRole("tabpanel")
@@ -84,6 +87,15 @@ for (const id of changeIds) {
             .map((element) => element.textContent?.slice(0, 60)),
         );
       expect(overflowing, `${id}, step ${step.source}`).toEqual([]);
+    }
+  });
+
+  test(`the copy of ${id} has no semicolons or arrows on any step`, async ({ page }) => {
+    await page.goto(`/changes/${id}`);
+    await expectNoSemicolonsOrArrows(page, `${id}, page`);
+    for (const step of STEP_TABS) {
+      await page.getByRole("tab", { name: step }).click();
+      await expectNoSemicolonsOrArrows(page, `${id}, step ${step.source}`);
     }
   });
 }

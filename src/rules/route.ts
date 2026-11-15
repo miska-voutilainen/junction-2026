@@ -293,7 +293,7 @@ function legacyReasons(review: RoutedReview): Reason[] {
  * guarded touch adds a Light reason so the owner sees the guard. Its R8 refusal,
  * when it has one, still keeps the hunk on the reading list, so the change is at
  * least Focused: a guard tells the owner what covers the touch, it never removes it.
- * @example "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK in 11 hunks, no test runs it on netstandard or .NET Framework: ...; the platform owner (the maintainers) decides" (mp-2297)
+ * @example "Old platform: #if !NETSTANDARD2_0 && !NETFRAMEWORK in 11 hunks, no test runs it on netstandard or .NET Framework: ..., the platform owner (the maintainers) decides" (mp-2297)
  */
 function legacyGuardReasons(review: RoutedReview): Reason[] {
   return (review.legacyTouchPoints ?? []).map((touch): Reason => {
@@ -314,7 +314,7 @@ function legacyGuardReasons(review: RoutedReview): Reason[] {
     return {
       ruleId: "R-legacy-guard",
       tier,
-      text: `${where}, ${evidence}; the ${touch.owner} decides`,
+      text: `${where}, ${evidence}, the ${touch.owner} decides`,
     };
   });
 }
