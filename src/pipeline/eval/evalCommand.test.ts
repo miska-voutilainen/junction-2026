@@ -151,7 +151,9 @@ describe("pnpm evals --score-only", () => {
     // One plant, so every area stays Shadow and routing reads the most.
     expect(card.areas.every((area: { level: string }) => area.level === "shadow")).toBe(true);
     expect(rewritten.routing.readHunks).toBeGreaterThanOrEqual(fixture.routing.readHunks);
-    expect(readFileSync(path.join(root, "docs/lessons.md"), "utf8")).toContain("No-go: no advantage");
+    expect(readFileSync(path.join(root, "docs/lessons.md"), "utf8")).toContain(
+      "No-go: no advantage",
+    );
   });
 
   it("rejects a --plant-runs that is not a whole number from 1", async () => {

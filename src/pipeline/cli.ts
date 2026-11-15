@@ -97,17 +97,26 @@ async function main(argv: string[]): Promise<void> {
 async function legacyCommand(changeId: string): Promise<void> {
   if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
   const repoDir = process.env.SAMPLE_REPO_DIR;
-  if (!repoDir) fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
+  if (!repoDir)
+    fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
   const levels = levelsForReviewer(await loadReportCard(), MODEL);
   const runs: Array<ComparisonRun | undefined> = [
     ...(hasRecordedReview(changeId) ? [undefined] : []),
     ...(await listComparisonRuns(changeId)),
   ];
-  if (runs.length === 0) fail(`No recorded review or comparison run for ${changeId}. Run pnpm review run ${changeId} first.`);
+  if (runs.length === 0)
+    fail(
+      `No recorded review or comparison run for ${changeId}. Run pnpm review run ${changeId} first.`,
+    );
   for (const comparison of runs) {
-    const before = comparison ? await loadRecordedRun(changeId, comparison) : await loadRecordedReview(changeId);
+    const before = comparison
+      ? await loadRecordedRun(changeId, comparison)
+      : await loadRecordedReview(changeId);
     const label = comparison ? `${changeId} ${comparison.mode} ${comparison.runNumber}` : changeId;
-    if (!before) fail(`${label} does not match the Review contract; runs listed above are already updated. Record it again with pnpm review run, then re-run this command (it is safe to repeat).`);
+    if (!before)
+      fail(
+        `${label} does not match the Review contract; runs listed above are already updated. Record it again with pnpm review run, then re-run this command (it is safe to repeat).`,
+      );
     const after = await addLegacyGuard(before, repoDir, levels);
     await writeRecordedReview(after, comparison);
     printLegacyResult(label, before, after);
@@ -123,7 +132,8 @@ async function legacyCommand(changeId: string): Promise<void> {
 async function replayCommand(target: string, includesTests: boolean): Promise<void> {
   if (existsSync(localEnvironmentFile)) process.loadEnvFile(localEnvironmentFile);
   const repoDir = process.env.SAMPLE_REPO_DIR;
-  if (!repoDir) fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
+  if (!repoDir)
+    fail("SAMPLE_REPO_DIR is not set. Point it at your clone of the fork (pnpm seed creates it).");
   const changeIds = target === "all" ? await listRecordedChanges() : [target];
   let differing = 0;
   let total = 0;
@@ -147,8 +157,12 @@ function printLegacyResult(label: string, before: Review, after: Review): void {
   const points = after.legacyTouchPoints ?? [];
   console.log(
     `${label} · ${before.routing.tier} -> ${after.routing.tier} · ${points.length} touch points` +
-      points.map((point) => `
-  ${point.kind} · ${point.guard.status} · ${point.hunkIds.length} hunks · ${point.detail}`).join(""),
+      points
+        .map(
+          (point) => `
+  ${point.kind} · ${point.guard.status} · ${point.hunkIds.length} hunks · ${point.detail}`,
+        )
+        .join(""),
   );
 }
 

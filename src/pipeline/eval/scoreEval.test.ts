@@ -138,15 +138,29 @@ describe("scoreReportCard planted bugs", () => {
     );
     const security = card.areas.find((area) => area.area === "security");
     expect(security).toMatchObject({ planted: 2, caught: 1 });
-    expect(security?.plants[0]).toMatchObject({ caught: true, runs: 3, caughtRuns: 2, findingId: "f2" });
-    expect(security?.plants[1]).toMatchObject({ caught: false, runs: 3, caughtRuns: 1, findingId: "f1" });
+    expect(security?.plants[0]).toMatchObject({
+      caught: true,
+      runs: 3,
+      caughtRuns: 2,
+      findingId: "f2",
+    });
+    expect(security?.plants[1]).toMatchObject({
+      caught: false,
+      runs: 3,
+      caughtRuns: 1,
+      findingId: "f1",
+    });
   });
 
   it("counts findings on plants over every run", () => {
     const card = scoreReportCard(
       input({
         plantedBugs: [
-          plant(bugKey("v01", "security"), review([defect("security", 22)]), review([defect("security", 22)])),
+          plant(
+            bugKey("v01", "security"),
+            review([defect("security", 22)]),
+            review([defect("security", 22)]),
+          ),
         ],
       }),
     );

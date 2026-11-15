@@ -90,7 +90,8 @@ describe("checkReview", () => {
   });
 
   it("misses the A5 case when no claim is Verified by a fail-then-pass test", () => {
-    const name = "mp-2283: A5 verifies a claim with a test that fails on the base and passes on the head";
+    const name =
+      "mp-2283: A5 verifies a claim with a test that fails on the base and passes on the head";
     expect(outcome(reviewWith({}))[name]).toBe(false);
   });
 
@@ -102,7 +103,10 @@ describe("checkReview", () => {
 });
 
 describe("checkReview: A3 and A4 cases for mp-2283", () => {
-  const key = { kind: "contradiction", defect: "The change touches only the generator." } as AnswerKey;
+  const key = {
+    kind: "contradiction",
+    defect: "The change touches only the generator.",
+  } as AnswerKey;
   const refusal = (ruleId: string, source: "ai" | "rule") => ({ id: "r1", ruleId, source });
   const finding = (statement: string) => ({ id: "f1", kind: "contradiction", statement });
   const names = (review: Review) => checkReview(review, key);
@@ -122,7 +126,9 @@ describe("checkReview: A3 and A4 cases for mp-2283", () => {
       refusals: [refusal("R7", "rule")] as Review["refusals"],
       findings: [finding("Something else entirely.")] as Review["findings"],
     });
-    const missed = names(review).filter((result) => !result.passed).map((result) => result.name);
+    const missed = names(review)
+      .filter((result) => !result.passed)
+      .map((result) => result.name);
     expect(missed).toEqual([
       "mp-2283: A3 refuses with R7 or R1",
       "mp-2283: A5 verifies a claim with a test that fails on the base and passes on the head",
