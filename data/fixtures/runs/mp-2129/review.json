@@ -602,7 +602,7 @@
       "id": "r1",
       "ruleId": "R7",
       "source": "rule",
-      "reason": "A new public attribute is public API. The issue lists three alternatives for per-member keys and settings; which one the library supports is the maintainers' decision.",
+      "reason": "A new public attribute is public API. The issue lists three alternatives for per-member keys and settings. Which one the library supports is the maintainers' decision.",
       "hunkIds": ["h1"]
     },
     {
