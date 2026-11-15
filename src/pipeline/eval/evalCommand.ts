@@ -29,8 +29,12 @@ import { rerouteReview, routingSpreadOf } from "./rerouteReview";
 import { planEvalJobs, runEvalJobs, type EvalJob, type EvalStore } from "./runEvalJobs";
 import { anchoredVsBlindVerdict, scoreReportCard, type ContradictionRuns } from "./scoreEval";
 
-/** Comparison runs per mode and plant when `--runs` is not given (spec section 5). */
-export const DEFAULT_RUNS_PER_MODE = 2;
+/**
+ * Comparison runs per mode and plant when `--runs` is not given (spec section 5).
+ * Three, matching the recorded runs: with two, a plain `pnpm evals` would score
+ * fewer runs than are committed and rewrite the report card down (#216).
+ */
+export const DEFAULT_RUNS_PER_MODE = 3;
 
 /**
  * Blind runs per planted bug when `--plant-runs` is not given. One run flips on

@@ -70,3 +70,9 @@ The entry below, "Security caught 0 of 3 planted bugs: all three are real misses
 No-go: no advantage for blind-first, so the pitch drops the claim. Blind-first caught 10 of 10, anchored 10 of 10 (5 plants, 2 runs per mode).
 
 Both modes caught every contradiction plant in every run (10 of 10 each), so at n = 2 runs per mode the count cannot separate them; the plants were likely too easy. The blind runs of cp0, cp1 and cp2 share A1 and A2 per run number (same recording, one Tieto change), so those runs are not independent. What we changed: the pitch drops the blind-first claim, and moment 2 leads with the contradiction and the refusals.
+
+## 2026-11-15 01:59 · Anchored versus blind-first
+
+No-go: no advantage for blind-first, so the pitch drops the claim. Blind-first caught 15 of 15, anchored 15 of 15 (5 plants, 3 runs per mode).
+
+The third run per mode (#216) didn't move the count: the plants are still at the ceiling. Five harder plants, `cp5` to `cp9` (false sentences that are mostly true and wrong in one detail), are written blind and sit unmerged on `feat/t216-harder-plants`. Running them is 30 more reviews (about 30 minutes, about $20), deferred until after judging. What we changed: nothing in the pitch; it already drops the blind-first claim.

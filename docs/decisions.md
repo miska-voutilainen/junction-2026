@@ -2,6 +2,14 @@
 
 <!-- One entry per real choice: stack, model, data source, design direction, a feature cut. Newest first. Kept short. -->
 
+## 2026-11-15 · Third run per mode for the contradiction plants; harder plants deferred (#216)
+
+- **Context:** The T16 entry below cut the anchored-versus-blind runs to 2 per mode; both modes caught 10 of 10.
+- **Decision (Miska):** Record the third run per mode (10 reviews), so the count is the spec's original 3 per mode: 15 of 15 each. Five harder plants (`cp5` to `cp9`, written by an isolated Claude Opus subagent blind to the prompts, pipeline and runs) stay unmerged on `feat/t216-harder-plants`.
+- **Why:** The third run was cheap and restores the spec's count. The harder plants need 30 more reviews, about 30 minutes, which Miska ruled out before judging.
+- **Rejected:** Running cp5 to cp9 now (time); merging their answer keys without runs (CI re-scores the report card against the runs on disk).
+- **PR:** feat/t216-third-run
+
 ## 2026-11-15 · Security headers, with `unsafe-inline` for scripts and styles
 
 - **Context:** Production sent only `Strict-Transport-Security`. A judge who runs the site through a header scanner should find the same care as in the pitch.
