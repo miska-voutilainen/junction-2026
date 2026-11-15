@@ -57,12 +57,15 @@ function RefusalItem({
         <span className="shrink-0 rounded-chip border border-border-default px-1.5 font-mono text-xs text-text-secondary">
           {refusal.ruleId}
         </span>
-        <span data-written-text className="text-base font-medium text-text-primary">
-          {refusal.title}
-        </span>
+        <span className="text-base font-medium text-text-primary">{refusal.title}</span>
       </p>
       <RaisedBy source={refusal.source} />
-      <p data-written-text className="text-sm text-text-secondary">
+      {/* Only the AI's reasons are shown as written: rule-made reasons and the
+          rule titles are our copy, so the copy checks must read them. */}
+      <p
+        data-written-text={refusal.source === "ai" || undefined}
+        className="text-sm text-text-secondary"
+      >
         {refusal.reason}
       </p>
       {refusal.locations.length > 0 && (
